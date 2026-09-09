@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Trans, useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { GraduationCap, Loader2, Plus } from "lucide-react";
+import { FileClock, GraduationCap, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
@@ -54,7 +54,33 @@ function buildPathColumns(
     {
       id: "status",
       header: t("management_career_paths.col_status"),
-      cell: (p) => <CareerPathStatusBadge status={p.status} />,
+      cell: (p) => (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <CareerPathStatusBadge status={p.status} />
+          {/* Draft-revision signal, mirroring the learning-program card:
+              a state, not an alert — no pulse. */}
+          {p.has_draft_version && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-violet-300">
+              <FileClock aria-hidden="true" className="h-3 w-3" />
+              {t("management_career_paths.draft_version_badge", {
+                n: (p.draft_version_no ?? 0) + 1,
+              })}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "student_count",
+      header: t("management_career_paths.col_students"),
+      align: "right",
+      sortable: true,
+      sortValue: (p) => p.student_count ?? 0,
+      cell: (p) => (
+        <span className="text-sm tabular-nums text-m3-on-surface">
+          {p.student_count ?? 0}
+        </span>
+      ),
     },
     {
       id: "stage_count",

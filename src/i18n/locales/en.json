@@ -1586,6 +1586,8 @@
     "col_status": "Status",
     "col_stages": "Stages",
     "col_courses": "Courses",
+    "col_students": "Students",
+    "draft_version_badge": "Draft v{{n}}",
     "col_updated": "Updated",
     "empty_search": "No matching career paths"
   },

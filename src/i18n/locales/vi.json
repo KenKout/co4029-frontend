@@ -1495,6 +1495,8 @@
     "col_status": "Trạng thái",
     "col_stages": "Giai đoạn",
     "col_courses": "Khóa học",
+    "col_students": "Học viên",
+    "draft_version_badge": "Bản nháp v{{n}}",
     "col_updated": "Cập nhật",
     "empty_search": "Không có lộ trình phù hợp"
   },

@@ -866,6 +866,12 @@ export type CareerPathAuthoring = Schemas["CareerPathAuthoring"] & {
   stage_count?: number;
   /** Attached-course count for the management list table (backend-enriched). */
   course_count?: number;
+  /** Total enrollments (any status) — management-list column. */
+  student_count?: number;
+  /** A draft revision exists (list-surface signal, like the program card). */
+  has_draft_version?: boolean;
+  /** The draft revision's number; 0 when has_draft_version is false. */
+  draft_version_no?: number;
 };
 export type CareerPathCreate = Schemas["CareerPathCreate"];
 export type CareerPathUpdate = Schemas["CareerPathUpdate"] & {
