@@ -16,7 +16,6 @@ import { LoadErrorBox } from "@/routes/management/_components/career-path-detail
 import { PathHeaderBar } from "@/routes/management/_components/career-path-detail/PathHeaderBar";
 import { PathImpactBanner } from "@/routes/management/_components/career-path-detail/PathImpactBanner";
 import { ProgramsTab } from "@/routes/management/_components/career-path-detail/ProgramsTab";
-import { ProgressTab } from "@/routes/management/_components/career-path-detail/ProgressTab";
 import { StudentsTab } from "@/routes/management/_components/career-path-detail/StudentsTab";
 import { TabBar } from "@/routes/management/_components/career-path-detail/TabBar";
 import { VersionPanel } from "@/routes/management/_components/career-path-detail/VersionPanel";
@@ -178,7 +177,6 @@ function TabContent({
   return (
     <div className="space-y-6">
       <StudentsTab id={id} canEnroll={false} canUnenroll={false} />
-      <ProgressTab id={id} />
     </div>
   );
 }
