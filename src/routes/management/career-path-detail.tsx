@@ -18,6 +18,7 @@ import { PathImpactBanner } from "@/routes/management/_components/career-path-de
 import { ProgramsTab } from "@/routes/management/_components/career-path-detail/ProgramsTab";
 import { StudentsTab } from "@/routes/management/_components/career-path-detail/StudentsTab";
 import { TabBar } from "@/routes/management/_components/career-path-detail/TabBar";
+import { usePathTabCounts } from "@/routes/management/_components/career-path-detail/use-tab-counts";
 import { VersionPanel } from "@/routes/management/_components/career-path-detail/VersionPanel";
 import type { TabKey } from "@/routes/management/_components/career-path-detail/types";
 
@@ -52,6 +53,7 @@ function ExistingCareerPathWorkspace({ id }: { id: string }) {
   const canRead = permissions.hasAny("course.read", "system.administer");
   const canManage = permissions.hasAny("course.create", "course.update", "system.administer");
   const path = useManagedCareerPath(!permissions.isLoading && canRead ? id : undefined);
+  const tabCounts = usePathTabCounts(id);
   const versions = usePathVersions(id, canRead);
   const search = useSearch({ strict: false }) as { tab?: TabKey; stage?: string };
   const [tab, setTab] = useState<TabKey>(search.tab ?? "general");
@@ -72,6 +74,7 @@ function ExistingCareerPathWorkspace({ id }: { id: string }) {
       data={path.data}
       tab={tab}
       onSelectTab={setTab}
+      tabCounts={tabCounts}
       editable={editable}
       readOnly={readOnly}
       canManage={canManage}
@@ -94,11 +97,13 @@ function WorkspaceShell({
   hasDraft,
   selectedVersionId,
   onSelectVersion,
+  tabCounts,
 }: {
   id: string;
   data: NonNullable<ReturnType<typeof useManagedCareerPath>["data"]>;
   tab: TabKey;
   onSelectTab: (tab: TabKey) => void;
+  tabCounts: ReturnType<typeof usePathTabCounts>;
   editable: boolean;
   readOnly: boolean;
   canManage: boolean;
@@ -121,7 +126,7 @@ function WorkspaceShell({
       )}
       <div className="grid items-start gap-6 lg:grid-cols-10">
         <main className="space-y-5 lg:col-span-7">
-          <TabBar tab={tab} onSelect={onSelectTab} />
+          <TabBar tab={tab} onSelect={onSelectTab} counts={tabCounts} />
           {editable && data.status === "published" && <PathImpactBanner id={id} />}
           <TabContent
             tab={tab}

@@ -11,9 +11,11 @@ import type { TabKey } from "./types";
 export function TabBar({
   tab,
   onSelect,
+  counts,
 }: {
   tab: TabKey;
   onSelect: (key: TabKey) => void;
+  counts?: Partial<Record<"programs" | "courses" | "students", number | undefined>>;
 }) {
   const { t } = useTranslation();
 
@@ -23,6 +25,10 @@ export function TabBar({
       defaultValue: tabDef.key === "programs" ? "Program" : `${tabDef.key[0]?.toUpperCase()}${tabDef.key.slice(1)}`,
     }),
     icon: tabDef.icon,
+    count:
+      tabDef.key === "general"
+        ? undefined
+        : counts?.[tabDef.key],
   }));
 
   return (
