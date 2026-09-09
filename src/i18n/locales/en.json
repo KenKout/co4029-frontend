@@ -3246,6 +3246,8 @@
       "prompt_title": "Switch to fullscreen mode",
       "prompt_description": "Your interview runs in fullscreen so nothing distracts you. The app menu is hidden until the interview ends.",
       "enter": "Enter fullscreen",
+      "enter_and_start": "Enter fullscreen and start",
+      "enter_and_resume": "Enter fullscreen and resume",
       "continue_windowed": "Continue in a window",
       "exit_warning_title": "You left fullscreen mode",
       "exit_warning_description": "Please return to fullscreen and stay there until the interview ends.",
@@ -3253,6 +3255,17 @@
       "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far).",
       "reenter": "Back to fullscreen",
       "stay_windowed": "Stay in a window"
+    },
+    "fullscreen_gate": {
+      "title": "Fullscreen required",
+      "description": "Your interview runs in fullscreen. Return to fullscreen to continue — your answers are safe, and the interview timer (if any) is unaffected.",
+      "requesting": "Requesting fullscreen…",
+      "reenter": "Re-enter fullscreen",
+      "denied": "The browser refused the fullscreen request. Press the button again — and allow fullscreen if the browser asks.",
+      "unsupported": "This browser or device cannot go fullscreen. Please switch to a desktop browser (Chrome, Edge, Firefox or Safari) and return to the interview."
+    },
+    "fullscreen_timer_note": {
+      "timer_continues": "The graded timer is running and keeps running while you are outside fullscreen."
     },
     "hybrid": {
       "prestart_hint": "Hybrid interview — type your answers or speak them",

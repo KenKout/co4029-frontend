@@ -60,6 +60,102 @@ describe("useInterviewFullscreen", () => {
     expect(result.current.isFullscreen).toBe(true);
   });
 
+  it("exposes the instant DOM check beside the React state", async () => {
+    const { result } = renderHook(() => useInterviewFullscreen(true));
+    expect(result.current.isFullscreenNow()).toBe(false);
+
+    await act(async () => {
+      await result.current.enter();
+    });
+    expect(result.current.isFullscreenNow()).toBe(true);
+
+    // DOM changed without the event having been observed yet (the guard
+    // scenario: state can lag one render behind fullscreenchange).
+    setFullscreenElement(null);
+    expect(result.current.isFullscreenNow()).toBe(false);
+  });
+
+  it("returns false when the promise resolves but the DOM is not fullscreen", async () => {
+    // A resolved requestFullscreen is NOT proof of fullscreen (some engines
+    // resolve before the transition settles). Only the element counts.
+    requestFullscreen.mockImplementation(() => Promise.resolve());
+
+    const { result } = renderHook(() => useInterviewFullscreen(true));
+
+    let granted: boolean | undefined;
+    await act(async () => {
+      granted = await result.current.enter();
+    });
+
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    expect(granted).toBe(false);
+    expect(result.current.isFullscreen).toBe(false);
+  });
+
+  it("shares ONE in-flight request across rapid double-clicks", async () => {
+    // Hold the promise open so the second click lands while the first is
+    // still pending — the exact double-submit race the shared ref guards.
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    requestFullscreen.mockImplementation(() => {
+      setFullscreenElement(document.documentElement);
+      document.dispatchEvent(new Event("fullscreenchange"));
+      return gate.then(() => Promise.resolve());
+    });
+
+    const { result } = renderHook(() => useInterviewFullscreen(true));
+
+    let first!: Promise<boolean>;
+    let second!: Promise<boolean>;
+    await act(async () => {
+      first = result.current.enter();
+      second = result.current.enter();
+      release();
+    });
+    const [a, b] = await act(async () => [
+      await first,
+      await second,
+    ]);
+
+    expect(a).toBe(true);
+    expect(b).toBe(true);
+    // One click sequence, ONE browser request.
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  it("enters immediately when already fullscreen without a new request", async () => {
+    const { result } = renderHook(() => useInterviewFullscreen(true));
+    await act(async () => {
+      await result.current.enter();
+    });
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+
+    let granted: boolean | undefined;
+    await act(async () => {
+      granted = await result.current.enter();
+    });
+    expect(granted).toBe(true);
+    // Still exactly one browser request: a granted gate is a granted gate.
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  it("syncs isFullscreen through the WebKit event", async () => {
+    // Safari fires ONLY webkitfullscreenchange; the hook must observe it.
+    const { result } = renderHook(() => useInterviewFullscreen(true));
+
+    await act(async () => {
+      setFullscreenElement(document.documentElement);
+      document.dispatchEvent(new Event("webkitfullscreenchange"));
+    });
+    expect(result.current.isFullscreen).toBe(true);
+
+    await act(async () => {
+      setFullscreenElement(null);
+      document.dispatchEvent(new Event("webkitfullscreenchange"));
+    });
+    expect(result.current.isFullscreen).toBe(false);
+  });
+
   it("warns when the user leaves fullscreen during an active interview", async () => {
     const onUnexpectedExit = vi.fn();
     const { result } = renderHook(() =>
@@ -149,5 +245,27 @@ describe("useInterviewFullscreen", () => {
 
     expect(granted).toBe(false);
     expect(result.current.isFullscreen).toBe(false);
+  });
+
+  it("reports unsupported when no fullscreen API exists", () => {
+    Object.defineProperty(document.documentElement, "requestFullscreen", {
+      configurable: true,
+      value: undefined,
+    });
+    Object.defineProperty(
+      document.documentElement,
+      "webkitRequestFullscreen",
+      { configurable: true, value: undefined },
+    );
+
+    const { result } = renderHook(() => useInterviewFullscreen(true));
+    expect(result.current.supported).toBe(false);
+
+    let granted: boolean | undefined;
+    return act(async () => {
+      granted = await result.current.enter();
+    }).then(() => {
+      expect(granted).toBe(false);
+    });
   });
 });

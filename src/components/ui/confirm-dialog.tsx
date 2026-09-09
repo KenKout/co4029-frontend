@@ -45,6 +45,12 @@ export interface ConfirmDialogProps {
    * outside-click cancel is the expected, harmless behaviour.
    */
   dismissOnBackdrop?: boolean;
+  /**
+   * Render the secondary (cancel) action at all. Default true. Mandatory
+   * gates (e.g. the interview fullscreen gate) pass false: there is no
+   * "cancel" that unlocks the dialog, so no such button may exist to click.
+   */
+  showCancel?: boolean;
 }
 
 /**
@@ -66,6 +72,7 @@ export function ConfirmDialog({
   confirmDisabled = false,
   extraContent,
   dismissOnBackdrop = false,
+  showCancel = true,
 }: ConfirmDialogProps) {
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -105,18 +112,20 @@ export function ConfirmDialog({
           {extraContent ? <div className="mt-4">{extraContent}</div> : null}
 
           <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
-            <AlertDialogPrimitive.Close
-              render={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={isPending}
-                  onClick={onCancel}
-                >
-                  {cancelLabel ?? "Cancel"}
-                </Button>
-              }
-            />
+            {showCancel ? (
+              <AlertDialogPrimitive.Close
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={isPending}
+                    onClick={onCancel}
+                  >
+                    {cancelLabel ?? "Cancel"}
+                  </Button>
+                }
+              />
+            ) : null}
             <Button
               type="button"
               variant={confirmVariant}

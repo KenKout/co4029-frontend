@@ -1,14 +1,17 @@
 import {
-  FullscreenExitWarningDialog,
-  FullscreenPromptDialog,
   LeaveInterviewDialog,
 } from "@/components/interview/dialogs";
 import type { CourseInterviewController } from "./use-course-interview";
 
 /**
- * The navigation-blocker and fullscreen-proctoring dialogs, moved verbatim out
- * of course-interview.tsx where they were two JSX consts reused by the voice
- * room and the text/hybrid workspace.
+ * The navigation-blocker dialog, moved verbatim out of course-interview.tsx.
+ *
+ * The fullscreen consent + exit-warning pair that used to live here is GONE:
+ * fullscreen is now a mandatory gate. The route renders
+ * `InterviewFullscreenGateScreen` whenever a live session is not fullscreen,
+ * and re-entry happens through that screen's Re-enter button — not through
+ * dismissable dialogs inside the workspace (the workspace unmounts entirely
+ * when the gate locks).
  */
 
 export function LeaveBlockerDialog({ iv }: { iv: CourseInterviewController }) {
@@ -20,29 +23,5 @@ export function LeaveBlockerDialog({ iv }: { iv: CourseInterviewController }) {
       assessmentStarted={iv.assessmentStartedAtMs !== null}
       hasTimeLimit={Boolean(iv.config?.time_limit_minutes)}
     />
-  );
-}
-
-/**
- * Fullscreen consent + exit-warning dialogs. Rendered in every live-session
- * branch (text/hybrid workspace and the LiveKit voice room) so the proctoring
- * behaviour is identical across modes.
- */
-export function FullscreenDialogs({ iv }: { iv: CourseInterviewController }) {
-  const { fullscreenDeterrent } = iv;
-  return (
-    <>
-      <FullscreenPromptDialog
-        open={fullscreenDeterrent.promptOpen}
-        onConfirm={fullscreenDeterrent.acceptPrompt}
-        onDecline={fullscreenDeterrent.declinePrompt}
-      />
-      <FullscreenExitWarningDialog
-        open={fullscreenDeterrent.warningOpen}
-        exitCount={fullscreenDeterrent.exitCount}
-        onReenter={fullscreenDeterrent.reenter}
-        onDismiss={fullscreenDeterrent.dismissWarning}
-      />
-    </>
   );
 }

@@ -91,6 +91,7 @@ const ROOM_PROPS_BASE = {
   micOn: true,
   finishResult: undefined as unknown,
   closingReason: null as "natural" | "ended_early" | "timed_out" | null,
+  fullscreenGranted: true,
 };
 
 const BASE = {

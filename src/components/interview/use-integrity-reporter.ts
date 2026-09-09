@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useReportIntegrityEvents } from "@/lib/api/hooks/interviews";
 import type { IntegrityEvent } from "@/lib/api/types";
+import { currentFullscreenElement } from "@/lib/hooks/useAssessmentFullscreen";
 
 const BATCH_DELAY_MS = 2000; // debounce window before sending
 const MAX_BATCH = 50; // backend cap
@@ -92,21 +93,30 @@ export function useIntegrityReporter(
     }
 
     function onFullscreenChange() {
-      // Only report when leaving fullscreen (document.fullscreenElement becomes null)
-      if (!document.fullscreenElement) {
-        enqueue({ event_type: "fullscreen_exit", severity: "warning" });
-        onWarningRef.current?.("fullscreen_exit");
-      }
+      // Only report when LEAVING fullscreen — the shared helper covers the
+      // WebKit-prefixed property so a Safari exit (which never touches
+      // `document.fullscreenElement`) is still recorded.
+      if (currentFullscreenElement()) return;
+      enqueue({ event_type: "fullscreen_exit", severity: "warning" });
+      onWarningRef.current?.("fullscreen_exit");
     }
 
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("blur", onBlur);
+    // Both fullscreen events, always: Safari fires only the webkit-prefixed
+    // one, so listening to the standard event alone left Safari exits
+    // unrecorded while the gate UI (which listens to both) still locked.
     document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("blur", onBlur);
       document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        onFullscreenChange,
+      );
       // Flush remaining events on unmount
       for (const handle of pendingBlursRef.current) clearTimeout(handle);
       pendingBlursRef.current.clear();

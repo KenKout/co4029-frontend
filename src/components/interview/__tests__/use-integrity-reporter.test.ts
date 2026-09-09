@@ -1,10 +1,3 @@
-/**
- * Unit tests for useIntegrityReporter hook.
- *
- * Tests integrity event batching, debouncing, and DOM listener attachment.
- * Uses fake timers to verify debounce behavior and flush on unmount.
- */
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
@@ -24,6 +17,13 @@ function setHidden(value: boolean) {
   Object.defineProperty(document, "hidden", { value, configurable: true });
 }
 
+function setFullscreenElement(value: Element | null) {
+  Object.defineProperty(document, "fullscreenElement", {
+    value,
+    configurable: true,
+  });
+}
+
 describe("useIntegrityReporter", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -33,11 +33,13 @@ describe("useIntegrityReporter", () => {
     // it now reads it to tell a tab switch from a plain focus loss, so the
     // leaked `true` silently stopped three tests from recording anything.
     setHidden(false);
+    setFullscreenElement(null);
   });
 
   afterEach(() => {
     vi.useRealTimers();
     setHidden(false);
+    setFullscreenElement(null);
   });
 
   it("attaches DOM event listeners when session_id is set", () => {
@@ -53,6 +55,10 @@ describe("useIntegrityReporter", () => {
     );
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       "fullscreenchange",
+      expect.any(Function),
+    );
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      "webkitfullscreenchange",
       expect.any(Function),
     );
     expect(windowAddEventListenerSpy).toHaveBeenCalledWith(
@@ -84,6 +90,10 @@ describe("useIntegrityReporter", () => {
     );
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       "fullscreenchange",
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "webkitfullscreenchange",
       expect.any(Function),
     );
     expect(windowRemoveEventListenerSpy).toHaveBeenCalledWith(
@@ -209,10 +219,6 @@ describe("useIntegrityReporter", () => {
 
     // Simulate fullscreen exit
     act(() => {
-      Object.defineProperty(document, "fullscreenElement", {
-        value: null,
-        configurable: true,
-      });
       document.dispatchEvent(new Event("fullscreenchange"));
     });
 
@@ -223,6 +229,31 @@ describe("useIntegrityReporter", () => {
 
     // Verify event was sent
     expect(mockMutateAsyncFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("records a Safari fullscreen exit through the WebKit event", () => {
+    // Safari never touches document.fullscreenElement; the reporter listens
+    // to webkitfullscreenchange AND reads webkitFullscreenElement, so a
+    // Safari exit is still recorded as an integrity event.
+    mockMutateAsyncFn.mockClear();
+
+    renderHook(() => useIntegrityReporter("session-123"));
+
+    act(() => {
+      document.dispatchEvent(new Event("webkitfullscreenchange"));
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(2100);
+    });
+
+    expect(mockMutateAsyncFn).toHaveBeenCalledTimes(1);
+    const firstCall = mockMutateAsyncFn.mock
+      .calls[0] as unknown as [{ events: { event_type: string }[] }] | undefined;
+    expect(firstCall).toBeDefined();
+    expect(firstCall![0].events).toEqual([
+      expect.objectContaining({ event_type: "fullscreen_exit" }),
+    ]);
   });
 
   it("caps batch at 50 events", () => {

@@ -47,8 +47,8 @@ export function useInterviewActions(base: InterviewBase) {
     finish,
     t,
     leaveBlocker,
-    startHandlerRef,
     sessionStartedAtRef,
+    fullscreenGate,
     setAnswerText,
     setEndDialogOpen,
     setAiSpeaking,
@@ -147,6 +147,14 @@ export function useInterviewActions(base: InterviewBase) {
   const chatBridge = useRef<UseInterviewChatResult | null>(null);
 
   /**
+   * Shared guard for the start/resume/retry sequencing: true from the moment a
+   * handler begins its fullscreen request until the start API settles (or the
+   * request is refused). A double-click therefore issues ONE request and ONE
+   * mutation; see beginSessionAfterFullscreen in interview-start-actions.ts.
+   */
+  const startInFlightRef = useRef(false);
+
+  /**
    * Bridge setter for the workspace screen: mounts the chat hook (the only
    * place the room is reachable) and hands it to `handleRespond`. Kept as a
    * controller method rather than a direct `iv.chatBridge.current = ...`
@@ -161,6 +169,8 @@ export function useInterviewActions(base: InterviewBase) {
     currentElapsedSeconds,
     beginClosing,
     chatBridge,
+    fullscreenGate,
+    startInFlightRef,
   };
 
   const handleTurnPresented = useTurnPresentedHandler(base, {
@@ -192,10 +202,6 @@ export function useInterviewActions(base: InterviewBase) {
   }
 
   const startInterview = () => handleStart(ctx);
-  // The auto-resume effect in useInterviewServerSync reached handleStart through
-  // function hoisting before the split; this keeps that "current declaration,
-  // read at call time" contract.
-  startHandlerRef.current = startInterview;
 
   return {
     currentElapsedSeconds,

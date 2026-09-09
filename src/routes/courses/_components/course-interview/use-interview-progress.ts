@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
-import { useFullscreenDeterrent } from "@/components/interview/use-fullscreen-deterrent";
+import { useInterviewFullscreenGate } from "@/components/interview/use-interview-fullscreen-gate";
 import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
 import { resolveInterviewState } from "@/lib/interview/format";
 import type {
@@ -131,11 +131,16 @@ export function useInterviewProgress(
     });
   }, [t]);
 
-  // ── Immersive fullscreen (proctoring) ──────────────────────────────────────
-  // A live session runs fullscreen with the app sidebar unmounted. Entering
-  // fullscreen requires a user gesture, so it is gated behind a confirmation
-  // dialog; leaving it mid-session raises a warning dialog (the exit itself is
-  // already logged as an integrity event by useIntegrityReporter above).
+  // ── Mandatory fullscreen gate ──────────────────────────────────────────────
+  // A live session runs fullscreen with the app sidebar unmounted, and the
+  // gate is HARD: while the session is active but the browser is not
+  // fullscreen, the routes render InterviewFullscreenGateScreen INSTEAD of the
+  // workspace (no transcript, no question, no composer, no AiTypingMessage)
+  // and the room capabilities drop to all-false. `enter()` runs inside the
+  // start/resume/retry click handlers (user gesture); an unexpected exit
+  // (Escape / F11) increments exitCount and cancels in-flight narration via
+  // the callback below — the gate never re-enters by itself (browsers require
+  // a user gesture; the gate screen's Re-enter button is the path back).
   const interviewActive = isInterviewActive({
     sessionId,
     hasFinishResult: Boolean(finishResult),
@@ -157,9 +162,14 @@ export function useInterviewProgress(
   useIntegrityReporter(interviewActive ? sessionId : null, {
     onWarning: handleIntegrityWarning,
   });
-  // Fullscreen consent + exit-warning policy (ask once, count exits, reset on
-  // session end) lives in useFullscreenDeterrent.
-  const fullscreenDeterrent = useFullscreenDeterrent(interviewActive);
+  // The mandatory gate (locked-until-granted policy, request state, exit
+  // count) — replaces the old deterrent. Mounted on EVERY render while active
+  // so the timer/integrity hooks above keep running behind the gate screen;
+  // the narration-cancel callback cuts the client voice the moment
+  // fullscreen is lost mid-speech.
+  const fullscreenGate = useInterviewFullscreenGate(interviewActive, {
+    onUnexpectedExit: () => speech.narration.cancel(),
+  });
 
   // Once the session is over, restore the normal app shell (sidebar back).
   useEffect(() => {
@@ -182,7 +192,7 @@ export function useInterviewProgress(
     totalQuestions,
     outcomeProgress,
     questionPacing,
-    fullscreenDeterrent,
+    fullscreenGate,
     agentStatus,
   };
 }

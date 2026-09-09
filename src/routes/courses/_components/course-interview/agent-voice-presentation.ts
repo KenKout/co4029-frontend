@@ -235,6 +235,15 @@ export function shouldWarmRoom(args: {
  * (`course-interview.tsx` and the learn-item `InterviewProxyInner`). Exported
  * and pure so the regression tests exercise the shipped rule instead of a copy.
  *
+ * The fullscreen gate is the OUTERMOST hold and is mandatory: `fullscreenGranted`
+ * is a required argument (no default — TypeScript forces both routes to pass
+ * `fullscreenGate.isFullscreen`), and `false` zeroes every capability below.
+ * When the candidate leaves fullscreen mid-session the client disconnects, the
+ * audio renderer and mic are dropped, warm-room stops, and no new agent is
+ * dispatched; the agent backend already dispatched may live on inside the
+ * room, but the client neither sees nor hears it until re-entry. (A web client
+ * cannot pause the worker; it can only refuse to listen.)
+ *
  * The terminal gate is the newest and hardest hold. `beginClosing` moves the
  * phase to `closing` SYNCHRONOUSLY — End button / timer expiry, before the
  * `POST /finish` round-trip resolves — so `roomRequested` drops to false at
@@ -274,6 +283,7 @@ export function interviewRoomProps(args: {
   onboardingStage: string | null | undefined;
   pendingFirstQuestion: unknown;
   micOn: boolean;
+  fullscreenGranted: boolean;
 }): {
   active: boolean;
   prefetch: boolean;
@@ -285,7 +295,11 @@ export function interviewRoomProps(args: {
     (args.phase === "closing" && args.closingReason !== "natural") ||
     args.phase === "results" ||
     Boolean(args.finishResult);
-  const roomRequested = !terminal && Boolean(args.sessionId);
+  // The fullscreen gate feeds roomRequested BEFORE every other computation:
+  // no fullscreen → no connection, no token mint, no warm room, no dispatch,
+  // no mic — all five props false. See the doc block above.
+  const roomRequested =
+    !terminal && Boolean(args.sessionId) && args.fullscreenGranted;
   const roomActive =
     roomRequested &&
     args.onboardingStage === "completed" &&

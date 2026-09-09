@@ -66,6 +66,9 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     dictation: { listening: false, stop: vi.fn() },
     answerText: "my answer",
     t: (key: string) => key,
+    // The mandatory fullscreen gate: granted in the default ctx (the transport
+    // tests are not about the gate); the gate-specific suites override it.
+    fullscreenGate: { isFullscreenNow: () => true },
     beginSubmit: vi.fn(),
     submitFailed: vi.fn(),
     setAnswerText: vi.fn(),

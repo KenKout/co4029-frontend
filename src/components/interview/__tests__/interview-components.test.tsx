@@ -388,7 +388,7 @@ describe("LeaveInterviewDialog", () => {
 });
 
 describe("StartInterviewDialog", () => {
-  it("asks for confirmation before starting the session", () => {
+  it("asks for confirmation before starting the session, naming the fullscreen step", () => {
     render(
       <StartInterviewDialog
         open
@@ -400,8 +400,10 @@ describe("StartInterviewDialog", () => {
 
     const dialog = screen.getByRole("alertdialog");
     expect(dialog).toHaveTextContent(/bạn chắc chắn muốn bắt đầu/i);
+    // The confirm button IS the user gesture that requests fullscreen, so the
+    // label must say what the click does (mandatory gate).
     expect(
-      screen.getByRole("button", { name: /^bắt đầu$/i }),
+      screen.getByRole("button", { name: /vào toàn màn hình và bắt đầu/i }),
     ).toBeEnabled();
     // Short on purpose: this is a confirmation, not a briefing. The old copy
     // listed identity/audio/language/readiness plus the voice default and ran
@@ -412,9 +414,11 @@ describe("StartInterviewDialog", () => {
     expect(
       screen.getByRole("button", { name: /^quay lại$/i }),
     ).toBeInTheDocument();
+    // No windowed path: the "Continue in a window" offer is gone.
+    expect(dialog.textContent ?? "").not.toMatch(/cửa sổ|window/i);
   });
 
-  it("uses continuation copy for an active attempt", () => {
+  it("uses continuation copy for an active attempt and warns the timer runs", () => {
     render(
       <StartInterviewDialog
         open
@@ -429,7 +433,7 @@ describe("StartInterviewDialog", () => {
       /không tạo lượt làm mới/i,
     );
     expect(
-      screen.getByRole("button", { name: /tiếp tục lượt trước/i }),
+      screen.getByRole("button", { name: /vào toàn màn hình và tiếp tục/i }),
     ).toBeEnabled();
   });
 });

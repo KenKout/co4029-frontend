@@ -28,6 +28,10 @@ import type { InterviewActionsContext } from "./types";
 
 /** The transport, when a turn can actually be sent right now. */
 function readyChat(ctx: InterviewActionsContext) {
+  // Mandatory-gate guard first: a stale click/callback racing an unexpected
+  // fullscreen exit must not open a transport — including the end-confirmation
+  // replies, which would otherwise tell the agent something after lock.
+  if (!ctx.fullscreenGate.isFullscreenNow()) return null;
   const chat = ctx.chatBridge.current;
   if (!ctx.currentQuestion || !ctx.sessionId || !chat || chat.pending) {
     return null;

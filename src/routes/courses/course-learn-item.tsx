@@ -38,6 +38,7 @@ import {
 import { InterviewRoomProvider } from "@/components/interview/interview-room-provider";
 import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
+import { InterviewFullscreenGateScreen } from "@/routes/courses/_components/course-interview/InterviewFullscreenGateScreen";
 import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
 import {
   InterviewLoadingScreen,
@@ -425,12 +426,13 @@ function InterviewProxy({ slug, interviewRef }: { slug: string; interviewRef: st
 function InterviewProxyInner({ slug, interviewRef }: { slug: string; interviewRef: string }) {
   const iv = useCourseInterviewWithRef(slug, interviewRef);
   const { course, config, finishResult, sessionId } = iv;
-  // Same five-provider-prop policy as course-interview.tsx: End/timer moves
-  // the phase to `closing` synchronously, and that terminal state disconnects
-  // the room / unmounts RoomAudioRenderer so agent audio cannot bleed into the
-  // closing/result screen. A `natural` closing is the exception — the agent is
-  // reading the goodbye over LiveKit and the room stays live until the
-  // farewell presents and the phase advances to results
+  // Same five-provider-prop policy as course-interview.tsx: the mandatory
+  // fullscreen gate first (no fullscreen → every capability false), End/timer
+  // moves the phase to `closing` synchronously, and that terminal state
+  // disconnects the room / unmounts RoomAudioRenderer so agent audio cannot
+  // bleed into the closing/result screen. A `natural` closing is the
+  // exception — the agent is reading the goodbye over LiveKit and the room
+  // stays live until the farewell presents and the phase advances to results
   // (see interviewRoomProps in agent-voice-presentation).
   const roomProps = interviewRoomProps({
     sessionId,
@@ -440,14 +442,21 @@ function InterviewProxyInner({ slug, interviewRef }: { slug: string; interviewRe
     onboardingStage: iv.onboardingStage,
     pendingFirstQuestion: iv.pendingFirstQuestion,
     micOn: iv.micOn,
+    fullscreenGranted: iv.fullscreenGate.isFullscreen,
   });
 
-  let screen: React.ReactNode;
-  if (iv.courseLoading || iv.configLoading) screen = <InterviewLoadingScreen />;
-  else if (!course || !config) screen = <InterviewMissingConfigScreen slug={iv.slug} />;
-  else if (finishResult) screen = <InterviewResultsScreen iv={iv as never} finishResult={finishResult} />;
-  else if (!sessionId) screen = <InterviewLobbyScreen iv={iv as never} course={course} config={config} />;
-  else screen = <InterviewWorkspaceScreen iv={iv as never} course={course} config={config} />;
+  // The SAME screen order as the direct route (resolveInterviewScreen there):
+  // loading → missing config → results (before the gate) → lobby → gate →
+  // workspace. One rule for both URLs; the gate cannot be bypassed by entering
+  // through the curriculum instead.
+  const screen = (() => {
+    if (iv.courseLoading || iv.configLoading) return <InterviewLoadingScreen />;
+    if (!course || !config) return <InterviewMissingConfigScreen slug={iv.slug} />;
+    if (finishResult) return <InterviewResultsScreen iv={iv as never} finishResult={finishResult} />;
+    if (!sessionId) return <InterviewLobbyScreen iv={iv as never} course={course} config={config} />;
+    if (iv.fullscreenGate.requiredOpen) return <InterviewFullscreenGateScreen iv={iv as never} />;
+    return <InterviewWorkspaceScreen iv={iv as never} course={course} config={config} />;
+  })();
 
   return (
     <InterviewRoomProvider

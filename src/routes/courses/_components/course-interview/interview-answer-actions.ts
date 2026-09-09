@@ -171,6 +171,10 @@ export async function handleRespond(
   options: { retrySubmissionId?: string } = {},
 ) {
   if (!ctx.currentQuestion || !ctx.sessionId) return;
+  // Mandatory-gate guard: a stale click/callback racing an unexpected
+  // fullscreen exit must not send an answer (or charge a follow-up) once the
+  // gate has locked. Instant DOM check — see interview-onboarding-actions.
+  if (!ctx.fullscreenGate.isFullscreenNow()) return;
   if (isSubmitBlocked(ctx)) return;
   const sourceText = answerOverride ?? ctx.answerText;
   const trimmed = sourceText.trim();

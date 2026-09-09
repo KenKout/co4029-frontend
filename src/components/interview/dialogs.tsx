@@ -1,18 +1,12 @@
-/**
- * Confirmation and prompt dialogs for the interview session.
- *
- * Extracted from the former `interview-workspace.tsx` (step 3 of its
- * decomposition; what remained is now `stages.tsx`).
- * These are leaf components: they take open/callback props, render a
- * `ConfirmDialog`, and hold no interview state of their own — which is why they
- * were the first UI cluster to move.
- */
-
 import { useTranslation } from "react-i18next";
-import { CircleHelp, Loader2, PhoneOff, Sparkles } from "lucide-react";
+import { CircleHelp, Loader2, Maximize, PhoneOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { resolveStartDialogCopy } from "@/components/interview/start-dialog-copy";
+
+const fallbackStartTitle = "Ready to start?";
+const fallbackResumeTitle = "Resume your attempt?";
 
 export function EndInterviewDialog({
   open,
@@ -158,13 +152,22 @@ export function LeaveInterviewDialog({
 }
 
 // Fullscreen dialogs are shared with the quiz take — see
-// components/assessment/FullscreenDialogs.tsx. Re-exported so interview
-// call sites keep importing them from here.
+// components/assessment/FullscreenDialogs.tsx. The INTERVIEW no longer uses
+// them (its fullscreen flow is the mandatory gate screen + the start dialog);
+// the re-export stays for the quiz call sites that import from here.
 export {
-  FullscreenPromptDialog,
   FullscreenExitWarningDialog,
+  FullscreenPromptDialog,
 } from "@/components/assessment/FullscreenDialogs";
 
+/**
+ * The start/resume confirmation — the USER GESTURE that powers the mandatory
+ * fullscreen gate. Browsers only grant requestFullscreen() from a user
+ * activation, so this dialog's confirm click is what `handleStart` /
+ * `handleRetry` build the sequencing on: fullscreen first, then the start
+ * API. It is not a "continue windowed" offer — there is no such path any
+ * more — and the copy says what the click does.
+ */
 export function StartInterviewDialog({
   open,
   onOpenChange,
@@ -181,23 +184,7 @@ export function StartInterviewDialog({
   const { t, i18n } = useTranslation();
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
   const isVietnamese = activeLanguage?.startsWith("vi") ?? false;
-  // Kept in step with `course_interview.start_dialog` in the locale files —
-  // these are the values used when a translation is missing, so copy that drifts
-  // here ships to whoever hits that path. One short line: the confirmation only
-  // needs to say that setup comes first and the graded clock is not running yet.
-  const fallbackCopy = isVietnamese
-    ? {
-        title: "Bạn chắc chắn muốn bắt đầu?",
-        description:
-          "Sẽ có bước chuẩn bị trước — đồng hồ chấm điểm chỉ bắt đầu khi bạn xác nhận sẵn sàng.",
-        cancel: "Quay lại",
-      }
-    : {
-        title: "Ready to start?",
-        description:
-          "Setup comes first — the graded timer starts only when you confirm you are ready.",
-        cancel: "Back",
-      };
+  const fallback = resolveStartDialogCopy(isResume, isVietnamese);
 
   return (
     <ConfirmDialog
@@ -205,16 +192,20 @@ export function StartInterviewDialog({
       onOpenChange={onOpenChange}
       title={
         isResume
-          ? t("course_interview.resume_dialog.title")
+          ? t("course_interview.resume_dialog.title", {
+              defaultValue: fallbackResumeTitle,
+            })
           : t("course_interview.start_dialog.title", {
-              defaultValue: fallbackCopy.title,
+              defaultValue: fallbackStartTitle,
             })
       }
       description={
         isResume
-          ? t("course_interview.resume_dialog.description")
+          ? t("course_interview.resume_dialog.description", {
+              defaultValue: fallback.description,
+            })
           : t("course_interview.start_dialog.description", {
-              defaultValue: fallbackCopy.description,
+              defaultValue: fallback.description,
             })
       }
       confirmLabel={
@@ -225,18 +216,24 @@ export function StartInterviewDialog({
           </span>
         ) : (
           <span className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
+            <Maximize className="h-4 w-4" />
             {isResume
-              ? t("course_interview.resume_dialog.continue")
-              : t("course_interview.actions.start")}
+              ? t("course_interview.fullscreen.enter_and_resume", {
+                  defaultValue: fallback.confirm,
+                })
+              : t("course_interview.fullscreen.enter_and_start", {
+                  defaultValue: fallback.confirm,
+                })}
           </span>
         )
       }
       cancelLabel={
         isResume
-          ? t("course_interview.resume_dialog.cancel")
+          ? t("course_interview.resume_dialog.cancel", {
+              defaultValue: fallback.cancel,
+            })
           : t("course_interview.start_dialog.cancel", {
-              defaultValue: fallbackCopy.cancel,
+              defaultValue: fallback.cancel,
             })
       }
       onConfirm={onConfirm}

@@ -24,7 +24,8 @@ export function useInterviewServerSync(
 ) {
   const { configId, course, resumableSession, previousSessionsLoading } = route;
   const { sessionId } = turn;
-  const { phase, finishResult, setFinishResult } = phaseState;
+  const { phase, finishResult, setFinishResult, setStartDialogOpen } =
+    phaseState;
 
   // Typed turns go over `lk.chat` — there is no `/respond` hook any more.
   // Onboarding is the only REST turn surface left, and it has its own endpoint.
@@ -41,16 +42,18 @@ export function useInterviewServerSync(
   // otherwise dumps the student back to the lobby with a manual "Resume" button.
   // We stamp a sessionStorage marker while the interview is live; on mount, if a
   // resumable in-progress session exists AND its marker is present (i.e. this is
-  // a genuine reload of an active attempt, not a fresh lobby visit), we resume
-  // automatically. sessionStorage survives reload but not tab-close, so a fresh
-  // navigation still shows the lobby + Resume button (never surprises the user).
+  // a genuine reload of an active attempt, not a fresh lobby visit), we open the
+  // MANDATORY start dialog.
+  //
+  // The effect NEVER calls the start API and NEVER requests fullscreen —
+  // browsers refuse requestFullscreen without a user gesture, and restoring a
+  // graded session without one would bypass the gate entirely. The dialog's
+  // confirm click is the gesture: it runs the same gated sequencing as a
+  // manual resume (beginSessionAfterFullscreen). For an attempt whose graded
+  // clock is already running, the dialog copy warns that the server timer
+  // keeps running while the candidate decides.
   const ACTIVE_MARKER_KEY = `abridge:iv-active:${configId}`;
   const autoResumeTriedRef = useRef(false);
-  // handleStart lives in useInterviewActions, which runs AFTER this hook group.
-  // In the pre-split file the auto-resume effect below reached it through
-  // function hoisting; this ref is the same "read the current declaration at
-  // call time" contract, assigned during render before any effect can fire.
-  const startHandlerRef = useRef<() => Promise<void>>(() => Promise.resolve());
   useEffect(() => {
     // Stamp / clear the "live attempt" marker as the session goes active/ends.
     try {
@@ -78,9 +81,9 @@ export function useInterviewServerSync(
     // Only auto-resume a genuine reload of THIS live attempt.
     if (marker !== resumableSession.session_id) return;
     autoResumeTriedRef.current = true;
-    void startHandlerRef.current();
-    // handleStart is a stable declaration read at call time; resumableSession /
-    // loading are the real triggers. Guarded by the ref so it fires once.
+    setStartDialogOpen(true);
+    // Guarded by the ref so it opens once; resumableSession / loading are the
+    // real triggers.
   }, [resumableSession, sessionId, previousSessionsLoading, ACTIVE_MARKER_KEY]);
 
   const { data: verdictPoll } = useInterviewSession(
@@ -136,7 +139,6 @@ export function useInterviewServerSync(
     evaluationUnavailable,
     gapReport,
     gapReportPending,
-    startHandlerRef,
     verdictPoll,
     liveVerdict,
     evaluationFailed,

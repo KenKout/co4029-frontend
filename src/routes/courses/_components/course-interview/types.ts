@@ -1,6 +1,7 @@
 import type { MutableRefObject } from "react";
 
 import type { UseInterviewChatResult } from "@/components/interview/use-interview-chat";
+import type { InterviewFullscreenGate } from "@/components/interview/use-interview-fullscreen-gate";
 import type { FinishReason } from "@/lib/interview/turn-factory";
 import type { useInterviewDrafts } from "./use-interview-drafts";
 import type { useInterviewPhaseState } from "./use-interview-phase-state";
@@ -41,4 +42,19 @@ export type InterviewActionsContext = InterviewBase & {
    * exists INSIDE it.
    */
   chatBridge: MutableRefObject<UseInterviewChatResult | null>;
+  /**
+   * The mandatory fullscreen gate, mirrored from useInterviewProgress. The
+   * start/resume/retry sequencing awaits `enter()` inside the click handler
+   * (a browser user gesture is required), and every turn-transport guard
+   * reads `isFullscreenNow()` so a stale click in the same tick as an
+   * unexpected exit cannot send after the gate has locked.
+   */
+  fullscreenGate: InterviewFullscreenGate;
+  /**
+   * True between a start attempt's fullscreen request and its completion —
+   * guards against a double-click issuing two requests or two start
+   * mutations. Lives on the context (not module state) so a retry from the
+   * results screen and a start from the lobby share ONE guard.
+   */
+  startInFlightRef: MutableRefObject<boolean>;
 };

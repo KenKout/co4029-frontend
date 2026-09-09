@@ -1,17 +1,23 @@
 /**
  * Fullscreen control for a proctored assessment (interview take or quiz take).
  *
- * The assessment runs in browser fullscreen so the participant has no visible
- * chrome (tabs, bookmarks, app sidebar) to drift into. Browsers only grant
- * `requestFullscreen()` from a user gesture, which is why the caller shows a
- * confirmation dialog and calls `enter()` from that click — never automatically.
+ * The interview treats this API as a HARD GATE (see
+ * `@/components/interview/use-interview-fullscreen-gate`): a session may not
+ * start, present or speak until the browser has actually entered fullscreen.
+ * The quiz keeps its softer deterrent policy on top of the same primitives.
  *
- * The hook owns three things:
- *  - `isFullscreen` — live state, kept in sync with the `fullscreenchange` event
- *    (so pressing Escape / F11 is observed, not just our own calls).
+ * Browsers only grant `requestFullscreen()` from a user gesture, which is why
+ * callers invoke `enter()` from a click handler — never automatically.
+ *
+ * The hook owns four things:
+ *  - `isFullscreen` — live state, kept in sync with the `fullscreenchange` and
+ *    `webkitfullscreenchange` events (so pressing Escape / F11 is observed,
+ *    not just our own calls).
+ *  - `isFullscreenNow` — the instant DOM check. React state can lag a render
+ *    behind a `fullscreenchange`, so action guards must read the DOM, not the
+ *    state, when deciding whether a click is still legal.
  *  - `supported`    — whether the API exists at all (older Safari / some mobile
- *    browsers expose no usable fullscreen). The caller hides the prompt entirely
- *    when false rather than showing a dialog whose button cannot work.
+ *    browsers expose no usable fullscreen).
  *  - automatic exit when the assessment is no longer active, so the results
  *    screen and any subsequent navigation return to the normal windowed app.
  */
@@ -26,7 +32,13 @@ type FullscreenCapableDocument = Document & {
   webkitExitFullscreen?: () => Promise<void> | void;
 };
 
-function currentFullscreenElement(): Element | null {
+/**
+ * The element currently filling the screen, through the standard API or the
+ * WebKit-prefixed one. Exported so downstream policy layers (the interview
+ * fullscreen gate, the integrity reporter) test the SAME truth the hook does
+ * instead of re-implementing the fallback chain.
+ */
+export function currentFullscreenElement(): Element | null {
   if (typeof document === "undefined") return null;
   const doc = document as FullscreenCapableDocument;
   return doc.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
@@ -63,6 +75,11 @@ export function useAssessmentFullscreen(
   onUnexpectedExitRef.current = options.onUnexpectedExit;
   const activeRef = useRef(active);
   activeRef.current = active;
+  // One shared in-flight request: a double-click (or a dialog re-confirm racing
+  // a second one) must issue ONE requestFullscreen, and both callers await the
+  // same outcome. Without this, the second call would race the first and the
+  // browser could reject it with TypeError while the first is still pending.
+  const enterRequestRef = useRef<Promise<boolean> | null>(null);
 
   const markIntentional = useCallback(() => {
     intentionalExitRef.current = true;
@@ -84,6 +101,9 @@ export function useAssessmentFullscreen(
       onUnexpectedExitRef.current?.();
     }
 
+    // Both events, always: Safari fires only the webkit-prefixed one, so
+    // listening to the standard event alone would lock the gate's UI state
+    // (and the integrity log) out of every Safari transition.
     document.addEventListener("fullscreenchange", handleChange);
     document.addEventListener("webkitfullscreenchange", handleChange);
     return () => {
@@ -93,6 +113,9 @@ export function useAssessmentFullscreen(
   }, []);
 
   const enter = useCallback(async () => {
+    // Already fullscreen: a granted gate is a granted gate, whoever opened it.
+    if (currentFullscreenElement()) return true;
+    if (enterRequestRef.current) return enterRequestRef.current;
     const root = document.documentElement as FullscreenCapableElement | null;
     if (!root) return false;
     const request = root.requestFullscreen
@@ -101,14 +124,24 @@ export function useAssessmentFullscreen(
         ? () => root.webkitRequestFullscreen?.()
         : null;
     if (!request) return false;
-    try {
-      await request();
-      return true;
-    } catch {
-      // Denied by the browser (no gesture, permissions policy, kiosk rules).
-      // The assessment continues windowed — never block on this.
-      return false;
-    }
+    const pending = (async () => {
+      try {
+        await request();
+        // A resolved promise is NOT proof: some engines resolve before the
+        // transition settles (and a permissions-policy rejection can race the
+        // resolution). Only an element actually in the DOM counts.
+        return Boolean(currentFullscreenElement());
+      } catch {
+        // Denied by the browser (no gesture, permissions policy, kiosk rules).
+        // The CALLER decides what a refusal means — for the interview gate a
+        // denial keeps the session locked; it is never silently windowed.
+        return false;
+      } finally {
+        enterRequestRef.current = null;
+      }
+    })();
+    enterRequestRef.current = pending;
+    return pending;
   }, []);
 
   const exit = useCallback(
@@ -147,9 +180,13 @@ export function useAssessmentFullscreen(
     [exit],
   );
 
+  /** Instant DOM read — see the hook doc for why this must exist beside state. */
+  const isFullscreenNow = useCallback(() => Boolean(currentFullscreenElement()), []);
+
   return {
     supported,
     isFullscreen,
+    isFullscreenNow,
     enter,
     exit,
     /** True while a programmatic exit is in flight — integrity logging guard. */

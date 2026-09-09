@@ -81,6 +81,9 @@ function makeCtx(overrides: Record<string, unknown> = {}) {
     currentQuestion: QUESTION,
     sessionId: "00000000-0000-0000-0000-000000000001",
     chatBridge: { current: liveChat() },
+    // The mandatory fullscreen gate: granted in the default ctx (the transport
+    // tests are not about the gate); the gate-specific suites override it.
+    fullscreenGate: { isFullscreenNow: () => true },
     t: (key: string) => key,
     currentElapsedSeconds: () => 42,
     setTranscript: vi.fn(),

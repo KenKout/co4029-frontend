@@ -116,6 +116,12 @@ export async function handleOnboarding(
   nameOverride?: string,
 ) {
   if (!ctx.sessionId || ctx.onboardingStage === "completed") return;
+  // Mandatory-gate guard: an unexpected fullscreen exit and a click still in
+  // flight can land in the same tick, and readiness `ready` MUST NOT reach the
+  // backend after the gate has locked — the backend then stamps
+  // assessment_started_at for a fresh attempt the candidate cannot see. The
+  // instant DOM check is authoritative; React state can lag a render.
+  if (!ctx.fullscreenGate.isFullscreenNow()) return;
   const naturalText = ctx.answerText.trim();
   const submittedText = resolveSubmittedText(ctx, {
     action,
