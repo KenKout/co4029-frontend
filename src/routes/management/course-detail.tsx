@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
+  useCourseReadiness,
   useCourseRoster,
   useCourseTeachers,
   useDeptCourses,
@@ -63,6 +64,9 @@ export default function DeptCourseDetailPage() {
 
   const teachers = useCourseTeachers(enabled ? courseId : undefined);
   const roster = useCourseRoster(enabled ? courseId : undefined);
+  // Placement count for the Career Paths tab badge. Same queryKey as the
+  // tab's own useCourseReadiness, so this adds no extra request.
+  const readiness = useCourseReadiness(enabled ? courseId : undefined);
 
   const initialTab = resolveInitialTab(tabParam, canDelete);
   const [tab, setTab] = useState<TabKey>(initialTab);
@@ -117,6 +121,7 @@ export default function DeptCourseDetailPage() {
           {
             key: "career-paths" as TabKey,
             label: t("dept_course_detail.tabs.career_paths"),
+            count: readiness.data?.career_paths?.length,
           },
         ]}
       />

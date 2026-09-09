@@ -111,20 +111,6 @@ export function DeptStudentsTab({
 
   return (
     <div className="space-y-4">
-      {canManageEnrollments && (
-        <div className="flex justify-end">
-          <Link
-            to="/management/courses/$courseId/enrollments"
-            params={{ courseId }}
-          >
-            <Button size="sm" className="gap-2">
-              <Users className="h-4 w-4" />
-              {t("dept_course_detail.manage_enrollments")}
-            </Button>
-          </Link>
-        </div>
-      )}
-
       {roster.isLoading ? (
         <PageSkeleton
           rows={4}
@@ -172,6 +158,21 @@ export function DeptStudentsTab({
                     count: rows.length,
                   })}
                 </p>
+                {/* Same line as the search input (was its own row above the
+                    table); pushed right so search/selection stays left. The
+                    empty roster case keeps its inline link in EmptyStudents. */}
+                {canManageEnrollments && (
+                  <Link
+                    to="/management/courses/$courseId/enrollments"
+                    params={{ courseId }}
+                    className="ml-auto"
+                  >
+                    <Button size="sm" className="gap-2">
+                      <Users className="h-4 w-4" />
+                      {t("dept_course_detail.manage_enrollments")}
+                    </Button>
+                  </Link>
+                )}
               </div>
             ) : undefined
           }
