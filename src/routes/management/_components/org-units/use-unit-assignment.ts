@@ -8,6 +8,8 @@ import {
 } from "@/lib/api/hooks/admin-organizations";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
 import { apiPost } from "@/lib/api/client";
+import { useDeptCourses } from "@/lib/api/hooks/dept";
+import { useManagedLearningPrograms } from "@/lib/api/hooks/learning-programs";
 import type { RoleAssignmentRead } from "@/lib/api/types";
 
 export interface UnitPerson {
@@ -37,18 +39,10 @@ export function useUnitAssignment(
     [memberships.data],
   );
   const users = useUsersByIds(activeMemberships.map((row) => row.user_id));
-  const usersById = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        profile?: { display_name?: string | null } | null;
-        primary_email?: string;
-        roles?: string[];
-      }
-    >();
-    for (const user of users.data ?? []) map.set(user.id, user);
-    return map;
-  }, [users.data]);
+  const usersById = useMemo(
+    () => indexUsersById(users.data),
+    [users.data],
+  );
 
   const facultyIdsByUser = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -192,8 +186,44 @@ export function useUnitAssignment(
   };
 }
 
+
+type ManagedUser = {
+  id: string;
+  profile?: { display_name?: string | null } | null;
+  primary_email?: string;
+  roles?: string[];
+};
+
+function indexUsersById(
+  users: ManagedUser[] | undefined,
+): Map<
+  string,
+  {
+    profile?: { display_name?: string | null } | null;
+    primary_email?: string;
+    roles?: string[];
+  }
+> {
+  const map = new Map<
+    string,
+    {
+      profile?: { display_name?: string | null } | null;
+      primary_email?: string;
+      roles?: string[];
+    }
+  >();
+  for (const user of users ?? []) map.set(user.id, user);
+  return map;
+}
+
 export function useUnitCounts(orgId: string | undefined) {
   const assignments = useFacultyAssignments(orgId);
+  // Courses + programs are grouped by their owning faculty. The dept course
+  // list is already the caller's staffing scope (the same list the Courses
+  // page renders), and the program list is org-wide — both cheap, both
+  // already in the react-query cache on this page's neighbours.
+  const courses = useDeptCourses();
+  const programs = useManagedLearningPrograms(orgId);
   const peopleCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const row of assignments.data ?? []) {
@@ -201,7 +231,28 @@ export function useUnitCounts(orgId: string | undefined) {
     }
     return counts;
   }, [assignments.data]);
-  return { peopleCounts, courseCounts: new Map<string, number>() };
+  const courseCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const course of courses.data ?? []) {
+      if (!course.faculty_id) continue;
+      counts.set(
+        course.faculty_id,
+        (counts.get(course.faculty_id) ?? 0) + 1,
+      );
+    }
+    return counts;
+  }, [courses.data]);
+  const programCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const program of programs.data ?? []) {
+      counts.set(
+        program.faculty_id,
+        (counts.get(program.faculty_id) ?? 0) + 1,
+      );
+    }
+    return counts;
+  }, [programs.data]);
+  return { peopleCounts, courseCounts, programCounts };
 }
 
 function messageOf(error: unknown): string {

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useFormatDate } from "@/lib/format/date";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { collectTreeIds, filterTree } from "@/lib/tree-filter";
@@ -31,6 +32,8 @@ export interface OrgUnitTableProps {
   courseCounts?: Map<string, number>;
   /** `{unitId: count}` for the People column. Omit to hide the column. */
   peopleCounts?: Map<string, number>;
+  /** `{unitId: count}` for the Programs column. Omit to hide the column. */
+  programCounts?: Map<string, number>;
   emptyState?: ReactNode;
   loading?: boolean;
 }
@@ -42,10 +45,12 @@ export function OrgUnitTable({
   actions,
   courseCounts,
   peopleCounts,
+  programCounts,
   emptyState,
   loading,
 }: OrgUnitTableProps) {
   const { t } = useTranslation();
+  const formatDate = useFormatDate();
   const [query, setQuery] = useState("");
   const prefix = "management_org_units";
 
@@ -88,19 +93,6 @@ export function OrgUnitTable({
           </div>
         ),
       },
-      {
-        id: "type",
-        header: t(`${prefix}.col_type`),
-        sortable: true,
-        sortValue: (n) => n.unit_type,
-        cell: (n) => (
-          <span className="inline-flex items-center rounded-full bg-m3-surface-container px-2.5 py-1 text-xs text-m3-on-surface-variant">
-            {t(`${prefix}.unit_types.${n.unit_type}`, {
-              defaultValue: n.unit_type,
-            })}
-          </span>
-        ),
-      },
     ];
     if (courseCounts) {
       cols.push({
@@ -122,8 +114,30 @@ export function OrgUnitTable({
         cell: (n) => <Count value={peopleCounts.get(n.id) ?? 0} warnOnZero />,
       });
     }
+    if (programCounts) {
+      cols.push({
+        id: "programs",
+        header: t(`${prefix}.col_programs`),
+        align: "left",
+        sortable: true,
+        sortValue: (n) => programCounts.get(n.id) ?? 0,
+        cell: (n) => <Count value={programCounts.get(n.id) ?? 0} />,
+      });
+    }
+    cols.push({
+      id: "created_at",
+      header: t(`${prefix}.col_created`),
+      align: "left",
+      sortable: true,
+      sortValue: (n) => n.created_at,
+      cell: (n) => (
+        <span className="whitespace-nowrap text-xs text-text-muted">
+          {formatDate(n.created_at)}
+        </span>
+      ),
+    });
     return cols;
-  }, [t, courseCounts, peopleCounts]);
+  }, [t, courseCounts, peopleCounts, programCounts, formatDate]);
 
   return (
     <DataTable

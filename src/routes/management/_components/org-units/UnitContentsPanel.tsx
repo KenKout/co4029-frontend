@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, ShieldPlus, User, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { GraduationCap, Plus, ShieldPlus, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
+import { useManagedLearningPrograms } from "@/lib/api/hooks/learning-programs";
 import { useUnitAssignment, type UnitPerson } from "./use-unit-assignment";
 import { AddPeopleDialog } from "./AddPeopleDialog";
 import { AppointDeanDialog } from "./AppointDeanDialog";
@@ -26,6 +28,18 @@ export function UnitContentsPanel({
   const [addingPeople, setAddingPeople] = useState(false);
   const [appointingDean, setAppointingDean] = useState(false);
   const prefix = "management_org_units";
+
+  // Programs owned by this faculty, newest first — the side section mirrors
+  // the people view so a faculty reads as one place: who is in it AND what
+  // it runs.
+  const programs = useManagedLearningPrograms(orgId);
+  const unitPrograms = useMemo(
+    () =>
+      (programs.data ?? [])
+        .filter((p) => p.faculty_id === unit.id)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    [programs.data, unit.id],
+  );
 
   return (
     <div className="space-y-5">
@@ -78,6 +92,38 @@ export function UnitContentsPanel({
           {assignments.peopleInUnit.length === 0 ? (
             <li className="py-2 text-xs text-text-muted">
               {t(`${prefix}.no_people_in_unit`)}
+            </li>
+          ) : null}
+        </ul>
+      </section>
+
+      <section>
+        <div className="flex items-center gap-2 border-b border-border pb-1.5">
+          <GraduationCap className="h-4 w-4 text-m3-primary" />
+          <span className="flex-1 text-xs font-semibold text-text-strong">
+            {t(`${prefix}.programs_in_unit`, { count: unitPrograms.length })}
+          </span>
+        </div>
+        <ul className="mt-2 space-y-1">
+          {unitPrograms.map((program) => (
+            <li key={program.id}>
+              <Link
+                to="/management/learning-programs/$id"
+                params={{ id: program.id }}
+                className="flex items-center gap-2 rounded px-1 py-1 hover:bg-m3-surface-container-low"
+              >
+                <span className="min-w-0 flex-1 truncate text-xs text-text-strong">
+                  {program.name}
+                </span>
+                <span className="shrink-0 text-[10px] uppercase tracking-wider text-m3-on-surface-variant">
+                  {program.status}
+                </span>
+              </Link>
+            </li>
+          ))}
+          {unitPrograms.length === 0 ? (
+            <li className="py-2 text-xs text-text-muted">
+              {t(`${prefix}.no_programs_in_unit`)}
             </li>
           ) : null}
         </ul>

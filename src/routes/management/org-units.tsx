@@ -14,13 +14,58 @@ import { UnitFormDialog } from "./_components/org-units/UnitFormDialog";
 import { UnitContentsPanel } from "./_components/org-units/UnitContentsPanel";
 import { useUnitCounts } from "./_components/org-units/use-unit-assignment";
 import { flattenOrgUnits } from "@/lib/org-unit-tree-helpers";
+import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
+
+/** Edit/delete row actions for one Faculty (master-dean only). */
+function UnitRowActions({
+  node,
+  t,
+  onEdit,
+  onDelete,
+}: {
+  node: OrgUnitNode;
+  t: ReturnType<typeof useTranslation>["t"];
+  onEdit: (node: OrgUnitNode) => void;
+  onDelete: (node: OrgUnitNode) => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 w-7 p-0"
+        title={t("common.edit")}
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit(node);
+        }}
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+        title={t("common.delete")}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(node);
+        }}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
 
 /** Top-level Faculty management and multi-Faculty staff affiliation. */
 export default function ManagementOrgUnitsPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const c = useOrgUnitsPage();
-  const { peopleCounts } = useUnitCounts(c.orgId);
+  const { peopleCounts, courseCounts, programCounts } = useUnitCounts(
+    c.orgId,
+  );
   // Flat id → name map so a picker can show a person's other faculties.
   const unitsById = useMemo(
     () => new Map(flattenOrgUnits(c.nodes).map((u) => [u.id, u.name])),
@@ -63,37 +108,19 @@ export default function ManagementOrgUnitsPage() {
               nodes={c.nodes}
               selectedId={c.selectedId}
               onSelect={(node) => c.setSelectedId(node.id)}
+              courseCounts={courseCounts}
               peopleCounts={peopleCounts}
+              programCounts={programCounts}
               emptyState={t(`${prefix}.empty_title`)}
               actions={
                 c.isMasterDean
                   ? (node) => (
-                      <div className="flex items-center gap-0.5">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    title={t("common.edit")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      c.openEdit(node);
-                    }}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                    title={t("common.delete")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      c.setPendingDelete(node);
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                      </div>
+                      <UnitRowActions
+                        node={node}
+                        t={t}
+                        onEdit={c.openEdit}
+                        onDelete={c.setPendingDelete}
+                      />
                     )
                   : undefined
               }
