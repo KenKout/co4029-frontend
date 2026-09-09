@@ -762,6 +762,13 @@
     "col_student": "Sinh viên",
     "col_status": "Trạng thái",
     "col_enrolled": "Ngày đăng ký",
+    "col_completed": "Hoàn thành",
+    "dropped_on": "Đã bỏ học {{date}}",
+    "status_filter": {
+      "all": "Tất cả",
+      "in_progress": "Đang học",
+      "aria": "Lọc sinh viên theo trạng thái ghi danh"
+    },
     "teacher_count_one": "{{count}} giảng viên",
     "teacher_count_other": "{{count}} giảng viên",
     "student_count_one": "{{count}} sinh viên",

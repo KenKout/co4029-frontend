@@ -833,6 +833,13 @@
     "col_student": "Student",
     "col_status": "Status",
     "col_enrolled": "Enrolled",
+    "col_completed": "Completed",
+    "dropped_on": "Dropped {{date}}",
+    "status_filter": {
+      "all": "All",
+      "in_progress": "In progress",
+      "aria": "Filter students by enrollment status"
+    },
     "teacher_count_one": "{{count}} instructor",
     "teacher_count_other": "{{count}} instructors",
     "student_count_one": "{{count}} student",

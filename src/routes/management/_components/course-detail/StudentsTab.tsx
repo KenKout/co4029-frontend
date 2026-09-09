@@ -6,11 +6,37 @@ import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { CourseEnrollmentStatusBadge } from "@/components/ui/status-badges";
 import { useFormatDate } from "@/lib/format/date";
 import type { RosterEntry } from "@/lib/api/types";
 import { StudentIdentityCell } from "./StudentRow";
 import type { ListQueryState } from "./types";
+
+type EnrollmentStatusFilter =
+  | "all"
+  | "active"
+  | "completed"
+  | "dropped"
+  | "waitlisted";
+
+const STATUS_FILTER_OPTIONS: { key: EnrollmentStatusFilter; i18nKey: string }[] =
+  [
+    { key: "all", i18nKey: "dept_course_detail.status_filter.all" },
+    { key: "active", i18nKey: "dept_course_detail.status_filter.in_progress" },
+    {
+      key: "completed",
+      i18nKey: "dept_course_detail.enrollment_status.completed",
+    },
+    {
+      key: "dropped",
+      i18nKey: "dept_course_detail.enrollment_status.dropped",
+    },
+    {
+      key: "waitlisted",
+      i18nKey: "dept_course_detail.enrollment_status.waitlisted",
+    },
+  ];
 
 /**
  * Roster tab — read-only view of who is enrolled; all mutation lives on
@@ -49,6 +75,73 @@ function EmptyStudents({
   );
 }
 
+/** Search + count + manage button (one line) over the status segmented filter. */
+function RosterToolbar({
+  query,
+  onQueryChange,
+  visibleCount,
+  canManageEnrollments,
+  courseId,
+  statusFilter,
+  onStatusFilterChange,
+  statusCounts,
+}: {
+  query: string;
+  onQueryChange: (q: string) => void;
+  visibleCount: number;
+  canManageEnrollments: boolean;
+  courseId: string;
+  statusFilter: EnrollmentStatusFilter;
+  onStatusFilterChange: (f: EnrollmentStatusFilter) => void;
+  statusCounts: Record<EnrollmentStatusFilter, number>;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          onClear={query ? () => onQueryChange("") : undefined}
+          placeholder={t("dept_course_detail.search_students")}
+          wrapperClassName="w-full sm:w-72"
+          aria-label={t("dept_course_detail.search_students")}
+        />
+        <p className="text-xs text-text-muted">
+          {t("dept_course_detail.student_count", { count: visibleCount })}
+        </p>
+        {/* Same line as the search input (was its own row above the table);
+            pushed right so search/selection stays left. The empty roster case
+            keeps its inline link in EmptyStudents. */}
+        {canManageEnrollments && (
+          <Link
+            to="/management/courses/$courseId/enrollments"
+            params={{ courseId }}
+            className="ml-auto"
+          >
+            <Button size="sm" className="gap-2">
+              <Users className="h-4 w-4" />
+              {t("dept_course_detail.manage_enrollments")}
+            </Button>
+          </Link>
+        )}
+      </div>
+      {/* Status filter — same vocabulary as the teacher course-students page;
+          "In progress" = enrollment active. */}
+      <SegmentedFilter
+        ariaLabel={t("dept_course_detail.status_filter.aria")}
+        value={statusFilter}
+        onChange={onStatusFilterChange}
+        options={STATUS_FILTER_OPTIONS.map((f) => ({
+          key: f.key,
+          label: t(f.i18nKey),
+          count: statusCounts[f.key],
+        }))}
+      />
+    </div>
+  );
+}
+
 export function DeptStudentsTab({
   active,
   roster,
@@ -63,17 +156,36 @@ export function DeptStudentsTab({
   const { t } = useTranslation();
   const formatDate = useFormatDate();
   const [query, setQuery] = useState("");
+  // Completed/dropped students ARE in the roster payload (the endpoint does
+  // not filter by status) — they were only indistinguishable. This filter is
+  // the same vocabulary as the teacher course-students page.
+  const [statusFilter, setStatusFilter] = useState<EnrollmentStatusFilter>("all");
+
+  const statusCounts = useMemo(() => {
+    const all = roster.data ?? [];
+    return {
+      all: all.length,
+      active: all.filter((e) => e.status === "active").length,
+      completed: all.filter((e) => e.status === "completed").length,
+      dropped: all.filter((e) => e.status === "dropped").length,
+      waitlisted: all.filter((e) => e.status === "waitlisted").length,
+    };
+  }, [roster.data]);
 
   const rows = useMemo(() => {
     const all = roster.data ?? [];
+    const byStatus =
+      statusFilter === "all"
+        ? all
+        : all.filter((e) => e.status === statusFilter);
     const q = query.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter((e) =>
+    if (!q) return byStatus;
+    return byStatus.filter((e) =>
       [e.display_name, e.primary_email]
         .filter(Boolean)
         .some((s) => (s as string).toLowerCase().includes(q)),
     );
-  }, [roster.data, query]);
+  }, [roster.data, query, statusFilter]);
 
   const columns: DataTableColumn<RosterEntry>[] = useMemo(
     () => [
@@ -90,6 +202,27 @@ export function DeptStudentsTab({
         sortable: true,
         sortValue: (e) => e.status,
         cell: (e) => <CourseEnrollmentStatusBadge status={e.status} />,
+      },
+      {
+        // The terminal dates the payload already carries: when the student
+        // completed the course (and, for drops, when they left). Em dash when
+        // not applicable — no date is information, not missing data.
+        id: "completed_at",
+        header: t("dept_course_detail.col_completed"),
+        sortable: true,
+        sortValue: (e) => e.completed_at ?? "",
+        align: "right",
+        cell: (e) => (
+          <span className="text-xs text-text-muted whitespace-nowrap">
+            {e.completed_at
+              ? formatDate(e.completed_at)
+              : e.dropped_at
+                ? t("dept_course_detail.dropped_on", {
+                    date: formatDate(e.dropped_at),
+                  })
+                : "—"}
+          </span>
+        ),
       },
       {
         id: "enrolled_at",
@@ -144,36 +277,16 @@ export function DeptStudentsTab({
           }
           toolbar={
             (roster.data ?? []).length > 0 ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <SearchInput
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onClear={query ? () => setQuery("") : undefined}
-                  placeholder={t("dept_course_detail.search_students")}
-                  wrapperClassName="w-full sm:w-72"
-                  aria-label={t("dept_course_detail.search_students")}
-                />
-                <p className="text-xs text-text-muted">
-                  {t("dept_course_detail.student_count", {
-                    count: rows.length,
-                  })}
-                </p>
-                {/* Same line as the search input (was its own row above the
-                    table); pushed right so search/selection stays left. The
-                    empty roster case keeps its inline link in EmptyStudents. */}
-                {canManageEnrollments && (
-                  <Link
-                    to="/management/courses/$courseId/enrollments"
-                    params={{ courseId }}
-                    className="ml-auto"
-                  >
-                    <Button size="sm" className="gap-2">
-                      <Users className="h-4 w-4" />
-                      {t("dept_course_detail.manage_enrollments")}
-                    </Button>
-                  </Link>
-                )}
-              </div>
+              <RosterToolbar
+                query={query}
+                onQueryChange={setQuery}
+                visibleCount={rows.length}
+                canManageEnrollments={canManageEnrollments}
+                courseId={courseId}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                statusCounts={statusCounts}
+              />
             ) : undefined
           }
         />
