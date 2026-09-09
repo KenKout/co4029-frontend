@@ -78,7 +78,7 @@ export function OutcomeRow({
         <Button variant="ghost"
           type="button"
           onClick={() => setEditingId(outcome.id)}
-          className="flex-1 truncate text-left text-sm text-m3-on-surface leading-relaxed hover:text-m3-on-surface-variant"
+          className="flex-1 justify-start truncate text-left text-sm text-m3-on-surface leading-relaxed hover:text-m3-on-surface-variant"
           title={t("teacher_outcomes.click_to_edit", "Click to edit")}
         >
           {outcome.outcome_text}
