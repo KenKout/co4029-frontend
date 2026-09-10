@@ -184,9 +184,16 @@ export interface SettingsDraft {
   rubric_criteria: RubricCriterion[];
   security_response_policy: SecurityResponsePolicy;
   security_max_consecutive_attempts: string;
+  // Single-source custom refusal (served verbatim for BOTH session languages;
+  // the per-language textarea was removed — decision 2026-09-10).
   security_custom_refusal_en: string;
-  security_custom_refusal_vi: string;
   security_incident_summary_enabled: boolean;
+  // Browser-integrity weights (server-scored) + the flag/warning threshold.
+  // String-based like every numeric knob so a half-typed input doesn't fight.
+  integrity_weight_tab_switch: string;
+  integrity_weight_focus_lost: string;
+  integrity_weight_fullscreen_exit: string;
+  integrity_score_threshold: string;
   // Optional per-trait persona overrides (Phase 3). Empty object = no override
   // (use the persona preset as-is). Each trait 0-4; opening_style optional.
   persona_profile: PersonaProfileOverride;

@@ -32,8 +32,11 @@ const DRAFT = {
   security_response_policy: "warn" as const,
   security_max_consecutive_attempts: "3",
   security_custom_refusal_en: "",
-  security_custom_refusal_vi: "",
   security_incident_summary_enabled: true,
+  integrity_weight_tab_switch: "3",
+  integrity_weight_focus_lost: "1",
+  integrity_weight_fullscreen_exit: "2",
+  integrity_score_threshold: "3",
   persona_profile: {},
 };
 

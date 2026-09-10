@@ -30,6 +30,88 @@ const SELECTABLE_POLICIES: readonly SecurityResponsePolicy[] = [
   "warn_and_continue",
 ];
 
+/** The browser-integrity weight policy block (authoring + formula preview). */
+function IntegrityWeightPolicy({
+  draft,
+  update,
+  lock,
+}: Omit<SettingsFieldsetProps, "status" | "frozenReason">) {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+        {t("teacher_interview_config.security.integrity_policy.title")}
+      </p>
+      <p className="mt-1 text-xs text-m3-on-surface-variant">
+        {t("teacher_interview_config.security.integrity_policy.description")}
+      </p>
+      <div className="mt-3 grid gap-4 sm:grid-cols-2">
+        <Field
+          label={t("teacher_interview_config.security.integrity_policy.tab_switch")}
+          {...lock("integrity_weight_tab_switch")}
+        >
+          <Input
+            type="number"
+            min={1}
+            max={5}
+            value={draft.integrity_weight_tab_switch}
+            onChange={(e) => update("integrity_weight_tab_switch", e.target.value)}
+          />
+        </Field>
+        <Field
+          label={t("teacher_interview_config.security.integrity_policy.focus_lost")}
+          {...lock("integrity_weight_focus_lost")}
+        >
+          <Input
+            type="number"
+            min={1}
+            max={5}
+            value={draft.integrity_weight_focus_lost}
+            onChange={(e) => update("integrity_weight_focus_lost", e.target.value)}
+          />
+        </Field>
+        <Field
+          label={t("teacher_interview_config.security.integrity_policy.fullscreen_exit")}
+          {...lock("integrity_weight_fullscreen_exit")}
+        >
+          <Input
+            type="number"
+            min={1}
+            max={5}
+            value={draft.integrity_weight_fullscreen_exit}
+            onChange={(e) =>
+              update("integrity_weight_fullscreen_exit", e.target.value)
+            }
+          />
+        </Field>
+        <Field
+          label={t("teacher_interview_config.security.integrity_policy.threshold")}
+          {...lock("integrity_score_threshold")}
+        >
+          <Input
+            type="number"
+            min={1}
+            max={20}
+            value={draft.integrity_score_threshold}
+            onChange={(e) => update("integrity_score_threshold", e.target.value)}
+          />
+        </Field>
+      </div>
+      <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+        {t("teacher_interview_config.security.integrity_policy.formula", {
+          tab: draft.integrity_weight_tab_switch || "3",
+          focus: draft.integrity_weight_focus_lost || "1",
+          exit: draft.integrity_weight_fullscreen_exit || "2",
+          threshold: draft.integrity_score_threshold || "3",
+        })}
+      </p>
+      <p className="mt-2 text-[11px] text-m3-on-surface-variant">
+        {t("teacher_interview_config.security.integrity_policy.behavior_notice")}
+      </p>
+    </div>
+  );
+}
+
 export function SettingsSecurityCard({
   draft,
   update,
@@ -123,42 +205,28 @@ export function SettingsSecurityCard({
               </Field>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field
-                label={t("teacher_interview_config.security.custom_en")}
-                {...lock("security_custom_refusal_en")}
-              >
-                <Textarea
-                  rows={3}
-                  maxLength={500}
-                  value={draft.security_custom_refusal_en}
-                  onChange={(e) =>
-                    update("security_custom_refusal_en", e.target.value)
-                  }
-                />
-                <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                  {draft.security_custom_refusal_en.trim() ||
-                    t("teacher_interview_config.security.preview_en")}
-                </p>
-              </Field>
-              <Field
-                label={t("teacher_interview_config.security.custom_vi")}
-                {...lock("security_custom_refusal_vi")}
-              >
-                <Textarea
-                  rows={3}
-                  maxLength={500}
-                  value={draft.security_custom_refusal_vi}
-                  onChange={(e) =>
-                    update("security_custom_refusal_vi", e.target.value)
-                  }
-                />
-                <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
-                  {draft.security_custom_refusal_vi.trim() ||
-                    t("teacher_interview_config.security.preview_vi")}
-                </p>
-              </Field>
-            </div>
+            <IntegrityWeightPolicy draft={draft} update={update} lock={lock} />
+
+            <Field
+              label={t("teacher_interview_config.security.custom_en")}
+              {...lock("security_custom_refusal_en")}
+            >
+              <Textarea
+                rows={3}
+                maxLength={500}
+                value={draft.security_custom_refusal_en}
+                onChange={(e) =>
+                  update("security_custom_refusal_en", e.target.value)
+                }
+              />
+              <p className="mt-2 rounded-lg bg-m3-surface-container px-3 py-2 text-xs text-m3-on-surface-variant">
+                {draft.security_custom_refusal_en.trim() ||
+                  t("teacher_interview_config.security.preview_en")}
+              </p>
+              <p className="mt-2 text-[11px] text-m3-on-surface-variant">
+                {t("teacher_interview_config.security.custom_language_note")}
+              </p>
+            </Field>
             <p className="text-[11px] text-m3-on-surface-variant">
               {t("teacher_interview_config.security.custom_scope_hint")}
             </p>

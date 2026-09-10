@@ -16,6 +16,11 @@
  * interview runs, or by ``services/evaluation.py`` when it is graded — changing
  * one mid-cohort means two students sit "the same" interview under different
  * rules. Unpublishing lifts every restriction.
+ *
+ * The browser-integrity policy (`integrity_weight_*` + `integrity_score_threshold`)
+ * is score-affecting and therefore frozen by the whitelist — and its values are
+ * SNAPSHOTTED onto each session at start (migration 0113), so even an
+ * out-of-band config edit cannot re-score a live attempt.
  */
 
 /**

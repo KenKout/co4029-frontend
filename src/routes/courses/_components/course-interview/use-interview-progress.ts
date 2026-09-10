@@ -131,6 +131,16 @@ export function useInterviewProgress(
     });
   }, [t]);
 
+  // Server-authoritative threshold warning (decision 2026-09-10): the ingest
+  // response reports `warning_issued` exactly once per session, so this shows
+  // the policy-level warning the lobby card promised — no local throttle
+  // needed, the one-shot flag lives on the server row.
+  const handleIntegrityThreshold = useCallback(() => {
+    toast.warning(t("course_interview.integrity_threshold_warning.title"), {
+      description: t("course_interview.integrity_threshold_warning.body"),
+    });
+  }, [t]);
+
   // ── Mandatory fullscreen gate ──────────────────────────────────────────────
   // A live session runs fullscreen with the app sidebar unmounted, and the
   // gate is HARD: while the session is active but the browser is not
@@ -161,6 +171,7 @@ export function useInterviewProgress(
   // the assessment ends. Recording during the live session is unchanged.
   useIntegrityReporter(interviewActive ? sessionId : null, {
     onWarning: handleIntegrityWarning,
+    onThresholdWarning: handleIntegrityThreshold,
   });
   // The mandatory gate (locked-until-granted policy, request state, exit
   // count) — replaces the old deterrent. Mounted on EVERY render while active

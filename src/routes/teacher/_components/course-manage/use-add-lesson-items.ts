@@ -102,6 +102,10 @@ export function useAddLessonItems(options: {
         title: interviewTitle.trim(),
         security_response_policy: "warn_and_continue",
         security_max_consecutive_attempts: 3,
+        integrity_weight_tab_switch: 3,
+        integrity_weight_focus_lost: 1,
+        integrity_weight_fullscreen_exit: 2,
+        integrity_score_threshold: 3,
         security_incident_summary_enabled: true,
       });
       setInterviewModalOpen(false);

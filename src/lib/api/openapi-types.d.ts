@@ -9155,6 +9155,19 @@ export interface components {
             /** Events */
             events: components["schemas"]["IntegrityEventItem"][];
         };
+        IntegrityEventBatchResponse: {
+            /** Accepted */
+            accepted: number;
+            /**
+             * Integrity Score
+             * @description Running weighted browser-signal score after this batch.
+             */
+            integrity_score: number;
+            /** Integrity Score Threshold */
+            integrity_score_threshold?: number;
+            /** Warning Issued */
+            warning_issued?: boolean;
+        };
         /** IntegrityEventItem */
         IntegrityEventItem: {
             /**
@@ -9247,8 +9260,30 @@ export interface components {
             security_max_consecutive_attempts: number;
             /** Security Custom Refusal En */
             security_custom_refusal_en?: string | null;
-            /** Security Custom Refusal Vi */
-            security_custom_refusal_vi?: string | null;
+            /**
+             * Integrity Weight Tab Switch
+             * @description Browser-integrity weight for tab_switch signals (1-5).
+             * @default 3
+             */
+            integrity_weight_tab_switch: number;
+            /**
+             * Integrity Weight Focus Lost
+             * @description Browser-integrity weight for focus_lost signals (1-5).
+             * @default 1
+             */
+            integrity_weight_focus_lost: number;
+            /**
+             * Integrity Weight Fullscreen Exit
+             * @description Browser-integrity weight for fullscreen_exit signals (1-5).
+             * @default 2
+             */
+            integrity_weight_fullscreen_exit: number;
+            /**
+             * Integrity Score Threshold
+             * @description Weighted browser-signal score at which the session is flagged (1-20).
+             * @default 3
+             */
+            integrity_score_threshold: number;
             /**
              * Security Incident Summary Enabled
              * @default true
@@ -9334,8 +9369,30 @@ export interface components {
             security_max_consecutive_attempts: number;
             /** Security Custom Refusal En */
             security_custom_refusal_en?: string | null;
-            /** Security Custom Refusal Vi */
-            security_custom_refusal_vi?: string | null;
+            /**
+             * Integrity Weight Tab Switch
+             * @description Browser-integrity weight for tab_switch signals (1-5).
+             * @default 3
+             */
+            integrity_weight_tab_switch: number;
+            /**
+             * Integrity Weight Focus Lost
+             * @description Browser-integrity weight for focus_lost signals (1-5).
+             * @default 1
+             */
+            integrity_weight_focus_lost: number;
+            /**
+             * Integrity Weight Fullscreen Exit
+             * @description Browser-integrity weight for fullscreen_exit signals (1-5).
+             * @default 2
+             */
+            integrity_weight_fullscreen_exit: number;
+            /**
+             * Integrity Score Threshold
+             * @description Weighted browser-signal score at which the session is flagged (1-20).
+             * @default 3
+             */
+            integrity_score_threshold: number;
             /**
              * Security Incident Summary Enabled
              * @default true
@@ -9407,6 +9464,30 @@ export interface components {
              * @default 3
              */
             max_hints_per_question?: number;
+            /**
+             * Integrity Weight Tab Switch
+             * @description Browser-integrity weight for tab_switch signals (1-5). Safe pre-start disclosure.
+             * @default 3
+             */
+            integrity_weight_tab_switch: number;
+            /**
+             * Integrity Weight Focus Lost
+             * @description Browser-integrity weight for focus_lost signals (1-5). Safe pre-start disclosure.
+             * @default 1
+             */
+            integrity_weight_focus_lost: number;
+            /**
+             * Integrity Weight Fullscreen Exit
+             * @description Browser-integrity weight for fullscreen_exit signals (1-5). Safe pre-start disclosure.
+             * @default 2
+             */
+            integrity_weight_fullscreen_exit: number;
+            /**
+             * Integrity Score Threshold
+             * @description Weighted browser-signal score at which the session is flagged and the learner warned (1-20).
+             * @default 3
+             */
+            integrity_score_threshold: number;
             /** Lock Quiz Ef Until Pass */
             /** Published At */
             published_at?: string | null;
@@ -9449,8 +9530,30 @@ export interface components {
             security_max_consecutive_attempts?: number | null;
             /** Security Custom Refusal En */
             security_custom_refusal_en?: string | null;
-            /** Security Custom Refusal Vi */
-            security_custom_refusal_vi?: string | null;
+            /**
+             * Integrity Weight Tab Switch
+             * @description Browser-integrity weight for tab_switch signals (1-5).
+             * @default 3
+             */
+            integrity_weight_tab_switch: number | null;
+            /**
+             * Integrity Weight Focus Lost
+             * @description Browser-integrity weight for focus_lost signals (1-5).
+             * @default 1
+             */
+            integrity_weight_focus_lost: number | null;
+            /**
+             * Integrity Weight Fullscreen Exit
+             * @description Browser-integrity weight for fullscreen_exit signals (1-5).
+             * @default 2
+             */
+            integrity_weight_fullscreen_exit: number | null;
+            /**
+             * Integrity Score Threshold
+             * @description Weighted browser-signal score at which the session is flagged (1-20).
+             * @default 3
+             */
+            integrity_score_threshold: number | null;
             /** Security Incident Summary Enabled */
             security_incident_summary_enabled?: boolean | null;
         };
@@ -23296,9 +23399,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: number;
-                    };
+                    "application/json": components["schemas"]["IntegrityEventBatchResponse"];
                 };
             };
             /** @description Validation Error */

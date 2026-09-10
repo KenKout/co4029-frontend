@@ -3443,6 +3443,20 @@
     },
     "voice": {
       "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
+    },
+    "integrity_threshold_warning": {
+      "title": "Đã ghi nhận cảnh báo toàn vẹn",
+      "body": "Hoạt động trình duyệt của bạn đã đạt ngưỡng cảnh báo của buổi phỏng vấn này. Lượt làm bài được đánh dấu để giáo viên xem lại — buổi phỏng vấn vẫn tiếp tục; hãy giữ chế độ toàn màn hình."
+    },
+    "integrity_policy_card": {
+      "title": "Chính sách hoạt động trình duyệt",
+      "description": "Trong buổi phỏng vấn, trình duyệt báo các tín hiệu dưới đây. Máy chủ cộng điểm và khi đạt ngưỡng sẽ ghi nhận đúng một cảnh báo để giáo viên xem lại. Buổi phỏng vấn vẫn tiếp tục.",
+      "rule_tab_switch": "Chuyển tab",
+      "rule_focus_lost": "Mất tiêu điểm",
+      "rule_fullscreen_exit": "Thoát toàn màn hình",
+      "rule_threshold": "Ngưỡng cảnh báo",
+      "points": "{{points}} điểm",
+      "behavior": "Đạt {{threshold}} điểm: ghi nhận một cảnh báo và đánh dấu lượt làm bài để giáo viên xem lại — buổi phỏng vấn vẫn tiếp tục."
     }
   },
   "management_career_path_detail": {
@@ -4678,13 +4692,22 @@
         "end_and_flag": "Kết thúc và gắn cờ (không còn khả dụng)"
       },
       "custom_en": "Lời từ chối an toàn tùy chỉnh (tiếng Anh)",
-      "custom_vi": "Lời từ chối an toàn tùy chỉnh (tiếng Việt)",
       "custom_scope_hint": "Chỉ dùng cho lần từ chối đầu tiên. Từ lần thử lặp lại thứ hai, hệ thống chuyển sang câu cảnh báo cố định (có nêu việc ghi nhận để xem xét bảo mật) nên nội dung tùy chỉnh sẽ không hiển thị.",
       "preview_en": "I can’t provide hidden interview questions, answers, or grading criteria. I can repeat or clarify the current question.",
-      "preview_vi": "Tôi không thể cung cấp các câu hỏi chưa được hỏi, đáp án hoặc tiêu chí chấm điểm. Tôi có thể nhắc lại hoặc giải thích câu hỏi hiện tại.",
       "incident_summary": "Gửi giáo viên báo cáo sự cố bảo mật",
       "incident_summary_description": "Chỉ hiển thị số lượng, danh mục, fallback và độ trễ đã biên tập; không kèm câu trả lời của sinh viên.",
-      "rules_hidden": "Quy tắc phát hiện do nền tảng quản lý và cố ý không hiển thị. Giáo viên không thể tắt các lớp bảo vệ cốt lõi."
+      "rules_hidden": "Quy tắc phát hiện do nền tảng quản lý và cố ý không hiển thị. Giáo viên không thể tắt các lớp bảo vệ cốt lõi.",
+      "custom_language_note": "Buổi phỏng vấn bằng tiếng Việt vẫn nhận nguyên văn nội dung này — phần hỏi đáp có thể được dịch, nhưng lời từ chối thì giữ nguyên. Để trống để dùng lời từ chối mặc định của nền tảng theo ngôn ngữ phiên.",
+      "integrity_policy": {
+        "title": "Cấu hình điểm toàn vẹn trình duyệt",
+        "description": "Mỗi tín hiệu dưới đây cộng điểm trong suốt buổi phỏng vấn. Hệ thống cộng dồn theo từng lượt làm bài trên máy chủ.",
+        "tab_switch": "Chuyển tab",
+        "focus_lost": "Mất tiêu điểm",
+        "fullscreen_exit": "Thoát toàn màn hình",
+        "threshold": "Ngưỡng cảnh báo (tổng điểm)",
+        "formula": "Điểm mỗi lượt: chuyển tab {{tab}} + mất tiêu điểm {{focus}} + thoát toàn màn hình {{exit}} — cảnh báo khi đạt {{threshold}}.",
+        "behavior_notice": "Đạt ngưỡng sẽ đánh dấu lượt làm bài để giáo viên xem lại và hiện một cảnh báo cho học viên; buổi phỏng vấn vẫn tiếp tục."
+      }
     },
     "outcomes": {
       "list_title": "Chuẩn đầu ra",

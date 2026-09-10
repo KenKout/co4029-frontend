@@ -67,9 +67,9 @@ export function draftFromConfig(
       config.security_max_consecutive_attempts ?? 3,
     ),
     security_custom_refusal_en: config.security_custom_refusal_en ?? "",
-    security_custom_refusal_vi: config.security_custom_refusal_vi ?? "",
     security_incident_summary_enabled:
       config.security_incident_summary_enabled ?? true,
+    ...integrityWeightsFromConfig(config),
     // Seed the override panel from whatever the backend resolved. When the
     // config has no stored overrides this equals the preset, so the sliders
     // simply show the preset values; a teacher only creates a real override by
@@ -78,6 +78,20 @@ export function draftFromConfig(
       config.persona,
       config.persona_profile_resolved,
     ),
+  };
+}
+
+// Browser-integrity knobs are NOT-NULL columns with shipped defaults
+// (3/1/2 + threshold 3), so an absent value falls back to the default,
+// mirroring buildFullConfigUpdatePayload.
+function integrityWeightsFromConfig(config: InterviewConfigAuthoring) {
+  return {
+    integrity_weight_tab_switch: String(config.integrity_weight_tab_switch ?? 3),
+    integrity_weight_focus_lost: String(config.integrity_weight_focus_lost ?? 1),
+    integrity_weight_fullscreen_exit: String(
+      config.integrity_weight_fullscreen_exit ?? 2,
+    ),
+    integrity_score_threshold: String(config.integrity_score_threshold ?? 3),
   };
 }
 
@@ -237,6 +251,22 @@ export function reconcileDraftWithConfig(
   return next;
 }
 
+// NOT NULL columns: an empty field falls back to the shipped default rather
+// than null, which the DB would reject. Must stay in step with
+// `integrityWeightsFromConfig` (same numbers, opposite direction).
+function integrityWeightsToPayload(draft: SettingsDraft) {
+  return {
+    integrity_weight_tab_switch:
+      integerOrNull(draft.integrity_weight_tab_switch) ?? 3,
+    integrity_weight_focus_lost:
+      integerOrNull(draft.integrity_weight_focus_lost) ?? 1,
+    integrity_weight_fullscreen_exit:
+      integerOrNull(draft.integrity_weight_fullscreen_exit) ?? 2,
+    integrity_score_threshold:
+      integerOrNull(draft.integrity_score_threshold) ?? 3,
+  };
+}
+
 function buildFullConfigUpdatePayload(
   draft: SettingsDraft,
 ): InterviewConfigUpdate {
@@ -275,7 +305,7 @@ function buildFullConfigUpdatePayload(
     security_max_consecutive_attempts:
       integerOrNull(draft.security_max_consecutive_attempts) ?? 3,
     security_custom_refusal_en: draft.security_custom_refusal_en.trim() || null,
-    security_custom_refusal_vi: draft.security_custom_refusal_vi.trim() || null,
+    ...integrityWeightsToPayload(draft),
     security_incident_summary_enabled: draft.security_incident_summary_enabled,
   };
 }

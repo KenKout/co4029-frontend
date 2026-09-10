@@ -1,8 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-// Mock the interviews hook before importing the hook that uses it
-const mockMutateAsyncFn = vi.fn(async () => {});
+// Mock the interviews hook before importing the hook that uses it. The real
+// mutation resolves to IntegrityEventsResponse; the tests below override the
+// resolved value per case.
+const mockMutateAsyncFn = vi.fn<(body: unknown) => Promise<unknown>>(
+  async () => ({ accepted: 0, integrity_score: 0 }),
+);
 
 vi.mock("@/lib/api/hooks/interviews", () => ({
   useReportIntegrityEvents: vi.fn(() => ({
@@ -297,5 +301,111 @@ describe("useIntegrityReporter", () => {
     // The promise rejection should be swallowed (caught intentionally)
     // The hook should not throw
     expect(mockMutateAsyncFn).toHaveBeenCalledTimes(1);
+  });
+
+  describe("client_event_id + server crossing signal (2026-09-10)", () => {
+    it("stamps a client_event_id on every scored browser signal", async () => {
+      mockMutateAsyncFn.mockClear();
+      mockMutateAsyncFn.mockResolvedValue({
+        accepted: 1,
+        integrity_score: 0,
+      });
+
+      renderHook(() => useIntegrityReporter("session-123"));
+
+      // A plain blur (window keeps visible) → focus_lost after one macrotask.
+      act(() => {
+        window.dispatchEvent(new Event("blur"));
+        vi.advanceTimersByTime(0);
+      });
+      // Tab hidden → tab_switch.
+      act(() => {
+        setHidden(true);
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      // Fullscreen exit (document.fullscreenElement already null).
+      act(() => {
+        document.dispatchEvent(new Event("fullscreenchange"));
+      });
+      setHidden(false);
+      await act(async () => {
+        vi.advanceTimersByTime(2100);
+      });
+
+      const call = mockMutateAsyncFn.mock.calls[0] as unknown as [
+        { events: { event_type: string; metadata?: { client_event_id?: string } }[] },
+      ];
+      const byType = Object.fromEntries(
+        call[0].events.map((e) => [e.event_type, e]),
+      );
+      // Scored signals carry a UUID retry key...
+      for (const t of ["tab_switch", "focus_lost", "fullscreen_exit"]) {
+        expect(byType[t]).toBeDefined();
+        expect(byType[t].metadata?.client_event_id).toMatch(
+          /^[0-9a-f-]{36}$/,
+        );
+      }
+      // ...and two of the same event never share a key.
+      expect(byType["tab_switch"].metadata?.client_event_id).not.toBe(
+        byType["fullscreen_exit"].metadata?.client_event_id,
+      );
+    });
+
+    it("fires onThresholdWarning exactly when the server reports the crossing", async () => {
+      mockMutateAsyncFn.mockClear();
+      mockMutateAsyncFn.mockResolvedValue({
+        accepted: 1,
+        integrity_score: 3,
+        integrity_score_threshold: 3,
+        warning_issued: true,
+      });
+      const onThreshold = vi.fn();
+      const onWarning = vi.fn();
+
+      renderHook(() =>
+        useIntegrityReporter("session-123", {
+          onWarning,
+          onThresholdWarning: onThreshold,
+        }),
+      );
+
+      act(() => {
+        setHidden(true);
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      // The immediate local nudge is preserved (FR-5.8 level-1 deterrent).
+      expect(onWarning).toHaveBeenCalledWith("tab_switch");
+      // ...but the policy warning only fires after the server confirms.
+      expect(onThreshold).not.toHaveBeenCalled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(2100);
+      });
+      expect(onThreshold).toHaveBeenCalledTimes(1);
+      expect(onThreshold).toHaveBeenCalledWith(3, 3);
+    });
+
+    it("does NOT fire onThresholdWarning for a non-crossing batch", async () => {
+      mockMutateAsyncFn.mockClear();
+      mockMutateAsyncFn.mockResolvedValue({
+        accepted: 2,
+        integrity_score: 2,
+        integrity_score_threshold: 3,
+        warning_issued: false,
+      });
+      const onThreshold = vi.fn();
+
+      renderHook(() =>
+        useIntegrityReporter("session-123", { onThresholdWarning: onThreshold }),
+      );
+
+      act(() => {
+        window.dispatchEvent(new Event("blur"));
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(2100);
+      });
+      expect(onThreshold).not.toHaveBeenCalled();
+    });
   });
 });

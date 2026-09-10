@@ -22,7 +22,11 @@ const FROZEN = [
   "security_response_policy",
   "security_max_consecutive_attempts",
   "security_custom_refusal_en",
-  "security_custom_refusal_vi",
+  // Browser-integrity policy: score-affecting, snapshot-frozen per session.
+  "integrity_weight_tab_switch",
+  "integrity_weight_focus_lost",
+  "integrity_weight_fullscreen_exit",
+  "integrity_score_threshold",
 ];
 
 // Settings that stay editable — must match

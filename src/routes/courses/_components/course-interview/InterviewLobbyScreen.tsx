@@ -1,6 +1,7 @@
 import { GlassCard } from "@/components/ui/glass-card";
 import { useTranslation } from "react-i18next";
 
+import { InterviewIntegrityPolicyCard } from "./InterviewIntegrityPolicyCard";
 import { LobbyAttemptHistory } from "./LobbyAttemptHistory";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbyResumeNotice } from "./LobbyResumeNotice";
@@ -60,6 +61,11 @@ export function InterviewLobbyScreen({
               configId={iv.configId}
             />
           )}
+
+          {/* Pre-start only (decision 2026-09-10): the learner is told the
+              browser-activity weights + threshold BEFORE starting; the
+              workspace and results screens never render this card. */}
+          <InterviewIntegrityPolicyCard config={config} />
 
           <LobbyStartActions iv={iv} />
         </GlassCard>

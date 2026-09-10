@@ -55,7 +55,8 @@ export type IntegrityEventSeverity = "info" | "warning" | "critical";
 export interface IntegrityEvent {
   event_type: IntegrityEventType;
   severity?: IntegrityEventSeverity;
-  /** Arbitrary JSON metadata (optional) */
+  /** Arbitrary JSON metadata (optional). Scored browser signals SHOULD carry
+   *  `client_event_id` (UUID) — the server dedupes retries on it. */
   metadata?: Record<string, unknown>;
 }
 
@@ -65,7 +66,20 @@ export interface IntegrityEventsRequest {
   events: IntegrityEvent[];
 }
 
-/** Response from POST /interview-sessions/{session_id}/integrity-events */
+/**
+ * Response from POST /interview-sessions/{session_id}/integrity-events
+ *
+ * All decision values are SERVER-computed from the session's frozen policy
+ * snapshot — nothing here can be forged from the client. `warning_issued` is
+ * true ONLY on the request whose events first crossed the threshold; the
+ * one-shot flag lives on the session row.
+ */
 export interface IntegrityEventsResponse {
   accepted: number;
+  /** Running weighted browser-signal score after this batch (0 for terminal sessions). */
+  integrity_score: number;
+  /** The threshold this session is scored against (0 when unknown/dropped). */
+  integrity_score_threshold?: number;
+  /** True only on the batch that FIRST crossed the threshold. */
+  warning_issued?: boolean;
 }
