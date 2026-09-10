@@ -9,6 +9,7 @@ import type {
   UseInterviewChatResult,
 } from "../use-interview-chat";
 import {
+  ControlEvent,
   TOPIC_CHAT,
   TOPIC_CONTROL,
   type StateSnapshot,
