@@ -8,12 +8,42 @@ import { countCoursesByStatus, filterAndSortCourses } from "./helpers";
 import type { CourseViewMode, SortKey, StatusCounts, StatusFilter } from "./types";
 
 const VIEW_MODE_KEY = "teacher_courses:viewMode";
+const STATUS_FILTER_KEY = "teacher_courses:statusFilter";
+const SORT_KEY = "teacher_courses:sort";
+
+const STATUS_FILTERS: readonly StatusFilter[] = [
+  "all",
+  "published",
+  "draft",
+  "archived",
+];
+const SORT_KEYS: readonly SortKey[] = ["recent", "oldest", "title"];
 
 function loadViewMode(): CourseViewMode {
   try {
     return localStorage.getItem(VIEW_MODE_KEY) === "list" ? "list" : "card";
   } catch {
     return "card";
+  }
+}
+
+/** Persisted status filter — falls back to "all" on junk/private mode. */
+function loadStatusFilter(): StatusFilter {
+  try {
+    const raw = localStorage.getItem(STATUS_FILTER_KEY) as StatusFilter | null;
+    return raw && STATUS_FILTERS.includes(raw) ? raw : "all";
+  } catch {
+    return "all";
+  }
+}
+
+/** Persisted sort — falls back to "recent" on junk/private mode. */
+function loadSort(): SortKey {
+  try {
+    const raw = localStorage.getItem(SORT_KEY) as SortKey | null;
+    return raw && SORT_KEYS.includes(raw) ? raw : "recent";
+  } catch {
+    return "recent";
   }
 }
 
@@ -44,17 +74,22 @@ export function useTeacherCoursesController(): TeacherCoursesController {
   const { t } = useTranslation();
   const { data: courses = [], isLoading } = useTeacherCourses();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [sort, setSort] = useState<SortKey>("recent");
+  const [statusFilter, setStatusFilter] =
+    useState<StatusFilter>(loadStatusFilter);
+  const [sort, setSort] = useState<SortKey>(loadSort);
   const [viewMode, setViewMode] = useState<CourseViewMode>(loadViewMode);
 
+  // Toolbar preferences survive reloads; private-mode storage failures are
+  // swallowed — the session just won't remember them.
   useEffect(() => {
     try {
       localStorage.setItem(VIEW_MODE_KEY, viewMode);
+      localStorage.setItem(STATUS_FILTER_KEY, statusFilter);
+      localStorage.setItem(SORT_KEY, sort);
     } catch {
-      // private mode — the toggle just won't persist
+      // private mode — preferences just won't persist
     }
-  }, [viewMode]);
+  }, [viewMode, statusFilter, sort]);
 
   const counts = useMemo(() => countCoursesByStatus(courses), [courses]);
 
