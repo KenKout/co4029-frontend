@@ -21,8 +21,15 @@ import { useTeacherCoursesController } from "./_components/courses/use-courses-c
  */
 export default function TeacherCoursesPage() {
   const controller = useTeacherCoursesController();
-  const { t, isLoading, filtered, courses, setSearch, setStatusFilter } =
-    controller;
+  const {
+    t,
+    isLoading,
+    filtered,
+    courses,
+    setSearch,
+    setStatusFilter,
+    viewMode,
+  } = controller;
 
   return (
     <div className="space-y-6 pb-12">
@@ -33,7 +40,7 @@ export default function TeacherCoursesPage() {
 
       {/* Content */}
       {isLoading ? (
-        <CoursesGridSkeleton />
+        <CoursesGridSkeleton viewMode={viewMode} />
       ) : filtered.length === 0 ? (
         courses.length === 0 ? (
           <CoursesFirstRunState />

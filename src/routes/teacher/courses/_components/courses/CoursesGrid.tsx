@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import { TeacherCourseCard } from "@/routes/teacher/_components/TeacherCourseCard";
 
+import { TeacherCourseListRow } from "./TeacherCourseListRow";
 import type { TeacherCoursesController } from "./use-courses-controller";
 
 /**
@@ -15,7 +16,7 @@ export function CoursesGrid({
   controller: TeacherCoursesController;
 }) {
   const { t } = useTranslation();
-  const { filtered, courses } = controller;
+  const { filtered, courses, viewMode } = controller;
   return (
     <>
       {/* Result count — orients the teacher once the list is filtered. */}
@@ -26,11 +27,19 @@ export function CoursesGrid({
           defaultValue: "Showing {{count}} of {{total}}",
         })}
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-        {filtered.map((course, i) => (
-          <TeacherCourseCard key={course.id} course={course} index={i} />
-        ))}
-      </div>
+      {viewMode === "list" ? (
+        <div className="space-y-3">
+          {filtered.map((course, i) => (
+            <TeacherCourseListRow key={course.id} course={course} index={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+          {filtered.map((course, i) => (
+            <TeacherCourseCard key={course.id} course={course} index={i} />
+          ))}
+        </div>
+      )}
     </>
   );
 }

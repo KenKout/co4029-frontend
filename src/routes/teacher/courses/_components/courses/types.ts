@@ -10,3 +10,6 @@ export type SortKey = "recent" | "oldest" | "title";
 
 /** Per-status course counts, keyed so `counts[statusFilter]` still works. */
 export type StatusCounts = Record<StatusFilter, number>;
+
+/** Card grid vs compact list rows — the same two modes as the student catalogue. */
+export type CourseViewMode = "card" | "list";

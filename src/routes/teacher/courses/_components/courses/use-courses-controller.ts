@@ -1,11 +1,21 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeacherCourses } from "@/lib/api/hooks/teacher-courses";
 import type { Course } from "@/lib/api/types/common";
 
 import { countCoursesByStatus, filterAndSortCourses } from "./helpers";
-import type { SortKey, StatusCounts, StatusFilter } from "./types";
+import type { CourseViewMode, SortKey, StatusCounts, StatusFilter } from "./types";
+
+const VIEW_MODE_KEY = "teacher_courses:viewMode";
+
+function loadViewMode(): CourseViewMode {
+  try {
+    return localStorage.getItem(VIEW_MODE_KEY) === "list" ? "list" : "card";
+  } catch {
+    return "card";
+  }
+}
 
 /**
  * State and derived values of the teacher Courses index, extracted from the
@@ -24,6 +34,8 @@ export interface TeacherCoursesController {
   setStatusFilter: (value: StatusFilter) => void;
   sort: SortKey;
   setSort: (value: SortKey) => void;
+  viewMode: CourseViewMode;
+  setViewMode: (mode: CourseViewMode) => void;
   counts: StatusCounts;
   filtered: Course[];
 }
@@ -34,6 +46,15 @@ export function useTeacherCoursesController(): TeacherCoursesController {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sort, setSort] = useState<SortKey>("recent");
+  const [viewMode, setViewMode] = useState<CourseViewMode>(loadViewMode);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, viewMode);
+    } catch {
+      // private mode — the toggle just won't persist
+    }
+  }, [viewMode]);
 
   const counts = useMemo(() => countCoursesByStatus(courses), [courses]);
 
@@ -52,6 +73,8 @@ export function useTeacherCoursesController(): TeacherCoursesController {
     setStatusFilter,
     sort,
     setSort,
+    viewMode,
+    setViewMode,
     counts,
     filtered,
   };
