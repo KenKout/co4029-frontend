@@ -73,6 +73,31 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reason, setReason] = useState("");
 
+  // A failed programs query used to degrade to "no banner" — for a student who
+  // already had the page open that reads as a button that does nothing. Surface
+  // the failure with a retry instead.
+  if (programs.isError) {
+    return (
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5">
+        <div className="min-w-0">
+          <p className="font-semibold text-text-strong">
+            Couldn&apos;t load your program enrolment
+          </p>
+          <p className="mt-0.5 text-xs text-text-muted">
+            Your path choice couldn&apos;t be checked. Retry in a moment.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          disabled={programs.isFetching}
+          onClick={() => void programs.refetch()}
+        >
+          {programs.isFetching ? "Retrying…" : "Retry"}
+        </Button>
+      </section>
+    );
+  }
+
   const data = programs.data ?? [];
   const awaiting = findAwaiting(data, careerPathId);
   const activeHere = !awaiting ? findActiveHere(data, careerPathId) : undefined;
@@ -123,7 +148,15 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
 
   // ── Case 1: first-time choice ──────────────────────────────────────────
   if (awaiting) {
-    return <AwaitingChoiceBanner enrollment={awaiting} isPending={selectPath.isPending} onRequestChoose={() => setDialogOpen(true)} onChoose={() => void choose()} />;
+    return (
+      <AwaitingChoiceBanner
+        enrollment={awaiting}
+        isPending={selectPath.isPending}
+        dialogOpen={dialogOpen}
+        setDialogOpen={setDialogOpen}
+        onChoose={() => void choose()}
+      />
+    );
   }
 
   return (
@@ -142,17 +175,19 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
 function AwaitingChoiceBanner({
   enrollment,
   isPending,
-  onRequestChoose,
+  dialogOpen,
+  setDialogOpen,
   onChoose,
 }: {
   enrollment: LearningProgramEnrollment;
   isPending: boolean;
-  /** Ask to open the confirm dialog — the commit itself happens after it. */
-  onRequestChoose: () => void;
+  /** Confirm-dialog visibility — owned by the parent (shared switch dialog
+   * state; the two cases never render together). */
+  dialogOpen: boolean;
+  setDialogOpen: (open: boolean) => void;
   onChoose: () => void;
 }) {
   const remaining = enrollment.max_path_switches - enrollment.approved_switch_count;
-  const [confirmOpen, setConfirmOpen] = useState(false);
   return (
     <>
       <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-m3-primary/30 bg-m3-primary-fixed/40 p-5">
@@ -170,7 +205,11 @@ function AwaitingChoiceBanner({
             {remaining === 1 ? "" : "s"}, with approval from your Faculty Dean.
           </p>
         </div>
-        <Button className="gap-2" disabled={isPending} onClick={onRequestChoose}>
+        <Button
+          className="gap-2"
+          disabled={isPending}
+          onClick={() => setDialogOpen(true)}
+        >
           <CheckCircle2 className="h-4 w-4" />
           {isPending ? "Selecting…" : "Choose this path"}
         </Button>
@@ -180,8 +219,8 @@ function AwaitingChoiceBanner({
           decision, so the button only opens this confirmation. The actual
           commit fires from the dialog's confirm button. */}
       <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
         title={`Commit to ${enrollment.program_name}?`}
         description={
           `This selects "${enrollment.program_name}" as your learning path. ` +
