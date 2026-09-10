@@ -35,7 +35,6 @@ export interface LearningProgram {
   id: string;
   organization_id: string;
   faculty_id: string;
-  owner_faculty_dean_id: string | null;
   slug: string;
   name: string;
   description: string | null;

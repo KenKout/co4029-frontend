@@ -160,12 +160,8 @@ export function CourseBasicsSection({
           }
           options={facultyOptions}
         />
-        {/* Was "ownership cannot be moved after creation" — no longer true as
-            of BE 695239f, which made faculty_id PATCHable from course
-            settings. Leaving the old sentence would have taught managers to
-            get it right first time or live with it. */}
         <p className="text-[11px] text-m3-on-surface-variant">
-          Can be changed later in course settings.
+          The owning faculty cannot be changed after creation.
         </p>
       </div>
 

@@ -8,20 +8,10 @@ import {
   savedCourseSettings,
   buildManagerCourseUpdatePayload,
 } from "../course-settings-model";
-import type { CourseSettingsValues, TeacherCourse } from "../types";
+import type { TeacherCourse } from "../types";
 
 /**
  * Every settings field must be SEEDED from the loaded course.
- *
- * `facultyId` was added to `CourseSettingsValues`, to the dirty check and to the
- * manager PATCH payload — but not to `applyInitial`. The compiler did not care:
- * `applyInitial` takes the whole object and simply ignored one key. The result
- * was two user-visible bugs from one omission:
- *
- *  1. the field held "" while the saved course held a UUID, so the dirty check
- *     never cleared and the panel showed "Unsaved changes" forever;
- *  2. Save then sent `faculty_id: null`, WIPING the faculty the manager had just
- *     picked — a silent data loss that looked like "the save didn't work".
  *
  * A round-trip assertion is the honest guard here: seed from a course, compare
  * against the same course, and the form must be clean. That fails for ANY field
@@ -80,55 +70,8 @@ describe("course settings seeding", () => {
     ).toBe(false);
   });
 
-  it("reads facultyId back out of the saved course", () => {
-    const saved = savedCourseSettings(COURSE);
-    expect(saved.facultyId).toBe("4dcd8d69-9dbd-4785-9adf-933fd0cc6a62");
-  });
-
-  it("maps an unassigned faculty to the empty sentinel", () => {
-    const saved = savedCourseSettings({
-      ...COURSE,
-      faculty_id: null,
-    } as unknown as TeacherCourse);
-    expect(saved.facultyId).toBe("");
-  });
-
-  it("is dirty when the faculty actually changes", () => {
-    const saved = savedCourseSettings(COURSE);
-    const draft: CourseSettingsValues = { ...saved, facultyId: "other-faculty" };
-    expect(
-      isCourseSettingsDirty({
-        draft,
-        saved,
-        stagedThumbnail: null,
-        scope: "manager",
-      }),
-    ).toBe(true);
-  });
-
-  it("sends the seeded faculty back unchanged, not null", () => {
-    // The data-loss half of the bug: an unseeded field round-tripped as null and
-    // cleared the column on any unrelated save.
+  it("keeps faculty_id out of every update payload", () => {
     const payload = buildManagerCourseUpdatePayload(savedCourseSettings(COURSE));
-    expect(payload.faculty_id).toBe("4dcd8d69-9dbd-4785-9adf-933fd0cc6a62");
-  });
-
-  it("sends null only when the faculty is genuinely cleared", () => {
-    const cleared: CourseSettingsValues = {
-      ...savedCourseSettings(COURSE),
-      facultyId: "",
-    };
-    // null, NOT undefined — undefined is dropped from the JSON body and the
-    // backend reads an omitted field as "leave alone", so unassign would be
-    // impossible.
-    expect(buildManagerCourseUpdatePayload(cleared).faculty_id).toBeNull();
-  });
-
-  it("keeps faculty_id out of the TEACHER payload", async () => {
-    // faculty_id is outside the backend's teacher allow-list, so its mere
-    // presence 403s the whole PATCH — even unchanged.
-    const { buildCourseUpdatePayload } = await import("../course-settings-model");
-    const payload = buildCourseUpdatePayload(savedCourseSettings(COURSE));
     expect("faculty_id" in payload).toBe(false);
   });
 });

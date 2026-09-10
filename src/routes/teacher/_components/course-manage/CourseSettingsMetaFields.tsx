@@ -1,6 +1,5 @@
 import { DurationField } from "@/components/ui/duration-field";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   CourseSettingsSetters,
@@ -23,18 +22,14 @@ export function CourseSettingsMetaFields({
   setters,
   t,
   scope = "manager",
-  facultyOptions = [],
 }: {
   values: CourseSettingsValues;
   setters: CourseSettingsSetters;
   t: TranslateFn;
   scope?: "teacher" | "manager";
-  /** Assignable faculties; empty on the teacher surface, which hides the field. */
-  facultyOptions?: { value: string; label: string }[];
 }) {
-  const { title, slug, description, facultyId, estimatedMinutes } = values;
-  const { setTitle, setSlug, setDescription, setFacultyId, setEstimatedMinutes } =
-    setters;
+  const { title, slug, description, estimatedMinutes } = values;
+  const { setTitle, setSlug, setDescription, setEstimatedMinutes } = setters;
   const managerScope = scope === "manager";
 
   return (
@@ -68,45 +63,6 @@ export function CourseSettingsMetaFields({
         </div>
       )}
 
-      {/*
-        Owning faculty. Manager-only for the same reason as title and slug: the
-        backend's teacher allow-list excludes `faculty_id`, so rendering this on
-        the teacher surface would offer an edit whose Save could only 403.
-
-        Before this existed a course's faculty was set once at creation and
-        frozen, so every course predating the faculty feature was stuck
-        unassigned with no route to fix it — and a faculty filter could never
-        match it.
-      */}
-      {managerScope && (
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            {t("teacher_course_settings.faculty")}
-          </label>
-          <Select
-            value={facultyId}
-            onValueChange={(value) => setFacultyId(value)}
-            // The Select is never clearable, so "unassigned" has to be a real
-            // option rather than an empty selection. "" is the sentinel the
-            // save path turns into an explicit null.
-            options={[
-              {
-                value: "",
-                label: t("teacher_course_settings.faculty_unassigned"),
-              },
-              ...facultyOptions,
-            ]}
-            placeholder={t("teacher_course_settings.faculty_unassigned")}
-          />
-          <p className="text-[11px] text-m3-on-surface-variant">
-            {t("teacher_course_settings.faculty_help")}
-          </p>
-        </div>
-      )}
-
-      {/* Required duration sits NEXT TO the faculty field — they read as a
-          pair (who owns it, how long it takes). Was its own row via the
-          delivery-fieldset before the two were grouped. */}
       <div className="space-y-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           {t("teacher_course_settings.estimated_duration")}

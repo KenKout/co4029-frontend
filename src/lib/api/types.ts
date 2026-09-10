@@ -73,7 +73,7 @@ export type CoursePublic = Schemas["CoursePublic"] &
   CoursePublicMeta &
   CoursePublicFields;
 export interface CourseFacultyFields {
-  /** Owning faculty; null means organization-wide. Reassignable since 695239f. */
+  /** Owning faculty; null means organization-wide. Immutable after creation. */
   faculty_id?: string | null;
   /** Server-side label for `faculty_id`; null when unassigned OR retired. */
   faculty_name?: string | null;
@@ -86,8 +86,7 @@ export type CourseCreate = Omit<Schemas["CourseCreate"], "org_unit_id"> &
   CourseContactFields &
   CourseFacultyFields;
 export type CourseUpdate = Omit<Schemas["CourseUpdate"], "org_unit_id"> &
-  CourseContactFields &
-  CourseFacultyFields;
+  CourseContactFields;
 /** Manager-only course clone depth (user request 2026-08-18). Hand-authored
  * like ContactFields: the committed openapi snapshot predates the endpoint. */
 export type CourseCloneDepth = "shell" | "structure" | "full";
