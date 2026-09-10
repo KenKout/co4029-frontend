@@ -268,6 +268,17 @@ function buildWorklistFilter(t: TFn): FilterDef {
   };
 }
 
+/**
+ * Filter-select value -> the list hook's ?faculty_id= param: "all" sends no
+ * param, the Unassigned sentinel maps to the backend's "none" literal, and a
+ * faculty id passes through untouched.
+ */
+function facultyQueryParam(value: string): string | undefined {
+  if (value === "all") return undefined;
+  if (value === UNASSIGNED_FACULTY) return "none";
+  return value;
+}
+
 function buildFacultyFilter(
   t: TFn,
   options: { value: string; label: string }[],
@@ -326,7 +337,16 @@ export default function DeptCoursesPage() {
 
   const enabled = !permissions.isLoading && canRead;
   const me = useMe();
-  const list = useDeptCourses(unitId);
+  // Faculty filter (state + options + the auto-default). Extracted to a hook
+  // because this component already breached the line/complexity caps. Its
+  // value drives the list's SERVER-side ?faculty_id= below — the worklist
+  // refetches when it changes; "Unassigned" maps to the backend's "none".
+  const facultyFilterState = useFacultyFilter(t("dept_courses.faculty_unassigned"));
+  const faculty = facultyFilterState.value;
+  const setFaculty = facultyFilterState.setValue;
+  const facultyOptions = facultyFilterState.options;
+
+  const list = useDeptCourses(unitId, facultyQueryParam(faculty));
   // Only to name the active scope chip; the filtering itself is server-side.
   const unitTree = useOrgUnitTree(
     unitId ? (me.data?.organization_id ?? undefined) : undefined,
@@ -335,23 +355,8 @@ export default function DeptCoursesPage() {
     ? findNode(unitTree.data ?? [], unitId)
     : null;
 
-  // Faculty filter (state + options + the auto-default). Extracted to a hook
-  // because this component already breached the line/complexity caps.
-  const facultyFilterState = useFacultyFilter(
-    list.data,
-    t("dept_courses.faculty_unassigned"),
-  );
-  const faculty = facultyFilterState.value;
-  const setFaculty = facultyFilterState.setValue;
-  const facultyOptions = facultyFilterState.options;
-
   const courses = useMemo(() => {
     let all = list.data ?? [];
-    if (faculty === UNASSIGNED_FACULTY) {
-      all = all.filter((c) => !c.faculty_id);
-    } else if (faculty !== "all") {
-      all = all.filter((c) => c.faculty_id === faculty);
-    }
     const q = query.trim().toLowerCase();
     if (q) {
       all = all.filter((c) =>

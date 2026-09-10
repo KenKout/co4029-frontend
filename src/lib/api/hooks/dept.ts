@@ -21,16 +21,28 @@ import type {
  * matching how the permission engine already reads the tree. Without it the
  * backend derives the scope from the caller's own role assignment.
  */
-export function useDeptCourses(facultyId?: string | null) {
+export function useDeptCourses(
+  facultyId?: string | null,
+  /**
+   * Server-side faculty narrowing for the scope list itself: a faculty UUID,
+   * the literal "none" (courses with no faculty), or undefined (no
+   * narrowing). Never widens the caller's scope — the backend applies it
+   * AFTER resolving it.
+   */
+  facultyFilter?: string,
+) {
+  const params = new URLSearchParams();
+  if (facultyFilter) params.set("faculty_id", facultyFilter);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
   return useQuery({
     queryKey: facultyId
-      ? ([...queryKeys.dept.courses(), "faculty", facultyId] as const)
-      : queryKeys.dept.courses(),
+      ? ([...queryKeys.dept.courses(), "faculty", facultyId, facultyFilter ?? null] as const)
+      : [...queryKeys.dept.courses(), "filter", facultyFilter ?? null] as const,
     queryFn: () =>
       apiFetch<CourseAuthoring[]>(
         facultyId
-          ? `/dept/faculties/${facultyId}/courses`
-          : "/dept/courses",
+          ? `/dept/faculties/${facultyId}/courses${suffix}`
+          : `/dept/courses${suffix}`,
       ),
     // No staleTime: the dept course DETAIL header reads this list (there is
     // no /dept/courses/{id} endpoint) and must never show a renamed or

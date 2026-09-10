@@ -5,40 +5,41 @@ import {
   useOrgUnits,
 } from "@/lib/api/hooks/admin-organizations";
 import { useMe } from "@/lib/api/hooks/auth";
-import type { CourseAuthoring } from "@/lib/api/types";
 
 /**
  * Filter value for "courses with no faculty at all".
  *
- * Not a UUID, so it can never collide with a real faculty id. Needed because an
- * org-scoped manager's list legitimately contains unassigned courses — today
- * that is EVERY course — and without this the only way to see them would be
- * "All", mixed in with everything else.
+ * Not a UUID, so it can never collide with a real faculty id. The list hook
+ * maps it to the backend's ?faculty_id=none literal.
  */
 export const UNASSIGNED_FACULTY = "__unassigned__";
 
 /**
  * The faculty filter on the manager course worklist.
  *
- * Extracted from `DeptCoursesPage` rather than inlined: that component already
- * breached the 150-line / complexity-15 lint caps before this feature, and the
- * filter is self-contained state with no other coupling to the page.
+ * The SELECT value drives a SERVER-side narrowing: the worklist hook passes
+ * it as ?faculty_id= and the backend applies it inside the caller's resolved
+ * scope, so picking a faculty refetches the list. This hook only owns the
+ * state, the option set (the organization's faculties + always an
+ * "Unassigned" entry) and the auto-default.
  *
- * The list is ALREADY scoped server-side by role assignment (GET /dept/courses
- * resolves faculty scope for a dean, organization scope for a manager), so this
- * filter only ever narrows within an authorised set — it cannot widen it, and
- * nothing here is a permission boundary.
+ * Options used to be derived from the courses on the page — but the filter
+ * now determines which courses are FETCHED, so deriving options from them is
+ * circular. The organization's faculty list is the honest option set: an
+ * org-scoped manager legitimately sees courses across every faculty. The
+ * "Unassigned" entry is always present rather than conditioned on the visible
+ * courses: when no course lacks a faculty it simply resolves to an empty
+ * list, which is the honest answer for that pick.
  */
 export interface FacultyFilterState {
-  /** "all" or a faculty id. */
+  /** "all" or a faculty id (or UNASSIGNED_FACULTY). */
   value: string;
   setValue: (next: string) => void;
-  /** Selectable faculties, label-sorted. Empty when no course has a faculty. */
+  /** Selectable faculties, label-sorted. */
   options: { value: string; label: string }[];
 }
 
 export function useFacultyFilter(
-  courses: CourseAuthoring[] | undefined,
   /** Translated label for the "Unassigned" option; passed in so the hook stays
    *  free of i18n and the caller owns the wording. */
   unassignedLabel: string,
@@ -63,41 +64,12 @@ export function useFacultyFilter(
     onlyRoots: true,
   });
 
-  /**
-   * Options come from the ORGANIZATION's faculties, plus whatever faculties the
-   * visible courses actually reference.
-   *
-   * The first version derived options from the courses on the page only. That
-   * was wrong twice over. An org-scoped manager legitimately sees courses across
-   * every faculty, so the org list is the honest set of things they can filter
-   * by — and because no course carries a faculty yet, "faculties seen on the
-   * page" was EMPTY, which hid the control completely. The course-derived half is
-   * kept as a union so a faculty that is somehow missing from the org list (a
-   * cross-org course, a renamed unit) still gets an option rather than becoming
-   * unfilterable.
-   *
-   * "Unassigned" is appended whenever any visible course has no faculty, which
-   * is what makes today's data reachable as a group instead of only via "All".
-   */
   const options = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const unit of orgFaculties.data ?? []) {
-      seen.set(unit.id, unit.name);
-    }
-    for (const course of courses ?? []) {
-      if (course.faculty_id && course.faculty_name) {
-        seen.set(course.faculty_id, course.faculty_name);
-      }
-    }
-    const named = [...seen.entries()]
-      .map(([id, label]) => ({ value: id, label }))
+    const named = (orgFaculties.data ?? [])
+      .map((unit) => ({ value: unit.id, label: unit.name }))
       .sort((a, b) => a.label.localeCompare(b.label));
-
-    const hasUnassigned = (courses ?? []).some((c) => !c.faculty_id);
-    return hasUnassigned
-      ? [...named, { value: UNASSIGNED_FACULTY, label: unassignedLabel }]
-      : named;
-  }, [courses, orgFaculties.data, unassignedLabel]);
+    return [...named, { value: UNASSIGNED_FACULTY, label: unassignedLabel }];
+  }, [orgFaculties.data, unassignedLabel]);
 
   /**
    * Default to the caller's own faculty when they belong to exactly ONE, and to
