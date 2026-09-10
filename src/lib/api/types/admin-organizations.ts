@@ -44,9 +44,11 @@ export type OrgUnitPatch = Omit<
   "parent_unit_id" | "unit_type"
 >;
 
-export type MembershipRead = Schemas["MembershipRead"];
-export type MembershipCreate = Schemas["MembershipCreate"];
-export type MembershipPatch = Schemas["MembershipPatch"];
+// The committed OpenAPI snapshot predates migration 0112. Keep the public
+// client contract aligned while that snapshot remains intentionally stable.
+export type MembershipRead = Omit<Schemas["MembershipRead"], "org_unit_id">;
+export type MembershipCreate = Omit<Schemas["MembershipCreate"], "org_unit_id">;
+export type MembershipPatch = Omit<Schemas["MembershipPatch"], "org_unit_id">;
 
 export interface FacultyAssignmentRead {
   id: string;
