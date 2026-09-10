@@ -15277,6 +15277,10 @@ export interface components {
             student_id: string;
             /** Student Email */
             student_email: string;
+            /** Student Display Name */
+            student_display_name: string | null;
+            /** Student Avatar Url */
+            student_avatar_url: string | null;
             /** Overall Percent */
             overall_percent: number;
             /** Completed Courses */

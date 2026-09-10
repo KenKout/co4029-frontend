@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -15,6 +16,13 @@ import { SectionActionCard } from "./SectionActionCard";
 import { StudentPickerDialog } from "./StudentPickerDialog";
 import type { TFunction } from "i18next";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { useStudentsTab } from "./use-students-tab";
 import { useRemoveCareerPathStudent } from "@/lib/api/hooks/career-paths";
 import { RemoveRowButtons } from "./RemoveRowButtons";
@@ -66,7 +74,7 @@ function RemoveCell({
             ),
           onError: (err) =>
             toast.error(
-              (err as Error).message ||
+              err.message ||
                 t(
                   "management_career_path_detail.errors.unregister_student_failed",
                 ),
@@ -90,21 +98,39 @@ function buildStudentColumns(
         header: t("management_career_path_detail.students.col_student"),
         sortable: true,
         sortValue: (row) => row.student_email.toLowerCase(),
-        cell: (row) => (
-          <Link
-            to="/management/users/$userId"
-            params={{ userId: row.student_id }}
-            className="block min-w-0 hover:text-m3-primary"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="truncate text-sm font-semibold">
-              {row.student_email}
-            </p>
-            <p className="mt-0.5 truncate font-mono text-[11px] text-m3-on-surface-variant">
-              {row.student_id}
-            </p>
-          </Link>
-        ),
+        cell: (row) => {
+          const displayName =
+            row.student_display_name?.trim() || row.student_email;
+          return (
+            <Link
+              to="/management/users/$userId"
+              params={{ userId: row.student_id }}
+              className="flex min-w-0 items-center gap-3 hover:text-m3-primary"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Avatar size="sm" className={avatarColor(row.student_id)}>
+                {row.student_avatar_url && (
+                  <AvatarImage
+                    src={row.student_avatar_url}
+                    alt={displayName}
+                  />
+                )}
+                <AvatarFallback>
+                  {avatarInitials(displayName, { uppercase: true })}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-text-strong">
+                  {displayName}
+                </p>
+                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-text-muted">
+                  <Mail className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{row.student_email}</span>
+                </p>
+              </div>
+            </Link>
+          );
+        },
       },
       {
         id: "completion",
@@ -179,6 +205,7 @@ export function StudentsTab({
       if (
         q &&
         !row.student_email.toLowerCase().includes(q) &&
+        !(row.student_display_name ?? "").toLowerCase().includes(q) &&
         !row.student_id.toLowerCase().includes(q)
       ) {
         return false;
