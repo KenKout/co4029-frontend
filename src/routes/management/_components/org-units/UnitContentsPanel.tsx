@@ -16,11 +16,14 @@ export function UnitContentsPanel({
   unit,
   unitsById,
   isMasterDean,
+  isDeanOfUnit,
 }: {
   orgId: string | undefined;
   unit: OrgUnitNode;
   unitsById: Map<string, string>;
   isMasterDean: boolean;
+  /** The caller is this Faculty's Dean (hod @ org_unit scope). */
+  isDeanOfUnit: boolean;
 }) {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
@@ -68,15 +71,20 @@ export function UnitContentsPanel({
               {t(`${prefix}.appoint_dean`)}
             </Button>
           ) : null}
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 gap-1 px-2 text-xs"
-            onClick={() => setAddingPeople(true)}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t(`${prefix}.assign_person`)}
-          </Button>
+          {/* Only a Dean (of this Faculty, or the org's master Dean) may add
+              people — the backend's org_unit.manage gate is broader, but the
+              decision to grow a Faculty's staff belongs to its Dean. */}
+          {isMasterDean || isDeanOfUnit ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() => setAddingPeople(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {t(`${prefix}.add_people`)}
+            </Button>
+          ) : null}
         </div>
         <ul className="mt-2 space-y-1">
           {assignments.peopleInUnit.map((person) => (

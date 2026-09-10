@@ -5787,7 +5787,7 @@
     "courses_in_unit": "Khoá học ({{count}})",
     "people_in_unit": "Nhân sự ({{count}})",
     "assign_course": "Thêm khoá học",
-    "assign_person": "Thêm người",
+    "add_people": "Thêm người",
     "appoint_dean": "Bổ nhiệm Dean",
     "appoint_dean_title": "Bổ nhiệm Faculty Dean?",
     "appoint_dean_description": "{{name}} sẽ nhận quyền Faculty Dean tại {{faculty}}. Các vai trò và quan hệ với khoa khác vẫn được giữ nguyên.",

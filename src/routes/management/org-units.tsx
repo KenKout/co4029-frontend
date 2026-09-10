@@ -149,6 +149,7 @@ export default function ManagementOrgUnitsPage() {
                   unit={c.selected}
                   unitsById={unitsById}
                   isMasterDean={c.isMasterDean}
+                  isDeanOfUnit={c.deanUnitIds.includes(c.selected.id)}
                 />
 
                 {/* Scope shortcuts — unlike the panel above these include the

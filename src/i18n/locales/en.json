@@ -5817,7 +5817,7 @@
     "courses_in_unit": "Courses ({{count}})",
     "people_in_unit": "People ({{count}})",
     "assign_course": "Add course",
-    "assign_person": "Add person",
+    "add_people": "Add people",
     "appoint_dean": "Appoint Dean",
     "appoint_dean_title": "Appoint Faculty Dean?",
     "appoint_dean_description": "{{name}} will receive Faculty Dean authority for {{faculty}}. Existing roles and other Faculty affiliations are preserved.",

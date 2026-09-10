@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { RoleAssignmentRead } from "@/lib/api/types";
 import { useMe } from "@/lib/api/hooks/auth";
 import { useListRoles, useUserAssignments } from "@/lib/api/hooks/admin";
 import {
@@ -43,6 +44,27 @@ const EMPTY_FORM: UnitFormState = {
  * the caller's own org server-side. Only the SPA route guard was
  * admin-only, which is why this screen exists at all.
  */
+
+/**
+ * Unit ids where the caller holds the Dean role (hod @ org_unit scope) —
+ * the Add-people affordance is theirs. Extracted so the page hook stays
+ * under the complexity cap.
+ */
+function collectDeanUnitIds(
+  hodRoleId: string | undefined,
+  assignments: RoleAssignmentRead[] | undefined,
+): string[] {
+  if (!hodRoleId) return [];
+  return (assignments ?? [])
+    .filter(
+      (assignment) =>
+        assignment.role_id === hodRoleId &&
+        assignment.scope_kind === "org_unit" &&
+        assignment.org_unit_id,
+    )
+    .map((assignment) => assignment.org_unit_id as string);
+}
+
 export function useOrgUnitsPage() {
   const me = useMe();
   const orgId = me.data?.organization_id ?? undefined;
@@ -58,6 +80,11 @@ export function useOrgUnitsPage() {
           assignment.scope_kind === "organization" &&
           assignment.organization_id === orgId,
       ),
+  );
+  /** Faculties the caller is the Dean of (hod @ org_unit scope). */
+  const deanUnitIds = useMemo(
+    () => collectDeanUnitIds(hodRoleId, myAssignments.data),
+    [hodRoleId, myAssignments.data],
   );
 
   const tree = useOrgUnitTree(orgId);
@@ -160,6 +187,7 @@ export function useOrgUnitsPage() {
     isError: tree.isError,
     nodes,
     isMasterDean,
+    deanUnitIds,
     selected,
     selectedId,
     setSelectedId,

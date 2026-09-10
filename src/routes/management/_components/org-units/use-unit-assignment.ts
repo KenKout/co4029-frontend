@@ -87,12 +87,16 @@ export function useUnitAssignment(
     [activeMemberships, facultyIdsByUser, facultyRoleCodesByUser, usersById],
   );
 
+  /**
+   * Candidates for the Add-people picker: teachers and managers only (deans
+   * are appointed through the dedicated Appoint-Dean dialog, students aren't
+   * faculty staff). Requires the roles field on /users/by-ids, which the
+   * backend batch-attaches.
+   */
   const allPeople = useMemo(
     () =>
       allOrganizationPeople.filter((person) =>
-        person.roles.some((role) =>
-          ["hod", "manager", "teacher"].includes(role),
-        ),
+        person.roles.some((role) => ["manager", "teacher"].includes(role)),
       ),
     [allOrganizationPeople],
   );
