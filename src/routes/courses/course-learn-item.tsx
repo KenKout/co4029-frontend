@@ -39,6 +39,7 @@ import { InterviewRoomProvider } from "@/components/interview/interview-room-pro
 import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
 import { InterviewFullscreenGateScreen } from "@/routes/courses/_components/course-interview/InterviewFullscreenGateScreen";
+import { FullscreenExitWarningDialog, FullscreenPromptDialog } from "@/components/assessment/FullscreenDialogs";
 import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
 import {
   InterviewLoadingScreen,
@@ -401,6 +402,11 @@ function QuizProxyInner({
   startParam: unknown;
   breadcrumb: React.ReactNode;
 }) {
+/** Quiz copy for the shared fullscreen dialogs (the default namespace is
+ *  the interview's, whose wording talks about an interview). */
+const QUIZ_FULLSCREEN_KEYS = "course_quiz.fullscreen";
+
+function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: string; startParam: unknown }) {
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
   const session = useQuizAttemptSession(quizId);
   const { quiz, taking, submittedSummary, displayQuestions } = session;
@@ -445,12 +451,25 @@ function QuizProxyInner({
       </>
     );
   }
+  if (displayQuestions.length === 0) {
+    return <QuizNoQuestionsPanel slug={slug} />;
+  }
   return (
     <>
-      {breadcrumb}
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-        <QuizNoQuestionsPanel slug={slug} />
-      </div>
+      <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />
+      <FullscreenPromptDialog
+        open={session.fullscreen.promptOpen}
+        onConfirm={session.fullscreen.acceptPrompt}
+        onDecline={session.fullscreen.declinePrompt}
+        keyPrefix={QUIZ_FULLSCREEN_KEYS}
+      />
+      <FullscreenExitWarningDialog
+        open={session.fullscreen.warningOpen}
+        onReenter={session.fullscreen.reenter}
+        onDismiss={session.fullscreen.dismissWarning}
+        exitCount={session.fullscreen.exitCount}
+        keyPrefix={QUIZ_FULLSCREEN_KEYS}
+      />
     </>
   );
 }
