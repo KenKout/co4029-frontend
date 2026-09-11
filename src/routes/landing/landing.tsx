@@ -16,22 +16,22 @@ export default function LandingPage() {
       <TopNavBar />
 
       <main ref={revealRef} className="pt-16">
-        {/* 1. HERO */}
+        {/* 1. PRODUCT PROMISE */}
         <HeroSection />
 
-        {/* 2. STATS */}
+        {/* 2. LEARNING PRINCIPLES */}
         <StatsSection />
 
-        {/* 3. BENTO CATEGORIES */}
+        {/* 3. CONNECTED ACADEMIC MODEL */}
         <CategoriesSection />
 
-        {/* 4. FEATURED COURSES */}
+        {/* 4. KNOWLEDGE-TO-EVIDENCE WORKFLOW */}
         <FeaturedCoursesSection />
 
-        {/* 5. TESTIMONIAL */}
+        {/* 5. RESPONSIBLE AI */}
         <TestimonialSection />
 
-        {/* 6. INSTRUCTOR CTA */}
+        {/* 6. INSTITUTIONAL CTA */}
         <InstructorCtaSection />
       </main>
 

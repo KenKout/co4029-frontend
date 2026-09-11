@@ -1,45 +1,93 @@
-export const stats = [
-  { value: "500k+", label: "Active Learners" },
-  { value: "12k+", label: "AI-Enhanced Courses" },
-  { value: "94%", label: "Accuracy" },
-  { value: "1.2M", label: "Skill Assessments" },
+import {
+  BookOpenCheck,
+  Building2,
+  ChartNoAxesCombined,
+  ClipboardCheck,
+  GitBranch,
+  Network,
+  Presentation,
+  ScanSearch,
+  ShieldCheck,
+  GraduationCap,
+  UserCheck,
+} from "lucide-react";
+
+export const learningAudiences = [
+  {
+    icon: Building2,
+    role: "Faculty & program leaders",
+    value:
+      "Align programs to intended capabilities and see evidence across courses.",
+  },
+  {
+    icon: Presentation,
+    role: "Instructors",
+    value:
+      "Turn trusted materials into reviewed learning structures, activities and assessments.",
+  },
+  {
+    icon: GraduationCap,
+    role: "Learners",
+    value:
+      "Understand the next step, practise where support is needed and track mastery.",
+  },
 ];
 
-export const featuredCourses = [
+export const learningPrinciples = [
   {
-    title: "Full-Stack Engineering with AI Pair Programming",
-    instructor: "Dr. Sarah Chen",
-    tag: "Software Engineering",
-    tagColor: "bg-m3-primary-fixed text-m3-primary",
-    rating: "4.9",
-    students: "12.4k",
-    thumbFrom: "from-[#1e3a8a]",
-    thumbTo: "to-[#1e40af]",
-    overlayFrom: "from-[#1e3a8a]/80",
-    overlayTo: "to-[#1e40af]/60",
+    icon: UserCheck,
+    title: "Instructor-governed",
+    description:
+      "Educators review learning content before it reaches students.",
   },
   {
-    title: "Data Science & ML: From Foundations to Deployment",
-    instructor: "Prof. Marcus Liu",
-    tag: "Data Science",
-    tagColor: "bg-m3-secondary-fixed text-m3-secondary",
-    rating: "4.8",
-    students: "9.1k",
-    thumbFrom: "from-[#1d4ed8]",
-    thumbTo: "to-[#3b82f6]",
-    overlayFrom: "from-[#1d4ed8]/80",
-    overlayTo: "to-[#3b82f6]/60",
+    icon: GitBranch,
+    title: "Outcome-aligned",
+    description:
+      "Concepts, activities and evidence connect to explicit outcomes.",
   },
   {
-    title: "Creative Direction in the Age of Generative AI",
-    instructor: "Amara Osei",
-    tag: "Creative Arts",
-    tagColor: "bg-[#e0f2f1] text-[#004a57]",
-    rating: "4.7",
-    students: "6.8k",
-    thumbFrom: "from-[#004a57]",
-    thumbTo: "to-[#00796b]",
-    overlayFrom: "from-[#004a57]/80",
-    overlayTo: "to-[#00796b]/60",
+    icon: ScanSearch,
+    title: "Adaptive practice",
+    description: "Each learner receives practice based on demonstrated gaps.",
+  },
+  {
+    icon: ChartNoAxesCombined,
+    title: "Evidence-led",
+    description:
+      "Faculty see where learners progress, struggle and need support.",
+  },
+];
+
+export const learningWorkflow = [
+  {
+    icon: ClipboardCheck,
+    title: "Define outcomes",
+    description:
+      "Faculty and program leaders establish the capabilities learners should demonstrate.",
+  },
+  {
+    icon: BookOpenCheck,
+    title: "Contribute knowledge",
+    description:
+      "Instructors upload approved materials and retain control over what is taught.",
+  },
+  {
+    icon: Network,
+    title: "Structure the domain",
+    description:
+      "AI proposes concepts, relationships and learning sequences for instructor review.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Assess mastery",
+    description:
+      "Learning activities and assessments collect evidence against each outcome.",
+  },
+  {
+    icon: ChartNoAxesCombined,
+    title: "Improve continuously",
+    description:
+      "Learning evidence informs student support, course improvement and program decisions.",
   },
 ];

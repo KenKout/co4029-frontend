@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -21,14 +21,6 @@ interface TrendingCarouselProps {
 
 export function TrendingCarousel({ courses }: TrendingCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(1);
-
-  // Auto-swipe functionality: go to next slide every 5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % courses.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [activeIndex, courses.length]);
 
   const nextSlide = () => {
     setActiveIndex((prev) => (prev + 1) % courses.length);
@@ -126,18 +118,6 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
                   </span>
                 </div>
               </div>
-
-              {/* Progress bar that matches the 5s auto-swipe interval */}
-              {isActive && (
-                <div className="absolute bottom-0 left-0 w-full h-1.5 bg-m3-surface-variant overflow-hidden">
-                  <div
-                    className="h-full bg-m3-primary w-full"
-                    style={{
-                      animation: "progress-fill 5000ms linear forwards",
-                    }}
-                  />
-                </div>
-              )}
             </div>
           );
         })}

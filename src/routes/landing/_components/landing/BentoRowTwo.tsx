@@ -1,64 +1,54 @@
-import { ArrowRight, BarChart3, FlaskConical } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { BookOpenCheck, Signpost } from "lucide-react";
 
-export function DigitalBusinessTile() {
+export function CareerPathTile() {
   return (
-    <div
-      className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial bg-m3-primary-fixed reveal reveal-scale w-full h-full"
-      style={{ "--reveal-delay": "0.2s" } as React.CSSProperties}
+    <article
+      className="reveal reveal-scale relative h-full w-full overflow-hidden rounded-xl shadow-editorial"
+      style={{ "--reveal-delay": "0.16s" } as React.CSSProperties}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-m3-primary-fixed via-m3-secondary-fixed/40 to-m3-primary-fixed" />
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
-            <BarChart3 className="w-4 h-4 text-white" />
-          </div>
-          <Badge className="bg-m3-primary/10 text-m3-primary border-0 text-xs">
-            1,100+ Courses
-          </Badge>
+      <div className="absolute inset-0 bg-gradient-to-br from-[#004a57] to-[#00796b]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-6">
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-white/15">
+          <Signpost className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
-        <h3 className="font-headline font-bold text-xl text-m3-on-surface">
-          Digital Business
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/65">
+          Capability progression
+        </p>
+        <h3 className="mt-2 font-headline text-xl font-bold text-white">
+          Career Paths
         </h3>
-        <p className="text-m3-on-surface-variant text-sm mt-1">
-          Marketing, growth &amp; entrepreneurship.
+        <p className="mt-2 text-sm leading-relaxed text-white/70">
+          Translate target roles into transparent capability milestones.
         </p>
       </div>
-    </div>
+    </article>
   );
 }
 
-export function DataScienceTile() {
+export function CourseAssessmentTile() {
   return (
-    <div
-      className="relative rounded-xl overflow-hidden group cursor-pointer shadow-editorial reveal reveal-scale w-full h-full"
-      style={{ "--reveal-delay": "0.3s" } as React.CSSProperties}
+    <article
+      className="reveal reveal-scale relative h-full w-full overflow-hidden rounded-xl shadow-editorial"
+      style={{ "--reveal-delay": "0.24s" } as React.CSSProperties}
     >
       <div className="absolute inset-0 gradient-secondary" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-                <FlaskConical className="w-4 h-4 text-white" />
-              </div>
-              <Badge className="bg-white/15 text-white border-0 text-xs">
-                3,200+ Courses
-              </Badge>
-            </div>
-            <h3 className="font-headline font-bold text-xl text-white">
-              Data Science
-            </h3>
-            <p className="text-white/60 text-sm mt-1">
-              ML, analytics, AI &amp; data engineering.
-            </p>
-          </div>
-          <div className="shrink-0 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-            <ArrowRight className="w-4 h-4 text-white" />
-          </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-7">
+        <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-white/15">
+          <BookOpenCheck className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/65">
+          Learning in action
+        </p>
+        <h3 className="mt-2 font-headline text-2xl font-bold text-white">
+          Courses &amp; Assessment
+        </h3>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
+          Connect instruction, practice and assessment to show what each learner
+          can do next.
+        </p>
       </div>
-    </div>
+    </article>
   );
 }

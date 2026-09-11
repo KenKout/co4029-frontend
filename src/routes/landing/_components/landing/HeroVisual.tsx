@@ -1,4 +1,4 @@
-import { Sparkles, GraduationCap } from "lucide-react";
+import { CheckCircle2, Network, Sparkles } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 
 export default function HeroVisual() {
@@ -19,14 +19,14 @@ export default function HeroVisual() {
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8">
           <div className="w-20 h-20 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-            <GraduationCap className="w-10 h-10 text-white" />
+            <Network className="w-10 h-10 text-white" />
           </div>
           <div className="text-center">
             <p className="text-white font-headline font-bold text-xl">
-              AI Curriculum
+              Knowledge-to-Mastery Map
             </p>
             <p className="text-white/60 text-sm mt-1">
-              Personalised to your goals
+              Concepts aligned to learning outcomes
             </p>
           </div>
           <div className="w-full space-y-2">
@@ -58,9 +58,9 @@ export default function HeroVisual() {
                 AI Insight
               </p>
               <p className="text-xs text-m3-on-surface-variant mt-0.5 leading-snug">
-                Next skill gap:{" "}
+                Evidence detected:{" "}
                 <span className="text-m3-secondary font-semibold">
-                  TypeScript Generics
+                  Retrieval needs practice
                 </span>
               </p>
               <div className="mt-2 h-1 bg-m3-surface-container rounded-full overflow-hidden">
@@ -71,17 +71,14 @@ export default function HeroVisual() {
         </GlassCard>
       </div>
 
-      {/* Top-right stat badge */}
+      {/* Top-right governance badge */}
       <div
         className="absolute -top-4 -right-2 sm:right-0 animate-float"
         style={{ animationDelay: "3s" }}
       >
-        <div className="glass ghost-border shadow-glass rounded-xl px-4 py-3 text-center">
-          <p className="text-2xl font-headline font-extrabold text-m3-primary">
-            94%
-          </p>
-          <p className="text-xs text-m3-on-surface-variant mt-0.5">
-            Accuracy
+        <div className="glass ghost-border shadow-glass rounded-xl px-4 py-3">
+          <p className="flex items-center gap-2 text-sm font-semibold text-m3-primary">
+            <CheckCircle2 className="h-4 w-4" /> Instructor reviewed
           </p>
         </div>
       </div>

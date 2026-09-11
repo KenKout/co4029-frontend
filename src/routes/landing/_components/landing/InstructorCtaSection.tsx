@@ -1,37 +1,47 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
+import { Button } from "@/components/ui/button";
 
 export default function InstructorCtaSection() {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-      <div className="relative rounded-xl overflow-hidden shadow-editorial reveal reveal-scale">
+    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+      <div className="reveal reveal-scale relative overflow-hidden rounded-xl shadow-editorial">
         <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5 blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-[#3b82f6]/20 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
+          <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#3b82f6]/20 blur-3xl" />
         </div>
-        <div className="relative px-8 py-16 sm:px-16 text-center space-y-6">
-          <AIInsightChip>Share Your Expertise</AIInsightChip>
-          <h2 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white max-w-2xl mx-auto leading-tight">
-            Ready to Build the Bridge?
+        <div className="relative space-y-6 px-8 py-16 text-center sm:px-16">
+          <AIInsightChip pulse={false}>
+            A connected learning environment
+          </AIInsightChip>
+          <h2 className="mx-auto max-w-3xl font-headline text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl">
+            Make every course part of a meaningful learning journey
           </h2>
-          <p className="text-white/70 text-lg max-w-xl mx-auto leading-relaxed font-body">
-            Join thousands of world-class instructors bringing knowledge to life
-            with AI-powered tools, real-time analytics, and a global audience of
-            eager learners.
+          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-white/70">
+            Connect faculty intent, program outcomes, career capabilities and
+            student evidence in one shared system.
           </p>
-          <div className="flex flex-wrap gap-3 justify-center pt-2">
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
             <Link to="/login" search={{ next: undefined }}>
               <Button
                 size="lg"
-                className="bg-white text-m3-primary hover:bg-white/90 border-0 gap-2 px-8 h-12 font-semibold hover-entity"
+                className="hover-entity h-12 gap-2 border-0 bg-white px-8 font-semibold text-m3-primary hover:bg-white/90"
               >
-                Get Started
-                <ArrowRight className="h-4 w-4" />
+                Sign in to aBridgeAI
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             </Link>
+            <a href="#how-it-works">
+              <Button
+                size="lg"
+                variant="outline"
+                className="hover-entity h-12 border-white/25 bg-white/10 px-8 font-semibold text-white hover:bg-white/20"
+              >
+                Review the workflow
+              </Button>
+            </a>
           </div>
         </div>
       </div>
