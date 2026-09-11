@@ -39,6 +39,7 @@ import { InterviewRoomProvider } from "@/components/interview/interview-room-pro
 import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
 import { InterviewFullscreenGateScreen } from "@/routes/courses/_components/course-interview/InterviewFullscreenGateScreen";
+import { FullscreenExitWarningDialog, FullscreenPromptDialog } from "@/components/assessment/FullscreenDialogs";
 import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
 import {
   InterviewLoadingScreen,
@@ -387,6 +388,10 @@ function QuizProxy({ slug, quizRef, startParam }: { slug: string; quizRef: strin
   return <QuizProxyInner slug={slug} quizId={quizRef} startParam={startParam} />;
 }
 
+/** Quiz copy for the shared fullscreen dialogs (the default namespace is
+ *  the interview's, whose wording talks about an interview). */
+const QUIZ_FULLSCREEN_KEYS = "course_quiz.fullscreen";
+
 function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: string; startParam: unknown }) {
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
   const session = useQuizAttemptSession(quizId);
@@ -416,7 +421,24 @@ function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: st
   if (displayQuestions.length === 0) {
     return <QuizNoQuestionsPanel slug={slug} />;
   }
-  return <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />;
+  return (
+    <>
+      <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />
+      <FullscreenPromptDialog
+        open={session.fullscreen.promptOpen}
+        onConfirm={session.fullscreen.acceptPrompt}
+        onDecline={session.fullscreen.declinePrompt}
+        keyPrefix={QUIZ_FULLSCREEN_KEYS}
+      />
+      <FullscreenExitWarningDialog
+        open={session.fullscreen.warningOpen}
+        onReenter={session.fullscreen.reenter}
+        onDismiss={session.fullscreen.dismissWarning}
+        exitCount={session.fullscreen.exitCount}
+        keyPrefix={QUIZ_FULLSCREEN_KEYS}
+      />
+    </>
+  );
 }
 
 function InterviewProxy({ slug, interviewRef }: { slug: string; interviewRef: string }) {
