@@ -391,6 +391,10 @@ function QuizProxy({
   return <QuizProxyInner slug={slug} quizId={quizRef} startParam={startParam} breadcrumb={breadcrumb} />;
 }
 
+/** Quiz copy for the shared fullscreen dialogs (the default namespace is
+ *  the interview's, whose wording talks about an interview). */
+const QUIZ_FULLSCREEN_KEYS = "course_quiz.fullscreen";
+
 function QuizProxyInner({
   slug,
   quizId,
@@ -402,11 +406,6 @@ function QuizProxyInner({
   startParam: unknown;
   breadcrumb: React.ReactNode;
 }) {
-/** Quiz copy for the shared fullscreen dialogs (the default namespace is
- *  the interview's, whose wording talks about an interview). */
-const QUIZ_FULLSCREEN_KEYS = "course_quiz.fullscreen";
-
-function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: string; startParam: unknown }) {
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
   const session = useQuizAttemptSession(quizId);
   const { quiz, taking, submittedSummary, displayQuestions } = session;
@@ -427,9 +426,28 @@ function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: st
     return <QuizNotFoundPanel slug={slug} />;
   }
   // In progress (a live attempt) the take screen owns the layout — its sticky
-  // bars already carry a back affordance — so no breadcrumb above it.
+  // bars already carry a back affordance — so no breadcrumb above it. The
+  // fullscreen proctoring dialogs ride along (no-ops unless the teacher set
+  // the quiz to 'securewindow').
   if (taking && displayQuestions.length > 0) {
-    return <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />;
+    return (
+      <>
+        <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />
+        <FullscreenPromptDialog
+          open={session.fullscreen.promptOpen}
+          onConfirm={session.fullscreen.acceptPrompt}
+          onDecline={session.fullscreen.declinePrompt}
+          keyPrefix={QUIZ_FULLSCREEN_KEYS}
+        />
+        <FullscreenExitWarningDialog
+          open={session.fullscreen.warningOpen}
+          onReenter={session.fullscreen.reenter}
+          onDismiss={session.fullscreen.dismissWarning}
+          exitCount={session.fullscreen.exitCount}
+          keyPrefix={QUIZ_FULLSCREEN_KEYS}
+        />
+      </>
+    );
   }
   if (submittedSummary) {
     return (
@@ -451,25 +469,13 @@ function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: st
       </>
     );
   }
-  if (displayQuestions.length === 0) {
-    return <QuizNoQuestionsPanel slug={slug} />;
-  }
+  // Taking but the live payload carries zero questions — defensive notice.
   return (
     <>
-      <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />
-      <FullscreenPromptDialog
-        open={session.fullscreen.promptOpen}
-        onConfirm={session.fullscreen.acceptPrompt}
-        onDecline={session.fullscreen.declinePrompt}
-        keyPrefix={QUIZ_FULLSCREEN_KEYS}
-      />
-      <FullscreenExitWarningDialog
-        open={session.fullscreen.warningOpen}
-        onReenter={session.fullscreen.reenter}
-        onDismiss={session.fullscreen.dismissWarning}
-        exitCount={session.fullscreen.exitCount}
-        keyPrefix={QUIZ_FULLSCREEN_KEYS}
-      />
+      {breadcrumb}
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+        <QuizNoQuestionsPanel slug={slug} />
+      </div>
     </>
   );
 }
