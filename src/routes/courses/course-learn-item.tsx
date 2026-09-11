@@ -210,14 +210,7 @@ function MatchedItemView({
     // module, so a bare slug could be ambiguous across courses — and the
     // learner API 404s an ambiguous slug even though this link is valid.
     const quizRef = matched.item.target?.id || itemSlug;
-    return (
-      <>
-        {breadcrumb}
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <QuizProxy slug={slug} quizRef={quizRef} startParam={start} />
-        </div>
-      </>
-    );
+    return <QuizProxy slug={slug} quizRef={quizRef} startParam={start} breadcrumb={breadcrumb} />;
   }
 
   if (matched.item.item_type === "interview") {
@@ -383,11 +376,31 @@ function LessonContentPane({
   );
 }
 
-function QuizProxy({ slug, quizRef, startParam }: { slug: string; quizRef: string; startParam: unknown }) {
-  return <QuizProxyInner slug={slug} quizId={quizRef} startParam={startParam} />;
+function QuizProxy({
+  slug,
+  quizRef,
+  startParam,
+  breadcrumb,
+}: {
+  slug: string;
+  quizRef: string;
+  startParam: unknown;
+  breadcrumb: React.ReactNode;
+}) {
+  return <QuizProxyInner slug={slug} quizId={quizRef} startParam={startParam} breadcrumb={breadcrumb} />;
 }
 
-function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: string; startParam: unknown }) {
+function QuizProxyInner({
+  slug,
+  quizId,
+  startParam,
+  breadcrumb,
+}: {
+  slug: string;
+  quizId: string;
+  startParam: unknown;
+  breadcrumb: React.ReactNode;
+}) {
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
   const session = useQuizAttemptSession(quizId);
   const { quiz, taking, submittedSummary, displayQuestions } = session;
@@ -407,16 +420,39 @@ function QuizProxyInner({ slug, quizId, startParam }: { slug: string; quizId: st
   if (!course || !quiz) {
     return <QuizNotFoundPanel slug={slug} />;
   }
+  // In progress (a live attempt) the take screen owns the layout — its sticky
+  // bars already carry a back affordance — so no breadcrumb above it.
+  if (taking && displayQuestions.length > 0) {
+    return <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />;
+  }
   if (submittedSummary) {
-    return <QuizResultScreen quiz={quiz} summary={submittedSummary} totalQuestionsFallback={displayQuestions.length} slug={slug} />;
+    return (
+      <>
+        {breadcrumb}
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+          <QuizResultScreen quiz={quiz} summary={submittedSummary} totalQuestionsFallback={displayQuestions.length} slug={slug} />
+        </div>
+      </>
+    );
   }
   if (!taking) {
-    return <QuizIntroStage session={session} quiz={quiz} slug={slug} courseTitle={course?.title} />;
+    return (
+      <>
+        {breadcrumb}
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+          <QuizIntroStage session={session} quiz={quiz} slug={slug} courseTitle={course?.title} />
+        </div>
+      </>
+    );
   }
-  if (displayQuestions.length === 0) {
-    return <QuizNoQuestionsPanel slug={slug} />;
-  }
-  return <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />;
+  return (
+    <>
+      {breadcrumb}
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+        <QuizNoQuestionsPanel slug={slug} />
+      </div>
+    </>
+  );
 }
 
 function InterviewProxy({ slug, interviewRef }: { slug: string; interviewRef: string }) {
