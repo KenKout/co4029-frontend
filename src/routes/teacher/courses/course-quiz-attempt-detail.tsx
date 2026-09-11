@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
@@ -52,6 +52,13 @@ export default function CourseQuizAttemptDetailPage() {
     courseId: string;
     attemptId: string;
   };
+  // ?back=student&student=<id> when the teacher arrived from a student's
+  // profile: back arrow + breadcrumb return THERE instead of Assessments.
+  const search = useSearch({ strict: false }) as {
+    back?: string;
+    student?: string;
+  };
+  const cameFromStudent = search.back === "student" && !!search.student;
   const { data: course } = useTeacherCourseById(courseId);
   const { data, isLoading, isError } = useCourseQuizAttemptDetail(
     courseId,
@@ -104,40 +111,13 @@ export default function CourseQuizAttemptDetailPage() {
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-5xl mx-auto space-y-6">
-        <Breadcrumbs
-          items={[
-            { label: t("nav.my_courses"), to: "/teacher/courses" },
-            {
-              label: course?.title ?? "—",
-              to: "/teacher/courses/$courseId",
-              params: { courseId },
-            },
-            {
-              label: t("teacher_quiz_attempt.breadcrumb_assessments"),
-              to: "/teacher/courses/$courseId/assessments",
-              params: { courseId },
-            },
-            { label: t("teacher_quiz_attempt.breadcrumb_attempt") },
-          ]}
+        <AttemptPageHeader
+          courseId={courseId}
+          courseTitle={course?.title ?? "—"}
+          cameFromStudent={cameFromStudent}
+          studentId={search.student}
+          attempt={attempt}
         />
-
-        <div className="flex items-center gap-3">
-          <Link
-            to="/teacher/courses/$courseId/assessments"
-            params={{ courseId }}
-            className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-            aria-label={t("teacher_quiz_attempt.back_to_assessments")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <SectionHeader
-            title={attempt.quiz_title}
-            subtitle={t("teacher_quiz_attempt.subtitle", {
-              student: attempt.student_name ?? attempt.student_id,
-              number: attempt.attempt_number,
-            })}
-          />
-        </div>
 
         {/* Summary tiles */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -196,6 +176,79 @@ export default function CourseQuizAttemptDetailPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+/**
+ * Breadcrumb + back-arrow + title header. The back target follows the entry
+ * point: a student profile (?back=student&student=<id>) returns THERE so the
+ * teacher can walk that student's attempts; anything else goes to Assessments.
+ */
+function AttemptPageHeader({
+  courseId,
+  courseTitle,
+  cameFromStudent,
+  studentId,
+  attempt,
+}: {
+  courseId: string;
+  courseTitle: string;
+  cameFromStudent: boolean;
+  studentId?: string;
+  attempt: { quiz_title: string; student_name?: string | null; student_id: string; attempt_number: number };
+}) {
+  const { t } = useTranslation();
+  const backTo = cameFromStudent && studentId
+    ? {
+        to: "/teacher/courses/$courseId/students/$studentId" as const,
+        params: { courseId, studentId },
+        label: t("teacher_quiz_attempt.back_to_student"),
+        crumb: t("teacher_quiz_attempt.breadcrumb_student"),
+      }
+    : {
+        to: "/teacher/courses/$courseId/assessments" as const,
+        params: { courseId },
+        label: t("teacher_quiz_attempt.back_to_assessments"),
+        crumb: t("teacher_quiz_attempt.breadcrumb_assessments"),
+      };
+
+  return (
+    <>
+      <Breadcrumbs
+        items={[
+          { label: t("nav.my_courses"), to: "/teacher/courses" },
+          {
+            label: courseTitle,
+            to: "/teacher/courses/$courseId",
+            params: { courseId },
+          },
+          {
+            label: backTo.crumb,
+            to: backTo.to,
+            params: backTo.params,
+          },
+          { label: t("teacher_quiz_attempt.breadcrumb_attempt") },
+        ]}
+      />
+
+      <div className="flex items-center gap-3">
+        <Link
+          to={backTo.to}
+          params={backTo.params}
+          className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
+          aria-label={backTo.label}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <SectionHeader
+          title={attempt.quiz_title}
+          subtitle={t("teacher_quiz_attempt.subtitle", {
+            student: attempt.student_name ?? attempt.student_id,
+            number: attempt.attempt_number,
+          })}
+        />
+      </div>
+    </>
   );
 }
 

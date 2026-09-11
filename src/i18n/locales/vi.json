@@ -419,7 +419,9 @@
   "teacher_quiz_attempt": {
     "load_failed": "Không tải được lượt làm này.",
     "back_to_assessments": "Quay lại Đánh giá",
+    "back_to_student": "Quay lại học viên",
     "breadcrumb_assessments": "Đánh giá",
+    "breadcrumb_student": "Học viên",
     "breadcrumb_attempt": "Lượt làm",
     "subtitle": "{{student}} · Lượt #{{number}}",
     "started": "Bắt đầu",

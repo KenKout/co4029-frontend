@@ -471,7 +471,9 @@
   "teacher_quiz_attempt": {
     "load_failed": "Couldn't load this attempt.",
     "back_to_assessments": "Back to Assessments",
+    "back_to_student": "Back to Student",
     "breadcrumb_assessments": "Assessments",
+    "breadcrumb_student": "Student",
     "breadcrumb_attempt": "Attempt",
     "subtitle": "{{student}} · Attempt #{{number}}",
     "started": "Started",

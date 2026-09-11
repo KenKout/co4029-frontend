@@ -1,11 +1,19 @@
 import { CheckCircle2, XCircle, Loader2, MinusCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { formatDateTimeMedium } from "@/lib/format/date";
 import type {
   InterviewSessionTeacherRead,
   QuizAttemptTeacherRead,
 } from "@/lib/api/types";
-import { isoToLocalInput } from "./quiz-manage/helpers";
+
+/** The tables' date cells: locale-aware medium date + time (or em dash). */
+function useTableDateFormatter() {
+  const { i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage === "vi" ? "vi-VN" : "en-US";
+  return (iso: string | null | undefined) => formatDateTimeMedium(iso, locale);
+}
 
 function QuizStatusBadge({ attempt }: { attempt: QuizAttemptTeacherRead }) {
   if (attempt.status === "in_progress") {
@@ -59,6 +67,7 @@ export function QuizAttemptsTable({
   emptyState = "No quiz attempts yet.",
   onRowClick,
 }: QuizAttemptsTableProps) {
+  const fmtDate = useTableDateFormatter();
   const columns: DataTableColumn<QuizAttemptTeacherRead>[] = [
     ...(showStudentColumn
       ? [
@@ -115,7 +124,7 @@ export function QuizAttemptsTable({
       header: "Submitted",
       cell: (a) => (
         <span className="text-xs text-m3-on-surface-variant whitespace-nowrap">
-          {isoToLocalInput(a.submitted_at ?? a.started_at)}
+          {fmtDate(a.submitted_at ?? a.started_at)}
         </span>
       ),
     },
@@ -205,6 +214,7 @@ export function InterviewSessionsTable({
   emptyState = "No interview attempts yet.",
   onRowClick,
 }: InterviewSessionsTableProps) {
+  const fmtDate = useTableDateFormatter();
   const columns: DataTableColumn<InterviewSessionTeacherRead>[] = [
     ...(showStudentColumn
       ? [
@@ -258,7 +268,7 @@ export function InterviewSessionsTable({
       header: "Started",
       cell: (s) => (
         <span className="text-xs text-m3-on-surface-variant whitespace-nowrap">
-          {isoToLocalInput(s.started_at)}
+          {fmtDate(s.started_at)}
         </span>
       ),
     },

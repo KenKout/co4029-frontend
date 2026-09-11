@@ -14,7 +14,8 @@ export function StudentQuizAttemptsSection({
 }: {
   controller: CourseStudentDetailController;
 }) {
-  const { quizAttempts, quizAttemptsLoading, navigate, courseId } = controller;
+  const { quizAttempts, quizAttemptsLoading, navigate, courseId, studentId } =
+    controller;
   return (
     <section className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-4">
       <div className="flex items-center gap-2">
@@ -29,8 +30,13 @@ export function StudentQuizAttemptsSection({
         showStudentColumn={false}
         onRowClick={(a) =>
           void navigate({
-            to: "/teacher/courses/$courseId/quizzes/$quizId",
-            params: { courseId, quizId: a.quiz_id },
+            // Per-ATTEMPT review (integrity events + per-question answers for
+            // every attempt, in-progress included) — not the quiz editor.
+            // ?back=student makes the review page return here, so the teacher
+            // can walk attempt #1..N of this student without losing context.
+            to: "/teacher/courses/$courseId/quiz-attempts/$attemptId",
+            params: { courseId, attemptId: a.id },
+            search: { back: "student", student: studentId },
           })
         }
       />
