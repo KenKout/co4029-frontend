@@ -42,10 +42,24 @@ describe("quiz taking hides the breadcrumb", () => {
     );
     const takingBranch = inner.slice(
       inner.indexOf("if (taking &&"),
-      inner.indexOf("if (submittedSummary)"),
+      inner.indexOf("if (!taking)"),
     );
     expect(takingBranch).toContain("QuizTakingStage");
     expect(takingBranch).not.toMatch(/^\s*\{breadcrumb\}/m);
+  });
+
+  it("the result screen wins over the (never-cleared) taking state", () => {
+    // Regression: taking stays truthy after submit (nothing calls
+    // setTaking(null)), so a taking-branch ABOVE the summary check kept the
+    // student on the take screen after hitting Submit.
+    const inner = SRC.slice(
+      SRC.indexOf("function QuizProxyInner"),
+      SRC.indexOf("function InterviewProxy"),
+    );
+    const summaryAt = inner.indexOf("if (submittedSummary)");
+    const takingAt = inner.indexOf("if (taking &&");
+    expect(summaryAt).toBeGreaterThan(-1);
+    expect(takingAt).toBeGreaterThan(summaryAt);
   });
 
   it("intro / results / no-questions still keep the breadcrumb", () => {

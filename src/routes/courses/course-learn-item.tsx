@@ -425,6 +425,20 @@ function QuizProxyInner({
   if (!course || !quiz) {
     return <QuizNotFoundPanel slug={slug} />;
   }
+  // PRECEDENCE: submittedSummary must win over `taking` — taking is never
+  // cleared on submit, so a branch on taking placed first would trap the
+  // student on the take screen after submitting (same order as the
+  // /quiz/$quizId route). Result screen keeps the breadcrumb.
+  if (submittedSummary) {
+    return (
+      <>
+        {breadcrumb}
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+          <QuizResultScreen quiz={quiz} summary={submittedSummary} totalQuestionsFallback={displayQuestions.length} slug={slug} />
+        </div>
+      </>
+    );
+  }
   // In progress (a live attempt) the take screen owns the layout — its sticky
   // bars already carry a back affordance — so no breadcrumb above it. The
   // fullscreen proctoring dialogs ride along (no-ops unless the teacher set
@@ -446,16 +460,6 @@ function QuizProxyInner({
           exitCount={session.fullscreen.exitCount}
           keyPrefix={QUIZ_FULLSCREEN_KEYS}
         />
-      </>
-    );
-  }
-  if (submittedSummary) {
-    return (
-      <>
-        {breadcrumb}
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <QuizResultScreen quiz={quiz} summary={submittedSummary} totalQuestionsFallback={displayQuestions.length} slug={slug} />
-        </div>
       </>
     );
   }
