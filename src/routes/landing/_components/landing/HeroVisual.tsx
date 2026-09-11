@@ -1,87 +1,69 @@
-import { CheckCircle2, Network, Sparkles } from "lucide-react";
-import { GlassCard } from "@/components/ui/glass-card";
+import { ArrowDown, Check, FileText, GitBranch } from "lucide-react";
 
 export default function HeroVisual() {
   return (
-    <div
-      className="relative flex items-center justify-center reveal reveal-right"
-      style={{ "--reveal-delay": "0.2s" } as React.CSSProperties}
-    >
-      <div className="relative w-full max-w-md aspect-[4/3] rounded-xl overflow-hidden shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#172554] via-[#1e40af] to-[#3b82f6]" />
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8">
-          <div className="w-20 h-20 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-            <Network className="w-10 h-10 text-white" />
-          </div>
-          <div className="text-center">
-            <p className="text-white font-headline font-bold text-xl">
-              Knowledge-to-Mastery Map
-            </p>
-            <p className="text-white/60 text-sm mt-1">
-              Concepts aligned to learning outcomes
-            </p>
-          </div>
-          <div className="w-full space-y-2">
-            {[80, 65, 90].map((w, i) => (
-              <div
-                key={i}
-                className="h-1.5 bg-white/10 rounded-full overflow-hidden"
-              >
-                <div
-                  className="h-full bg-gradient-to-r from-[#bfdbfe] to-[#3b82f6] rounded-full"
-                  style={{ width: `${w}%` }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1860]/60 via-transparent to-transparent" />
-      </div>
-
-      {/* Floating AI insight card */}
-      <div className="absolute -bottom-6 -left-4 sm:-left-10 z-10 animate-float hover-entity">
-        <GlassCard className="p-4 w-56 shadow-glass">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl gradient-secondary flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-m3-on-surface">
-                AI Insight
-              </p>
-              <p className="text-xs text-m3-on-surface-variant mt-0.5 leading-snug">
-                Evidence detected:{" "}
-                <span className="text-m3-secondary font-semibold">
-                  Retrieval needs practice
-                </span>
-              </p>
-              <div className="mt-2 h-1 bg-m3-surface-container rounded-full overflow-hidden">
-                <div className="h-full w-2/3 gradient-secondary rounded-full animate-pulse-slow" />
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Top-right governance badge */}
-      <div
-        className="absolute -top-4 -right-2 sm:right-0 animate-float"
-        style={{ animationDelay: "3s" }}
-      >
-        <div className="glass ghost-border shadow-glass rounded-xl px-4 py-3">
-          <p className="flex items-center gap-2 text-sm font-semibold text-m3-primary">
-            <CheckCircle2 className="h-4 w-4" /> Instructor reviewed
+    <figure className="relative min-w-0 rounded-2xl border border-white/20 bg-white p-5 text-slate-900 shadow-2xl sm:p-7">
+      <figcaption className="mb-6 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-4">
+        <span className="text-sm font-semibold">
+          One lesson. Connected learning.
+        </span>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+          Illustrative example
+        </span>
+      </figcaption>
+      <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <span className="rounded-lg bg-blue-100 p-3 text-blue-800">
+          <FileText className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500">
+            01 / TEACHING MATERIAL
+          </p>
+          <p className="mt-1 font-semibold">Introduction to databases</p>
+          <p className="mt-1 text-xs text-slate-600">
+            Your lesson notes and learning outcomes
           </p>
         </div>
       </div>
-    </div>
+      <ArrowDown
+        className="mx-auto my-3 h-5 w-5 text-slate-400"
+        aria-hidden="true"
+      />
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <p className="flex items-center gap-2 text-xs font-semibold text-blue-800">
+          <GitBranch className="h-4 w-4" aria-hidden="true" />
+          02 / CONCEPTS FOR REVIEW
+        </p>
+        <ol className="mt-4 flex flex-wrap items-center gap-2 text-sm font-medium">
+          {["Tables", "Keys", "Relationships"].map((concept) => (
+            <li
+              key={concept}
+              className="rounded-lg border border-blue-200 bg-white px-3 py-2"
+            >
+              {concept}
+            </li>
+          ))}
+        </ol>
+        <p className="mt-4 flex items-center gap-2 text-xs text-blue-800">
+          <Check className="h-4 w-4" aria-hidden="true" />
+          Instructor reviews before publication
+        </p>
+      </div>
+      <ArrowDown
+        className="mx-auto my-3 h-5 w-5 text-slate-400"
+        aria-hidden="true"
+      />
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <p className="text-xs font-semibold text-amber-900">
+          03 / NEXT LEARNING STEP
+        </p>
+        <p className="mt-2 text-sm font-semibold">
+          Revisit how foreign keys connect tables
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+          Use assessment evidence to guide the next practice activity.
+        </p>
+      </div>
+    </figure>
   );
 }

@@ -26,11 +26,11 @@ const safeguards = [
   },
 ];
 
-export default function TestimonialSection() {
+export default function GovernanceSection() {
   return (
     <section
       aria-labelledby="responsible-ai-title"
-      className="relative overflow-hidden bg-[#1e1b4b] py-24"
+      className="relative overflow-hidden bg-[#172554] py-14 sm:py-20"
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-0 top-0 h-[400px] w-[400px] rounded-full bg-[#1d4ed8]/10 blur-3xl" />
@@ -38,7 +38,7 @@ export default function TestimonialSection() {
       </div>
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-        <div className="reveal reveal-left space-y-5">
+        <div className="space-y-5">
           <AIInsightChip pulse={false}>Responsible AI by design</AIInsightChip>
           <h2
             id="responsible-ai-title"
@@ -53,7 +53,7 @@ export default function TestimonialSection() {
           </p>
         </div>
 
-        <div className="reveal reveal-right rounded-xl border border-white/10 bg-white/[0.06] p-5 shadow-glass backdrop-blur-sm sm:p-7">
+        <div className="rounded-xl border border-white/10 bg-white/[0.06] p-5 shadow-glass backdrop-blur-sm sm:p-7">
           <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-5">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
               <ShieldCheck

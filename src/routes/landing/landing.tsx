@@ -1,38 +1,27 @@
-import { useReveal } from "@/hooks/use-reveal";
-import TopNavBar from "@/components/layout/TopNavBar";
 import Footer from "@/components/layout/Footer";
-import CategoriesSection from "./_components/landing/CategoriesSection";
-import FeaturedCoursesSection from "./_components/landing/FeaturedCoursesSection";
+import LandingNav from "./_components/landing/LandingNav";
+import AudienceSection from "./_components/landing/AudienceSection";
+import SampleWorkflow from "./_components/landing/SampleWorkflow";
+import LandingFaq from "./_components/landing/LandingFaq";
 import HeroSection from "./_components/landing/HeroSection";
-import InstructorCtaSection from "./_components/landing/InstructorCtaSection";
-import StatsSection from "./_components/landing/StatsSection";
-import TestimonialSection from "./_components/landing/TestimonialSection";
+import GettingStartedSection from "./_components/landing/GettingStartedSection";
+import GovernanceSection from "./_components/landing/GovernanceSection";
 
 export default function LandingPage() {
-  const revealRef = useReveal<HTMLElement>();
-
   return (
     <>
-      <TopNavBar />
-
-      <main ref={revealRef} className="pt-16">
-        {/* 1. PRODUCT PROMISE */}
+      <LandingNav />
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="scroll-mt-20 bg-m3-surface"
+      >
         <HeroSection />
-
-        {/* 2. LEARNING PRINCIPLES */}
-        <StatsSection />
-
-        {/* 3. CONNECTED ACADEMIC MODEL */}
-        <CategoriesSection />
-
-        {/* 4. KNOWLEDGE-TO-EVIDENCE WORKFLOW */}
-        <FeaturedCoursesSection />
-
-        {/* 5. RESPONSIBLE AI */}
-        <TestimonialSection />
-
-        {/* 6. INSTITUTIONAL CTA */}
-        <InstructorCtaSection />
+        <SampleWorkflow />
+        <AudienceSection />
+        <GovernanceSection />
+        <LandingFaq />
+        <GettingStartedSection />
       </main>
 
       <Footer />

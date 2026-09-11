@@ -7,8 +7,8 @@ export function FooterBrandColumn() {
         </span>
       </div>
       <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-        Personalizing education through the synergy of artificial intelligence
-        and human curiosity. Next-generation learning infrastructure.
+        Connect teaching materials, instructor review and learning evidence. A
+        clearer path from what you teach to what learners understand.
       </p>
       {/* The GitHub / X / LinkedIn icon row was removed: all three were
           `href="#"`, and each rendered an anchor with no text and no
