@@ -34,6 +34,7 @@ function failedEvent(turnKey: string): ControlEvent {
     actionText: null,
     errorClass: "RuntimeError",
     snapshot: null,
+    streamId: null,
   };
 }
 

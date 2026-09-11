@@ -22,6 +22,7 @@ export function useInterviewDrafts(
     answer,
     resetAnswerForQuestion,
     restoreDraft,
+    retrySubmissionIdRef,
   } = turn;
   const { phase, setConnected, setSessionDeadlineAt, timeoutTriggeredRef } =
     phaseState;
@@ -48,6 +49,8 @@ export function useInterviewDrafts(
     markSubmitted: markDraftSubmitted,
     clear: clearDraftAutosave,
     clearIfConfirmed: clearDraftIfConfirmed,
+    clearMatchingSent: clearSentRecordMatching,
+    clearLive: clearLiveDraftOnly,
   } = draftAutosave;
 
   // On (re)entering a question during active questioning, rehydrate any draft
@@ -63,8 +66,16 @@ export function useInterviewDrafts(
     if (answer.state.status !== "draft" || answerText.trim()) return;
     const saved = restoreDraftAutosave();
     if (saved) {
-      setAnswerText(saved);
-      restoreDraft(saved);
+      setAnswerText(saved.text);
+      restoreDraft(saved.text);
+      // Retry identity: ONLY a sent record owns a turn key — the answer it
+      // holds was already acked under that key, so a re-submit must reuse it
+      // (the durable receipt dedupes). A live restore is text being typed;
+      // its next submission gets a FRESH key. Legacy parked copies (no key)
+      // restore as inert text for the same reason.
+      if (saved.source === "sent" && saved.turnKey) {
+        retrySubmissionIdRef.current = saved.turnKey;
+      }
     }
     // answerText/answer.state are read as a one-shot guard at question entry;
     // re-running on their every change would fight live typing.
@@ -128,6 +139,10 @@ export function useInterviewDrafts(
     markDraftSubmitted,
     clearDraftAutosave,
     clearDraftIfConfirmed,
+    /** Settles ONE confirmed turn's parked copy, leaving a newer live draft. */
+    clearSentRecordMatching,
+    /** Debounce-cancel + live-key removal only (question advance, explicit reset). */
+    clearLiveDraftOnly,
     shouldBlockInterviewExit,
     leaveBlocker,
     reconcileDeadline,

@@ -198,19 +198,22 @@ function AttemptPageHeader({
   attempt: { quiz_title: string; student_name?: string | null; student_id: string; attempt_number: number };
 }) {
   const { t } = useTranslation();
-  const backTo = cameFromStudent && studentId
-    ? {
+  const backTo =
+    cameFromStudent && studentId ? (
+      {
         to: "/teacher/courses/$courseId/students/$studentId" as const,
         params: { courseId, studentId },
         label: t("teacher_quiz_attempt.back_to_student"),
         crumb: t("teacher_quiz_attempt.breadcrumb_student"),
       }
-    : {
+    ) : (
+      {
         to: "/teacher/courses/$courseId/assessments" as const,
         params: { courseId },
         label: t("teacher_quiz_attempt.back_to_assessments"),
         crumb: t("teacher_quiz_attempt.breadcrumb_assessments"),
-      };
+      }
+    );
 
   return (
     <>
@@ -225,7 +228,7 @@ function AttemptPageHeader({
           {
             label: backTo.crumb,
             to: backTo.to,
-            params: backTo.params,
+            params: backTo.params as Record<string, string>,
           },
           { label: t("teacher_quiz_attempt.breadcrumb_attempt") },
         ]}

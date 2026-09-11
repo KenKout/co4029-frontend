@@ -56,25 +56,41 @@ describe("a draft outlives an unconfirmed submit", () => {
     );
     const { result } = mount("");
 
-    expect(result.current.restore()).toBe("my careful answer");
+    const restored = result.current.restore();
+    expect(restored?.text).toBe("my careful answer");
+    // Structured restore: a VERSIONED sent record owns its turn key — this is
+    // what seeds the retry identity — and is marked as `sent`, not live.
+    expect(restored?.source).toBe("sent");
+    expect(restored?.turnKey).toBe("tk-2");
+    expect(restored?.legacy).toBe(false);
   });
 
   it("restores a LEGACY plain-string sent draft", () => {
     // Drafts parked by the pre-protocol build were plain strings; an upgrade
-    // must not lose them.
+    // must not lose them. A legacy copy can never be confirmed, so its
+    // structured restore has NO turn key (fresh key on the next submit).
     window.localStorage.setItem(SENT_KEY, "old parked answer");
     const { result } = mount("");
 
-    expect(result.current.restore()).toBe("old parked answer");
+    const restored = result.current.restore();
+    expect(restored?.text).toBe("old parked answer");
+    expect(restored?.source).toBe("sent");
+    expect(restored?.turnKey).toBeNull();
+    expect(restored?.legacy).toBe(true);
   });
 
   it("prefers a live draft over the sent copy", () => {
     // The candidate started typing again — that text is what they care about.
+    // A live restore NEVER seeds retry identity (turnKey null): the next
+    // submit is a fresh turn.
     window.localStorage.setItem(SENT_KEY, "the sent one");
     window.localStorage.setItem(LIVE_KEY, "what I am typing now");
     const { result } = mount("what I am typing now");
 
-    expect(result.current.restore()).toBe("what I am typing now");
+    const restored = result.current.restore();
+    expect(restored?.text).toBe("what I am typing now");
+    expect(restored?.source).toBe("live");
+    expect(restored?.turnKey).toBeNull();
   });
 
   it("parks text that was submitted before the debounced write landed", () => {
@@ -124,7 +140,7 @@ describe("a draft outlives an unconfirmed submit", () => {
 
     result.current.clearIfConfirmed({ turnKey: "tk-other" });
 
-    expect(result.current.restore()).toBe("still unconfirmed");
+    expect(result.current.restore()?.text).toBe("still unconfirmed");
   });
 
   it("keeps the copy when the snapshot carries NO confirmation", () => {
@@ -134,7 +150,52 @@ describe("a draft outlives an unconfirmed submit", () => {
 
     result.current.clearIfConfirmed({ turnKey: null });
 
-    expect(result.current.restore()).toBe("unconfirmed");
+    expect(result.current.restore()?.text).toBe("unconfirmed");
+  });
+
+  it("a confirmation settles the sent copy but keeps a NEW live follow-up draft", () => {
+    // Answer A was acked and parked; the candidate already typed a follow-up B
+    // (a new live draft). The confirmation of A must remove A's insurance copy
+    // WITHOUT destroying B.
+    window.localStorage.setItem(LIVE_KEY, "follow-up draft B");
+    window.localStorage.setItem(
+      SENT_KEY,
+      JSON.stringify({ v: 1, text: "answer A", turnKey: "tk-a" }),
+    );
+    const { result } = mount("follow-up draft B");
+
+    result.current.clearMatchingSent({ turnKey: "tk-a" });
+
+    expect(window.localStorage.getItem(SENT_KEY)).toBeNull();
+    expect(window.localStorage.getItem(LIVE_KEY)).toBe("follow-up draft B");
+    expect(result.current.restore()?.text).toBe("follow-up draft B");
+  });
+
+  it("clearMatchingSent removes a legacy parked copy but still keeps the live draft", () => {
+    window.localStorage.setItem(LIVE_KEY, "typing now");
+    window.localStorage.setItem(SENT_KEY, "legacy parked");
+    const { result } = mount("typing now");
+
+    // Legacy copies carry no key; the confirmation's own key is irrelevant —
+    // the un-confirmable copy goes, the live draft stays.
+    result.current.clearMatchingSent({ turnKey: "tk-whatever" });
+
+    expect(window.localStorage.getItem(SENT_KEY)).toBeNull();
+    expect(window.localStorage.getItem(LIVE_KEY)).toBe("typing now");
+  });
+
+  it("clearLive cancels the debounce and removes ONLY the live key", () => {
+    vi.useFakeTimers();
+    const { result } = mount("live text");
+
+    result.current.clearLive();
+    vi.advanceTimersByTime(500);
+
+    expect(window.localStorage.getItem(LIVE_KEY)).toBeNull();
+    // The parked sent record is insurance — untouched by a live-only clear.
+    window.localStorage.setItem(SENT_KEY, "kept");
+    result.current.clearLive();
+    expect(window.localStorage.getItem(SENT_KEY)).toBe("kept");
   });
 
   it("drops both copies unconditionally on clear()", () => {

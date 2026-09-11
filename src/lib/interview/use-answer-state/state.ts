@@ -38,7 +38,21 @@ export type AnswerAction =
   | { type: "submitSuccess"; submittedAnswer?: string }
   | { type: "submitFailure"; error: string }
   | { type: "restoreDraft"; draft?: string }
-  | { type: "reopen" };
+  | { type: "reopen" }
+  /**
+   * A turn-scoped FAILED for a turn whose waiter is gone (the ack resolved the
+   * submit long ago). ONE atomic transition: status=failed, the exact parked
+   * draft/error/turn-key restored, the stale question's event ignored. Chaining
+   * `restoreDraft()` then `submitFailed()` instead let an interleaved dispatch
+   * drop the restored text or mark the wrong question failed.
+   */
+  | {
+      type: "lateSubmitFailure";
+      questionId: string;
+      draft: string;
+      error: string;
+      submissionId?: string;
+    };
 
 export function createInitialAnswerState(questionId: string): AnswerState {
   return {

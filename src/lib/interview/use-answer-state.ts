@@ -58,6 +58,8 @@ export function answerReducer(
       return handle.restoreDraft(state, action);
     case "reopen":
       return handle.reopen(state);
+    case "lateSubmitFailure":
+      return handle.lateSubmitFailure(state, action);
     default:
       return state;
   }
@@ -73,6 +75,12 @@ export interface UseAnswerStateResult {
   submitSucceeded: (submittedAnswer?: string) => void;
   submitFailed: (error: string) => void;
   restoreDraft: (draft?: string) => void;
+  lateSubmitFailure: (args: {
+    questionId: string;
+    draft: string;
+    error: string;
+    submissionId?: string;
+  }) => void;
   resetForQuestion: (questionId: string) => void;
   reopenForFollowUp: () => void;
 }
@@ -118,6 +126,15 @@ export function useAnswerState(questionId: string): UseAnswerStateResult {
     (draft?: string) => dispatch({ type: "restoreDraft", draft }),
     [],
   );
+  const lateSubmitFailure = useCallback(
+    (args: {
+      questionId: string;
+      draft: string;
+      error: string;
+      submissionId?: string;
+    }) => dispatch({ type: "lateSubmitFailure", ...args }),
+    [],
+  );
   const resetForQuestion = useCallback(
     (nextQuestionId: string) =>
       dispatch({ type: "reset", questionId: nextQuestionId }),
@@ -135,6 +152,7 @@ export function useAnswerState(questionId: string): UseAnswerStateResult {
     submitSucceeded,
     submitFailed,
     restoreDraft,
+    lateSubmitFailure,
     resetForQuestion,
     reopenForFollowUp,
   };

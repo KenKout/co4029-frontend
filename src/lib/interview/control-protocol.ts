@@ -198,6 +198,15 @@ export interface ControlEvent {
   errorClass: string | null;
   /** Present on `snapshot` only; null on every turn-scoped status. */
   snapshot: StateSnapshot | null;
+  /**
+   * The publishing agent's stream epoch (opaque UUID), when the server tags it.
+   *
+   * Agent replacement in one room restarts `seq`, so ordering must be scoped to
+   * the active epoch instead of a global last-seen sequence. Absent on frames
+   * from a server predating the tag — those keep their legacy global-sequence
+   * meaning (see `use-interview-chat`'s tracker).
+   */
+  streamId: string | null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -371,6 +380,7 @@ export function parseControlEvent(raw: string): ControlEvent | null {
     status: status as ControlStatus,
     turnKey: asNullableString(payload.turn_key),
     seq,
+    streamId: asNullableString(payload.stream_id),
     turnAction,
     actionKind:
       status === "agent_action" ? asNullableString(payload.turn_action) : null,

@@ -117,14 +117,28 @@ export interface SentDraft {
   turnKey: string | null;
 }
 
+/** What restore() hands back: the text plus WHO owns it. */
+export interface RestoredDraft {
+  text: string;
+  /** "live" = being typed; "sent" = parked post-ack insurance copy. */
+  source: "live" | "sent";
+  /** Turn key only a VERSIONED sent record owns; live/legacy restores are null. */
+  turnKey: string | null;
+  /** True for a pre-protocol plain-string parked copy. */
+  legacy: boolean;
+}
+
 export interface UseDraftAutosaveResult {
   /**
    * The persisted answer for the current session+question, or null.
    *
    * Prefers a live draft over a sent-but-unconfirmed one: if the candidate has
-   * started typing again, that is the text they care about.
+   * started typing again, that is the text they care about. The structured
+   * return distinguishes the two so the caller seeds a retry identity ONLY
+   * from a sent record that owns a turn key (a live restore starts a FRESH
+   * submission).
    */
-  restore: () => string | null;
+  restore: () => RestoredDraft | null;
   /**
    * The turn was acked. Park it as sent rather than deleting it.
    *
@@ -145,6 +159,14 @@ export interface UseDraftAutosaveResult {
    * that this draft made it.
    */
   clearIfConfirmed: (args: { turnKey: string | null }) => void;
+  /**
+   * Remove ONLY the parked `:sent` record whose turnKey matches (or any parked
+   * record when none matches — legacy copies can never be confirmed). A NEW
+   * live draft (post-confirmation follow-up typing) is left untouched.
+   */
+  clearMatchingSent: (args: { turnKey: string | null }) => void;
+  /** Cancel the pending debounce and remove ONLY the live draft. */
+  clearLive: () => void;
   /** Remove every copy unconditionally (results/finish cleanup). */
   clear: () => void;
 }
@@ -174,15 +196,23 @@ export function useDraftAutosave(
     };
   }, [key, draft]);
 
-  const restore = useCallback((): string | null => {
+  const restore = useCallback((): RestoredDraft | null => {
     if (!key) return null;
     const live = safeGet(key);
-    if (live && live.trim()) return live;
+    if (live && live.trim()) {
+      return { text: live, source: "live", turnKey: null, legacy: false };
+    }
     // Nothing being typed — fall back to an answer that was sent but never
     // confirmed stored. Without this, an ack followed by a worker crash left the
     // candidate with an empty composer and no copy of what they had written.
     const sent = parseSentRecord(safeGet(`${key}${SENT_SUFFIX}`));
-    return sent?.text ?? null;
+    if (!sent) return null;
+    return {
+      text: sent.text,
+      source: "sent",
+      turnKey: sent.legacy ? null : sent.turnKey,
+      legacy: sent.legacy,
+    };
   }, [key]);
 
   const markSubmitted = useCallback(
@@ -229,6 +259,29 @@ export function useDraftAutosave(
     [key],
   );
 
+  const clearMatchingSent = useCallback(
+    ({ turnKey }: { turnKey: string | null }): void => {
+      if (!key) return;
+      const parked = parseSentRecord(safeGet(`${key}${SENT_SUFFIX}`));
+      if (!parked) return;
+      if (parked.legacy || turnKey === null || parked.turnKey === turnKey) {
+        safeRemove(`${key}${SENT_SUFFIX}`);
+      }
+      // Deliberately does NOT touch the live key: a confirmation settles one
+      // turn, and text typed afterwards is a NEW draft the candidate still owns.
+    },
+    [key],
+  );
+
+  const clearLive = useCallback((): void => {
+    if (!key) return;
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+      timer.current = null;
+    }
+    safeRemove(key);
+  }, [key]);
+
   const clear = useCallback((): void => {
     if (!key) return;
     if (timer.current !== null) {
@@ -239,5 +292,5 @@ export function useDraftAutosave(
     safeRemove(`${key}${SENT_SUFFIX}`);
   }, [key]);
 
-  return { restore, markSubmitted, clear, clearIfConfirmed };
+  return { restore, markSubmitted, clear, clearIfConfirmed, clearMatchingSent, clearLive };
 }

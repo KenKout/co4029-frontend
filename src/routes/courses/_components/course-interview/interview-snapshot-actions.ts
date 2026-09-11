@@ -30,6 +30,17 @@ export function applyStateSnapshot(
     outcomesRequired: snapshot.outcomesRequired,
   });
 
+  // The server's explicit durability confirmation rides wherever the snapshot
+  // lands — including a FINISHED one. Processing it BEFORE the isFinished
+  // branch (not after the closing guard below, which returns early on
+  // closing/results) means the candidate's final typed answer still gets its
+  // parked `:sent` copy settled by the confirmation it earned; a final
+  // snapshot consumed by beginClosing would otherwise strand it.
+  if (snapshot.confirmedTurnKey) {
+    ctx.markTurnConfirmed(snapshot.confirmedTurnKey);
+    ctx.clearDraftIfConfirmed({ turnKey: snapshot.confirmedTurnKey });
+  }
+
   if (snapshot.isFinished) {
     // `beginClosing` is itself idempotent (it returns early once the phase is
     // closing/results), so a repeated finished snapshot cannot re-finish.
@@ -47,15 +58,6 @@ export function applyStateSnapshot(
   // Progress and the deadline above are still applied: they are display-only and
   // a fresher reading of them is never wrong.
   if (ctx.phase === "closing" || ctx.phase === "results") return;
-
-  // The server's explicit durability confirmation for a typed answer. Ride it
-  // wherever the snapshot lands — the question may have advanced in this very
-  // snapshot, or the model may still be probing the SAME question. Only the
-  // matching key clears the parked copy.
-  if (snapshot.confirmedTurnKey) {
-    ctx.markTurnConfirmed(snapshot.confirmedTurnKey);
-    ctx.clearDraftIfConfirmed({ turnKey: snapshot.confirmedTurnKey });
-  }
 
   const question = snapshotQuestion(snapshot);
   if (!question) return;

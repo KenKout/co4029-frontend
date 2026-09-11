@@ -29,6 +29,7 @@ export function useInterviewTurnState() {
     submitSucceeded,
     submitFailed,
     restoreDraft,
+    lateSubmitFailure,
   } = answer;
   // End-confirmation gate (Slice 4): true after the interviewer asks the
   // candidate to confirm ending (backend `pending_confirmation`). While true
@@ -102,19 +103,26 @@ export function useInterviewTurnState() {
   /**
    * Surface a post-ACK fold failure as a RETRYABLE failed state.
    *
-   * Restores the EXACT parked text into the composer, rolls the answer
-   * machine back to `failed` (which re-enables submit), and remembers the
-   * turn key as the next submission's idempotency key — the server-side
-   * receipt reclaim makes that redelivery safe.
+   * ONE atomic reducer transition (`lateSubmitFailure`) restores the exact
+   * parked draft, the retryable error and the turn key — chaining
+   * `restoreDraft()` then `submitFailed()` let an interleaved dispatch drop
+   * the restored text or fail the wrong question. The turn key stays the next
+   * submission's idempotency key (the server-side receipt reclaim makes that
+   * redelivery safe).
    */
   const submitFailedForRetry = useCallback(
     (text: string, turnKey: string) => {
+      const current = answer.state;
+      lateSubmitFailure({
+        questionId: current.questionId,
+        draft: text,
+        error: "fold_failed_retryable",
+        submissionId: turnKey,
+      });
       setAnswerText(text);
-      restoreDraft(text);
-      submitFailed("fold_failed_retryable");
       retrySubmissionIdRef.current = turnKey;
     },
-    [restoreDraft, submitFailed],
+    [answer.state, lateSubmitFailure, setAnswerText],
   );
 
   // The turn key a RETRY must reuse (failed fold / rejected send). Cleared on

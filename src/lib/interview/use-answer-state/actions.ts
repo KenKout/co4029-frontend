@@ -150,3 +150,30 @@ export function reopen(state: AnswerState): AnswerState {
   if (state.status !== "submitted") return state;
   return { ...state, status: "draft", draft: "", error: null };
 }
+
+export function lateSubmitFailure(
+  state: AnswerState,
+  action: ActionOf<"lateSubmitFailure">,
+): AnswerState {
+  /** A turn-scoped FAILED whose waiter is gone (plan §5, atomic transition).
+   *
+   * Guards, in order:
+   * - A stale question's event is rejected outright (the machine has moved on).
+   * - A turn already CONFIRMED cannot retroactively fail (the reducer may have
+   *   reached `submitted` in the window between the ack resolving and the
+   *   FAILED arriving).
+   * - Everything else (draft/reviewing/failed) is a valid landing: restore the
+   *   exact parked draft + error + retry key in ONE transition.
+   */
+  if (action.questionId !== state.questionId) return state;
+  if (state.status === "submitted" || state.status === "submitting") return state;
+  return {
+    ...state,
+    status: "failed",
+    draft: action.draft,
+    error: action.error,
+    // The FAILED event is turn-scoped: the same turn_key stays the retry
+    // identity, matching the backend's same-key idempotency.
+    submissionId: action.submissionId ?? state.submissionId,
+  };
+}

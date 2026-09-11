@@ -45,6 +45,7 @@ import {
   type StateSnapshot,
   type TurnAction,
 } from "@/lib/interview/control-protocol";
+import { StreamOrderTracker } from "@/lib/interview/stream-order";
 
 /** Outcome of one typed turn, resolved from the control topic. */
 export interface ChatTurnOutcome {
@@ -181,11 +182,13 @@ export function useInterviewChat(
   const waitingRef = useRef(
     new Map<string, (outcome: ChatTurnOutcome) => void>(),
   );
-  // Highest `seq` seen — the WHOLE ordering protocol, shared by both channels on
-  // this topic. Control events are ordered by this, never by arrival: after a
-  // reconnect an older event can still land, and applying it would roll the UI
-  // back to a previous turn's or snapshot's state.
-  const lastSeqRef = useRef(-1);
+  // Ordering across agent epochs: `seq` is only comparable WITHIN one agent's
+  // stream (a replacement agent restarts it at 1), so a global last-seen value
+  // would drop every frame of the new agent. The tracker scopes comparisons to
+  // the active tagged epoch, drops frames from retired epochs, and keeps the
+  // legacy global-sequence behaviour for untagged frames until the first tagged
+  // one arrives. See `stream-order.ts`.
+  const orderRef = useRef(new StreamOrderTracker());
 
   // Subscribe to the control topic for the room's lifetime, not per-send: an
   // agent can publish `accepted` before a slow `sendText` promise settles, and a
@@ -210,10 +213,9 @@ export function useInterviewChat(
         // down the room over one frame.
         if (!event) return;
 
-        // Out-of-order / replayed event: ignore. `seq` is strictly increasing
-        // per session on the agent side.
-        if (event.seq <= lastSeqRef.current) return;
-        lastSeqRef.current = event.seq;
+        // Out-of-order / replayed / retired-epoch event: ignore. Ordering is
+        // scoped to the active agent epoch (or the legacy global sequence).
+        if (!orderRef.current.accept(event)) return;
 
         setLastEvent(event);
 
@@ -292,6 +294,7 @@ export function useInterviewChat(
           actionText: null,
           errorClass: "RoomDisconnected",
           snapshot: null,
+          streamId: null,
         },
         // A turn cut off mid-flight was never graded — keep the draft so the
         // candidate can retry (same turn_key stays idempotent server-side).
