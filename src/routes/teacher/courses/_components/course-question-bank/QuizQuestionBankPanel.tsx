@@ -34,58 +34,100 @@ import type {
   QuizQuestionBankStatus,
 } from "@/lib/api/types";
 
-const TYPE_OPTIONS = [
-  { value: "", label: "All question types" },
-  { value: "multiple_choice", label: "Multiple choice" },
-  { value: "true_false", label: "True / false" },
-  { value: "short_answer", label: "Short answer" },
-  { value: "fill_blank", label: "Fill blank" },
-  { value: "code", label: "Code" },
-  { value: "numerical", label: "Numerical" },
-  { value: "matching", label: "Matching" },
-  { value: "ordering", label: "Ordering" },
+/**
+ * Option VALUES only — the labels are resolved through `t()` at render time.
+ *
+ * These used to carry hardcoded English labels, which is why this whole tab
+ * stayed English on a Vietnamese UI. A module constant is evaluated once at
+ * import, before i18next is even initialised, so it cannot hold translated
+ * copy at all: the values live here and the copy lives in the locale files.
+ */
+const TYPE_VALUES = [
+  "",
+  "multiple_choice",
+  "true_false",
+  "short_answer",
+  "fill_blank",
+  "code",
+  "numerical",
+  "matching",
+  "ordering",
 ] as const;
 
-const CREATE_TYPE_OPTIONS = TYPE_OPTIONS.filter(
-  (option) =>
-    option.value === "multiple_choice" ||
-    option.value === "true_false" ||
-    option.value === "short_answer" ||
-    option.value === "numerical",
+/**
+ * The types this form can author COMPLETELY — prompt plus the answer key the
+ * grader needs.
+ *
+ * `short_answer` is deliberately absent even though the filter list above
+ * includes it (existing short-answer items copied in from a quiz are still
+ * browsable and importable). The grader reads a short answer's expected text
+ * from `original_generated_payload.correct_answer`, and neither this form nor
+ * `QuizQuestionBankItemCreate` has any field that can set it. A short answer
+ * authored here would therefore carry no key at all: every submission scores
+ * zero and lands in the manual-grading queue with no reference answer for the
+ * teacher to mark against. Offering the type without the field does not create
+ * a short-answer question — it creates a hand-grading obligation the teacher
+ * never agreed to.
+ *
+ * Restore it here the moment the create schema can carry an answer key.
+ */
+const CREATE_TYPE_VALUES = TYPE_VALUES.filter(
+  (value) =>
+    value === "multiple_choice" ||
+    value === "true_false" ||
+    value === "numerical",
 );
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All statuses" },
-  { value: "draft", label: "Draft" },
-  { value: "approved", label: "Approved" },
-  { value: "archived", label: "Archived" },
-] as const;
+const STATUS_VALUES = ["", "draft", "approved", "archived"] as const;
 
-const DIFFICULTY_OPTIONS = [
-  { value: "", label: "All difficulties" },
-  { value: "easy", label: "Easy" },
-  { value: "medium", label: "Medium" },
-  { value: "hard", label: "Hard" },
-] as const;
+const DIFFICULTY_VALUES = ["", "easy", "medium", "hard"] as const;
+
+const K = "teacher_question_bank.quiz";
+
+/** Build a Select's options, translating each value's label. */
+function useOptions(
+  values: readonly string[],
+  key: (value: string) => string,
+): { value: string; label: string }[] {
+  const { t } = useTranslation();
+  // `key` and `values` are module-level constants at every call site, so the
+  // only dependency that ever actually changes here is the active language.
+  return useMemo(
+    () => values.map((value) => ({ value, label: t(key(value)) })),
+    [values, key, t],
+  );
+}
+
+const typeKey = (value: string) => `${K}.type_${value || "all"}`;
+const statusKey = (value: string) => `${K}.status_${value || "all"}`;
+const difficultyKey = (value: string) => `${K}.difficulty_${value || "all"}`;
 
 type ConfirmAction = {
   kind: "approve" | "archive" | "delete";
   item: QuizQuestionBankItem;
 } | null;
 
-function statusBadge(status: QuizQuestionBankStatus) {
+function StatusBadge({ status }: { status: QuizQuestionBankStatus }) {
+  const { t } = useTranslation();
   const classes = {
     draft: "bg-amber-50 text-amber-800",
     approved: "bg-emerald-50 text-emerald-800",
     archived: "bg-slate-100 text-slate-700",
   }[status];
-  return <Badge className={`border-0 capitalize ${classes}`}>{status}</Badge>;
+  // No `capitalize`: the label is translated copy now, already cased for its
+  // own language, and Vietnamese does not capitalise mid-sentence nouns.
+  return (
+    <Badge className={`border-0 ${classes}`}>{t(statusKey(status))}</Badge>
+  );
 }
 
 function NewBankQuestionForm({ courseId }: { courseId: string }) {
+  const { t } = useTranslation();
   const create = useCreateCuratedQuizQuestion(courseId);
+  const typeOptions = useOptions(CREATE_TYPE_VALUES, typeKey);
+  const difficultyOptions = useOptions(DIFFICULTY_VALUES, difficultyKey);
   const [open, setOpen] = useState(false);
-  const [questionType, setQuestionType] = useState("short_answer");
+  const [questionType, setQuestionType] = useState("multiple_choice");
   const [prompt, setPrompt] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [numericAnswer, setNumericAnswer] = useState("");
@@ -103,7 +145,7 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
 
   async function submit() {
     if (!prompt.trim()) {
-      toast.error("Question text is required");
+      toast.error(t(`${K}.prompt_required`));
       return;
     }
     const optionPayload =
@@ -148,10 +190,10 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
         status: "draft",
         options: optionPayload,
       });
-      toast.success("Draft bank question created");
+      toast.success(t(`${K}.created`));
       reset();
     } catch (error) {
-      toast.error((error as Error).message || "Could not create question");
+      toast.error((error as Error).message || t(`${K}.create_failed`));
     }
   }
 
@@ -164,7 +206,7 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
         className="h-auto w-full justify-between rounded-xl p-4"
       >
         <span className="flex items-center gap-2 font-semibold">
-          <Plus className="h-4 w-4" /> New Quiz bank question
+          <Plus className="h-4 w-4" /> {t(`${K}.new_question`)}
         </span>
         {open ? (
           <ChevronUp className="h-4 w-4" />
@@ -178,20 +220,20 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
             <Select
               value={questionType}
               onValueChange={setQuestionType}
-              options={CREATE_TYPE_OPTIONS}
-              aria-label="Question type"
+              options={typeOptions}
+              aria-label={t(`${K}.question_type_label`)}
             />
             <Select
               value={difficulty}
               onValueChange={setDifficulty}
-              options={DIFFICULTY_OPTIONS}
-              aria-label="Difficulty"
+              options={difficultyOptions}
+              aria-label={t(`${K}.difficulty_label`)}
             />
           </div>
           <Textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
-            placeholder="Question text"
+            placeholder={t(`${K}.prompt_placeholder`)}
             rows={3}
           />
           {questionType === "multiple_choice" ? (
@@ -216,7 +258,9 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
                         ),
                       )
                     }
-                    placeholder={`Option ${String.fromCharCode(65 + index)}`}
+                    placeholder={t(`${K}.option_placeholder`, {
+                      letter: String.fromCharCode(65 + index),
+                    })}
                   />
                 </label>
               ))}
@@ -227,8 +271,8 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
               value={String(correctIndex)}
               onValueChange={(value) => setCorrectIndex(Number(value))}
               options={[
-                { value: "0", label: "Correct answer: True" },
-                { value: "1", label: "Correct answer: False" },
+                { value: "0", label: t(`${K}.correct_true`) },
+                { value: "1", label: t(`${K}.correct_false`) },
               ]}
             />
           ) : null}
@@ -237,12 +281,12 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
               type="number"
               value={numericAnswer}
               onChange={(event) => setNumericAnswer(event.target.value)}
-              placeholder="Correct numerical answer"
+              placeholder={t(`${K}.numeric_placeholder`)}
             />
           ) : null}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={reset}>
-              Cancel
+              {t(`${K}.cancel`)}
             </Button>
             <Button
               type="button"
@@ -252,7 +296,7 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
               {create.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Create draft
+              {t(`${K}.create_draft`)}
             </Button>
           </div>
         </div>
@@ -280,6 +324,9 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
     }),
     [difficulty, questionType, searchInput, status],
   );
+  const statusOptions = useOptions(STATUS_VALUES, statusKey);
+  const typeOptions = useOptions(TYPE_VALUES, typeKey);
+  const difficultyOptions = useOptions(DIFFICULTY_VALUES, difficultyKey);
   const bank = useCuratedQuizQuestionBank(courseId, filters);
   const update = useUpdateCuratedQuizQuestion(courseId);
   const setItemStatus = useSetCuratedQuizQuestionStatus(courseId);
@@ -294,12 +341,12 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
       });
       toast.success(
         updated.status === "draft" && editing.status === "approved"
-          ? "Saved as draft because approved content changed"
-          : "Question updated",
+          ? t(`${K}.demoted_to_draft`)
+          : t(`${K}.updated`),
       );
       setEditing(null);
     } catch (error) {
-      toast.error((error as Error).message || "Could not update question");
+      toast.error((error as Error).message || t(`${K}.update_failed`));
     }
   }
 
@@ -308,7 +355,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
     try {
       if (confirm.kind === "delete") {
         await deleteItem.mutateAsync(confirm.item.id);
-        toast.success("Question removed from bank");
+        toast.success(t(`${K}.deleted`));
       } else {
         await setItemStatus.mutateAsync({
           itemId: confirm.item.id,
@@ -316,17 +363,20 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
         });
         toast.success(
           confirm.kind === "approve"
-            ? "Question approved"
-            : "Question archived",
+            ? t(`${K}.approved_toast`)
+            : t(`${K}.archived_toast`),
         );
       }
       setConfirm(null);
     } catch (error) {
-      toast.error((error as Error).message || "Action failed");
+      toast.error((error as Error).message || t(`${K}.action_failed`));
     }
   }
 
   const pendingAction = setItemStatus.isPending || deleteItem.isPending;
+  // Falls back to "approve" only while the dialog is closing (`confirm` is
+  // already null but the exit animation still renders the old copy).
+  const confirmKind = confirm?.kind ?? "approve";
   return (
     <div className="space-y-4">
       <NewBankQuestionForm courseId={courseId} />
@@ -337,7 +387,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
           <Input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Search Quiz bank questions"
+            placeholder={t(`${K}.search_placeholder`)}
             className="pl-9"
           />
         </div>
@@ -345,17 +395,17 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
           <Select
             value={status}
             onValueChange={setStatus}
-            options={STATUS_OPTIONS}
+            options={statusOptions}
           />
           <Select
             value={questionType}
             onValueChange={setQuestionType}
-            options={TYPE_OPTIONS}
+            options={typeOptions}
           />
           <Select
             value={difficulty}
             onValueChange={setDifficulty}
-            options={DIFFICULTY_OPTIONS}
+            options={difficultyOptions}
           />
         </div>
       </div>
@@ -389,18 +439,18 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
           renderItem={(item) => (
             <article className="rounded-xl border border-m3-outline-variant/30 bg-m3-surface p-4 space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                {statusBadge(item.status)}
-                <Badge variant="outline" className="capitalize">
-                  {item.question_type.replace(/_/g, " ")}
+                <StatusBadge status={item.status} />
+                <Badge variant="outline">
+                  {t(typeKey(item.question_type))}
                 </Badge>
                 {item.difficulty ? (
-                  <Badge variant="outline" className="capitalize">
-                    {item.difficulty}
+                  <Badge variant="outline">
+                    {t(difficultyKey(item.difficulty))}
                   </Badge>
                 ) : null}
                 {item.source_question_id ? (
                   <span className="text-xs text-m3-on-surface-variant">
-                    Saved from a quiz
+                    {t(`${K}.saved_from_quiz`)}
                   </span>
                 ) : null}
               </div>
@@ -424,7 +474,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                       variant="outline"
                       onClick={() => setEditing(null)}
                     >
-                      Cancel
+                      {t(`${K}.cancel`)}
                     </Button>
                     <Button
                       type="button"
@@ -432,7 +482,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                       onClick={() => void saveEdit()}
                       disabled={update.isPending}
                     >
-                      Save
+                      {t(`${K}.save`)}
                     </Button>
                   </>
                 ) : (
@@ -446,7 +496,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                     }}
                     className="gap-2"
                   >
-                    <Pencil className="h-3.5 w-3.5" /> Edit
+                    <Pencil className="h-3.5 w-3.5" /> {t(`${K}.edit`)}
                   </Button>
                 )}
                 {item.status !== "approved" ? (
@@ -457,7 +507,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                     onClick={() => setConfirm({ kind: "approve", item })}
                     className="gap-2 border-emerald-200 text-emerald-700"
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Approve
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {t(`${K}.approve`)}
                   </Button>
                 ) : null}
                 {item.status !== "archived" ? (
@@ -468,7 +518,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                     onClick={() => setConfirm({ kind: "archive", item })}
                     className="gap-2"
                   >
-                    <Archive className="h-3.5 w-3.5" /> Archive
+                    <Archive className="h-3.5 w-3.5" /> {t(`${K}.archive`)}
                   </Button>
                 ) : null}
                 <Button
@@ -478,7 +528,7 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
                   onClick={() => setConfirm({ kind: "delete", item })}
                   className="ml-auto gap-2 border-red-200 text-red-700"
                 >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                  <Trash2 className="h-3.5 w-3.5" /> {t(`${K}.delete`)}
                 </Button>
               </div>
             </article>
@@ -491,27 +541,9 @@ export function QuizQuestionBankPanel({ courseId }: { courseId: string }) {
         onOpenChange={(open) => {
           if (!open && !pendingAction) setConfirm(null);
         }}
-        title={
-          confirm?.kind === "delete"
-            ? "Delete bank question?"
-            : confirm?.kind === "archive"
-              ? "Archive bank question?"
-              : "Approve bank question?"
-        }
-        description={
-          confirm?.kind === "delete"
-            ? "Already imported Quiz questions remain unchanged. This bank item will no longer be available."
-            : confirm?.kind === "archive"
-              ? "The question will be hidden from new imports. Existing imported questions are unaffected."
-              : "Approved questions become available for import into editable quizzes."
-        }
-        confirmLabel={
-          confirm?.kind === "delete"
-            ? "Delete"
-            : confirm?.kind === "archive"
-              ? "Archive"
-              : "Approve"
-        }
+        title={t(`${K}.confirm_${confirmKind}_title`)}
+        description={t(`${K}.confirm_${confirmKind}_body`)}
+        confirmLabel={t(`${K}.${confirmKind}`)}
         confirmVariant={confirm?.kind === "delete" ? "destructive" : "default"}
         isPending={pendingAction}
         onConfirm={() => void runConfirmedAction()}

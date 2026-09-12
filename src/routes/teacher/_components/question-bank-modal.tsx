@@ -42,6 +42,7 @@ import { CuratedBankImportBody } from "./question-bank-modal/CuratedBankImportBo
 
 export function QuestionBankModal(props: QuestionBankModalProps) {
   const { onClose } = props;
+  const { t } = useTranslation();
   const [source, setSource] = useState<"curated" | "existing">("curated");
   const controller = useQuestionBankModal(props);
 
@@ -56,13 +57,19 @@ export function QuestionBankModal(props: QuestionBankModalProps) {
         <BankModalHeader onClose={onClose} />
         <Tabs
           tabs={[
-            { key: "curated", label: "Curated bank" },
-            { key: "existing", label: "Existing quizzes" },
+            {
+              key: "curated",
+              label: t("teacher_question_bank.quiz.source_curated"),
+            },
+            {
+              key: "existing",
+              label: t("teacher_question_bank.quiz.source_existing"),
+            },
           ]}
           value={source}
           onChange={setSource}
           variant="contained"
-          ariaLabel="Question source"
+          ariaLabel={t("teacher_question_bank.quiz.source_aria")}
         />
         {source === "curated" ? (
           <CuratedBankImportBody {...props} />
@@ -79,4 +86,5 @@ export function QuestionBankModal(props: QuestionBankModalProps) {
   );
 }
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Tabs } from "@/components/ui/tabs";

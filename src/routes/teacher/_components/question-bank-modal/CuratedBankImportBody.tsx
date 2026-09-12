@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ export function CuratedBankImportBody({
   quizId,
   onClose,
 }: QuestionBankModalProps) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const bank = useCuratedQuizQuestionBank(courseId, {
@@ -39,10 +41,17 @@ export function CuratedBankImportBody({
     if (selected.size === 0) return;
     try {
       const created = await importer.mutateAsync(Array.from(selected));
-      toast.success(`Imported ${created.length} curated question${created.length === 1 ? "" : "s"}`);
+      // Pluralised by i18next rather than an inline "s": Vietnamese has no
+      // plural suffix, so the hand-built English form was untranslatable.
+      toast.success(
+        t("teacher_question_bank.quiz.import_done", { count: created.length }),
+      );
       onClose();
     } catch (error) {
-      toast.error((error as Error).message || "Import failed");
+      toast.error(
+        (error as Error).message ||
+          t("teacher_question_bank.quiz.import_failed"),
+      );
     }
   }
 
@@ -53,7 +62,9 @@ export function CuratedBankImportBody({
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search approved curated questions"
+          placeholder={t(
+            "teacher_question_bank.quiz.import_search_placeholder",
+          )}
           className="pl-9"
           autoFocus
         />
@@ -62,13 +73,12 @@ export function CuratedBankImportBody({
       <div className="min-h-52 flex-1 overflow-y-auto rounded-xl border border-m3-outline-variant/20">
         {bank.isLoading ? (
           <div className="flex items-center justify-center gap-2 p-8 text-sm text-m3-on-surface-variant">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading curated bank…
+            <Loader2 className="h-4 w-4 animate-spin" />{" "}
+            {t("teacher_question_bank.quiz.import_loading")}
           </div>
         ) : bank.items.length === 0 ? (
           <div className="p-8 text-center text-sm text-m3-on-surface-variant">
-            No approved curated questions found. Questions added from a Quiz
-            start as drafts — approve them in the course Question Bank panel
-            before they can be imported.
+            {t("teacher_question_bank.quiz.import_empty")}
           </div>
         ) : (
           <InfiniteList
@@ -96,16 +106,28 @@ export function CuratedBankImportBody({
                   className="mt-1"
                 />
                 <span className="min-w-0 flex-1 space-y-1.5">
-                  <span className="block text-sm text-m3-on-surface">{item.prompt_text}</span>
+                  <span className="block text-sm text-m3-on-surface">
+                    {item.prompt_text}
+                  </span>
                   <span className="flex flex-wrap gap-1.5">
-                    <Badge variant="outline" className="capitalize">
-                      {item.question_type.replace(/_/g, " ")}
+                    <Badge variant="outline">
+                      {t(
+                        `teacher_question_bank.quiz.type_${item.question_type}`,
+                      )}
                     </Badge>
                     {item.difficulty ? (
-                      <Badge variant="outline" className="capitalize">{item.difficulty}</Badge>
+                      <Badge variant="outline">
+                        {t(
+                          `teacher_question_bank.quiz.difficulty_${item.difficulty}`,
+                        )}
+                      </Badge>
                     ) : null}
+                    {/* Bloom levels are rendered raw across the whole app —
+                        no locale copy exists for them anywhere. */}
                     {item.bloom_level ? (
-                      <Badge variant="outline" className="capitalize">{item.bloom_level}</Badge>
+                      <Badge variant="outline" className="capitalize">
+                        {item.bloom_level}
+                      </Badge>
                     ) : null}
                   </span>
                 </span>
@@ -117,11 +139,13 @@ export function CuratedBankImportBody({
 
       <div className="flex items-center justify-between gap-2 shrink-0">
         <span className="text-xs text-m3-on-surface-variant">
-          <strong className="text-m3-on-surface">{selected.size}</strong> selected
+          {t("teacher_question_bank.quiz.import_selected_count", {
+            count: selected.size,
+          })}
         </span>
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            Cancel
+            {t("teacher_question_bank.quiz.cancel")}
           </Button>
           <Button
             type="button"
@@ -129,8 +153,14 @@ export function CuratedBankImportBody({
             onClick={() => void importSelected()}
             disabled={selected.size === 0 || importer.isPending}
           >
-            {importer.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Import {selected.size ? `(${selected.size})` : ""}
+            {importer.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            {selected.size
+              ? t("teacher_question_bank.quiz.import_action_count", {
+                  count: selected.size,
+                })
+              : t("teacher_question_bank.quiz.import_action")}
           </Button>
         </div>
       </div>
