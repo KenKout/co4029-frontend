@@ -50,11 +50,11 @@ export function useCreateOverride(quizId: string | null | undefined) {
   return useMutation({
     mutationFn: (body: QuizOverrideIn) =>
       apiPost<QuizOverrideRead>(`/teacher/quizzes/${quizId}/overrides`, body),
-    onSuccess: () => {
-      if (quizId)
-        void qc.invalidateQueries({
-          queryKey: queryKeys.quizzes.overrides(quizId),
-        });
+    onSuccess: async (saved) => {
+      if (!quizId) return;
+      const key = queryKeys.quizzes.overrides(quizId);
+      await qc.cancelQueries({ queryKey: key });
+      qc.setQueryData<QuizOverrideRead[]>(key, (current = []) => [...current.filter((row) => row.id !== saved.id), saved]);
     },
   });
 }
@@ -64,11 +64,11 @@ export function useDeleteOverride(quizId: string | null | undefined) {
   return useMutation({
     mutationFn: (overrideId: string) =>
       apiDelete(`/teacher/quizzes/${quizId}/overrides/${overrideId}`),
-    onSuccess: () => {
-      if (quizId)
-        void qc.invalidateQueries({
-          queryKey: queryKeys.quizzes.overrides(quizId),
-        });
+    onSuccess: async (_, removedId) => {
+      if (!quizId) return;
+      const key = queryKeys.quizzes.overrides(quizId);
+      await qc.cancelQueries({ queryKey: key });
+      qc.setQueryData<QuizOverrideRead[]>(key, (current = []) => current.filter((row) => row.id !== removedId));
     },
   });
 }
@@ -80,9 +80,11 @@ export interface FeedbackBandIn {
   feedback_text: string;
   feedback_format?: string;
 }
-export interface FeedbackBandRead extends FeedbackBandIn {
+export interface FeedbackBandRead extends Omit<FeedbackBandIn, "min_grade" | "max_grade"> {
   id: string;
-  quiz_id: string;
+  quiz_id?: string;
+  min_grade: number | string;
+  max_grade: number | string;
 }
 
 export function useFeedbackBands(quizId: string | null | undefined) {
@@ -101,12 +103,13 @@ export function useSetFeedbackBands(quizId: string | null | undefined) {
       apiPut<FeedbackBandRead[]>(`/teacher/quizzes/${quizId}/feedback-bands`, {
         bands,
       }),
-    onSuccess: (bands) => {
-      if (quizId) qc.setQueryData(queryKeys.quizzes.feedbackBands(quizId), bands);
-      if (quizId)
-        void qc.invalidateQueries({
-          queryKey: queryKeys.quizzes.feedbackBands(quizId),
-        });
+    onSuccess: async (bands) => {
+      if (!quizId) return;
+      const key = queryKeys.quizzes.feedbackBands(quizId);
+      // The write response is authoritative. An older in-flight GET must not
+      // replace it, and a redundant immediate GET may show stale data.
+      await qc.cancelQueries({ queryKey: key });
+      qc.setQueryData(key, bands);
     },
   });
 }

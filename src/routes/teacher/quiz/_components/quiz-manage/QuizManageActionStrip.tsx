@@ -73,7 +73,7 @@ export function QuizManageActionStrip({
             actionsStuck={actionsStuck}
             publishDisabled={publishDisabled}
             publishPending={data.publishQuiz.isPending}
-            deletePending={data.deleteQuiz.isPending}
+            deletePending={data.deleteQuiz.isPending || state.settingsBusy || data.patchQuiz.isPending}
             questionCount={data.questions.length}
             onPublish={() => state.setConfirmPublish(true)}
             onDelete={() => state.setConfirmDelete(true)}
@@ -81,7 +81,7 @@ export function QuizManageActionStrip({
         </div>
         {!isPublished && state.hasUnsavedWork && (
           <p role="status" className="text-xs text-m3-primary py-2 bg-m3-surface">
-            {t("teacher_quiz_manage.settings.assist.save_before_publish")}
+            {t(`teacher_quiz_manage.settings.assist.${state.settingsBusy ? "mutation_pending" : "save_before_publish"}`)}
           </p>
         )}
       </div>

@@ -19,11 +19,11 @@ export function SettingsSummary({ draft, dirty = false }: { draft: SettingsDraft
     [t("teacher_quiz_manage.settings.review.title"), t(`teacher_quiz_manage.settings.review.presets.${preset ?? "custom"}`)],
   ];
   return (
-    <section aria-label={t(`${k}.summary`)} className="space-y-4 rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-5">
+    <section aria-label={t(`${k}.summary`)} className="space-y-4 rounded-xl border border-border bg-m3-surface-container-lowest p-5">
       <h3 className="font-headline font-bold text-m3-on-surface">{t(`${k}.summary`)}</h3>
       <p className="text-xs text-m3-on-surface-variant">{t(`${k}.${dirty ? "draft_summary" : "saved_summary"}`)}</p>
-      <dl className="space-y-3 text-sm">
-        {rows.map(([label, value]) => <div key={label} className="space-y-1"><dt className="text-m3-on-surface-variant">{label}</dt><dd className="font-semibold break-words">{value}</dd></div>)}
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+        {rows.map(([label, value], index) => <div key={label} className={`min-w-0 space-y-1 ${index < (hasMultipleAttempts(draft) ? 4 : 3) ? "" : "col-span-2"}`}><dt className="text-m3-on-surface-variant">{label}</dt><dd className="font-semibold break-words">{value}</dd></div>)}
       </dl>
       <p className="text-xs text-m3-on-surface-variant">{t(`${k}.mastery_distinction`)}</p>
       {settingsErrors(draft).map((key) => <p key={key} role="alert" className="text-sm text-m3-error">{t(`${k}.${key}`)}</p>)}

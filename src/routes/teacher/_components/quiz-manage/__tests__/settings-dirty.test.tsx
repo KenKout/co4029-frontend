@@ -10,6 +10,14 @@ function setup() {
   return renderHook(({ quiz }: { quiz: QuizAuthoring }) => useQuizManageState({ quizId: quiz.id, quiz, questions }), { initialProps: { quiz: quizFixture } });
 }
 describe("quiz unsaved work", () => {
+  it("does not offer discard/tab navigation during a mutation", () => {
+    const { result } = setup();
+    act(() => result.current.setSettingsBusy(true));
+    act(() => result.current.selectTab("preview"));
+    expect(result.current.tab).toBe("settings");
+    expect(result.current.leaveGuard.isAsking).toBe(false);
+    expect(result.current.hasUnsavedWork).toBe(true);
+  });
   it("includes feedback and exception drafts in the page-wide publish/leave guard", () => {
     const { result } = setup();
     expect(result.current.hasUnsavedWork).toBe(false);

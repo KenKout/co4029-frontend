@@ -25,8 +25,8 @@ export function SettingsAttemptsSection({
   const { t } = useTranslation();
 
   return (
-    <LockableSection locked={locked}>
-      <SettingsSection title={t("teacher_quiz_manage.settings.attempts.title")}>
+    <SettingsSection title={t("teacher_quiz_manage.settings.attempts.title")}>
+      <LockableSection locked={locked}>
         <ToggleRow
           label={t("teacher_quiz_manage.settings.attempts.allow_label")}
           description={t("teacher_quiz_manage.settings.attempts.allow_desc")}
@@ -66,7 +66,7 @@ export function SettingsAttemptsSection({
             </Field>
           </div>
         )}
-      </SettingsSection>
-    </LockableSection>
+      </LockableSection>
+    </SettingsSection>
   );
 }

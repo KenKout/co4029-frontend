@@ -127,7 +127,7 @@ export default function QuizManagePage() {
       />
 
       {state.leaveGuard.dialog}
-      <QuizNavigationGuard dirty={state.hasUnsavedWork} />
+      <QuizNavigationGuard dirty={state.hasUnsavedWork} busy={state.settingsBusy || data.patchQuiz.isPending} />
     </div>
   );
 }

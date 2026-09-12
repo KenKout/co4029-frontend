@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
-import { Field, SettingsSection } from "./form-primitives";
+import { Field, LockableSection, SettingsSection } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
 
 const K = "teacher_quiz_manage.settings.access";
@@ -55,17 +55,21 @@ function IntegrityNumberField({
 export function SettingsAccessSection({
   draft,
   update,
+  locked = false,
 }: {
   draft: SettingsDraft;
   update: SettingsUpdate;
+  locked?: boolean;
 }) {
   const { t } = useTranslation();
 
   return (
     <SettingsSection
+      defaultOpen={false}
       title={t("teacher_quiz_manage.settings.access.title")}
       description={t("teacher_quiz_manage.settings.access.description")}
     >
+      <LockableSection locked={locked}>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label={t("teacher_quiz_manage.settings.access.password_label")}
@@ -151,6 +155,7 @@ export function SettingsAccessSection({
           {t(`${K}.frozen_note`)}
         </p>
       </div>
+      </LockableSection>
     </SettingsSection>
   );
 }

@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
+import { Collapsible } from "@base-ui/react/collapsible";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,23 +15,30 @@ export function SettingsSection({
   title,
   description,
   children,
+  defaultOpen = true,
+  collapsible = true,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  defaultOpen?: boolean;
+  collapsible?: boolean;
 }) {
   return (
-    <section className="space-y-4">
+    <Collapsible.Root defaultOpen={defaultOpen} render={<section />} className="space-y-4">
       <div className="space-y-1">
         <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
-          {title}
+          {collapsible ? <Collapsible.Trigger render={<Button type="button" variant="ghost" />} className="group h-auto w-full min-w-0 justify-between gap-3 whitespace-normal p-0 text-left font-inherit hover:bg-transparent">
+            <span>{title}</span>
+            <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 transition-transform group-data-[panel-open]:rotate-180" />
+          </Collapsible.Trigger> : title}
         </h3>
         {description && (
           <p className="text-xs text-m3-on-surface-variant">{description}</p>
         )}
       </div>
-      <div className="space-y-4">{children}</div>
-    </section>
+      {collapsible ? <Collapsible.Panel keepMounted className="space-y-4">{children}</Collapsible.Panel> : <div className="space-y-4">{children}</div>}
+    </Collapsible.Root>
   );
 }
 
@@ -95,12 +103,12 @@ export function ToggleRow({
       className={cn(
         // h-full so cards in the same grid row match height even when one
         // description wraps to more lines than the others.
-        "group flex h-full w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors",
+        "group flex h-auto w-full min-w-0 items-start justify-start gap-3 whitespace-normal rounded-xl border p-3.5 text-left transition-colors",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/40",
         "disabled:cursor-not-allowed disabled:opacity-60",
         value
           ? "border-m3-primary/40 bg-m3-primary/[0.07]"
-          : "border-m3-outline-variant/25 bg-m3-surface-container-lowest hover:bg-m3-surface-container-high",
+          : "border-border bg-m3-surface-container-lowest hover:bg-m3-surface-container-high",
       )}
     >
       <span
@@ -114,7 +122,7 @@ export function ToggleRow({
       >
         {value && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
       </span>
-      <span className="min-w-0">
+      <span className="min-w-0 flex-1 break-words">
         <span
           className={cn(
             "block text-sm font-bold",
@@ -141,7 +149,7 @@ export function LockableSection({
   return (
     <fieldset
       disabled={locked}
-      className="border-0 p-0 m-0 min-w-0 disabled:opacity-60"
+      className="border-0 p-0 m-0 min-w-0 space-y-4 disabled:opacity-60"
     >
       {children}
     </fieldset>

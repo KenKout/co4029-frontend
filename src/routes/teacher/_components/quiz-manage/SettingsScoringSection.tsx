@@ -22,8 +22,8 @@ export function SettingsScoringSection({
   const { t } = useTranslation();
 
   return (
-    <LockableSection locked={locked}>
-      <SettingsSection title={t("teacher_quiz_manage.settings.scoring.title")}>
+    <SettingsSection title={t("teacher_quiz_manage.settings.scoring.title")}>
+      <LockableSection locked={locked}>
         <Field
           label={
             <span className="flex items-center justify-between">
@@ -92,7 +92,7 @@ export function SettingsScoringSection({
             className="w-full"
           />
         </Field> : <p className="text-xs text-m3-on-surface-variant">{t("teacher_quiz_manage.settings.assist.single_attempt_grading")}</p>}
-      </SettingsSection>
-    </LockableSection>
+      </LockableSection>
+    </SettingsSection>
   );
 }

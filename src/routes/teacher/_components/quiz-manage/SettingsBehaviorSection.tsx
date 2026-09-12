@@ -28,7 +28,7 @@ export function SettingsBehaviorSection({
           stays editable. They can't be split across a `<fieldset disabled>`
           here without breaking the grid (the fieldset would be one grid
           item), so the lock is applied per card via `disabled`. */}
-      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid items-stretch gap-3 sm:grid-cols-2">
         <ToggleRow
           label={t("teacher_quiz_manage.settings.behavior.shuffle_q_label")}
           description={t(

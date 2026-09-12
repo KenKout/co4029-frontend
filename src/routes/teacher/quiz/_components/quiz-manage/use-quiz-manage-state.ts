@@ -95,11 +95,12 @@ export function useQuizManageState({
   const [dirtyQuestionCount, setDirtyQuestionCount] = useState(0);
   const [feedbackDirty, setFeedbackDirty] = useState(false);
   const [overrideDirty, setOverrideDirty] = useState(false);
+  const [settingsBusy, setSettingsBusy] = useState(false);
   const settingsDirty =
     draft != null &&
     quiz != null &&
     JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz));
-  const hasUnsavedWork = settingsDirty || feedbackDirty || overrideDirty || dirtyQuestionCount > 0;
+  const hasUnsavedWork = settingsBusy || settingsDirty || feedbackDirty || overrideDirty || dirtyQuestionCount > 0;
   const leaveGuard = useUnsavedChangesGuard(hasUnsavedWork);
 
   // Jump from the Preview tab to a specific question in the Questions editor:
@@ -143,6 +144,7 @@ export function useQuizManageState({
   }, [quiz]);
 
   function selectTab(next: TabKey) {
+    if (settingsBusy) return;
     if (next === tab) return;
     leaveGuard.run(() => {
       // The confirmation says "discard": reset persisted parent state too.
@@ -201,6 +203,8 @@ export function useQuizManageState({
     setDirtyQuestionCount,
     setFeedbackDirty,
     setOverrideDirty,
+    settingsBusy,
+    setSettingsBusy,
     hasUnsavedWork,
     selectTab,
     settingsDirty,

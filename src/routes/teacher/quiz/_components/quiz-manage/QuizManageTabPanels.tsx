@@ -91,6 +91,7 @@ export function QuizManageTabPanels({
           courseId={courseId}
           onFeedbackDirtyChange={state.setFeedbackDirty}
           onOverrideDirtyChange={state.setOverrideDirty}
+          onBusyChange={state.setSettingsBusy}
           draft={draft}
           savedDraft={draftFromQuiz(quiz)}
           setDraft={setDraft}

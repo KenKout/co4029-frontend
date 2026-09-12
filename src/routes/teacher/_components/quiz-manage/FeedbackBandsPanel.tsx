@@ -12,13 +12,17 @@ import {
 } from "@/lib/api/hooks/quizzes";
 import { FeedbackBandRow } from "./FeedbackBandRow";
 
+function normalizeBands(bands: Array<Omit<FeedbackBandIn, "min_grade" | "max_grade"> & { min_grade: number | string; max_grade: number | string }>): FeedbackBandIn[] {
+  return bands.map((b) => ({ min_grade: Number(b.min_grade), max_grade: Number(b.max_grade), feedback_text: b.feedback_text, feedback_format: b.feedback_format ?? "markdown" }));
+}
+
 /**
  * Phase 8 — grade-band feedback editor. A teacher defines score ranges that map
  * to feedback shown to the student after submit. Wholesale-replace on save
  * (mirrors the backend PUT). Client-side validation (min < max, no overlap)
  * mirrors the server so overlaps surface before the 422 backstop.
  */
-export function FeedbackBandsPanel({ quizId, locked = false, onDirtyChange }: { quizId: string; locked?: boolean; onDirtyChange?: (dirty: boolean) => void }) {
+export function FeedbackBandsPanel({ quizId, locked = false, onDirtyChange, onBusyChange }: { quizId: string; locked?: boolean; onDirtyChange?: (dirty: boolean) => void; onBusyChange?: (busy: boolean) => void }) {
   const { t } = useTranslation();
   const { data: bands, isLoading, isError, refetch } = useFeedbackBands(quizId);
   const { confirm, dialog } = useConfirm();
@@ -26,18 +30,18 @@ export function FeedbackBandsPanel({ quizId, locked = false, onDirtyChange }: { 
   const [draft, setDraft] = useState<FeedbackBandIn[]>([]);
   const [baseline, setBaseline] = useState<FeedbackBandIn[]>([]);
   const baselineRef = useRef<FeedbackBandIn[]>([]);
+  const submitting = useRef(false);
+  const [working, setWorking] = useState(false);
+  const [savedNotice, setSavedNotice] = useState(false);
+  useEffect(() => { onBusyChange?.(working); }, [working, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const dirty = JSON.stringify(draft) !== JSON.stringify(baseline);
   useEffect(() => { onDirtyChange?.(dirty || save.isPending); }, [dirty, save.isPending, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   useEffect(() => {
     if (bands) {
-      const next = bands.map((b) => ({
-          min_grade: b.min_grade,
-          max_grade: b.max_grade,
-          feedback_text: b.feedback_text,
-          feedback_format: b.feedback_format ?? "markdown",
-        }));
+      const next = normalizeBands(bands);
       const previous = baselineRef.current;
       setDraft((current) => JSON.stringify(current) === JSON.stringify(previous) ? next : current);
       baselineRef.current = next;
@@ -82,15 +86,18 @@ export function FeedbackBandsPanel({ quizId, locked = false, onDirtyChange }: { 
   }
 
   async function handleSave() {
-    if (locked || save.isPending || !dirty) return;
+    if (locked || submitting.current || !dirty) return;
     const err = validate();
     if (err) {
       toast.error(t(`teacher_quiz_manage.feedback_bands.${err}`));
       return;
     }
-    if (!(await confirm({ title: t("teacher_quiz_manage.feedback_bands.save"), description: t("teacher_quiz_manage.settings.assist.feedback_confirm"), confirmLabel: t("teacher_quiz_manage.feedback_bands.save"), cancelLabel: t("common.cancel"), confirmVariant: "default" }))) return;
+    submitting.current = true;
     try {
-      await save.mutateAsync(
+      if (!(await confirm({ title: t("teacher_quiz_manage.feedback_bands.save"), description: t("teacher_quiz_manage.settings.assist.feedback_confirm"), confirmLabel: t("teacher_quiz_manage.feedback_bands.save"), cancelLabel: t("common.cancel"), confirmVariant: "default" }))) return;
+      setWorking(true);
+      setSavedNotice(false);
+      const saved = await save.mutateAsync(
         draft.map((b) => ({
           min_grade: Number(b.min_grade),
           max_grade: Number(b.max_grade),
@@ -98,9 +105,17 @@ export function FeedbackBandsPanel({ quizId, locked = false, onDirtyChange }: { 
           feedback_format: b.feedback_format ?? "markdown",
         })),
       );
+      const accepted = normalizeBands(saved);
+      baselineRef.current = accepted;
+      setBaseline(accepted);
+      setDraft(accepted);
+      setSavedNotice(true);
       toast.success(t("teacher_quiz_manage.feedback_bands.saved"));
     } catch {
       toast.error(t("teacher_quiz_manage.feedback_bands.save_failed"));
+    } finally {
+      submitting.current = false;
+      setWorking(false);
     }
   }
 
@@ -115,7 +130,7 @@ export function FeedbackBandsPanel({ quizId, locked = false, onDirtyChange }: { 
 
   return (
     <form onSubmit={(event) => { event.preventDefault(); void handleSave(); }} className="space-y-3">
-      <fieldset disabled={locked || save.isPending} className="border-0 p-0 min-w-0 space-y-3">
+      <fieldset disabled={locked || working} className="border-0 p-0 min-w-0 space-y-3">
       {draft.length === 0 && (
         <p className="text-sm text-m3-on-surface-variant">
           {t("teacher_quiz_manage.feedback_bands.empty")}
@@ -158,6 +173,7 @@ export function FeedbackBandsPanel({ quizId, locked = false, onDirtyChange }: { 
         }}>{t("teacher_quiz_manage.settings.reset_button")}</Button>}
       </div>
       {dirty && <p role="status" className="text-xs text-m3-primary">{t("teacher_quiz_manage.settings.unsaved_changes")}</p>}
+      {!dirty && savedNotice && <p role="status" className="text-sm text-m3-primary">{t("teacher_quiz_manage.feedback_bands.saved")}</p>}
       </fieldset>
       {dialog}
     </form>
