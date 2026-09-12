@@ -27,11 +27,13 @@ export function ReviewWindowCard({
   windowFlags,
   onSetWindow,
   onToggle,
+  disabled = false,
 }: {
   win: WindowKey;
   windowFlags: ReviewWindowFlags;
   onSetWindow: (next: ReviewWindowFlags) => void;
   onToggle: (flag: FlagKey) => void;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const Icon = WINDOW_ICONS[win];
@@ -40,6 +42,7 @@ export function ReviewWindowCard({
 
   return (
     <fieldset
+      disabled={disabled}
       // Labelled by the visible heading rather than a duplicate
       // sr-only <legend>, which would announce the window name
       // twice to a screen reader.

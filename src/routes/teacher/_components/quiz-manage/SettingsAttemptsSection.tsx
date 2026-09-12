@@ -57,6 +57,7 @@ export function SettingsAttemptsSection({
                 type="number"
                 min={0}
                 value={draft.cooldown_hours}
+                endAdornment={t("teacher_quiz_manage.settings.assist.hour_unit")}
                 onChange={(e) => update("cooldown_hours", e.target.value)}
                 placeholder={t(
                   "teacher_quiz_manage.settings.attempts.cooldown_placeholder",

@@ -86,8 +86,13 @@ export function QuizManageTabPanels({
         // locked per-section inside SettingsTab. Mirrors the backend
         // whitelist in authoring.py (_PUBLISHED_EDITABLE_FIELDS).
         <SettingsTab
+          key={quizId}
           quizId={quizId}
+          courseId={courseId}
+          onFeedbackDirtyChange={state.setFeedbackDirty}
+          onOverrideDirtyChange={state.setOverrideDirty}
           draft={draft}
+          savedDraft={draftFromQuiz(quiz)}
           setDraft={setDraft}
           onSubmit={actions.handleSaveSettings}
           saving={data.patchQuiz.isPending}

@@ -8,6 +8,7 @@ import { createQuizManageActions } from "./_components/quiz-manage/actions";
 import { PendingDeletesBanner } from "./_components/quiz-manage/PendingDeletesBanner";
 import { QuizManageActionStrip } from "./_components/quiz-manage/QuizManageActionStrip";
 import { QuizManageHeader } from "./_components/quiz-manage/QuizManageHeader";
+import { QuizNavigationGuard } from "./_components/quiz-manage/QuizNavigationGuard";
 import { QuizManageOverlays } from "./_components/quiz-manage/QuizManageOverlays";
 import {
   QuizManageLoading,
@@ -67,7 +68,7 @@ export default function QuizManagePage() {
     (q) => q.review_status === "approved",
   ).length;
   const publishDisabled =
-    data.publishQuiz.isPending || isPublished || approvedCount === 0;
+    data.publishQuiz.isPending || data.patchQuiz.isPending || isPublished || approvedCount === 0 || state.hasUnsavedWork || pendingDeletes.comboCount > 0;
 
   const actions = createQuizManageActions({
     t,
@@ -126,6 +127,7 @@ export default function QuizManagePage() {
       />
 
       {state.leaveGuard.dialog}
+      <QuizNavigationGuard dirty={state.hasUnsavedWork} />
     </div>
   );
 }

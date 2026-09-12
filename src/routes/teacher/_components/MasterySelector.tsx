@@ -93,12 +93,13 @@ export function detectPreset(
 }
 
 interface MasterySelectorProps {
+  disabled?: boolean;
   values: MasteryValues;
   /** Apply a partial patch to the parent draft (merges the given keys). */
   onPatch: (patch: Partial<MasteryValues>) => void;
 }
 
-export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
+export function MasterySelector({ values, onPatch, disabled = false }: MasterySelectorProps) {
   const { t } = useTranslation();
   const selected = detectPreset(values);
   const [advancedOpen, setAdvancedOpen] = useState(selected === "custom");
@@ -113,6 +114,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
             <Button variant="ghost"
               key={key}
               type="button"
+              disabled={disabled}
               onClick={() => onPatch(MASTERY_PRESETS[key])}
               aria-pressed={active}
               className={cn(
@@ -186,7 +188,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
             <p className="text-[11px] text-m3-on-surface-variant leading-relaxed">
               {t("teacher_quiz_manage.settings.spacing.advanced.help")}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <fieldset disabled={disabled} className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-0 p-0 min-w-0">
               <AdvancedField
                 label={t("teacher_quiz_manage.settings.spacing.starting_ef")}
                 min={1.3}
@@ -214,7 +216,7 @@ export function MasterySelector({ values, onPatch }: MasterySelectorProps) {
                 placeholder="85"
                 onChange={(v) => onPatch({ coverage_threshold: v })}
               />
-            </div>
+            </fieldset>
           </div>
         )}
       </div>

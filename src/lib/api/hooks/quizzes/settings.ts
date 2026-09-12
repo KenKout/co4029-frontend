@@ -101,7 +101,8 @@ export function useSetFeedbackBands(quizId: string | null | undefined) {
       apiPut<FeedbackBandRead[]>(`/teacher/quizzes/${quizId}/feedback-bands`, {
         bands,
       }),
-    onSuccess: () => {
+    onSuccess: (bands) => {
+      if (quizId) qc.setQueryData(queryKeys.quizzes.feedbackBands(quizId), bands);
       if (quizId)
         void qc.invalidateQueries({
           queryKey: queryKeys.quizzes.feedbackBands(quizId),

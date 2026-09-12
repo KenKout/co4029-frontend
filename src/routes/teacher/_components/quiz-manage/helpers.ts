@@ -68,9 +68,9 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     time_limit_minutes:
       quiz.time_limit_seconds == null
         ? ""
-        : String(Math.max(1, Math.round(quiz.time_limit_seconds / 60))),
+        : String(quiz.time_limit_seconds / 60),
     passing_score_percent: Number.isFinite(passingNum)
-      ? Math.max(0, Math.min(100, Math.round(passingNum)))
+      ? Math.max(0, Math.min(100, passingNum))
       : 70,
     max_attempts: toDraftString(quiz.max_attempts),
     cooldown_hours: toDraftString(quiz.cooldown_hours),

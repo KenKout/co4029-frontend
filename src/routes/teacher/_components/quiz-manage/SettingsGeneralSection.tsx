@@ -25,6 +25,8 @@ export function SettingsGeneralSection({
     >
       <Field label={t("teacher_quiz_manage.settings.general.title_label")}>
         <Input
+          required
+          aria-label={t("teacher_quiz_manage.settings.general.title_label")}
           value={draft.title}
           onChange={(e) => update("title", e.target.value)}
           placeholder={t(
@@ -34,6 +36,7 @@ export function SettingsGeneralSection({
       </Field>
       <Field label={t("teacher_quiz_manage.settings.general.desc_label")}>
         <Textarea
+          aria-label={t("teacher_quiz_manage.settings.general.desc_label")}
           value={draft.description}
           onChange={(e) => update("description", e.target.value)}
           rows={3}

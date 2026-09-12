@@ -26,7 +26,7 @@ export function SettingsSaveBar({
   const { t } = useTranslation();
 
   return (
-    <div className="sticky bottom-0 z-10 -mx-6 lg:-mx-8 -mb-6 lg:-mb-8 mt-8">
+    <div className="sticky bottom-0 z-10">
       <div
         className={cn(
           "flex items-center justify-end gap-3 px-6 lg:px-8 py-4 border-t backdrop-blur-md transition-colors rounded-b-xl",

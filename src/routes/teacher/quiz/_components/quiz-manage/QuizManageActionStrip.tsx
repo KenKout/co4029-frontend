@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 import { QuizPageActions } from "./QuizPageActions";
 import { QuizTabSwitcher } from "./QuizTabSwitcher";
@@ -36,6 +37,7 @@ export function QuizManageActionStrip({
   sticky: StickyActionsController;
 }) {
   const { actionsStuck } = sticky;
+  const { t } = useTranslation();
   return (
     <>
       {/* Zero-height sentinel: when it scrolls up under the global top bar,
@@ -61,7 +63,7 @@ export function QuizManageActionStrip({
           <QuizTabSwitcher
             tab={state.tab}
             actionsStuck={actionsStuck}
-            onSelect={(key) => state.leaveGuard.run(() => state.setTab(key))}
+            onSelect={state.selectTab}
           />
 
           <QuizPageActions
@@ -77,6 +79,11 @@ export function QuizManageActionStrip({
             onDelete={() => state.setConfirmDelete(true)}
           />
         </div>
+        {!isPublished && state.hasUnsavedWork && (
+          <p role="status" className="text-xs text-m3-primary py-2 bg-m3-surface">
+            {t("teacher_quiz_manage.settings.assist.save_before_publish")}
+          </p>
+        )}
       </div>
     </>
   );

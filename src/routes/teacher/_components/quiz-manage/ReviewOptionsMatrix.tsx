@@ -31,9 +31,11 @@ export type { ReviewWindowFlags } from "./review-options-model";
 export function ReviewOptionsMatrix({
   value,
   onChange,
+  disabled = false,
 }: {
   value: ReviewOptions;
   onChange: (next: ReviewOptions) => void;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const activePreset = useMemo(() => matchPreset(value), [value]);
@@ -51,7 +53,7 @@ export function ReviewOptionsMatrix({
 
   return (
     <div className="space-y-4">
-      <ReviewPresetRow activePreset={activePreset} onChange={onChange} />
+      <ReviewPresetRow activePreset={activePreset} onChange={onChange} disabled={disabled} />
 
       {/* Per-window detail. */}
       <div className="rounded-xl border border-m3-outline-variant/20">
@@ -78,6 +80,7 @@ export function ReviewOptionsMatrix({
             {WINDOW_KEYS.map((win) => (
               <ReviewWindowCard
                 key={win}
+                disabled={disabled}
                 win={win}
                 windowFlags={value[win]}
                 onSetWindow={(next) => setWindow(win, next)}

@@ -72,7 +72,8 @@ export function SettingsAccessSection({
           hint={t("teacher_quiz_manage.settings.access.password_hint")}
         >
           <Input
-            type="text"
+            type="password"
+            autoComplete="new-password"
             value={draft.require_password}
             onChange={(e) => update("require_password", e.target.value)}
             className="w-full"
@@ -138,6 +139,14 @@ export function SettingsAccessSection({
             onChange={(v) => update("integrity_score_threshold", v)}
           />
         </div>
+        <p className="text-xs text-m3-on-surface-variant">
+          {t("teacher_quiz_manage.settings.assist.integrity_formula", {
+            tab: draft.integrity_weight_tab_switch || "3",
+            focus: draft.integrity_weight_focus_lost || "1",
+            exit: draft.integrity_weight_fullscreen_exit || "2",
+            threshold: draft.integrity_score_threshold || "3",
+          })}
+        </p>
         <p className="text-xs text-m3-on-surface-variant">
           {t(`${K}.frozen_note`)}
         </p>

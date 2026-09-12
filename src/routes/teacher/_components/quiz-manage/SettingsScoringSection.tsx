@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Field, LockableSection, SettingsSection } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
+import { hasMultipleAttempts } from "./settings-insights";
 
 /**
  * Scoring section: passing score, time limit, headline-grade policy. Frozen
@@ -30,40 +31,32 @@ export function SettingsScoringSection({
                 {t("teacher_quiz_manage.settings.scoring.pass_score")}
               </span>
               <span className="text-m3-primary font-extrabold text-sm">
-                {draft.passing_score_percent}%
+                {Number.isFinite(draft.passing_score_percent) ? `${draft.passing_score_percent}%` : "—"}
               </span>
             </span>
           }
         >
           <input
+            aria-label={t("teacher_quiz_manage.settings.scoring.pass_score")}
             type="range"
             min={0}
             max={100}
             step={5}
-            value={draft.passing_score_percent}
+            value={Number.isFinite(draft.passing_score_percent) ? draft.passing_score_percent : 0}
             onChange={(e) =>
               update("passing_score_percent", Number(e.target.value))
             }
             className="w-full h-2 rounded-full cursor-pointer accent-[var(--m3-primary)]"
           />
-        </Field>
-        <Field
-          label={t("teacher_quiz_manage.settings.scoring.time_label")}
-          hint={t("teacher_quiz_manage.settings.scoring.time_hint")}
-        >
           <Input
-            type="number"
-            min={1}
-            max={180}
-            value={draft.time_limit_minutes}
-            onChange={(e) => update("time_limit_minutes", e.target.value)}
-            placeholder={t(
-              "teacher_quiz_manage.settings.scoring.time_placeholder",
-            )}
-            className="w-40"
+            aria-label={t("teacher_quiz_manage.settings.assist.precise_score")}
+            type="number" min={0} max={100} step={0.01} required
+            value={Number.isFinite(draft.passing_score_percent) ? draft.passing_score_percent : ""}
+            onChange={(e) => update("passing_score_percent", e.target.valueAsNumber)}
+            endAdornment="%"
           />
         </Field>
-        <Field
+        {hasMultipleAttempts(draft) ? <Field
           label={t("teacher_quiz_manage.settings.scoring.grading_method_label")}
           hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
         >
@@ -96,9 +89,9 @@ export function SettingsScoringSection({
                 ),
               },
             ]}
-            className="w-full sm:w-72"
+            className="w-full"
           />
-        </Field>
+        </Field> : <p className="text-xs text-m3-on-surface-variant">{t("teacher_quiz_manage.settings.assist.single_attempt_grading")}</p>}
       </SettingsSection>
     </LockableSection>
   );

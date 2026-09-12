@@ -1,4 +1,5 @@
 import { ImportExportPanel } from "@/routes/teacher/_components/quiz-manage/ImportExportPanel";
+import { draftFromQuiz } from "@/routes/teacher/_components/quiz-manage/helpers";
 import { QuestionBankModal } from "@/routes/teacher/_components/question-bank-modal";
 
 import { ConfirmDeleteQuizDialog } from "./ConfirmDeleteQuizDialog";
@@ -64,6 +65,8 @@ export function QuizManageOverlays({
 
       {state.confirmPublish && (
         <ConfirmPublishQuizDialog
+          draft={draftFromQuiz(quiz)}
+          disabled={state.hasUnsavedWork || data.patchQuiz.isPending || data.pendingDeletes.comboCount > 0 || approvedCount === 0}
           tab={state.tab}
           approvedCount={approvedCount}
           pending={data.publishQuiz.isPending}

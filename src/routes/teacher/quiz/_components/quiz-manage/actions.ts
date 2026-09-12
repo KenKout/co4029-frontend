@@ -3,6 +3,8 @@ import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api/client";
 import type { SettingsDraft } from "@/routes/teacher/_components/quiz-manage/types";
+import { settingsErrors } from "@/routes/teacher/_components/quiz-manage/settings-insights";
+import { draftFromQuiz } from "@/routes/teacher/_components/quiz-manage/helpers";
 
 import { buildNewQuestionPayload, settingsPatchFromDraft } from "./helpers";
 import type { TranslateFn } from "./types";
@@ -113,12 +115,18 @@ export function createQuizManageActions({
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
     if (!draft) return;
+    const errors = settingsErrors(draft);
+    if (errors.length) {
+      toast.error(t(`teacher_quiz_manage.settings.assist.${errors[0]}`));
+      return;
+    }
     if (!draft.title.trim()) {
       toast.error(t("teacher_quiz_manage.errors.title_required"));
       return;
     }
     try {
-      await patchQuiz.mutateAsync(settingsPatchFromDraft(draft));
+      const saved = await patchQuiz.mutateAsync(settingsPatchFromDraft(draft));
+      state.setDraft((current) => JSON.stringify(current) === JSON.stringify(draft) ? draftFromQuiz(saved) : current);
       toast.success(t("teacher_quiz_manage.toasts.settings_saved"));
     } catch (err: unknown) {
       toast.error(

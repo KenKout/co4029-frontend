@@ -13,9 +13,11 @@ import type { PresetKey } from "./review-options-model";
 export function ReviewPresetRow({
   activePreset,
   onChange,
+  disabled = false,
 }: {
   activePreset: PresetKey | null;
   onChange: (next: ReviewOptions) => void;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -31,6 +33,7 @@ export function ReviewPresetRow({
             <Button variant="ghost"
               key={key}
               type="button"
+              disabled={disabled}
               aria-pressed={active}
               onClick={() => onChange(PRESETS[key]())}
               className={cn(

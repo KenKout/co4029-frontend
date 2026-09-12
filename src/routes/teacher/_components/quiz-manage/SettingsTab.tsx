@@ -1,4 +1,11 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent } from "@/components/ui/card";
+import { useConfirm } from "@/components/ui/use-confirm";
+import { FeedbackBandsPanel } from "./FeedbackBandsPanel";
+import { OverridesPanel } from "./OverridesPanel";
+import { SettingsSection } from "./form-primitives";
+import { SettingsSummary } from "./SettingsSummary";
 import { SettingsAttemptsSection } from "./SettingsAttemptsSection";
 import { SettingsBehaviorSection } from "./SettingsBehaviorSection";
 import { SettingsGeneralSection } from "./SettingsGeneralSection";
@@ -18,7 +25,11 @@ import type { SettingsDraft } from "./types";
  */
 export function SettingsTab({
   quizId,
+  courseId,
+  onFeedbackDirtyChange,
+  onOverrideDirtyChange,
   draft,
+  savedDraft,
   setDraft,
   onSubmit,
   saving,
@@ -27,7 +38,11 @@ export function SettingsTab({
   locked = false,
 }: {
   quizId: string;
+  courseId: string;
+  onFeedbackDirtyChange: (dirty: boolean) => void;
+  onOverrideDirtyChange: (dirty: boolean) => void;
   draft: SettingsDraft;
+  savedDraft: SettingsDraft;
   setDraft: React.Dispatch<React.SetStateAction<SettingsDraft | null>>;
   onSubmit: (e: React.FormEvent) => void;
   saving: boolean;
@@ -37,6 +52,8 @@ export function SettingsTab({
    *  description, schedule, and reminders stay editable. */
   locked?: boolean;
 }) {
+  const { t } = useTranslation();
+  const { confirm, dialog } = useConfirm();
   function update<K extends keyof SettingsDraft>(
     key: K,
     value: SettingsDraft[K],
@@ -45,31 +62,37 @@ export function SettingsTab({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="bg-m3-surface-container-lowest border border-m3-outline-variant/20 rounded-xl p-6 lg:p-8 space-y-8 shadow-glass"
-    >
-      <SettingsGeneralSection draft={draft} update={update} />
-
-      <SettingsScoringSection draft={draft} update={update} locked={locked} />
-
-      <SettingsAttemptsSection draft={draft} update={update} locked={locked} />
-
-      {/* Schedule stays editable on a published quiz — extending a deadline
-          or shifting the open/close window doesn't disrupt a live attempt. */}
-      <SettingsScheduleSection draft={draft} update={update} />
-
-      <SettingsBehaviorSection draft={draft} update={update} locked={locked} />
-
-      <SettingsLockedSections
-        quizId={quizId}
-        draft={draft}
-        update={update}
-        setDraft={setDraft}
-        locked={locked}
-      />
-
-      <SettingsSaveBar saving={saving} dirty={dirty} onReset={onReset} />
-    </form>
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+      <div className="min-w-0 space-y-6">
+        <form onSubmit={onSubmit} className="space-y-6">
+          <fieldset disabled={saving} className="min-w-0 border-0 p-0 space-y-6">
+            <Card><CardContent><SettingsGeneralSection draft={draft} update={update} /></CardContent></Card>
+            <Card><CardContent><SettingsScheduleSection draft={draft} update={update} locked={locked} /></CardContent></Card>
+            <Card><CardContent className="space-y-6">
+              <SettingsAttemptsSection draft={draft} update={update} locked={locked} />
+              <SettingsScoringSection draft={draft} update={update} locked={locked} />
+            </CardContent></Card>
+            <Card><CardContent><SettingsBehaviorSection draft={draft} update={update} locked={locked} /></CardContent></Card>
+            <SettingsLockedSections draft={draft} update={update} setDraft={setDraft} locked={locked} />
+          </fieldset>
+          <SettingsSaveBar saving={saving} dirty={dirty} onReset={() => {
+            void confirm({ title: t("common.unsaved.title"), description: t("common.unsaved.description"), confirmLabel: t("teacher_quiz_manage.settings.reset_button"), cancelLabel: t("common.cancel") }).then((ok) => { if (ok) onReset(); });
+          }} />
+        </form>
+        <p className="text-sm text-m3-on-surface-variant">{t("teacher_quiz_manage.settings.assist.separate_saves")}</p>
+        <Card><CardContent>
+          <SettingsSection title={t("teacher_quiz_manage.settings.feedback.title")} description={t("teacher_quiz_manage.settings.feedback.description")}>
+            <FeedbackBandsPanel quizId={quizId} locked={locked} onDirtyChange={onFeedbackDirtyChange} />
+          </SettingsSection>
+        </CardContent></Card>
+        <Card><CardContent>
+          <SettingsSection title={t("teacher_quiz_manage.settings.overrides.title")} description={t("teacher_quiz_manage.settings.overrides.description")}>
+            <OverridesPanel quizId={quizId} courseId={courseId} base={savedDraft} locked={locked} onDirtyChange={onOverrideDirtyChange} />
+          </SettingsSection>
+        </CardContent></Card>
+      </div>
+      <aside className="min-w-0 xl:sticky xl:top-36"><SettingsSummary draft={draft} dirty={dirty} /></aside>
+      {dialog}
+    </div>
   );
 }

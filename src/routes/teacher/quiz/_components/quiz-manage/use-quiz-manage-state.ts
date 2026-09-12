@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard";
 import { draftFromQuiz } from "@/routes/teacher/_components/quiz-manage/helpers";
@@ -93,13 +93,13 @@ export function useQuizManageState({
   // Switching tabs unmounts the editor, so without this a half-finished edit
   // vanished silently — including the Questions -> Preview jump.
   const [dirtyQuestionCount, setDirtyQuestionCount] = useState(0);
+  const [feedbackDirty, setFeedbackDirty] = useState(false);
+  const [overrideDirty, setOverrideDirty] = useState(false);
   const settingsDirty =
     draft != null &&
     quiz != null &&
     JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz));
-  const hasUnsavedWork =
-    (tab === "settings" && settingsDirty) ||
-    (tab === "questions" && dirtyQuestionCount > 0);
+  const hasUnsavedWork = settingsDirty || feedbackDirty || overrideDirty || dirtyQuestionCount > 0;
   const leaveGuard = useUnsavedChangesGuard(hasUnsavedWork);
 
   // Jump from the Preview tab to a specific question in the Questions editor:
@@ -124,9 +124,35 @@ export function useQuizManageState({
     });
   }, []);
 
+  const baseline = useRef<SettingsDraft | null>(null);
+  const loadedQuizId = useRef<string | null>(null);
   useEffect(() => {
-    if (quiz) setDraft(draftFromQuiz(quiz));
+    if (!quiz) return;
+    const next = draftFromQuiz(quiz);
+    const previous = baseline.current;
+    const changedQuiz = loadedQuizId.current !== quiz.id;
+    // Background refetches must not overwrite a teacher's local edits.
+    setDraft((current) => changedQuiz || current === null || JSON.stringify(current) === JSON.stringify(previous) ? next : current);
+    if (changedQuiz) {
+      setFeedbackDirty(false);
+      setOverrideDirty(false);
+      setDirtyQuestionCount(0);
+    }
+    loadedQuizId.current = quiz.id;
+    baseline.current = next;
   }, [quiz]);
+
+  function selectTab(next: TabKey) {
+    if (next === tab) return;
+    leaveGuard.run(() => {
+      // The confirmation says "discard": reset persisted parent state too.
+      if (quiz) setDraft(draftFromQuiz(quiz));
+      setFeedbackDirty(false);
+      setOverrideDirty(false);
+      setDirtyQuestionCount(0);
+      setTab(next);
+    });
+  }
 
   useEffect(() => {
     setSelectedQuestionIds((current) => {
@@ -173,6 +199,10 @@ export function useQuizManageState({
     bulkSeconds,
     setBulkSeconds,
     setDirtyQuestionCount,
+    setFeedbackDirty,
+    setOverrideDirty,
+    hasUnsavedWork,
+    selectTab,
     settingsDirty,
     leaveGuard,
     goToQuestionInEditor,
