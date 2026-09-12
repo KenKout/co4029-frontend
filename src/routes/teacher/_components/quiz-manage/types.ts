@@ -35,6 +35,12 @@ export interface SettingsDraft {
   // Access rules (Phase 12). Empty string = no restriction.
   require_password: string;
   require_subnet: string;
+  // Proctoring sensitivity (migration 0115). Strings, like every other
+  // numeric field in this draft, so a half-typed value is representable.
+  integrity_weight_tab_switch: string;
+  integrity_weight_focus_lost: string;
+  integrity_weight_fullscreen_exit: string;
+  integrity_score_threshold: string;
   // Timing enforcement (Phase 6).
   overdue_handling: "autosubmit" | "graceperiod" | "autoabandon";
   grace_period_seconds: string;

@@ -91,6 +91,18 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
       defaultReviewOptions(),
     require_password: quiz.require_password ?? "",
     require_subnet: quiz.require_subnet ?? "",
+    integrity_weight_tab_switch: toDraftString(
+      quiz.integrity_weight_tab_switch ?? 3,
+    ),
+    integrity_weight_focus_lost: toDraftString(
+      quiz.integrity_weight_focus_lost ?? 1,
+    ),
+    integrity_weight_fullscreen_exit: toDraftString(
+      quiz.integrity_weight_fullscreen_exit ?? 2,
+    ),
+    integrity_score_threshold: toDraftString(
+      quiz.integrity_score_threshold ?? 3,
+    ),
     overdue_handling: quiz.overdue_handling ?? "autosubmit",
     grace_period_seconds: toDraftString(quiz.grace_period_seconds),
   };

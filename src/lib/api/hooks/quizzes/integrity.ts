@@ -23,6 +23,21 @@ export interface QuizIntegrityEvent {
 }
 
 /**
+ * Server-authoritative ingest result.
+ *
+ * `warning_issued` is true only on the request whose events first pushed the
+ * attempt's weighted score to the quiz's threshold. The flag lives on the
+ * attempt row, so a retried crossing batch reports false and the client
+ * cannot forge a warning.
+ */
+export interface QuizIntegrityBatchResult {
+  accepted: number;
+  integrity_score: number;
+  integrity_score_threshold: number;
+  warning_issued: boolean;
+}
+
+/**
  * Fire-and-forget batch POST of quiz integrity signals for a live attempt.
  * Mirrors `useReportIntegrityEvents` (interviews). Errors must never break
  * the take, so callers swallow rejections.
@@ -32,8 +47,9 @@ export function useReportQuizIntegrityEvents(
 ) {
   return useMutation({
     mutationFn: ({ events }: { events: QuizIntegrityEvent[] }) =>
-      apiPost<{ accepted: number }>(`/attempts/${attemptId}/integrity-events`, {
-        events,
-      }),
+      apiPost<QuizIntegrityBatchResult>(
+        `/attempts/${attemptId}/integrity-events`,
+        { events },
+      ),
   });
 }

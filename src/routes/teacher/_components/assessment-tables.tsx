@@ -1,4 +1,10 @@
-import { CheckCircle2, XCircle, Loader2, MinusCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  MinusCircle,
+  ShieldAlert,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -13,6 +19,32 @@ function useTableDateFormatter() {
   const { i18n } = useTranslation();
   const locale = i18n.resolvedLanguage === "vi" ? "vi-VN" : "en-US";
   return (iso: string | null | undefined) => formatDateTimeMedium(iso, locale);
+}
+
+/**
+ * Proctoring flag count for one attempt.
+ *
+ * The events themselves live on the attempt-detail page; this is the pointer
+ * to them. Without it the only way to discover that an attempt had tab
+ * switches or fullscreen exits was to open every attempt in the course one at
+ * a time, which in a real cohort means nobody ever did.
+ *
+ * A clean attempt renders an em dash, not a green tick: zero flags is the
+ * ordinary case, and decorating it would drown the few rows that need a look.
+ */
+function IntegrityFlagCell({ count }: { count: number }) {
+  if (count <= 0) {
+    return <span className="text-m3-on-surface-variant">—</span>;
+  }
+  return (
+    <span
+      className="inline-flex items-center gap-1 font-semibold text-amber-700"
+      title={`${count} proctoring signal${count === 1 ? "" : "s"} recorded — open the attempt to review`}
+    >
+      <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+      {count}
+    </span>
+  );
 }
 
 function QuizStatusBadge({ attempt }: { attempt: QuizAttemptTeacherRead }) {
@@ -118,6 +150,11 @@ export function QuizAttemptsTable({
       id: "status",
       header: "Status",
       cell: (a) => <QuizStatusBadge attempt={a} />,
+    },
+    {
+      id: "integrity",
+      header: "Flags",
+      cell: (a) => <IntegrityFlagCell count={a.integrity_flags ?? 0} />,
     },
     {
       id: "submitted",

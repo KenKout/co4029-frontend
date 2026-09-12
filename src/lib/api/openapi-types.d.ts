@@ -13406,6 +13406,26 @@ export interface components {
             score_percent?: string | null;
             /** Passed */
             passed?: boolean | null;
+            /**
+             * Integrity Flags
+             * @default 0
+             */
+            integrity_flags: number;
+            /**
+             * Integrity Score
+             * @default 0
+             */
+            integrity_score: number;
+            /**
+             * Integrity Score Threshold
+             * @default 0
+             */
+            integrity_score_threshold: number;
+            /**
+             * Integrity Flagged
+             * @default false
+             */
+            integrity_flagged: boolean;
         };
         /**
          * QuizAttemptTeacherReview

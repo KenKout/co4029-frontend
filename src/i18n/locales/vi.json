@@ -455,7 +455,9 @@
         "critical": "Nghiêm trọng",
         "warning": "Cảnh báo",
         "info": "Thông tin"
-      }
+      },
+      "score_flagged": "Đã gắn cờ: điểm liêm chính {{score}} đã đạt ngưỡng {{threshold}}",
+      "score_under": "Điểm liêm chính {{score}}/{{threshold}} (chưa gắn cờ)"
     },
     "questions": {
       "title": "Câu trả lời",
@@ -4365,7 +4367,16 @@
         "password_hint": "Học viên phải nhập để bắt đầu. Để trống nếu không cần.",
         "password_placeholder": "Không có mật khẩu",
         "subnet_label": "IP / subnet cho phép",
-        "subnet_hint": "CIDR hoặc IP, cách nhau bằng dấu phẩy. Trống = mọi mạng."
+        "subnet_hint": "CIDR hoặc IP, cách nhau bằng dấu phẩy. Trống = mọi mạng.",
+        "integrity_title": "Độ nhạy giám sát",
+        "integrity_description": "Mỗi tín hiệu trình duyệt được tính bao nhiêu điểm, và mức điểm khiến bài làm bị gắn cờ để bạn xem xét. Việc gắn cờ không tự động thay đổi điểm số.",
+        "weight_tab_switch": "Điểm cho việc chuyển tab",
+        "weight_focus_lost": "Điểm cho việc mất tiêu điểm",
+        "weight_fullscreen_exit": "Điểm cho việc thoát toàn màn hình",
+        "score_threshold": "Gắn cờ tại mức điểm",
+        "weight_hint": "1 (dễ) đến 5 (nghiêm)",
+        "threshold_hint": "1 đến 20. Bài làm đạt mức này sẽ bị gắn cờ.",
+        "frozen_note": "Thay đổi chỉ áp dụng cho các bài làm bắt đầu từ bây giờ. Các bài đã làm giữ nguyên thiết lập đã dùng để chấm."
       },
       "timing": {
         "title": "Kiểm soát thời gian",

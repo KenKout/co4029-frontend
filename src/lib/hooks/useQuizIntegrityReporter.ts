@@ -20,6 +20,22 @@ import {
 const BATCH_DELAY_MS = 2000; // debounce window before sending
 const MAX_BATCH = 50; // backend cap
 
+/**
+ * Per-signal retry key. The server dedupes on (attempt, client_event_id), so
+ * a batch retried after a network loss is scored ONCE. Without it a single
+ * physical tab switch could score twice and push a student over the warning
+ * threshold for something they did one time.
+ */
+function newClientEventId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  // Non-secure contexts have no randomUUID. The server tolerates an absent or
+  // malformed key (it just loses retry dedupe for that one event), so a weaker
+  // id here is strictly better than none.
+  return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`;
+}
+
 export function useQuizIntegrityReporter(attemptId: string | null | undefined) {
   const report = useReportQuizIntegrityEvents(attemptId);
   const pendingRef = useRef<QuizIntegrityEvent[]>([]);
@@ -41,7 +57,12 @@ export function useQuizIntegrityReporter(attemptId: string | null | undefined) {
   const enqueue = useCallback(
     (event: QuizIntegrityEvent) => {
       if (!attemptId) return;
-      pendingRef.current.push(event);
+      // Stamped here rather than at each call site so no signal can be added
+      // later that silently skips dedupe.
+      pendingRef.current.push({
+        ...event,
+        metadata: { ...event.metadata, client_event_id: newClientEventId() },
+      });
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(flush, BATCH_DELAY_MS);
     },

@@ -229,6 +229,12 @@ export interface QuizScheduleWindow {
   require_subnet?: string | null;
   overdue_handling?: "autosubmit" | "graceperiod" | "autoabandon" | null;
   grace_period_seconds?: number | null;
+  // Proctoring sensitivity (migration 0115). Authoring-only on the server, so
+  // optional here: the student's quiz projection never carries them.
+  integrity_weight_tab_switch?: number | null;
+  integrity_weight_focus_lost?: number | null;
+  integrity_weight_fullscreen_exit?: number | null;
+  integrity_score_threshold?: number | null;
 }
 
 export type Quiz = Schemas["QuizPublic"] & QuizScheduleWindow;

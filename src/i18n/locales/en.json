@@ -507,7 +507,9 @@
         "critical": "Critical",
         "warning": "Warning",
         "info": "Info"
-      }
+      },
+      "score_flagged": "Flagged: integrity score {{score}} reached the threshold of {{threshold}}",
+      "score_under": "Integrity score {{score}} of {{threshold}} (not flagged)"
     },
     "questions": {
       "title": "Answers",
@@ -4535,7 +4537,16 @@
         "password_hint": "Students must enter this to start. Leave blank for none.",
         "password_placeholder": "No password",
         "subnet_label": "Allowed IP / subnet",
-        "subnet_hint": "Comma-separated CIDR or IPs. Blank = any network."
+        "subnet_hint": "Comma-separated CIDR or IPs. Blank = any network.",
+        "integrity_title": "Proctoring sensitivity",
+        "integrity_description": "How much each browser signal counts, and the score at which an attempt is flagged for your review. Flagging never changes a grade by itself.",
+        "weight_tab_switch": "Tab switch weight",
+        "weight_focus_lost": "Focus loss weight",
+        "weight_fullscreen_exit": "Fullscreen exit weight",
+        "score_threshold": "Flag at score",
+        "weight_hint": "1 (lenient) to 5 (strict)",
+        "threshold_hint": "1 to 20. Attempts reaching this score are flagged.",
+        "frozen_note": "Changes apply to attempts started from now on. Attempts already taken keep the settings they were scored under."
       },
       "timing": {
         "title": "Time enforcement",

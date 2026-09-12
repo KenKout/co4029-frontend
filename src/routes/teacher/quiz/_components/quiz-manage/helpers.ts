@@ -135,6 +135,16 @@ export function settingsPatchFromDraft(
     review_options: draft.review_options,
     require_password: draft.require_password.trim() || null,
     require_subnet: draft.require_subnet.trim() || null,
+    integrity_weight_tab_switch: integerOrNull(
+      draft.integrity_weight_tab_switch,
+    ),
+    integrity_weight_focus_lost: integerOrNull(
+      draft.integrity_weight_focus_lost,
+    ),
+    integrity_weight_fullscreen_exit: integerOrNull(
+      draft.integrity_weight_fullscreen_exit,
+    ),
+    integrity_score_threshold: integerOrNull(draft.integrity_score_threshold),
     overdue_handling: draft.overdue_handling,
     grace_period_seconds: integerOrNull(draft.grace_period_seconds),
   };

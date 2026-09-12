@@ -10,6 +10,7 @@ import {
   Minimize,
   MinusCircle,
   MonitorX,
+  ShieldAlert,
   ShieldCheck,
   Wifi,
   WifiOff,
@@ -165,6 +166,9 @@ export default function CourseQuizAttemptDetailPage() {
         <IntegrityPanel
           events={integrity_events}
           counts={integrityCounts}
+          score={attempt.integrity_score ?? 0}
+          threshold={attempt.integrity_score_threshold ?? 0}
+          flagged={attempt.integrity_flagged ?? false}
           fmtDateTime={fmtDateTime}
         />
 
@@ -322,9 +326,63 @@ function AttemptStatusBadge({
   );
 }
 
+/**
+ * The scored verdict strip: weighted score against the threshold this attempt
+ * was FROZEN under at start.
+ *
+ * The raw event list alone left every judgement to the reader — three tab
+ * switches might be nothing or might be the whole story, and two teachers
+ * reading the same timeline reached different conclusions. The score is the
+ * quiz's own declared policy applied consistently, and `flagged` is the
+ * server's persisted one-shot decision rather than a client recomputation, so
+ * it keeps agreeing with the timeline after the weights are retuned.
+ */
+function IntegrityScoreStrip({
+  score,
+  threshold,
+  flagged,
+}: {
+  score: number;
+  threshold: number;
+  flagged: boolean;
+}) {
+  const { t } = useTranslation();
+  // A threshold of 0 means this attempt predates scoring (no snapshot was
+  // frozen). Showing "0 / 0" would read as a clean score rather than as an
+  // unscored attempt, so show nothing at all.
+  if (threshold <= 0) return null;
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold shrink-0",
+        flagged
+          ? "border-red-300 bg-red-50 text-red-800"
+          : "border-amber-300 bg-amber-50/70 text-amber-800",
+      )}
+    >
+      {flagged ? (
+        <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+      ) : (
+        <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+      )}
+      <span>
+        {t(
+          flagged
+            ? "teacher_quiz_attempt.integrity.score_flagged"
+            : "teacher_quiz_attempt.integrity.score_under",
+          { score, threshold },
+        )}
+      </span>
+    </div>
+  );
+}
+
 function IntegrityPanel({
   events,
   counts,
+  score,
+  threshold,
+  flagged,
   fmtDateTime,
 }: {
   events: QuizAttemptIntegrityEvent[];
@@ -334,6 +392,9 @@ function IntegrityPanel({
     focusLost: number;
     fullscreenExit: number;
   };
+  score: number;
+  threshold: number;
+  flagged: boolean;
   fmtDateTime: (iso: string | null | undefined) => string;
 }) {
   const { t } = useTranslation();
@@ -375,6 +436,11 @@ function IntegrityPanel({
             })}
           </p>
         </div>
+        <IntegrityScoreStrip
+          score={score}
+          threshold={threshold}
+          flagged={flagged}
+        />
       </div>
       <div className="divide-y divide-amber-200/40 max-h-72 overflow-y-auto">
         {events.map((ev) => {
