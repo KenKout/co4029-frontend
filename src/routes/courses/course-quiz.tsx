@@ -11,14 +11,7 @@ import {
 } from "@/routes/courses/_components/course-quiz/QuizStatusScreens";
 import { QuizTakingStage } from "@/routes/courses/_components/course-quiz/QuizTakingStage";
 import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
-import {
-  FullscreenExitWarningDialog,
-  FullscreenPromptDialog,
-} from "@/components/assessment/FullscreenDialogs";
-
-/** Quiz copy for the shared fullscreen dialogs (the default is the
- *  interview namespace, whose wording talks about an interview). */
-const QUIZ_FULLSCREEN_KEYS = "course_quiz.fullscreen";
+import { QuizFullscreenGateScreen } from "@/routes/courses/_components/course-quiz/QuizFullscreenGateScreen";
 
 /**
  * Student quiz-taking route. All attempt state + lifecycle lives in
@@ -90,30 +83,25 @@ export default function CourseQuizPage() {
     return <QuizNoQuestionsPanel slug={slug} />;
   }
 
+  // Fullscreen is MANDATORY for every attempt (same rule as the interview).
+  // The gate REPLACES the take rather than overlaying it: a dialog over the
+  // questions still leaves them in the DOM, readable with the dialog dismissed
+  // by devtools or a screen reader.
+  if (session.fullscreen.requiredOpen) {
+    return (
+      <QuizFullscreenGateScreen
+        gate={session.fullscreen}
+        timed={Boolean(quiz.time_limit_seconds)}
+      />
+    );
+  }
+
   return (
-    <>
-      <QuizTakingStage
-        session={session}
-        quiz={quiz}
-        slug={slug}
-        courseTitle={course.title}
-      />
-      {/* Proctoring gate. Both dialogs no-op unless the teacher set this quiz
-          to 'securewindow' — `fullscreen` is driven by an inactive deterrent
-          otherwise, so `promptOpen` / `warningOpen` stay false. */}
-      <FullscreenPromptDialog
-        open={session.fullscreen.promptOpen}
-        onConfirm={session.fullscreen.acceptPrompt}
-        onDecline={session.fullscreen.declinePrompt}
-        keyPrefix={QUIZ_FULLSCREEN_KEYS}
-      />
-      <FullscreenExitWarningDialog
-        open={session.fullscreen.warningOpen}
-        onReenter={session.fullscreen.reenter}
-        onDismiss={session.fullscreen.dismissWarning}
-        exitCount={session.fullscreen.exitCount}
-        keyPrefix={QUIZ_FULLSCREEN_KEYS}
-      />
-    </>
+    <QuizTakingStage
+      session={session}
+      quiz={quiz}
+      slug={slug}
+      courseTitle={course.title}
+    />
   );
 }

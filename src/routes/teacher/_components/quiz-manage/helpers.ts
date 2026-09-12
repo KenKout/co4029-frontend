@@ -91,7 +91,6 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
       defaultReviewOptions(),
     require_password: quiz.require_password ?? "",
     require_subnet: quiz.require_subnet ?? "",
-    browser_security: quiz.browser_security === "securewindow",
     overdue_handling: quiz.overdue_handling ?? "autosubmit",
     grace_period_seconds: toDraftString(quiz.grace_period_seconds),
   };

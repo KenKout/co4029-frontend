@@ -492,9 +492,9 @@
     },
     "integrity": {
       "clean_title": "No integrity flags",
-      "clean_body": "This student stayed on the quiz page the whole time — no tab switches or focus loss recorded.",
+      "clean_body": "This student stayed on the quiz page in fullscreen the whole time — no tab switches, focus loss or fullscreen exits recorded.",
       "flagged_title": "Integrity signals detected",
-      "summary": "Left the page {{tab}}× (tab switch), lost focus {{focus}}×. Recorded for your review — never auto-penalized.",
+      "summary": "Left the page {{tab}}× (tab switch), lost focus {{focus}}×, exited fullscreen {{fullscreen}}×. Recorded for your review — never auto-penalized.",
       "event": {
         "tab_switch": "Switched away from the quiz tab",
         "focus_lost": "Quiz window lost focus",
@@ -3041,16 +3041,19 @@
   },
   "course_quiz": {
     "fullscreen": {
-      "prompt_title": "Switch to fullscreen mode",
-      "prompt_description": "This quiz runs in fullscreen so nothing distracts you. The app menu is hidden until you submit.",
-      "enter": "Enter fullscreen",
-      "continue_windowed": "Continue in a window",
-      "exit_warning_title": "You left fullscreen mode",
-      "exit_warning_description": "Please return to fullscreen and stay there until you submit this quiz.",
       "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
-      "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far).",
-      "reenter": "Back to fullscreen",
-      "stay_windowed": "Stay in a window"
+      "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far)."
+    },
+    "fullscreen_gate": {
+      "title": "Fullscreen required",
+      "description": "This quiz runs in fullscreen. Return to fullscreen to continue — your saved answers are safe.",
+      "requesting": "Requesting fullscreen…",
+      "reenter": "Re-enter fullscreen",
+      "denied": "The browser refused the fullscreen request. Press the button again — and allow fullscreen if the browser asks.",
+      "unsupported": "This browser or device cannot go fullscreen. Please switch to a desktop browser (Chrome, Edge, Firefox or Safari) and return to the quiz."
+    },
+    "fullscreen_timer_note": {
+      "timer_continues": "The quiz timer is running and keeps running while you are outside fullscreen."
     },
     "empty": {
       "no_questions_title": "No questions available",
@@ -3245,18 +3248,10 @@
     "enable_audio": "Enable interviewer audio",
     "enable_audio_body": "The interviewer is live and speaking. Your browser blocks audio until you click once — enable it to hear the questions.",
     "fullscreen": {
-      "prompt_title": "Switch to fullscreen mode",
-      "prompt_description": "Your interview runs in fullscreen so nothing distracts you. The app menu is hidden until the interview ends.",
-      "enter": "Enter fullscreen",
       "enter_and_start": "Enter fullscreen and start",
       "enter_and_resume": "Enter fullscreen and resume",
-      "continue_windowed": "Continue in a window",
-      "exit_warning_title": "You left fullscreen mode",
-      "exit_warning_description": "Please return to fullscreen and stay there until the interview ends.",
       "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
-      "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far).",
-      "reenter": "Back to fullscreen",
-      "stay_windowed": "Stay in a window"
+      "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far)."
     },
     "fullscreen_gate": {
       "title": "Fullscreen required",
@@ -4468,9 +4463,7 @@
         "password_hint": "Students must enter this to start. Leave blank for none.",
         "password_placeholder": "No password",
         "subnet_label": "Allowed IP / subnet",
-        "subnet_hint": "Comma-separated CIDR or IPs. Blank = any network.",
-        "browser_security_label": "Browser security mode",
-        "browser_security_desc": "Signal a safe/locked-down browser window during the attempt."
+        "subnet_hint": "Comma-separated CIDR or IPs. Blank = any network."
       },
       "timing": {
         "title": "Time enforcement",

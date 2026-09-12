@@ -1,11 +1,13 @@
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
-import { Field, SettingsSection, ToggleRow } from "./form-primitives";
+import { Field, SettingsSection } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
 
 /**
- * Access section: password, subnet allowlist and the browser-security switch.
+ * Access section: password and subnet allowlist. (The browser-security
+ * switch was retired with migration 0114 — fullscreen is now mandatory for
+ * every attempt, so there was nothing left for it to toggle.)
  * Extracted from SettingsTab verbatim; the caller still supplies the
  * LockableSection wrapper it sits inside.
  */
@@ -51,14 +53,6 @@ export function SettingsAccessSection({
           />
         </Field>
       </div>
-      <ToggleRow
-        label={t("teacher_quiz_manage.settings.access.browser_security_label")}
-        description={t(
-          "teacher_quiz_manage.settings.access.browser_security_desc",
-        )}
-        value={draft.browser_security}
-        onChange={(v) => update("browser_security", v)}
-      />
     </SettingsSection>
   );
 }

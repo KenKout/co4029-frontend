@@ -151,15 +151,6 @@ export function LeaveInterviewDialog({
   );
 }
 
-// Fullscreen dialogs are shared with the quiz take — see
-// components/assessment/FullscreenDialogs.tsx. The INTERVIEW no longer uses
-// them (its fullscreen flow is the mandatory gate screen + the start dialog);
-// the re-export stays for the quiz call sites that import from here.
-export {
-  FullscreenExitWarningDialog,
-  FullscreenPromptDialog,
-} from "@/components/assessment/FullscreenDialogs";
-
 /**
  * The start/resume confirmation — the USER GESTURE that powers the mandatory
  * fullscreen gate. Browsers only grant requestFullscreen() from a user

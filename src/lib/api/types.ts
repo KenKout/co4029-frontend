@@ -227,11 +227,6 @@ export interface QuizScheduleWindow {
   review_options?: Record<string, unknown> | null;
   require_password?: string | null;
   require_subnet?: string | null;
-  // Proctoring mode, NOT a flag: the column is a string enum
-  // (ck_quizzes_browser_security). Typed as `boolean` here since the
-  // augmentation was written, which made every truthiness check on it
-  // wrong — "none" is truthy.
-  browser_security?: "none" | "securewindow" | null;
   overdue_handling?: "autosubmit" | "graceperiod" | "autoabandon" | null;
   grace_period_seconds?: number | null;
 }

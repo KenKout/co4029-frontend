@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
-import { useInterviewFullscreenGate } from "@/components/interview/use-interview-fullscreen-gate";
+import { useAssessmentFullscreenGate } from "@/lib/hooks/useAssessmentFullscreenGate";
 import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
 import { resolveInterviewState } from "@/lib/interview/format";
 import type {
@@ -178,7 +178,7 @@ export function useInterviewProgress(
   // so the timer/integrity hooks above keep running behind the gate screen;
   // the narration-cancel callback cuts the client voice the moment
   // fullscreen is lost mid-speech.
-  const fullscreenGate = useInterviewFullscreenGate(interviewActive, {
+  const fullscreenGate = useAssessmentFullscreenGate(interviewActive, {
     onUnexpectedExit: () => speech.narration.cancel(),
   });
 

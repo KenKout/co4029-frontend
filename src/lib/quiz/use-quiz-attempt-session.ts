@@ -11,7 +11,7 @@ import {
 import type { QuizQuestionPublic } from "@/lib/api/types";
 import { useQuestionFocusTime } from "@/lib/quiz/use-question-focus-time";
 import { useQuizIntegrityReporter } from "@/lib/hooks/useQuizIntegrityReporter";
-import { useFullscreenDeterrent } from "@/lib/hooks/useFullscreenDeterrent";
+import { useAssessmentFullscreenGate } from "@/lib/hooks/useAssessmentFullscreenGate";
 import { useAttemptActions } from "@/lib/quiz/quiz-attempt-session/use-attempt-actions";
 import { useAttemptHydration } from "@/lib/quiz/quiz-attempt-session/use-attempt-hydration";
 import { useAttemptPagination } from "@/lib/quiz/quiz-attempt-session/use-attempt-pagination";
@@ -85,19 +85,22 @@ export function useQuizAttemptSession(quizId: string) {
     taking && activeAttemptId ? activeAttemptId : null,
   );
 
-  // Fullscreen is the teacher's call, not ours: `browser_security` has been a
-  // quiz setting since migration 0056 but nothing on the client read it, so
-  // 'securewindow' did nothing. Honouring it here is what makes the toggle
-  // real — and leaves every quiz still set to 'none' behaving exactly as
-  // before rather than surprising students with a fullscreen prompt.
-  const secureWindow = quiz?.browser_security === "securewindow";
-  const fullscreen = useFullscreenDeterrent(
-    Boolean(secureWindow && taking && activeAttemptId),
+  // Fullscreen is MANDATORY for every quiz attempt, matching the interview.
+  //
+  // It used to hang off a per-quiz `browser_security` setting, which meant two
+  // independent ways for a proctoring signal to silently never exist: a quiz
+  // left at the default 'none' never entered fullscreen, and even when it was
+  // switched on the student could decline the prompt and carry on windowed.
+  // Either way the teacher's timeline showed no fullscreen exits — not because
+  // nothing happened, but because nothing could. A gate an author can switch
+  // off is not a gate, so the setting was retired outright (migration 0114),
+  // the same way the interview has never had one.
+  const fullscreen = useAssessmentFullscreenGate(
+    Boolean(taking && activeAttemptId),
     {
-      // Recorded here rather than from a `fullscreenchange` listener inside the
-      // reporter, because only the deterrent knows which exits were ours: it
-      // leaves fullscreen itself when the attempt ends, and logging that would
-      // charge every student one exit for submitting.
+      // Only UNEXPECTED exits reach this callback — the underlying browser-API
+      // hook suppresses the programmatic exit performed when the attempt ends,
+      // so submitting never charges a student one exit.
       onUnexpectedExit: () =>
         integrity.record({
           event_type: "fullscreen_exit",
@@ -152,6 +155,7 @@ export function useQuizAttemptSession(quizId: string) {
     startAttempt,
     submitAnswer,
     submitAttempt,
+    enterFullscreen: fullscreen.enter,
   });
 
   // Once the user clicks Resume, hold on the skeleton while the resume payload
@@ -213,11 +217,15 @@ export function useQuizAttemptSession(quizId: string) {
     handleSaveOnly: actions.handleSaveOnly,
     handleSaveNext: actions.handleSaveNext,
     handleFinalSubmit: actions.handleFinalSubmit,
-    requestResume: () => setResumeRequested(true),
+    requestResume: () => {
+      // Resume skips `handleStartAttempt` (it hydrates from the in-progress
+      // attempt), so it needs its own fullscreen request on the click.
+      void fullscreen.enter();
+      setResumeRequested(true);
+    },
     resumeRequested,
     resuming,
-    // fullscreen proctoring (inert unless the quiz asks for 'securewindow')
-    secureWindow,
+    // mandatory fullscreen gate — live for every attempt
     fullscreen,
   };
 }

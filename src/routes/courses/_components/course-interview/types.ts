@@ -1,7 +1,7 @@
 import type { MutableRefObject } from "react";
 
 import type { UseInterviewChatResult } from "@/components/interview/use-interview-chat";
-import type { InterviewFullscreenGate } from "@/components/interview/use-interview-fullscreen-gate";
+import type { AssessmentFullscreenGate } from "@/lib/hooks/useAssessmentFullscreenGate";
 import type { FinishReason } from "@/lib/interview/turn-factory";
 import type { useInterviewDrafts } from "./use-interview-drafts";
 import type { useInterviewPhaseState } from "./use-interview-phase-state";
@@ -49,7 +49,7 @@ export type InterviewActionsContext = InterviewBase & {
    * reads `isFullscreenNow()` so a stale click in the same tick as an
    * unexpected exit cannot send after the gate has locked.
    */
-  fullscreenGate: InterviewFullscreenGate;
+  fullscreenGate: AssessmentFullscreenGate;
   /**
    * True between a start attempt's fullscreen request and its completion —
    * guards against a double-click issuing two requests or two start

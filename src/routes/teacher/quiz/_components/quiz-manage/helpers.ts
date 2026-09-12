@@ -135,7 +135,6 @@ export function settingsPatchFromDraft(
     review_options: draft.review_options,
     require_password: draft.require_password.trim() || null,
     require_subnet: draft.require_subnet.trim() || null,
-    browser_security: draft.browser_security,
     overdue_handling: draft.overdue_handling,
     grace_period_seconds: integerOrNull(draft.grace_period_seconds),
   };

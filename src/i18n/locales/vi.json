@@ -440,9 +440,9 @@
     },
     "integrity": {
       "clean_title": "Không có cảnh báo gian lận",
-      "clean_body": "Sinh viên này ở lại trang làm bài suốt thời gian — không ghi nhận chuyển tab hay mất tiêu điểm.",
+      "clean_body": "Sinh viên này ở lại trang làm bài ở chế độ toàn màn hình suốt thời gian — không ghi nhận chuyển tab, mất tiêu điểm hay thoát toàn màn hình.",
       "flagged_title": "Phát hiện tín hiệu bất thường",
-      "summary": "Rời khỏi trang {{tab}} lần (chuyển tab), mất tiêu điểm {{focus}} lần. Được ghi lại để bạn xem xét — không tự động trừ điểm.",
+      "summary": "Rời khỏi trang {{tab}} lần (chuyển tab), mất tiêu điểm {{focus}} lần, thoát toàn màn hình {{fullscreen}} lần. Được ghi lại để bạn xem xét — không tự động trừ điểm.",
       "event": {
         "tab_switch": "Chuyển khỏi tab làm bài",
         "focus_lost": "Cửa sổ làm bài mất tiêu điểm",
@@ -2870,16 +2870,19 @@
   },
   "course_quiz": {
     "fullscreen": {
-      "prompt_title": "Chuyển sang chế độ toàn màn hình",
-      "prompt_description": "Bài kiểm tra này chạy ở chế độ toàn màn hình để bạn không bị phân tâm. Menu ứng dụng sẽ ẩn cho đến khi bạn nộp bài.",
-      "enter": "Bật toàn màn hình",
-      "continue_windowed": "Tiếp tục trong cửa sổ",
-      "exit_warning_title": "Bạn đã thoát chế độ toàn màn hình",
-      "exit_warning_description": "Vui lòng quay lại chế độ toàn màn hình và giữ nguyên cho đến khi nộp bài.",
       "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần).",
-      "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần).",
-      "reenter": "Quay lại toàn màn hình",
-      "stay_windowed": "Ở lại trong cửa sổ"
+      "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần)."
+    },
+    "fullscreen_gate": {
+      "title": "Bắt buộc toàn màn hình",
+      "description": "Bài kiểm tra này chạy ở chế độ toàn màn hình. Quay lại toàn màn hình để tiếp tục — câu trả lời đã lưu của bạn vẫn an toàn.",
+      "requesting": "Đang yêu cầu toàn màn hình…",
+      "reenter": "Vào lại toàn màn hình",
+      "denied": "Trình duyệt đã từ chối yêu cầu toàn màn hình. Bấm lại nút bên dưới — và cho phép toàn màn hình nếu trình duyệt hỏi.",
+      "unsupported": "Trình duyệt hoặc thiết bị này không hỗ trợ toàn màn hình. Vui lòng chuyển sang trình duyệt máy tính (Chrome, Edge, Firefox hoặc Safari) rồi quay lại bài kiểm tra."
+    },
+    "fullscreen_timer_note": {
+      "timer_continues": "Đồng hồ bài kiểm tra đang chạy và vẫn tiếp tục chạy trong lúc bạn ở ngoài toàn màn hình."
     },
     "empty": {
       "no_questions_title": "Chưa có câu hỏi",
@@ -3074,18 +3077,10 @@
     "enable_audio": "Bật tiếng người phỏng vấn",
     "enable_audio_body": "Người phỏng vấn đang trực tiếp nói chuyện. Trình duyệt chặn âm thanh cho đến khi bạn bấm một lần — hãy bật để nghe câu hỏi.",
     "fullscreen": {
-      "prompt_title": "Chuyển sang chế độ toàn màn hình",
-      "prompt_description": "Buổi phỏng vấn sẽ chạy toàn màn hình để bạn không bị phân tán. Menu của ứng dụng được ẩn cho đến khi phỏng vấn kết thúc.",
-      "enter": "Vào toàn màn hình",
       "enter_and_start": "Vào toàn màn hình và bắt đầu",
       "enter_and_resume": "Vào toàn màn hình và tiếp tục",
-      "continue_windowed": "Tiếp tục trong cửa sổ",
-      "exit_warning_title": "Bạn đã thoát chế độ toàn màn hình",
-      "exit_warning_description": "Vui lòng quay lại toàn màn hình và ở đó cho đến khi phỏng vấn kết thúc.",
       "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
-      "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
-      "reenter": "Quay lại toàn màn hình",
-      "stay_windowed": "Ở lại trong cửa sổ"
+      "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần)."
     },
     "fullscreen_gate": {
       "title": "Bắt buộc toàn màn hình",
@@ -4297,9 +4292,7 @@
         "password_hint": "Học viên phải nhập để bắt đầu. Để trống nếu không cần.",
         "password_placeholder": "Không có mật khẩu",
         "subnet_label": "IP / subnet cho phép",
-        "subnet_hint": "CIDR hoặc IP, cách nhau bằng dấu phẩy. Trống = mọi mạng.",
-        "browser_security_label": "Chế độ bảo mật trình duyệt",
-        "browser_security_desc": "Yêu cầu cửa sổ trình duyệt an toàn/khóa khi làm bài."
+        "subnet_hint": "CIDR hoặc IP, cách nhau bằng dấu phẩy. Trống = mọi mạng."
       },
       "timing": {
         "title": "Kiểm soát thời gian",

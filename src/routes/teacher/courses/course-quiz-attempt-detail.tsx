@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  Minimize,
   MinusCircle,
   MonitorX,
   ShieldCheck,
@@ -73,7 +74,13 @@ export default function CourseQuizAttemptDetailPage() {
     const focusLost = events.filter(
       (e) => e.event_type === "focus_lost",
     ).length;
-    return { total: events.length, tabSwitch, focusLost };
+    // Fullscreen exits were being collected by the client and stored by the
+    // server, but never counted here — so the one signal the mandatory gate
+    // exists to produce was invisible in the summary line.
+    const fullscreenExit = events.filter(
+      (e) => e.event_type === "fullscreen_exit",
+    ).length;
+    return { total: events.length, tabSwitch, focusLost, fullscreenExit };
   }, [data]);
 
   if (isLoading) {
@@ -195,25 +202,28 @@ function AttemptPageHeader({
   courseTitle: string;
   cameFromStudent: boolean;
   studentId?: string;
-  attempt: { quiz_title: string; student_name?: string | null; student_id: string; attempt_number: number };
+  attempt: {
+    quiz_title: string;
+    student_name?: string | null;
+    student_id: string;
+    attempt_number: number;
+  };
 }) {
   const { t } = useTranslation();
   const backTo =
-    cameFromStudent && studentId ? (
-      {
-        to: "/teacher/courses/$courseId/students/$studentId" as const,
-        params: { courseId, studentId },
-        label: t("teacher_quiz_attempt.back_to_student"),
-        crumb: t("teacher_quiz_attempt.breadcrumb_student"),
-      }
-    ) : (
-      {
-        to: "/teacher/courses/$courseId/assessments" as const,
-        params: { courseId },
-        label: t("teacher_quiz_attempt.back_to_assessments"),
-        crumb: t("teacher_quiz_attempt.breadcrumb_assessments"),
-      }
-    );
+    cameFromStudent && studentId
+      ? {
+          to: "/teacher/courses/$courseId/students/$studentId" as const,
+          params: { courseId, studentId },
+          label: t("teacher_quiz_attempt.back_to_student"),
+          crumb: t("teacher_quiz_attempt.breadcrumb_student"),
+        }
+      : {
+          to: "/teacher/courses/$courseId/assessments" as const,
+          params: { courseId },
+          label: t("teacher_quiz_attempt.back_to_assessments"),
+          crumb: t("teacher_quiz_attempt.breadcrumb_assessments"),
+        };
 
   return (
     <>
@@ -318,7 +328,12 @@ function IntegrityPanel({
   fmtDateTime,
 }: {
   events: QuizAttemptIntegrityEvent[];
-  counts: { total: number; tabSwitch: number; focusLost: number };
+  counts: {
+    total: number;
+    tabSwitch: number;
+    focusLost: number;
+    fullscreenExit: number;
+  };
   fmtDateTime: (iso: string | null | undefined) => string;
 }) {
   const { t } = useTranslation();
@@ -356,6 +371,7 @@ function IntegrityPanel({
             {t("teacher_quiz_attempt.integrity.summary", {
               tab: counts.tabSwitch,
               focus: counts.focusLost,
+              fullscreen: counts.fullscreenExit,
             })}
           </p>
         </div>
@@ -370,11 +386,13 @@ function IntegrityPanel({
               ? MonitorX
               : ev.event_type === "focus_lost"
                 ? Eye
-                : ev.event_type === "disconnect"
-                  ? WifiOff
-                  : ev.event_type === "reconnect"
-                    ? Wifi
-                    : Clock;
+                : ev.event_type === "fullscreen_exit"
+                  ? Minimize
+                  : ev.event_type === "disconnect"
+                    ? WifiOff
+                    : ev.event_type === "reconnect"
+                      ? Wifi
+                      : Clock;
           return (
             <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
               <Icon className="h-4 w-4 text-amber-700 shrink-0" />

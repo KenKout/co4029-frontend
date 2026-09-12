@@ -3,10 +3,6 @@ import { render, screen } from "@testing-library/react";
 import * as React from "react";
 
 import { FocusedAnswerComposer } from "../composer/FocusedAnswerComposer";
-import {
-  FullscreenExitWarningDialog,
-  FullscreenPromptDialog,
-} from "../dialogs";
 import { InterviewHeader, QuestionCard } from "../stages";
 import type { ConversationTurn } from "@/lib/interview/types";
 
@@ -102,43 +98,9 @@ describe("QuestionCard (smoke)", () => {
 // duplication (and never carried the agent's live utterances). Their smoke
 // coverage went with them.
 
-describe("fullscreen dialogs (smoke)", () => {
-  it("renders the fullscreen prompt when open", () => {
-    render(
-      <FullscreenPromptDialog
-        open
-        onConfirm={() => undefined}
-        onDecline={() => undefined}
-      />,
-    );
-    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
-  });
-
-  it("renders nothing while closed", () => {
-    render(
-      <FullscreenPromptDialog
-        open={false}
-        onConfirm={() => undefined}
-        onDecline={() => undefined}
-      />,
-    );
-    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-  });
-
-  it("surfaces the recorded exit count in the warning dialog", () => {
-    // The count is the deterrent; a dialog that lost it would still look fine.
-    render(
-      <FullscreenExitWarningDialog
-        open
-        onReenter={() => undefined}
-        onDismiss={() => undefined}
-        exitCount={3}
-      />,
-    );
-    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
-    expect(screen.getByText(/3/)).toBeInTheDocument();
-  });
-});
+// The soft fullscreen prompt/exit-warning dialogs were removed with the
+// deterrent: every assessment now uses the MANDATORY gate screen, which has
+// its own coverage in lib/hooks/__tests__/useAssessmentFullscreenGate.test.ts.
 
 describe("FocusedAnswerComposer (smoke)", () => {
   it("renders the answer surface without a control bar", () => {

@@ -1,5 +1,5 @@
 /**
- * The interview's MANDATORY fullscreen gate.
+ * The MANDATORY fullscreen gate shared by every proctored assessment.
  *
  * Policy only — the browser primitives live in `useAssessmentFullscreen`. This
  * hook turns them from a proctoring *deterrent* ("please go fullscreen; a
@@ -10,7 +10,7 @@
  * refuse to send while `isFullscreenNow()` is false) — nothing here mounts or
  * unmounts presentation itself.
  *
- * Replaces `useFullscreenDeterrent` for the interview. The differences that
+ * Replaces `useFullscreenDeterrent`. The differences that
  * matter:
  *  - No consent prompt and no dismissal: entering is part of starting, and the
  *    only way out of the gate is a granted fullscreen request (or the session
@@ -30,7 +30,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAssessmentFullscreen,
   currentFullscreenElement,
-} from "@/lib/hooks/useAssessmentFullscreen";
+} from "./useAssessmentFullscreen";
 
 export type FullscreenRequestState =
   | "idle"
@@ -39,7 +39,7 @@ export type FullscreenRequestState =
   | "denied"
   | "unsupported";
 
-export interface InterviewFullscreenGate {
+export interface AssessmentFullscreenGate {
   /** Whether the browser exposes any usable fullscreen API at all. */
   supported: boolean;
   /** React-state view of fullscreen — drives the screens. */
@@ -66,7 +66,7 @@ export interface InterviewFullscreenGate {
   exitCount: number;
 }
 
-export interface InterviewFullscreenGateOptions {
+export interface AssessmentFullscreenGateOptions {
   /**
    * Fired synchronously on each UNEXPECTED exit (Escape / F11 / OS gesture)
    * while the session is active. Callers cancel client narration here so no
@@ -77,14 +77,15 @@ export interface InterviewFullscreenGateOptions {
 }
 
 /**
- * @param active True while a live interview session exists (isInterviewActive).
+ * @param active True while a live proctored assessment exists (a running
+ *   interview session, or a quiz attempt being taken).
  *   Everything resets when this goes false, so a retry in the same page
  *   session starts from zero exits and an idle request state.
  */
-export function useInterviewFullscreenGate(
+export function useAssessmentFullscreenGate(
   active: boolean,
-  options: InterviewFullscreenGateOptions = {},
-): InterviewFullscreenGate {
+  options: AssessmentFullscreenGateOptions = {},
+): AssessmentFullscreenGate {
   // Held in a ref so a caller passing an inline closure does not re-attach the
   // underlying fullscreenchange listener on every render.
   const onUnexpectedExitRef = useRef(options.onUnexpectedExit);

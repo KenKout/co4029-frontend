@@ -129,6 +129,12 @@ export function useAttemptActions(args: {
   startAttempt: StartAttemptMutation;
   submitAnswer: SubmitAnswerMutation;
   submitAttempt: SubmitAttemptMutation;
+  /**
+   * Request the mandatory fullscreen gate. Must be called from the start
+   * click itself — browsers grant `requestFullscreen()` only under a user
+   * activation, and awaiting the start API first would spend it.
+   */
+  enterFullscreen: () => Promise<boolean>;
 }) {
   const {
     t,
@@ -142,6 +148,7 @@ export function useAttemptActions(args: {
     startAttempt,
     submitAnswer,
     submitAttempt,
+    enterFullscreen,
   } = args;
   const { activeIdx, activeAttemptId, statuses } = state;
   const { passwordInput } = passwordGate;
@@ -160,6 +167,11 @@ export function useAttemptActions(args: {
   const handleStartAttempt = useCallback(
     async (password?: string) => {
       startIdempotencyKeyRef.current ??= crypto.randomUUID();
+      // Fullscreen FIRST, on the click's own user activation, so the common
+      // path costs one gesture rather than two. Not awaited as a condition:
+      // a refusal must not block the attempt from starting — the gate screen
+      // takes over instead, and no question is rendered until it is granted.
+      void enterFullscreen();
       try {
         const result = await startAttempt.mutateAsync({
           idempotency_key: startIdempotencyKeyRef.current,
@@ -171,7 +183,7 @@ export function useAttemptActions(args: {
         reportStartFailure(ctx, err);
       }
     },
-    [startAttempt, focusTime, t],
+    [startAttempt, focusTime, enterFullscreen, t],
   );
 
   const submitPassword = useCallback(() => {

@@ -1,6 +1,7 @@
 /**
- * Unit tests for the interview's mandatory fullscreen gate hook
- * (`useInterviewFullscreenGate`).
+ * Unit tests for the mandatory fullscreen gate hook shared by every
+ * proctored assessment — interview take and quiz take alike
+ * (`useAssessmentFullscreenGate`).
  *
  * `useAssessmentFullscreen` (the browser-API layer underneath) is mocked,
  * because jsdom has no Fullscreen API and what matters here is the POLICY on
@@ -11,7 +12,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-import { useInterviewFullscreenGate } from "@/components/interview/use-interview-fullscreen-gate";
+import { useAssessmentFullscreenGate } from "@/lib/hooks/useAssessmentFullscreenGate";
 
 const enter = vi.fn(() => Promise.resolve(true));
 const exitFullscreen = vi.fn(() => Promise.resolve());
@@ -49,10 +50,10 @@ beforeEach(() => {
   enter.mockImplementation(() => Promise.resolve(true));
 });
 
-describe("useInterviewFullscreenGate", () => {
+describe("useAssessmentFullscreenGate", () => {
   it("starts idle and unlocked, and requiredOpen follows the active flag", () => {
     const { result, rerender } = renderHook(
-      ({ active }) => useInterviewFullscreenGate(active),
+      ({ active }) => useAssessmentFullscreenGate(active),
       { initialProps: { active: false } },
     );
     expect(result.current.requestState).toBe("idle");
@@ -64,7 +65,7 @@ describe("useInterviewFullscreenGate", () => {
 
   it("grants when enter() succeeds and the DOM confirms", async () => {
     isFullscreenNow.mockImplementation(() => true);
-    const { result } = renderHook(() => useInterviewFullscreenGate(true));
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
 
     let granted: boolean | undefined;
     await act(async () => {
@@ -81,7 +82,7 @@ describe("useInterviewFullscreenGate", () => {
     // decides what to render; the gate only promises that requestState says
     // `denied` and requiredOpen keeps the screen locked.
     enter.mockImplementation(() => Promise.resolve(false));
-    const { result } = renderHook(() => useInterviewFullscreenGate(true));
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
 
     let granted: boolean | undefined;
     await act(async () => {
@@ -95,7 +96,7 @@ describe("useInterviewFullscreenGate", () => {
 
   it("marks unsupported without issuing a request", async () => {
     fullscreenState.supported = false;
-    const { result } = renderHook(() => useInterviewFullscreenGate(true));
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
 
     let granted: boolean | undefined;
     await act(async () => {
@@ -110,7 +111,7 @@ describe("useInterviewFullscreenGate", () => {
 
   it("short-circuits to granted when the DOM is already fullscreen", async () => {
     fullscreenState.isFullscreen = true;
-    const { result } = renderHook(() => useInterviewFullscreenGate(true));
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
 
     let granted: boolean | undefined;
     await act(async () => {
@@ -125,7 +126,7 @@ describe("useInterviewFullscreenGate", () => {
   it("counts unexpected exits and resets the request state on each", () => {
     const onExitCallback = vi.fn();
     const { result } = renderHook(() =>
-      useInterviewFullscreenGate(true, { onUnexpectedExit: onExitCallback }),
+      useAssessmentFullscreenGate(true, { onUnexpectedExit: onExitCallback }),
     );
 
     act(() => {
@@ -140,7 +141,7 @@ describe("useInterviewFullscreenGate", () => {
   it("never re-enters on its own after an unexpected exit", () => {
     // A browser requires a user gesture; the gate screen's button is the path
     // back. The hook itself must not call enter().
-    const { result } = renderHook(() => useInterviewFullscreenGate(true));
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
     act(() => onUnexpectedExit?.());
     expect(enter).not.toHaveBeenCalled();
     // Still locked.
@@ -149,7 +150,7 @@ describe("useInterviewFullscreenGate", () => {
 
   it("resets request state and exit count when the session ends", () => {
     const { result, rerender } = renderHook(
-      ({ active }) => useInterviewFullscreenGate(active),
+      ({ active }) => useAssessmentFullscreenGate(active),
       { initialProps: { active: true } },
     );
     act(() => onUnexpectedExit?.());
@@ -166,7 +167,7 @@ describe("useInterviewFullscreenGate", () => {
   });
 
   it("delegates intentional exits to the browser layer", async () => {
-    const { result } = renderHook(() => useInterviewFullscreenGate(true));
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
     await act(async () => {
       await result.current.exit(true);
     });

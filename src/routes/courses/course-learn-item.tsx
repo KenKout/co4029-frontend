@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearch,
+} from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 
@@ -14,7 +19,10 @@ import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledge
 import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/CurriculumSidebar";
 import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
 import { LessonTabsSection } from "@/routes/courses/_components/course-learn/LessonTabsSection";
-import { LessonPlayerFrame, VideoEngagementTracker } from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
+import {
+  LessonPlayerFrame,
+  VideoEngagementTracker,
+} from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
 import {
   useCurriculumItems,
   useInProgressInterviewSessions,
@@ -22,9 +30,19 @@ import {
   useMyInterviewProgress,
   useMyQuizProgress,
 } from "@/routes/courses/_components/course-learn/use-curriculum";
-import { useActiveLessonContent, useLessonStatusMap } from "@/routes/courses/_components/course-learn/use-lesson-content";
-import { earliestPendingItemId, itemStateFor } from "@/routes/courses/_components/course-learn/helpers";
-import type { CurriculumProps, FlatItem, Tab } from "@/routes/courses/_components/course-learn/types";
+import {
+  useActiveLessonContent,
+  useLessonStatusMap,
+} from "@/routes/courses/_components/course-learn/use-lesson-content";
+import {
+  earliestPendingItemId,
+  itemStateFor,
+} from "@/routes/courses/_components/course-learn/helpers";
+import type {
+  CurriculumProps,
+  FlatItem,
+  Tab,
+} from "@/routes/courses/_components/course-learn/types";
 import type { CoursePublic, LessonPublic, ModulePublic } from "@/lib/api/types";
 import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
 import { QuizIntroStage } from "@/routes/courses/_components/course-quiz/QuizIntroStage";
@@ -39,7 +57,7 @@ import { InterviewRoomProvider } from "@/components/interview/interview-room-pro
 import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
 import { InterviewFullscreenGateScreen } from "@/routes/courses/_components/course-interview/InterviewFullscreenGateScreen";
-import { FullscreenExitWarningDialog, FullscreenPromptDialog } from "@/components/assessment/FullscreenDialogs";
+import { QuizFullscreenGateScreen } from "@/routes/courses/_components/course-quiz/QuizFullscreenGateScreen";
 import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
 import {
   InterviewLoadingScreen,
@@ -55,8 +73,13 @@ import { useCourseInterviewWithRef } from "@/routes/courses/_components/course-i
  * Breadcrumb: Courses / <course> / Learn / <item>
  */
 export default function CourseLearnItemPage() {
-  const { slug, itemSlug } = useParams({ strict: false }) as { slug: string; itemSlug: string };
-  const search = useSearch({ strict: false }) as { start?: boolean | string | number };
+  const { slug, itemSlug } = useParams({ strict: false }) as {
+    slug: string;
+    itemSlug: string;
+  };
+  const search = useSearch({ strict: false }) as {
+    start?: boolean | string | number;
+  };
   const { t } = useTranslation();
 
   const courseQuery = useCourseBySlug(slug);
@@ -66,11 +89,17 @@ export default function CourseLearnItemPage() {
 
   const sortedModules = useMemo(() => {
     if (!contentQuery.data) return [];
-    return [...contentQuery.data.modules].sort((a, b) => a.position - b.position);
+    return [...contentQuery.data.modules].sort(
+      (a, b) => a.position - b.position,
+    );
   }, [contentQuery.data]);
 
   const itemsByModule = useModuleItemsMap(sortedModules);
-  const { flatItems, lessonItems } = useCurriculumItems(sortedModules, itemsByModule, t);
+  const { flatItems, lessonItems } = useCurriculumItems(
+    sortedModules,
+    itemsByModule,
+    t,
+  );
 
   const matched = useMemo<FlatItem | null>(() => {
     if (!itemSlug || !flatItems.length) return null;
@@ -92,16 +121,23 @@ export default function CourseLearnItemPage() {
   }
 
   const courseUnavailable =
-    courseQuery.isError && courseQuery.error instanceof ApiError && courseQuery.error.status === 404;
+    courseQuery.isError &&
+    courseQuery.error instanceof ApiError &&
+    courseQuery.error.status === 404;
   if (courseUnavailable || !course) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center space-y-4 max-w-md">
-          <p className="text-m3-on-surface font-headline font-bold text-xl">{t("course_detail.unavailable_title")}</p>
-          <p className="text-sm text-m3-on-surface-variant">{t("course_detail.unavailable_body")}</p>
+          <p className="text-m3-on-surface font-headline font-bold text-xl">
+            {t("course_detail.unavailable_title")}
+          </p>
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_detail.unavailable_body")}
+          </p>
           <Link to="/courses">
             <Button className="gradient-primary text-white rounded-xl gap-2">
-              {t("course_detail.browse_courses")} <ArrowRight className="h-4 w-4" />
+              {t("course_detail.browse_courses")}{" "}
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -117,16 +153,24 @@ export default function CourseLearnItemPage() {
             items={[
               { label: t("course_detail.breadcrumb_courses"), to: "/courses" },
               { label: course.title, to: "/courses/$slug", params: { slug } },
-              { label: t("course_learn.breadcrumb_learn"), to: "/courses/$slug/learn", params: { slug } },
+              {
+                label: t("course_learn.breadcrumb_learn"),
+                to: "/courses/$slug/learn",
+                params: { slug },
+              },
               { label: itemSlug },
             ]}
           />
-          <p className="font-headline font-bold text-xl text-m3-on-surface mt-4">{t("course_learn.item_not_found_title")}</p>
+          <p className="font-headline font-bold text-xl text-m3-on-surface mt-4">
+            {t("course_learn.item_not_found_title")}
+          </p>
           <p className="text-sm text-m3-on-surface-variant">
             {t("course_learn.item_not_found_body", { item: itemSlug })}
           </p>
           <Link to="/courses/$slug/learn" params={{ slug }}>
-            <Button className="gradient-primary text-white rounded-xl">{t("course_learn.back_to_learn")}</Button>
+            <Button className="gradient-primary text-white rounded-xl">
+              {t("course_learn.back_to_learn")}
+            </Button>
           </Link>
         </div>
       </div>
@@ -182,7 +226,11 @@ function MatchedItemView({
         items={[
           { label: t("course_detail.breadcrumb_courses"), to: "/courses" },
           { label: course.title, to: "/courses/$slug", params: { slug } },
-          { label: t("course_learn.breadcrumb_learn"), to: "/courses/$slug/learn", params: { slug } },
+          {
+            label: t("course_learn.breadcrumb_learn"),
+            to: "/courses/$slug/learn",
+            params: { slug },
+          },
           { label: itemTitle },
         ]}
       />
@@ -211,7 +259,14 @@ function MatchedItemView({
     // module, so a bare slug could be ambiguous across courses — and the
     // learner API 404s an ambiguous slug even though this link is valid.
     const quizRef = matched.item.target?.id || itemSlug;
-    return <QuizProxy slug={slug} quizRef={quizRef} startParam={start} breadcrumb={breadcrumb} />;
+    return (
+      <QuizProxy
+        slug={slug}
+        quizRef={quizRef}
+        startParam={start}
+        breadcrumb={breadcrumb}
+      />
+    );
   }
 
   if (matched.item.item_type === "interview") {
@@ -298,8 +353,12 @@ function LessonItemView({
     return (
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <GlassCard className="p-10 text-center mt-6">
-          <p className="font-headline font-bold text-xl text-m3-on-surface mb-2">{t("course_learn.lesson_unavailable_title")}</p>
-          <p className="text-sm text-m3-on-surface-variant">{t("course_learn.lesson_unavailable_body")}</p>
+          <p className="font-headline font-bold text-xl text-m3-on-surface mb-2">
+            {t("course_learn.lesson_unavailable_title")}
+          </p>
+          <p className="text-sm text-m3-on-surface-variant">
+            {t("course_learn.lesson_unavailable_body")}
+          </p>
         </GlassCard>
       </div>
     );
@@ -323,19 +382,60 @@ function LessonItemView({
             on the right (desktop) / below the content on mobile. */}
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <div className="flex-1 min-w-0 flex flex-col gap-6">
-            <LessonContentPane activeLesson={activeLesson} courseId={courseId} playerRef={playerRef} activeLessonId={activeLessonId} />
+            <LessonContentPane
+              activeLesson={activeLesson}
+              courseId={courseId}
+              playerRef={playerRef}
+              activeLessonId={activeLessonId}
+            />
             <LessonKnowledgeMap lessonId={activeLesson.id} />
             <LessonTabsSection
               activeTab={activeTab}
               onTabChange={setActiveTab}
               activeLessonId={activeLessonId}
               resources={resources}
-              hasPrev={lessonItems.findIndex((fi) => fi.item.id === matched.item.id) > 0}
-              hasNext={lessonItems.findIndex((fi) => fi.item.id === matched.item.id) < lessonItems.length - 1}
-              onPrev={() => onSelect(Math.max(0, lessonItems.findIndex((fi) => fi.item.id === matched.item.id) - 1))}
-              onNext={() => onSelect(Math.min(lessonItems.length - 1, lessonItems.findIndex((fi) => fi.item.id === matched.item.id) + 1))}
-              prevLabel={lessonItems[lessonItems.findIndex((fi) => fi.item.id === matched.item.id) - 1]?.label}
-              nextLabel={lessonItems[lessonItems.findIndex((fi) => fi.item.id === matched.item.id) + 1]?.label}
+              hasPrev={
+                lessonItems.findIndex((fi) => fi.item.id === matched.item.id) >
+                0
+              }
+              hasNext={
+                lessonItems.findIndex((fi) => fi.item.id === matched.item.id) <
+                lessonItems.length - 1
+              }
+              onPrev={() =>
+                onSelect(
+                  Math.max(
+                    0,
+                    lessonItems.findIndex(
+                      (fi) => fi.item.id === matched.item.id,
+                    ) - 1,
+                  ),
+                )
+              }
+              onNext={() =>
+                onSelect(
+                  Math.min(
+                    lessonItems.length - 1,
+                    lessonItems.findIndex(
+                      (fi) => fi.item.id === matched.item.id,
+                    ) + 1,
+                  ),
+                )
+              }
+              prevLabel={
+                lessonItems[
+                  lessonItems.findIndex(
+                    (fi) => fi.item.id === matched.item.id,
+                  ) - 1
+                ]?.label
+              }
+              nextLabel={
+                lessonItems[
+                  lessonItems.findIndex(
+                    (fi) => fi.item.id === matched.item.id,
+                  ) + 1
+                ]?.label
+              }
             />
           </div>
           <CurriculumSidebar {...curriculum} />
@@ -360,12 +460,25 @@ function LessonContentPane({
   const streamQuery = useStreamUrl(materialId);
   const streamUrl = streamQuery.data?.url ?? null;
   const materialVersionId = streamQuery.data?.material_version_id ?? null;
-  useLessonEngagementTracker({ materialVersionId, lessonId: activeLesson.id, courseId });
+  useLessonEngagementTracker({
+    materialVersionId,
+    lessonId: activeLesson.id,
+    courseId,
+  });
 
   if (activeLesson.lesson_type === "reading") {
     return (
-      <GlassCard className="p-6 sm:p-8 space-y-6 mt-2" data-testid="course-learn-reading">
-        <ReadingLessonBody lesson={activeLesson} materialId={materialId} streamUrl={streamUrl} isLoading={streamQuery.isLoading} t={t} />
+      <GlassCard
+        className="p-6 sm:p-8 space-y-6 mt-2"
+        data-testid="course-learn-reading"
+      >
+        <ReadingLessonBody
+          lesson={activeLesson}
+          materialId={materialId}
+          streamUrl={streamUrl}
+          isLoading={streamQuery.isLoading}
+          t={t}
+        />
       </GlassCard>
     );
   }
@@ -388,12 +501,15 @@ function QuizProxy({
   startParam: unknown;
   breadcrumb: React.ReactNode;
 }) {
-  return <QuizProxyInner slug={slug} quizId={quizRef} startParam={startParam} breadcrumb={breadcrumb} />;
+  return (
+    <QuizProxyInner
+      slug={slug}
+      quizId={quizRef}
+      startParam={startParam}
+      breadcrumb={breadcrumb}
+    />
+  );
 }
-
-/** Quiz copy for the shared fullscreen dialogs (the default namespace is
- *  the interview's, whose wording talks about an interview). */
-const QUIZ_FULLSCREEN_KEYS = "course_quiz.fullscreen";
 
 function QuizProxyInner({
   slug,
@@ -410,7 +526,11 @@ function QuizProxyInner({
   const session = useQuizAttemptSession(quizId);
   const { quiz, taking, submittedSummary, displayQuestions } = session;
   const autoStarted = useRef(false);
-  const shouldStart = startParam === true || startParam === "1" || startParam === 1 || startParam === "true";
+  const shouldStart =
+    startParam === true ||
+    startParam === "1" ||
+    startParam === 1 ||
+    startParam === "true";
 
   useEffect(() => {
     if (shouldStart && !taking && !submittedSummary && !autoStarted.current) {
@@ -419,7 +539,12 @@ function QuizProxyInner({
     }
   }, [shouldStart, taking, submittedSummary, session]);
 
-  if (courseLoading || session.quizLoading || session.attemptsLoading || session.resuming) {
+  if (
+    courseLoading ||
+    session.quizLoading ||
+    session.attemptsLoading ||
+    session.resuming
+  ) {
     return <QuizLoadingSkeleton />;
   }
   if (!course || !quiz) {
@@ -434,33 +559,38 @@ function QuizProxyInner({
       <>
         {breadcrumb}
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <QuizResultScreen quiz={quiz} summary={submittedSummary} totalQuestionsFallback={displayQuestions.length} slug={slug} />
+          <QuizResultScreen
+            quiz={quiz}
+            summary={submittedSummary}
+            totalQuestionsFallback={displayQuestions.length}
+            slug={slug}
+          />
         </div>
       </>
     );
   }
   // In progress (a live attempt) the take screen owns the layout — its sticky
-  // bars already carry a back affordance — so no breadcrumb above it. The
-  // fullscreen proctoring dialogs ride along (no-ops unless the teacher set
-  // the quiz to 'securewindow').
+  // bars already carry a back affordance — so no breadcrumb above it.
+  //
+  // Fullscreen is MANDATORY for every attempt (same rule as the interview),
+  // and the gate REPLACES the take rather than overlaying it: a dialog over
+  // the questions still leaves them in the DOM.
   if (taking && displayQuestions.length > 0) {
+    if (session.fullscreen.requiredOpen) {
+      return (
+        <QuizFullscreenGateScreen
+          gate={session.fullscreen}
+          timed={Boolean(quiz.time_limit_seconds)}
+        />
+      );
+    }
     return (
-      <>
-        <QuizTakingStage session={session} quiz={quiz} slug={slug} courseTitle={course.title} />
-        <FullscreenPromptDialog
-          open={session.fullscreen.promptOpen}
-          onConfirm={session.fullscreen.acceptPrompt}
-          onDecline={session.fullscreen.declinePrompt}
-          keyPrefix={QUIZ_FULLSCREEN_KEYS}
-        />
-        <FullscreenExitWarningDialog
-          open={session.fullscreen.warningOpen}
-          onReenter={session.fullscreen.reenter}
-          onDismiss={session.fullscreen.dismissWarning}
-          exitCount={session.fullscreen.exitCount}
-          keyPrefix={QUIZ_FULLSCREEN_KEYS}
-        />
-      </>
+      <QuizTakingStage
+        session={session}
+        quiz={quiz}
+        slug={slug}
+        courseTitle={course.title}
+      />
     );
   }
   if (!taking) {
@@ -468,7 +598,12 @@ function QuizProxyInner({
       <>
         {breadcrumb}
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <QuizIntroStage session={session} quiz={quiz} slug={slug} courseTitle={course?.title} />
+          <QuizIntroStage
+            session={session}
+            quiz={quiz}
+            slug={slug}
+            courseTitle={course?.title}
+          />
         </div>
       </>
     );
@@ -484,11 +619,23 @@ function QuizProxyInner({
   );
 }
 
-function InterviewProxy({ slug, interviewRef }: { slug: string; interviewRef: string }) {
+function InterviewProxy({
+  slug,
+  interviewRef,
+}: {
+  slug: string;
+  interviewRef: string;
+}) {
   return <InterviewProxyInner slug={slug} interviewRef={interviewRef} />;
 }
 
-function InterviewProxyInner({ slug, interviewRef }: { slug: string; interviewRef: string }) {
+function InterviewProxyInner({
+  slug,
+  interviewRef,
+}: {
+  slug: string;
+  interviewRef: string;
+}) {
   const iv = useCourseInterviewWithRef(slug, interviewRef);
   const { course, config, finishResult, sessionId } = iv;
   // Same five-provider-prop policy as course-interview.tsx: the mandatory
@@ -516,11 +663,29 @@ function InterviewProxyInner({ slug, interviewRef }: { slug: string; interviewRe
   // through the curriculum instead.
   const screen = (() => {
     if (iv.courseLoading || iv.configLoading) return <InterviewLoadingScreen />;
-    if (!course || !config) return <InterviewMissingConfigScreen slug={iv.slug} />;
-    if (finishResult) return <InterviewResultsScreen iv={iv as never} finishResult={finishResult} />;
-    if (!sessionId) return <InterviewLobbyScreen iv={iv as never} course={course} config={config} />;
-    if (iv.fullscreenGate.requiredOpen) return <InterviewFullscreenGateScreen iv={iv as never} />;
-    return <InterviewWorkspaceScreen iv={iv as never} course={course} config={config} />;
+    if (!course || !config)
+      return <InterviewMissingConfigScreen slug={iv.slug} />;
+    if (finishResult)
+      return (
+        <InterviewResultsScreen iv={iv as never} finishResult={finishResult} />
+      );
+    if (!sessionId)
+      return (
+        <InterviewLobbyScreen
+          iv={iv as never}
+          course={course}
+          config={config}
+        />
+      );
+    if (iv.fullscreenGate.requiredOpen)
+      return <InterviewFullscreenGateScreen iv={iv as never} />;
+    return (
+      <InterviewWorkspaceScreen
+        iv={iv as never}
+        course={course}
+        config={config}
+      />
+    );
   })();
 
   return (

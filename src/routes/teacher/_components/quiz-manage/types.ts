@@ -35,7 +35,6 @@ export interface SettingsDraft {
   // Access rules (Phase 12). Empty string = no restriction.
   require_password: string;
   require_subnet: string;
-  browser_security: boolean;
   // Timing enforcement (Phase 6).
   overdue_handling: "autosubmit" | "graceperiod" | "autoabandon";
   grace_period_seconds: string;
