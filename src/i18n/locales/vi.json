@@ -2869,6 +2869,15 @@
     "back_to_my_order": "Về thứ tự của tôi"
   },
   "course_quiz": {
+    "start_dialog": {
+      "start_title": "Bắt đầu bài kiểm tra ở chế độ toàn màn hình",
+      "start_description": "Bài kiểm tra này được giám sát. Bài chạy ở chế độ toàn màn hình, và việc thoát toàn màn hình trước khi nộp sẽ được ghi lại để giáo viên xem xét. Bạn có thể quay lại toàn màn hình bất cứ lúc nào.",
+      "start_confirm": "Bật toàn màn hình và bắt đầu",
+      "resume_title": "Tiếp tục bài kiểm tra ở chế độ toàn màn hình",
+      "resume_description": "Bài kiểm tra này được giám sát. Bài chạy ở chế độ toàn màn hình, và việc thoát toàn màn hình trước khi nộp sẽ được ghi lại để giáo viên xem xét. Câu trả lời đã lưu của bạn vẫn ở đó.",
+      "resume_confirm": "Bật toàn màn hình và tiếp tục",
+      "cancel": "Để sau"
+    },
     "fullscreen": {
       "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần).",
       "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần)."

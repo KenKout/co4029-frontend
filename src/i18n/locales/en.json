@@ -3040,6 +3040,15 @@
     }
   },
   "course_quiz": {
+    "start_dialog": {
+      "start_title": "Start this quiz in fullscreen",
+      "start_description": "This quiz is monitored. It runs in fullscreen, and leaving fullscreen before you submit is recorded for your teacher to review. You can go back to fullscreen at any time.",
+      "start_confirm": "Enter fullscreen and start",
+      "resume_title": "Resume this quiz in fullscreen",
+      "resume_description": "This quiz is monitored. It runs in fullscreen, and leaving fullscreen before you submit is recorded for your teacher to review. Your saved answers are waiting for you.",
+      "resume_confirm": "Enter fullscreen and resume",
+      "cancel": "Not yet"
+    },
     "fullscreen": {
       "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
       "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far)."

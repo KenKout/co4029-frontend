@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { QuizIntroPanel } from "@/routes/courses/_components/QuizIntroPanel";
+import { QuizStartDialog } from "./QuizStartDialog";
 import type { QuizStageProps } from "./types";
 
 /**
@@ -92,18 +94,42 @@ export function QuizIntroStage({
     resumeRequested,
   } = session;
 
+  // Which confirmation is open, if any. Start and resume share one dialog
+  // because they differ only in copy — and both must run their action from
+  // the CONFIRM click, since that click is the user activation the mandatory
+  // fullscreen gate needs.
+  const [confirming, setConfirming] = useState<"start" | "resume" | null>(null);
+
   return (
     <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10">
       <QuizIntroPanel
         quiz={quiz}
         attempts={attempts}
         inProgressAttempt={inProgressAttempt}
-        onStart={() => void handleStartAttempt()}
-        onResume={requestResume}
+        onStart={() => setConfirming("start")}
+        onResume={() => setConfirming("resume")}
         starting={startAttempt.isPending}
         resuming={resumeRequested}
         slug={slug}
         courseTitle={courseTitle}
+      />
+
+      <QuizStartDialog
+        open={confirming !== null}
+        onOpenChange={(next) => {
+          if (!next) setConfirming(null);
+        }}
+        isResume={confirming === "resume"}
+        isPending={startAttempt.isPending || resumeRequested}
+        onConfirm={() => {
+          // Close first so the dialog does not sit over the take screen, then
+          // act — still inside this click's activation, so the fullscreen
+          // request the action makes is honoured.
+          const action = confirming;
+          setConfirming(null);
+          if (action === "resume") requestResume();
+          else if (action === "start") void handleStartAttempt();
+        }}
       />
 
       <QuizPasswordPrompt session={session} />

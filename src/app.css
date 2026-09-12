@@ -405,6 +405,19 @@
       -apple-system,
       sans-serif;
   }
+
+  html:fullscreen,
+  html:-webkit-full-screen {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: var(--surface);
+  }
+
+  html:fullscreen::backdrop,
+  html:-webkit-full-screen::backdrop {
+    background-color: var(--surface);
+  }
   h1,
   h2,
   h3,
