@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Archive, ArrowLeft, GitBranch, History, Plus, Route, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -40,14 +41,15 @@ type TabKey = "general" | "roster" | "requests" | "history";
  * The count badges make the tabs self-announcing — a dean lands here and
  * sees "Path changes 3" without opening anything.
  */
-const TABS = (pending: number, history: number, enrolled: number): TabDef<TabKey>[] => [
-  { key: "general", label: "General & paths", icon: Route },
-  { key: "roster", label: "Students", icon: Users, count: enrolled || undefined },
-  { key: "requests", label: "Path changes", icon: GitBranch, count: pending || undefined },
-  { key: "history", label: "History", icon: History, count: history || undefined },
+const TABS = (t: (key: string) => string, pending: number, history: number, enrolled: number): TabDef<TabKey>[] => [
+  { key: "general", label: t("management_learning_program_detail.tabs.general"), icon: Route },
+  { key: "roster", label: t("management_learning_program_detail.tabs.roster"), icon: Users, count: enrolled || undefined },
+  { key: "requests", label: t("management_learning_program_detail.tabs.requests"), icon: GitBranch, count: pending || undefined },
+  { key: "history", label: t("management_learning_program_detail.tabs.history"), icon: History, count: history || undefined },
 ];
 
 export default function ManagementLearningProgramDetailPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams({ strict: false }) as { id: string };
   // Tab rides the URL (?tab=requests) so a dean notification can deep-link
@@ -98,7 +100,7 @@ export default function ManagementLearningProgramDetailPage() {
   const studentCandidates: SelectableEntity[] = (users.data ?? []).map((user) => ({ id: user.user_id, primaryLabel: user.display_name?.trim() || user.primary_email, secondaryLabel: user.primary_email }));
 
   if (current.isLoading || (selectedVersionId && historical.isLoading)) return <PageSkeleton rows={4} />;
-  if (!data) return <p>Learning Program not found.</p>;
+  if (!data) return <p>{t("management_learning_program_detail.not_found")}</p>;
 
   const composePathIds = (extraIds: string[]) => [
     ...data.paths.map((path) => path.career_path_id),
@@ -106,9 +108,9 @@ export default function ManagementLearningProgramDetailPage() {
   ];
 
   async function confirmedAction(title: string, description: string, label: string, action: () => Promise<unknown>, success: string) {
-    if (!(await confirm({ title, description, confirmLabel: label, cancelLabel: "Cancel", confirmVariant: label === "Archive" ? "destructive" : "default" }))) return;
+    if (!(await confirm({ title, description, confirmLabel: label, cancelLabel: t("management_learning_program_detail.actions.cancel"), confirmVariant: label === t("management_learning_program_detail.actions.archive") ? "destructive" : "default" }))) return;
     try { await action(); toast.success(success); setSelectedVersionId(null); }
-    catch (error) { toast.error(getApiErrorMessage(error, "Action failed")); }
+    catch (error) { toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.action_failed"))); }
   }
 
   const isDraft = data.current_version.status === "draft" && !readOnly;
@@ -125,11 +127,10 @@ export default function ManagementLearningProgramDetailPage() {
 
   async function removePath(pathId: string, pathName: string) {
     const accepted = await confirm({
-      title: `Remove ${pathName} from this draft?`,
-      description:
-        "Only the current Program draft will change. Published versions and existing student enrollments keep their pinned Career Path.",
-      confirmLabel: "Remove path",
-      cancelLabel: "Cancel",
+      title: t("management_learning_program_detail.confirm.remove_path_title", { name: pathName }),
+      description: t("management_learning_program_detail.confirm.remove_path_description"),
+      confirmLabel: t("management_learning_program_detail.confirm.remove_path"),
+      cancelLabel: t("management_learning_program_detail.actions.cancel"),
       confirmVariant: "destructive",
     });
     if (!accepted) return;
@@ -140,36 +141,36 @@ export default function ManagementLearningProgramDetailPage() {
           .filter((path) => path.career_path_id !== pathId)
           .map((path) => path.career_path_id),
       });
-      toast.success("Career Path removed from the draft");
+      toast.success(t("management_learning_program_detail.toast.path_removed"));
     } catch (error) {
-      toast.error(getApiErrorMessage(error, "Could not remove the Career Path"));
+      toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.path_remove_failed")));
     }
   }
 
   return (
     <div className="space-y-6 pb-16">
       {dialog}
-      <Link to="/management/learning-programs" className="inline-flex items-center gap-2 text-sm font-semibold text-m3-primary"><ArrowLeft className="h-4 w-4" /> Learning Programs</Link>
+      <Link to="/management/learning-programs" className="inline-flex items-center gap-2 text-sm font-semibold text-m3-primary"><ArrowLeft className="h-4 w-4" /> {t("management_learning_program_detail.back")}</Link>
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div><div className="flex flex-wrap items-center gap-2"><h1 className="font-headline text-3xl font-black">{data.name}</h1><span className="rounded-full bg-m3-surface-container px-3 py-1 text-xs font-semibold">{data.status}</span></div><p className="mt-1 font-mono text-xs text-m3-on-surface-variant">{data.slug}</p></div>
-        {!readOnly && <div className="flex gap-2">{isDraft && <Button onClick={() => void confirmedAction("Publish this program version?", "Publishing freezes this version for new enrollments.", "Publish", () => publish.mutateAsync(), "Program published")}>Publish</Button>}{data.status !== "archived" && <Button variant="outline" className="gap-2" onClick={() => void confirmedAction("Archive this Learning Program?", "Existing enrollments continue, but new enrollments will be blocked.", "Archive", () => archive.mutateAsync(), "Program archived")}><Archive className="h-4 w-4" /> Archive</Button>}</div>}
+        <div><div className="flex flex-wrap items-center gap-2"><h1 className="font-headline text-3xl font-black">{data.name}</h1><span className="rounded-full bg-m3-surface-container px-3 py-1 text-xs font-semibold">{t(`management_learning_program_detail.status.${data.status}`)}</span></div><p className="mt-1 font-mono text-xs text-m3-on-surface-variant">{data.slug}</p></div>
+        {!readOnly && <div className="flex gap-2">{isDraft && <Button onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.publish_title"), t("management_learning_program_detail.confirm.publish_description"), t("management_learning_program_detail.actions.publish"), () => publish.mutateAsync(), t("management_learning_program_detail.toast.published"))}>{t("management_learning_program_detail.actions.publish")}</Button>}{data.status !== "archived" && <Button variant="outline" className="gap-2" onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.archive_title"), t("management_learning_program_detail.confirm.archive_description"), t("management_learning_program_detail.actions.archive"), () => archive.mutateAsync(), t("management_learning_program_detail.toast.archived"))}><Archive className="h-4 w-4" /> {t("management_learning_program_detail.actions.archive")}</Button>}</div>}
       </header>
-      {readOnly && <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">Viewing frozen program v{data.current_version.version_no}. Select the draft/current version to edit.</div>}
+      {readOnly && <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">{t("management_learning_program_detail.readonly_version", { version: data.current_version.version_no })}</div>}
 
       <div className="grid items-start gap-6 lg:grid-cols-10">
         <main className="space-y-6 lg:col-span-7">
           <Tabs<TabKey>
-            tabs={TABS(pendingCount, historyRequests.length, (roster.data ?? []).length)}
+            tabs={TABS(t, pendingCount, historyRequests.length, (roster.data ?? []).length)}
             value={tab}
             onChange={setTab}
-            ariaLabel="Learning program sections"
+            ariaLabel={t("management_learning_program_detail.tabs.aria")}
           />
 
           {tab === "general" && (
             <>
               <ProgramGeneral key={data.current_version.id} data={data} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
               <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
-                <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">Career Paths</h2><p className="text-sm text-m3-on-surface-variant">Published path versions pinned in program v{data.current_version.version_no}.</p></div>{isDraft && (
+                <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">{t("management_learning_program_detail.paths.title")}</h2><p className="text-sm text-m3-on-surface-variant">{t("management_learning_program_detail.paths.description", { version: data.current_version.version_no })}</p></div>{isDraft && (
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Only PUBLISHED paths can be pinned into a program, so a
                         dean with nothing to add has no way forward from here
@@ -185,10 +186,10 @@ export default function ManagementLearningProgramDetailPage() {
                         })
                       }
                     >
-                      <Plus className="h-4 w-4" /> Create new path
+                      <Plus className="h-4 w-4" /> {t("management_learning_program_detail.actions.create_path")}
                     </Button>
                     <Button variant="outline" className="gap-2" onClick={() => setPathPickerOpen(true)}>
-                      <Plus className="h-4 w-4" /> Add Career Path
+                      <Plus className="h-4 w-4" /> {t("management_learning_program_detail.actions.add_path")}
                     </Button>
                   </div>
                 )}</div>
@@ -208,7 +209,10 @@ export default function ManagementLearningProgramDetailPage() {
                             {path.position}. {path.name}
                           </p>
                           <p className="mt-1 text-xs text-m3-on-surface-variant">
-                            Career Path v{path.career_path_version_no} · {path.status}
+                            {t("management_learning_program_detail.paths.version_status", {
+                              version: path.career_path_version_no,
+                              status: t(`management_learning_program_detail.status.${path.status}`),
+                            })}
                           </p>
                         </div>
                         <ArrowLeft className="h-4 w-4 shrink-0 rotate-180 text-m3-primary" />
@@ -218,7 +222,7 @@ export default function ManagementLearningProgramDetailPage() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          aria-label={`Remove ${path.name}`}
+                          aria-label={t("management_learning_program_detail.paths.remove_aria", { name: path.name })}
                           disabled={update.isPending}
                           onClick={() => void removePath(path.career_path_id, path.name)}
                         >
@@ -248,11 +252,11 @@ export default function ManagementLearningProgramDetailPage() {
               roster={roster.data ?? []}
               onApprove={(request) =>
                 void confirmedAction(
-                  "Approve path change?",
-                  "The current path is snapshotted and the student moves to the target path.",
-                  "Approve",
+                  t("management_learning_program_detail.confirm.approve_title"),
+                  t("management_learning_program_detail.confirm.approve_description"),
+                  t("management_learning_program_detail.actions.approve"),
                   () => decide.mutateAsync({ requestId: request.id, approve: true }),
-                  "Path change approved",
+                  t("management_learning_program_detail.toast.approved"),
                 )
               }
             />
@@ -267,15 +271,15 @@ export default function ManagementLearningProgramDetailPage() {
         </main>
 
         <aside className="space-y-4 rounded-xl border border-m3-outline-variant/40 bg-card p-4 lg:col-span-3 lg:sticky lg:top-24">
-          <div className="flex items-center justify-between"><div><h2 className="font-headline font-bold">Versions</h2><p className="text-xs text-m3-on-surface-variant">Published history is read-only.</p></div><GitBranch className="h-5 w-5 text-m3-primary" /></div>
-          <div className="space-y-2">{(versions.data ?? []).map((version) => { const editing = version.status === "draft" && !selectedVersionId; const selected = selectedVersionId === version.id || editing; return <button key={version.id} type="button" onClick={() => setSelectedVersionId(version.status === "draft" ? null : version.id)} className={`w-full cursor-pointer rounded-lg border p-3 text-left ${selected ? "border-m3-primary bg-m3-primary-fixed/50" : "border-m3-outline-variant/40 hover:bg-m3-surface-container"}`}><div className="flex justify-between"><span className="font-semibold">v{version.version_no}</span><span className="text-[11px] uppercase text-m3-on-surface-variant">{version.status}</span></div><p className="mt-1 text-xs text-m3-on-surface-variant">{version.published_at ? formatDate(version.published_at) : "Not published"}</p>{version.published_by_name && <p className="mt-0.5 truncate text-xs text-m3-on-surface-variant">by {version.published_by_name}</p>}</button>; })}</div>
-          {!readOnly && data.status === "published" && !(versions.data ?? []).some((version) => version.status === "draft") && <Button variant="outline" className="w-full gap-2" onClick={() => void confirmedAction("Create a new program version?", "The latest published paths and settings will be copied into an editable draft.", "Create version", () => update.mutateAsync({}), "Draft version created")}><GitBranch className="h-4 w-4" /> New version</Button>}
+          <div className="flex items-center justify-between"><div><h2 className="font-headline font-bold">{t("management_learning_program_detail.versions.title")}</h2><p className="text-xs text-m3-on-surface-variant">{t("management_learning_program_detail.versions.description")}</p></div><GitBranch className="h-5 w-5 text-m3-primary" /></div>
+          <div className="space-y-2">{(versions.data ?? []).map((version) => { const editing = version.status === "draft" && !selectedVersionId; const selected = selectedVersionId === version.id || editing; return <button key={version.id} type="button" onClick={() => setSelectedVersionId(version.status === "draft" ? null : version.id)} className={`w-full cursor-pointer rounded-lg border p-3 text-left ${selected ? "border-m3-primary bg-m3-primary-fixed/50" : "border-m3-outline-variant/40 hover:bg-m3-surface-container"}`}><div className="flex justify-between"><span className="font-semibold">v{version.version_no}</span><span className="text-[11px] uppercase text-m3-on-surface-variant">{t(`management_learning_program_detail.status.${version.status}`)}</span></div><p className="mt-1 text-xs text-m3-on-surface-variant">{version.published_at ? formatDate(version.published_at) : t("management_learning_program_detail.versions.not_published")}</p>{version.published_by_name && <p className="mt-0.5 truncate text-xs text-m3-on-surface-variant">{t("management_learning_program_detail.versions.published_by", { name: version.published_by_name })}</p>}</button>; })}</div>
+          {!readOnly && data.status === "published" && !(versions.data ?? []).some((version) => version.status === "draft") && <Button variant="outline" className="w-full gap-2" onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.new_version_title"), t("management_learning_program_detail.confirm.new_version_description"), t("management_learning_program_detail.actions.create_version"), () => update.mutateAsync({}), t("management_learning_program_detail.toast.version_created"))}><GitBranch className="h-4 w-4" /> {t("management_learning_program_detail.actions.create_version")}</Button>}
         </aside>
       </div>
 
-      {pathPickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: composePathIds(rows.map((row) => row.id)) }).then(() => toast.success("Career Paths added")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not add paths"))); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
+      {pathPickerOpen && <EntityMultiSelectDialog title={t("management_learning_program_detail.paths.picker_title")} searchPlaceholder={t("management_learning_program_detail.paths.picker_search")} items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: composePathIds(rows.map((row) => row.id)) }).then(() => toast.success(t("management_learning_program_detail.toast.paths_added"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.paths_add_failed")))); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText={t("management_learning_program_detail.paths.picker_empty")} alreadyAddedLabel={t("management_learning_program_detail.paths.picker_added")} />}
       {importOpen && <ImportStudentsDialog programId={id} onClose={() => setImportOpen(false)} />}
-      {studentPickerOpen && <EntityMultiSelectDialog title="Enroll students" searchPlaceholder="Search students by name or email" items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success("Students enrolled")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not enroll students"))); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText="No student found" alreadyAddedLabel="Enrolled" />}
+      {studentPickerOpen && <EntityMultiSelectDialog title={t("management_learning_program_detail.student_picker.title")} searchPlaceholder={t("management_learning_program_detail.student_picker.search")} items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success(t("management_learning_program_detail.toast.students_enrolled"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.students_enroll_failed")))); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText={t("management_learning_program_detail.student_picker.empty")} alreadyAddedLabel={t("management_learning_program_detail.student_picker.added")} />}
     </div>
   );
 }
@@ -290,6 +294,7 @@ export default function ManagementLearningProgramDetailPage() {
  * whether a change is retroactive (it is not).
  */
 function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null; max_path_switches?: number }) => Promise<unknown> }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(data.name);
   const [slug, setSlug] = useState(data.slug);
   const [description, setDescription] = useState(data.description ?? "");
@@ -301,9 +306,9 @@ function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnTy
   const switchesValid =
     Number.isInteger(switches) && switches >= 0 && switches <= 100;
 
-  return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">General</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Program name <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div>
+  return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">{t("management_learning_program_detail.general.title")}</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.name")} <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.slug")} <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div>
     <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-      Path changes allowed
+      {t("management_learning_program_detail.general.switches")}
       <Input
         type="number"
         min={0}
@@ -313,16 +318,15 @@ function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnTy
         onChange={(event) => setMaxPathSwitches(event.target.value)}
       />
       <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">
-        How many Career Path switches a student may request in this program, each
-        needing Faculty Dean approval (0 locks the choice). Applies to program
-        v{data.current_version.version_no}; students already enrolled keep the
-        budget of the version they enrolled under.
+        {t("management_learning_program_detail.general.switches_hint", {
+          version: data.current_version.version_no,
+        })}
       </span>
       {!readOnly && !switchesValid && (
         <span className="block text-[11px] font-normal normal-case tracking-normal text-red-600">
-          Enter a whole number between 0 and 100.
+          {t("management_learning_program_detail.general.switches_error")}
         </span>
       )}
     </label>
-    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim() || !switchesValid} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, max_path_switches: switches }).then(() => toast.success("Program details saved")).catch((error: unknown) => toast.error(getApiErrorMessage(error, "Could not save")))}>Save changes</Button></div>}</section>;
+    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.description")}<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim() || !switchesValid} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, max_path_switches: switches }).then(() => toast.success(t("management_learning_program_detail.toast.details_saved"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.save_failed"))))}>{t("management_learning_program_detail.actions.save")}</Button></div>}</section>;
 }

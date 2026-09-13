@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,44 +31,14 @@ import type { PathChangeRejectionReasonCode } from "@/lib/api/types";
  *  literal and the DB CHECK constraint; `other` stays last. */
 const REASONS: {
   code: PathChangeRejectionReasonCode;
-  label: string;
-  hint: string;
 }[] = [
-  {
-    code: "insufficient_justification",
-    label: "Justification is not sufficient",
-    hint: "The stated reason does not support a path change.",
-  },
-  {
-    code: "progress_loss_too_high",
-    label: "Too much progress would be lost",
-    hint: "Switching now would discard significant completed work.",
-  },
-  {
-    code: "target_path_not_suitable",
-    label: "Target path is not a suitable fit",
-    hint: "The requested path does not match the student's record.",
-  },
-  {
-    code: "preserve_remaining_switch",
-    label: "Keep the remaining switch for later",
-    hint: "The student's remaining budget is better saved.",
-  },
-  {
-    code: "advising_required",
-    label: "Advising conversation needed first",
-    hint: "Discuss with the student before any switch.",
-  },
-  {
-    code: "documentation_missing",
-    label: "Supporting information missing",
-    hint: "Required evidence was not provided with the request.",
-  },
-  {
-    code: "other",
-    label: "Other (explain below)",
-    hint: "A written explanation is required.",
-  },
+  { code: "insufficient_justification" },
+  { code: "progress_loss_too_high" },
+  { code: "target_path_not_suitable" },
+  { code: "preserve_remaining_switch" },
+  { code: "advising_required" },
+  { code: "documentation_missing" },
+  { code: "other" },
 ];
 
 export function RejectPathChangeDialog({
@@ -84,6 +55,7 @@ export function RejectPathChangeDialog({
   isPending: boolean;
   onReject: (reasonCode: PathChangeRejectionReasonCode, note: string) => void;
 }) {
+  const { t } = useTranslation();
   const [reasonCode, setReasonCode] =
     useState<PathChangeRejectionReasonCode | null>(null);
   const [note, setNote] = useState("");
@@ -104,13 +76,16 @@ export function RejectPathChangeDialog({
         onOpenChange(next);
         if (!next) reset();
       }}
-      title={`Reject path change for ${studentName}?`}
-      description={
-        "The student keeps their current path and is notified with the reason " +
-        "you pick. This does not use up one of their path changes."
+      title={t("management_learning_program_detail.reject.title", {
+        name: studentName,
+      })}
+      description={t("management_learning_program_detail.reject.description")}
+      confirmLabel={
+        isPending
+          ? t("management_learning_program_detail.actions.rejecting")
+          : t("management_learning_program_detail.actions.reject_request")
       }
-      confirmLabel={isPending ? "Rejecting…" : "Reject request"}
-      cancelLabel="Cancel"
+      cancelLabel={t("management_learning_program_detail.actions.cancel")}
       confirmVariant="destructive"
       isPending={isPending}
       confirmDisabled={!canSubmit}
@@ -122,7 +97,8 @@ export function RejectPathChangeDialog({
         <div className="space-y-3">
           <fieldset className="space-y-1.5">
             <legend className="text-sm font-medium text-text-strong">
-              Reason <span className="text-destructive">*</span>
+              {t("management_learning_program_detail.reject.reason")}{" "}
+              <span className="text-destructive">*</span>
             </legend>
             <div className="space-y-1.5">
               {REASONS.map((reason) => {
@@ -148,10 +124,14 @@ export function RejectPathChangeDialog({
                     />
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-text-strong">
-                        {reason.label}
+                        {t(
+                          `management_learning_program_detail.reject.reasons.${reason.code}.label`,
+                        )}
                       </span>
                       <span className="mt-0.5 block text-[11px] text-text-muted">
-                        {reason.hint}
+                        {t(
+                          `management_learning_program_detail.reject.reasons.${reason.code}.hint`,
+                        )}
                       </span>
                     </span>
                   </label>
@@ -162,11 +142,13 @@ export function RejectPathChangeDialog({
 
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-text-strong">
-              Note to the student{" "}
+              {t("management_learning_program_detail.reject.note")}{" "}
               {noteRequired ? (
                 <span className="text-destructive">*</span>
               ) : (
-                <span className="font-normal text-text-muted">(optional)</span>
+                <span className="font-normal text-text-muted">
+                  {t("management_learning_program_detail.reject.optional")}
+                </span>
               )}
             </span>
             <Textarea
@@ -177,8 +159,8 @@ export function RejectPathChangeDialog({
               disabled={isPending}
               placeholder={
                 noteRequired
-                  ? "Explain the reason for this rejection…"
-                  : "Add any detail the student should know…"
+                  ? t("management_learning_program_detail.reject.required_placeholder")
+                  : t("management_learning_program_detail.reject.optional_placeholder")
               }
               onChange={(event) => setNote(event.target.value)}
             />
@@ -197,6 +179,7 @@ export function RejectButton({
   onClick: () => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Button
       size="sm"
@@ -205,7 +188,8 @@ export function RejectButton({
       disabled={disabled}
       onClick={onClick}
     >
-      <X className="h-4 w-4" /> Reject
+      <X className="h-4 w-4" />
+      {t("management_learning_program_detail.actions.reject")}
     </Button>
   );
 }

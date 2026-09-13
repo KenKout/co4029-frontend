@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UserPlus, Upload } from "lucide-react";
 import {
   Avatar,
@@ -48,6 +49,7 @@ export function RosterTab({
   onOpenPicker: () => void;
   onOpenImport: () => void;
 }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
   const studentIds = useMemo(
@@ -99,7 +101,7 @@ export function RosterTab({
     () => [
       {
         id: "student",
-        header: "Student",
+        header: t("management_learning_program_detail.roster.student"),
         sortable: true,
         sortValue: (r) => r.displayName.toLowerCase(),
         cell: (r) => (
@@ -127,7 +129,7 @@ export function RosterTab({
       },
       {
         id: "path",
-        header: "Chosen path",
+        header: t("management_learning_program_detail.roster.chosen_path"),
         sortable: true,
         sortValue: (r) => (r.pathName ?? "").toLowerCase(),
         cell: (r) =>
@@ -137,20 +139,20 @@ export function RosterTab({
             // Awaiting a choice is a work item, not a blank: these are the
             // students who enrolled but have not started anything yet.
             <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
-              No path selected
+              {t("management_learning_program_detail.roster.no_path")}
             </span>
           ),
       },
       {
         id: "status",
-        header: "Status",
+        header: t("management_learning_program_detail.roster.status"),
         sortable: true,
         sortValue: (r) => r.status,
         cell: (r) => <CourseEnrollmentStatusBadge status={r.status} />,
       },
       {
         id: "progress",
-        header: "Progress",
+        header: t("management_learning_program_detail.roster.progress"),
         sortable: true,
         sortValue: (r) => r.progressPercent,
         cell: (r) =>
@@ -172,7 +174,7 @@ export function RosterTab({
           ),
       },
     ],
-    [],
+    [t],
   );
 
   return (
@@ -182,14 +184,16 @@ export function RosterTab({
       getRowId={(r) => r.enrollmentId}
       loading={users.isLoading && roster.length > 0}
       emptyState={
-        search ? "No students match your search" : "No students enrolled yet"
+        search
+          ? t("management_learning_program_detail.roster.empty_filtered")
+          : t("management_learning_program_detail.roster.empty")
       }
       toolbar={
         <div className="flex flex-wrap items-center justify-between gap-2">
           <DataTableToolbar
             search={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search by name, email or path…"
+            searchPlaceholder={t("management_learning_program_detail.roster.search")}
           />
           {canEnroll ? (
             <div className="flex gap-2">
@@ -200,11 +204,11 @@ export function RosterTab({
                 onClick={onOpenImport}
               >
                 <Upload className="h-4 w-4" />
-                Import CSV
+                {t("management_learning_program_detail.actions.import_csv")}
               </Button>
               <Button size="sm" className="gap-2" onClick={onOpenPicker}>
                 <UserPlus className="h-4 w-4" />
-                Enroll students
+                {t("management_learning_program_detail.actions.enroll_students")}
               </Button>
             </div>
           ) : null}

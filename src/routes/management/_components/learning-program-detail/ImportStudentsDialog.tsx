@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, CheckCircle2, FileText } from "lucide-react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export function ImportStudentsDialog({
   programId: string;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const importCsv = useImportProgramStudentsCsv(programId);
   const [fileName, setFileName] = useState<string | null>(null);
   const [result, setResult] = useState<ProgramCsvImportResult | null>(null);
@@ -57,12 +59,14 @@ export function ImportStudentsDialog({
           )}
         >
           <DialogPrimitive.Title className="font-headline text-lg font-bold text-text-strong">
-            {result ? "Import finished" : "Import students from CSV"}
+            {result
+              ? t("management_learning_program_detail.import.finished")
+              : t("management_learning_program_detail.import.title")}
           </DialogPrimitive.Title>
           <DialogPrimitive.Description className="mt-2 text-sm text-text-muted">
             {result
-              ? "Rows that failed are listed below with the reason."
-              : "One row per student. Required column: email. Optional: given_name, family_name, display_name."}
+              ? t("management_learning_program_detail.import.finished_description")
+              : t("management_learning_program_detail.import.description")}
           </DialogPrimitive.Description>
 
           {result ? (
@@ -73,9 +77,9 @@ export function ImportStudentsDialog({
                 onFile={handleFile}
                 accept=".csv,text/csv"
                 busy={importCsv.isPending}
-                busyLabel="Importing…"
-                idleTitle="Drop the roster CSV here"
-                hint="CSV only"
+                busyLabel={t("management_learning_program_detail.import.importing")}
+                idleTitle={t("management_learning_program_detail.import.dropzone")}
+                hint={t("management_learning_program_detail.import.csv_only")}
               />
               {fileName ? (
                 <p className="flex items-center gap-2 text-sm text-text-muted">
@@ -93,7 +97,9 @@ export function ImportStudentsDialog({
 
           <div className="mt-6 flex justify-end gap-2">
             <Button variant="ghost" onClick={onClose} disabled={importCsv.isPending}>
-              {result ? "Close" : "Cancel"}
+              {result
+                ? t("management_learning_program_detail.actions.close")
+                : t("management_learning_program_detail.actions.cancel")}
             </Button>
           </div>
         </DialogPrimitive.Popup>
@@ -103,20 +109,22 @@ export function ImportStudentsDialog({
 }
 
 function ImportResult({ result }: { result: ProgramCsvImportResult }) {
+  const { t } = useTranslation();
   return (
     <div className="mt-4 space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <Stat label="Enrolled" value={result.enrolled.length} tone="good" />
-        <Stat label="New accounts" value={result.created_users.length} />
-        <Stat label="Already in" value={result.already_enrolled.length} />
+        <Stat label={t("management_learning_program_detail.import.enrolled")} value={result.enrolled.length} tone="good" />
+        <Stat label={t("management_learning_program_detail.import.new_accounts")} value={result.created_users.length} />
+        <Stat label={t("management_learning_program_detail.import.already_in")} value={result.already_enrolled.length} />
       </div>
 
       {result.failures.length > 0 ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
           <p className="flex items-center gap-2 text-sm font-semibold text-amber-900">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            {result.failures.length} row
-            {result.failures.length === 1 ? "" : "s"} could not be imported
+            {t("management_learning_program_detail.import.failed_rows", {
+              count: result.failures.length,
+            })}
           </p>
           <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto">
             {result.failures.map((f) => (
@@ -124,7 +132,9 @@ function ImportResult({ result }: { result: ProgramCsvImportResult }) {
                 key={`${f.row_number}:${f.identifier ?? ""}`}
                 className="text-xs break-words text-amber-900/80"
               >
-                Row {f.row_number}
+                {t("management_learning_program_detail.import.row", {
+                  number: f.row_number,
+                })}
                 {f.identifier ? ` (${f.identifier})` : ""} — {f.reason}
               </li>
             ))}
@@ -133,7 +143,7 @@ function ImportResult({ result }: { result: ProgramCsvImportResult }) {
       ) : (
         <p className="flex items-center gap-2 text-sm text-emerald-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          Every row imported.
+          {t("management_learning_program_detail.import.all_imported")}
         </p>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, Eye, Loader2 } from "lucide-react";
 import {
   Avatar,
@@ -46,14 +47,14 @@ import {
 
 const STATUS_CHIP: Record<
   Extract<PathChangeRequestStatus, "pending" | "in_progress">,
-  { label: string; className: string }
+  { labelKey: string; className: string }
 > = {
   pending: {
-    label: "Awaiting review",
+    labelKey: "management_learning_program_detail.requests.awaiting",
     className: "bg-amber-100 text-amber-900",
   },
   in_progress: {
-    label: "In progress",
+    labelKey: "management_learning_program_detail.requests.in_progress",
     className: "bg-m3-primary-fixed text-m3-primary",
   },
 };
@@ -73,9 +74,12 @@ function RequesterCell({
   studentId: string | undefined;
   user: RequestStudent | undefined;
 }) {
+  const { t } = useTranslation();
   if (!studentId) return <div className="flex min-w-0 items-center gap-3" />;
   const displayName =
-    user?.display_name?.trim() || user?.primary_email || "Unknown student";
+    user?.display_name?.trim() ||
+    user?.primary_email ||
+    t("management_learning_program_detail.requests.unknown_student");
   const email = user?.primary_email ?? "";
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -122,6 +126,7 @@ function RequestRow({
   onMarkInProgress: () => void;
   onOpenReject: () => void;
 }) {
+  const { t } = useTranslation();
   const acknowledged = request.status === "in_progress";
   const chip = STATUS_CHIP[acknowledged ? "in_progress" : "pending"];
   const formatDateTime = useFormatDateTimeMedium();
@@ -136,15 +141,23 @@ function RequestRow({
             chip.className,
           )}
         >
-          {chip.label}
+          {t(chip.labelKey)}
         </span>
         <p className="mt-1 truncate text-sm" title={request.reason}>
           {request.reason}
         </p>
         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-text-muted">
-          <span>Requested {formatDateTime(request.created_at)}</span>
+          <span>
+            {t("management_learning_program_detail.requests.requested_at", {
+              value: formatDateTime(request.created_at),
+            })}
+          </span>
           {request.in_progress_at ? (
-            <span>Review started {formatDateTime(request.in_progress_at)}</span>
+            <span>
+              {t("management_learning_program_detail.requests.review_started_at", {
+                value: formatDateTime(request.in_progress_at),
+              })}
+            </span>
           ) : null}
         </div>
       </div>
@@ -164,11 +177,14 @@ function RequestRow({
             ) : (
               <Eye className="h-4 w-4" />
             )}
-            {marking ? "Marking…" : "Mark in progress"}
+            {marking
+              ? t("management_learning_program_detail.actions.marking")
+              : t("management_learning_program_detail.actions.mark_in_progress")}
           </Button>
         ) : null}
         <Button size="sm" className="gap-1" onClick={onApprove}>
-          <Check className="h-4 w-4" /> Approve
+          <Check className="h-4 w-4" />
+          {t("management_learning_program_detail.actions.approve")}
         </Button>
         <RejectButton onClick={onOpenReject} />
       </div>
@@ -199,6 +215,7 @@ export function PathChangeRequestsSection({
   markingInProgressId?: string | null;
   isRejecting?: boolean;
 }) {
+  const { t } = useTranslation();
   const [rejectTarget, setRejectTarget] = useState<PathChangeRequest | null>(null);
 
   const studentByEnrollment = useMemo(() => {
@@ -227,7 +244,7 @@ export function PathChangeRequestsSection({
   if (requests.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-m3-on-surface-variant">
-        No open requests.
+        {t("management_learning_program_detail.requests.empty")}
       </p>
     );
   }
@@ -263,7 +280,7 @@ export function PathChangeRequestsSection({
           studentName={
             rejectStudent?.display_name?.trim() ||
             rejectStudent?.primary_email ||
-            "this student"
+            t("management_learning_program_detail.requests.unknown_student")
           }
           isPending={Boolean(isRejecting)}
           onReject={(reasonCode, note) => {

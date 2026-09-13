@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import { getApiErrorMessage } from "@/lib/api/error-codes";
 import {
@@ -37,16 +38,18 @@ export function PathChangeRequestsTab({
   /** Approval routes back through the page's shared confirm dialog. */
   onApprove: (request: PathChangeRequest) => void;
 }) {
+  const { t } = useTranslation();
   const decide = useDecidePathChange(programId);
   const markInProgress = useMarkPathChangeInProgress(programId);
 
   return (
     <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
       <div>
-        <h2 className="font-headline text-lg font-bold">Path change requests</h2>
+        <h2 className="font-headline text-lg font-bold">
+          {t("management_learning_program_detail.requests.title")}
+        </h2>
         <p className="mt-0.5 text-sm text-m3-on-surface-variant">
-          Mark a request in progress to tell the student you are checking their
-          record. Rejecting asks for a reason, which the student receives.
+          {t("management_learning_program_detail.requests.description")}
         </p>
       </div>
       <PathChangeRequestsSection
@@ -59,10 +62,10 @@ export function PathChangeRequestsTab({
           void markInProgress
             .mutateAsync(request.id)
             .then(() =>
-              toast.success("Marked in progress — the student has been notified"),
+              toast.success(t("management_learning_program_detail.toast.in_progress")),
             )
             .catch((error: unknown) =>
-              toast.error(getApiErrorMessage(error, "Could not mark the request")),
+              toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.in_progress_failed"))),
             )
         }
         onApprove={onApprove}
@@ -76,10 +79,10 @@ export function PathChangeRequestsTab({
               reason: note || undefined,
             })
             .then(() =>
-              toast.success("Path change rejected — the student has been notified"),
+              toast.success(t("management_learning_program_detail.toast.rejected")),
             )
             .catch((error: unknown) => {
-              toast.error(getApiErrorMessage(error, "Could not reject the request"));
+              toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.reject_failed")));
               // Rethrow so the dialog stays open on failure: closing it would
               // discard the reason the dean just typed.
               throw error;
