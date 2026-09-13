@@ -3575,6 +3575,8 @@
     },
     "transition_history": "Lịch sử chuyển lộ trình",
     "switched_away": "Đã chuyển khỏi lộ trình",
+    "transition_started_at": "Bắt đầu {{value}}",
+    "transition_ended_at": "Kết thúc {{value}}",
     "percent_done": "đã hoàn thành {{percent}}%",
     "empty": {
       "title": "Chưa có chương trình học",
@@ -3592,6 +3594,9 @@
       "waiting": "Đang chờ Trưởng khoa xem xét",
       "reviewing_description": "Yêu cầu đã được mở và hồ sơ của bạn đang được kiểm tra. Chưa có thay đổi nào — bạn vẫn học lộ trình hiện tại cho đến khi có quyết định.",
       "waiting_description": "Yêu cầu đã được gửi và đang chờ tiếp nhận.",
+      "submitted_at": "Đã gửi lúc {{value}}",
+      "reviewing_since": "Bắt đầu xem xét lúc {{value}}",
+      "resolved_at": "Đã xử lý lúc {{value}}",
       "your_reason": "Lý do của bạn: {{reason}}",
       "cancel": "Hủy yêu cầu",
       "approved": "Đã duyệt",

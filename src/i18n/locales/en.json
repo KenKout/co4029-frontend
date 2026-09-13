@@ -3745,6 +3745,8 @@
     },
     "transition_history": "Transition history",
     "switched_away": "Switched away",
+    "transition_started_at": "Started {{value}}",
+    "transition_ended_at": "Ended {{value}}",
     "percent_done": "{{percent}}% done",
     "empty": {
       "title": "No learning program yet",
@@ -3762,6 +3764,9 @@
       "waiting": "Waiting for Faculty Dean review",
       "reviewing_description": "Your request has been opened and your record is being checked. Nothing has changed yet — you stay on your current path until a decision is made.",
       "waiting_description": "Your request has been submitted and is waiting to be picked up.",
+      "submitted_at": "Submitted {{value}}",
+      "reviewing_since": "Review started {{value}}",
+      "resolved_at": "Resolved {{value}}",
       "your_reason": "Your reason: {{reason}}",
       "cancel": "Cancel request",
       "approved": "Approved",

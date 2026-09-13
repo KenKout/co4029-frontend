@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
+import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 import type {
   LearningProgramEnrollment,
@@ -123,6 +124,7 @@ function RequestRow({
 }) {
   const acknowledged = request.status === "in_progress";
   const chip = STATUS_CHIP[acknowledged ? "in_progress" : "pending"];
+  const formatDateTime = useFormatDateTimeMedium();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-m3-surface-container p-4">
@@ -139,6 +141,12 @@ function RequestRow({
         <p className="mt-1 truncate text-sm" title={request.reason}>
           {request.reason}
         </p>
+        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-text-muted">
+          <span>Requested {formatDateTime(request.created_at)}</span>
+          {request.in_progress_at ? (
+            <span>Review started {formatDateTime(request.in_progress_at)}</span>
+          ) : null}
+        </div>
       </div>
       <div className="flex gap-2">
         {/* Acknowledgement is offered only while untouched: re-sending the

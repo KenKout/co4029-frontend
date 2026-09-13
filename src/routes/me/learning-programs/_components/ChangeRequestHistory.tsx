@@ -2,6 +2,7 @@ import { CheckCircle2, Clock, Eye, History, XCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 import type {
   PathChangeRejectionReasonCode,
@@ -47,6 +48,7 @@ export function OpenChangeRequestBanner({
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
+  const formatDateTime = useFormatDateTimeMedium();
   const inProgress = request.status === "in_progress";
   return (
     <div
@@ -73,6 +75,20 @@ export function OpenChangeRequestBanner({
             : t("my_learning_programs.requests.waiting_description")}
         </p>
         <p className="mt-1 text-xs opacity-80">{t("my_learning_programs.requests.your_reason", { reason: request.reason })}</p>
+        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs opacity-80">
+          <span>
+            {t("my_learning_programs.requests.submitted_at", {
+              value: formatDateTime(request.created_at),
+            })}
+          </span>
+          {request.in_progress_at ? (
+            <span>
+              {t("my_learning_programs.requests.reviewing_since", {
+                value: formatDateTime(request.in_progress_at),
+              })}
+            </span>
+          ) : null}
+        </div>
       </div>
       <Button
         variant="outline"
@@ -88,12 +104,11 @@ export function OpenChangeRequestBanner({
 
 function DecidedRequestRow({
   request,
-  formatDate,
 }: {
   request: PathChangeRequest;
-  formatDate: (value: string) => string;
 }) {
   const { t } = useTranslation();
+  const formatDateTime = useFormatDateTimeMedium();
   const decidedAt = request.reviewed_at ?? request.created_at;
   const rejected = request.status === "rejected";
   const approved = request.status === "approved";
@@ -121,11 +136,18 @@ function DecidedRequestRow({
                 : t("my_learning_programs.requests.invalidated")}
         </span>
         <span className="text-xs text-m3-on-surface-variant">
-          {formatDate(decidedAt)}
+          {t("my_learning_programs.requests.resolved_at", {
+            value: formatDateTime(decidedAt),
+          })}
         </span>
       </div>
       <p className="mt-1 text-xs text-m3-on-surface-variant">
         {t("my_learning_programs.requests.your_reason", { reason: request.reason })}
+      </p>
+      <p className="mt-1 text-xs text-m3-on-surface-variant">
+        {t("my_learning_programs.requests.submitted_at", {
+          value: formatDateTime(request.created_at),
+        })}
       </p>
       {/* The reason is the whole point of showing a rejection: a bare
           "rejected" is what makes a student re-file the same request. */}
@@ -148,12 +170,10 @@ function DecidedRequestRow({
 /** Decided requests, newest first. Renders nothing when there are none. */
 export function ChangeRequestHistory({
   history,
-  formatDate,
 }: {
   /** Full history from the API; open requests are filtered out here because the
    *  banner above already shows them. */
   history: PathChangeRequest[];
-  formatDate: (value: string) => string;
 }) {
   const { t } = useTranslation();
   const decided = history.filter(
@@ -170,7 +190,6 @@ export function ChangeRequestHistory({
         <DecidedRequestRow
           key={request.id}
           request={request}
-          formatDate={formatDate}
         />
       ))}
     </div>

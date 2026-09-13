@@ -24,7 +24,7 @@ import type {
   PathChangeRequest,
   PathChangeRequestStatus,
 } from "@/lib/api/types";
-import { useFormatDate } from "@/lib/format/date";
+import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 
 type TerminalStatus = Extract<
@@ -202,7 +202,7 @@ export function PathChangeHistoryTab({
   requests: PathChangeRequest[];
   roster: LearningProgramEnrollment[];
 }) {
-  const formatDate = useFormatDate();
+  const formatDateTime = useFormatDateTimeMedium();
   const [search, setSearch] = useState("");
   const [students, setStudents] = useState<string[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRange>("all");
@@ -322,9 +322,9 @@ export function PathChangeHistoryTab({
         sortValue: (row) => row.occurredAt,
         cell: (row) => (
           <div className="min-w-[125px] text-xs">
-            <p className="font-medium">{formatDate(row.occurredAt)}</p>
+            <p className="font-medium">{formatDateTime(row.occurredAt)}</p>
             <p className="mt-1 text-text-muted">
-              Requested {formatDate(row.request.created_at)}
+              Requested {formatDateTime(row.request.created_at)}
             </p>
           </div>
         ),
@@ -350,7 +350,7 @@ export function PathChangeHistoryTab({
         ),
       },
     ],
-    [formatDate],
+    [formatDateTime],
   );
 
   function resetFilters() {

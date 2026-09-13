@@ -9,7 +9,7 @@ import {
   useMyLearningPrograms,
 } from "@/lib/api/hooks/learning-programs";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
-import { useFormatDate } from "@/lib/format/date";
+import { useFormatDateTimeMedium } from "@/lib/format/date";
 import {
   ChangeRequestHistory,
   OpenChangeRequestBanner,
@@ -19,7 +19,7 @@ import { PathCard } from "./_components/PathCard";
 function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) {
   const { t } = useTranslation();
   const cancelChange = useCancelProgramPathChange();
-  const formatDate = useFormatDate();
+  const formatDateTime = useFormatDateTimeMedium();
   const active = enrollment.attempts.find((attempt) => attempt.status === "active");
   const currentPath = enrollment.paths.find((path) => path.career_path_id === active?.career_path_id);
   const available = enrollment.paths.filter(
@@ -146,7 +146,6 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
           refused. */}
       <ChangeRequestHistory
         history={enrollment.change_request_history ?? []}
-        formatDate={formatDate}
       />
 
       {enrollment.attempts.length > 1 && (
@@ -168,7 +167,14 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
                       typeof percent === "number"
                         ? t("my_learning_programs.percent_done", { percent: Math.round(percent) })
                         : null,
-                      attempt.ended_at ? formatDate(attempt.ended_at) : null,
+                      t("my_learning_programs.transition_started_at", {
+                        value: formatDateTime(attempt.selected_at),
+                      }),
+                      attempt.ended_at
+                        ? t("my_learning_programs.transition_ended_at", {
+                            value: formatDateTime(attempt.ended_at),
+                          })
+                        : null,
                     ].filter(Boolean).join(" · ")}
                   </span>
                 </div>
