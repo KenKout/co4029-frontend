@@ -7135,6 +7135,11 @@ export interface components {
             is_required: boolean;
             /** Stage Id */
             stage_id?: string | null;
+            /**
+             * Thumbnail Url
+             * @description Short-lived presigned URL, same image the catalogue shows.
+             */
+            thumbnail_url?: string | null;
         };
         /** CareerPathCourseReorder */
         CareerPathCourseReorder: {

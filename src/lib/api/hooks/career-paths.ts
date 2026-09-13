@@ -62,6 +62,7 @@ export interface CareerPathStagePublic {
     position: number;
     is_required: boolean;
     stage_id: string | null;
+    thumbnail_url?: string | null;
   }[];
 }
 
@@ -90,7 +91,8 @@ export interface CareerPathDetailPublic {
 export function useCareerPathDetail(slug: string | undefined) {
   return useQuery({
     queryKey: ["career-paths", "detail", slug ?? ""],
-    queryFn: () => apiFetch<CareerPathDetailPublic>(`/career-paths/${slug}/detail`),
+    queryFn: () =>
+      apiFetch<CareerPathDetailPublic>(`/career-paths/${slug}/detail`),
     enabled: Boolean(slug),
   });
 }
@@ -228,7 +230,9 @@ export function usePathVersions(id: string | undefined, enabled = true) {
   return useQuery({
     queryKey: queryKeys.careerPaths.versions(id ?? ""),
     queryFn: () =>
-      apiFetch<CareerPathVersionRead[]>(`/management/career-paths/${id}/versions`),
+      apiFetch<CareerPathVersionRead[]>(
+        `/management/career-paths/${id}/versions`,
+      ),
     enabled: !!id && enabled,
   });
 }
@@ -243,8 +247,12 @@ export function useCreatePathVersion(id: string) {
       qc.invalidateQueries({
         queryKey: queryKeys.careerPaths.versions(id),
       });
-      qc.invalidateQueries({ queryKey: queryKeys.careerPaths.managementStages(id) });
-      qc.invalidateQueries({ queryKey: queryKeys.careerPaths.managementCourses(id) });
+      qc.invalidateQueries({
+        queryKey: queryKeys.careerPaths.managementStages(id),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.careerPaths.managementCourses(id),
+      });
     },
   });
 }
@@ -312,12 +320,17 @@ export function useUploadCareerPathThumbnail(id: string) {
         queryKey: queryKeys.careerPaths.managementList(path.organization_id),
       });
       void qc.invalidateQueries({ queryKey: queryKeys.careerPaths.list() });
-      void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.mine() });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.learningPrograms.mine(),
+      });
     },
   });
 }
 
-export function useCareerPathCourses(id: string | undefined, versionId?: string) {
+export function useCareerPathCourses(
+  id: string | undefined,
+  versionId?: string,
+) {
   return useQuery({
     queryKey: queryKeys.careerPaths.managementCourses(id ?? "", versionId),
     queryFn: () =>
@@ -525,7 +538,10 @@ export function usePathReadinessOverview(careerPathId: string | undefined) {
 
 /* ── Stages (backend migration 0070) ────────────────────────────────── */
 
-export function useCareerPathStages(id: string | undefined, versionId?: string) {
+export function useCareerPathStages(
+  id: string | undefined,
+  versionId?: string,
+) {
   return useQuery({
     queryKey: queryKeys.careerPaths.managementStages(id ?? "", versionId),
     queryFn: () =>
@@ -540,10 +556,19 @@ export function useCareerPathStages(id: string | undefined, versionId?: string) 
  * Invalidate everything a stage mutation can change: the stage list, the
  * course list (items carry `stage_id`) and the path detail.
  */
-function invalidateStageScopes(qc: ReturnType<typeof useQueryClient>, id: string) {
-  qc.invalidateQueries({ queryKey: queryKeys.careerPaths.managementStages(id) });
-  qc.invalidateQueries({ queryKey: queryKeys.careerPaths.managementCourses(id) });
-  qc.invalidateQueries({ queryKey: queryKeys.careerPaths.managementDetail(id) });
+function invalidateStageScopes(
+  qc: ReturnType<typeof useQueryClient>,
+  id: string,
+) {
+  qc.invalidateQueries({
+    queryKey: queryKeys.careerPaths.managementStages(id),
+  });
+  qc.invalidateQueries({
+    queryKey: queryKeys.careerPaths.managementCourses(id),
+  });
+  qc.invalidateQueries({
+    queryKey: queryKeys.careerPaths.managementDetail(id),
+  });
 }
 
 /**
