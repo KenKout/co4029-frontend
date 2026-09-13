@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CareerPathThumbnailField } from "./CareerPathThumbnailField";
 import { useEditForm, type EditFormInitialValues } from "./use-edit-form";
 
 /**
@@ -58,14 +59,20 @@ export function EditForm(props: EditFormInitialValues & { readOnly?: boolean }) 
           disabled={props.readOnly}
         />
       </div>
+      <CareerPathThumbnailField
+        currentUrl={props.initialThumbnailUrl}
+        file={form.thumbnailFile}
+        onChange={form.setThumbnailFile}
+        disabled={props.readOnly || form.isPending}
+      />
       {!props.readOnly && <div className="flex justify-end">
         <Button
           type="submit"
           size="sm"
-          disabled={!form.dirty || form.patch.isPending}
+          disabled={!form.dirty || form.isPending}
           className="gap-2"
         >
-          {form.patch.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+          {form.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           {t("common.save")}
         </Button>
       </div>}

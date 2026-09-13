@@ -3,6 +3,7 @@ import { usePermissions } from "@/lib/auth/use-permissions";
 import { DESKTOP_FIRST_PREFIXES } from "./constants";
 import {
   matchesPrefix,
+  resolveDefaultRole,
   resolveIsAllowed,
   resolveNavGroups,
   resolveRole,
@@ -38,7 +39,14 @@ export function useRouteAccess(): RouteAccess {
     onTeacherPath,
   });
 
-  const section = { isAllowed, onAdminPath, onManagerPath, onTeacherPath };
+  const defaultRole = resolveDefaultRole(perms);
+  const section = {
+    isAllowed,
+    onAdminPath,
+    onManagerPath,
+    onTeacherPath,
+    defaultRole,
+  };
   const navGroups = resolveNavGroups(section);
   const role = resolveRole(section);
 

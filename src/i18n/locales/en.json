@@ -3701,6 +3701,66 @@
       "behavior": "Reaching {{threshold}} points: a warning is recorded and the attempt is flagged for teacher review — the interview continues."
     }
   },
+  "my_learning_programs": {
+    "title": "My Learning Programs",
+    "subtitle": "Choose and follow one career path in each enrolled program.",
+    "status": {
+      "awaiting_path": "Awaiting path",
+      "active": "Active",
+      "completed": "Completed",
+      "withdrawn": "Withdrawn",
+      "cancelled": "Cancelled"
+    },
+    "program_summary": "Program version {{version}} · {{used}}/{{max}} path changes used",
+    "current_path": "Current path",
+    "course_progress": "{{completed}}/{{total}} courses",
+    "completed_message": "Program completed. Path changes are closed.",
+    "choose_path": {
+      "title": "Choose one career path",
+      "description": "Open a path to see its full roadmap before you commit — changing later needs approval from your Faculty Dean."
+    },
+    "explore_paths": {
+      "title": "Explore other paths",
+      "description": "Browse all career paths — switching later needs approval from your Faculty Dean."
+    },
+    "transition_history": "Transition history",
+    "switched_away": "Switched away",
+    "percent_done": "{{percent}}% done",
+    "empty": {
+      "title": "No learning program yet",
+      "description": "A Manager or Faculty Dean must enroll you before you can choose a career path."
+    },
+    "path_card": {
+      "your_path": "Your path",
+      "courses": "{{count}} courses",
+      "required": "{{count}} required",
+      "stages": "{{count}} stages",
+      "view_roadmap": "View roadmap"
+    },
+    "requests": {
+      "reviewing": "Your Faculty Dean is reviewing this",
+      "waiting": "Waiting for Faculty Dean review",
+      "reviewing_description": "Your request has been opened and your record is being checked. Nothing has changed yet — you stay on your current path until a decision is made.",
+      "waiting_description": "Your request has been submitted and is waiting to be picked up.",
+      "your_reason": "Your reason: {{reason}}",
+      "cancel": "Cancel request",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled by you",
+      "invalidated": "Closed (target path unavailable)",
+      "dean_note": "Dean's note: {{note}}",
+      "history": "Path change requests",
+      "rejection_reasons": {
+        "insufficient_justification": "The stated justification was not sufficient.",
+        "progress_loss_too_high": "Too much progress would be lost by switching now.",
+        "target_path_not_suitable": "The target path is not a suitable fit for your current record.",
+        "preserve_remaining_switch": "Your remaining path change is better kept for a more necessary switch.",
+        "advising_required": "An advising conversation is needed before a switch.",
+        "documentation_missing": "Supporting information for the request was missing.",
+        "other": ""
+      }
+    }
+  },
   "management_career_path_detail": {
     "tabs": {
       "courses": "Courses",
@@ -3808,6 +3868,13 @@
       "required": "Required",
       "student_uuid": "Student UUID *",
       "organization": "Organization"
+    },
+    "thumbnail": {
+      "label": "Thumbnail",
+      "change": "Choose image",
+      "hint": "JPEG, PNG, WebP or GIF · up to 5 MiB",
+      "invalid_type": "Choose a JPEG, PNG, WebP or GIF image.",
+      "too_large": "The image must be 5 MiB or smaller."
     },
     "placeholders": {
       "position_end": "End",

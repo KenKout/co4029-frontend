@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import type { TFunction } from "i18next";
-import { usePatchCareerPath } from "@/lib/api/hooks/career-paths";
+import {
+  usePatchCareerPath,
+  useUploadCareerPathThumbnail,
+} from "@/lib/api/hooks/career-paths";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 
 export interface EditFormInitialValues {
@@ -9,6 +12,7 @@ export interface EditFormInitialValues {
   initialName: string;
   initialSlug: string;
   initialDescription: string;
+  initialThumbnailUrl?: string | null;
 }
 
 /**
@@ -25,47 +29,57 @@ export function useEditForm(
     initialName,
     initialSlug,
     initialDescription,
+    initialThumbnailUrl,
   }: EditFormInitialValues,
   t: TFunction,
 ) {
   const patch = usePatchCareerPath(id);
+  const uploadThumbnail = useUploadCareerPathThumbnail(id);
   const [name, setName] = useState(initialName);
   const [slug, setSlug] = useState(initialSlug);
   const [description, setDescription] = useState(initialDescription);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   useEffect(() => {
     setName(initialName);
     setSlug(initialSlug);
     setDescription(initialDescription);
-  }, [initialName, initialSlug, initialDescription]);
+    setThumbnailFile(null);
+  }, [initialName, initialSlug, initialDescription, initialThumbnailUrl]);
 
-  const dirty = name !== initialName || slug !== initialSlug || description !== initialDescription;
+  const metadataDirty =
+    name !== initialName ||
+    slug !== initialSlug ||
+    description !== initialDescription;
+  const dirty = metadataDirty || thumbnailFile !== null;
 
   useUnsavedChangesWarning(dirty);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    patch.mutate(
-      {
-        name: name.trim() !== initialName ? name.trim() : undefined,
-        slug: slug.trim() !== initialSlug ? slug.trim() : undefined,
-        description:
-          description.trim() !== initialDescription
-            ? description.trim() || null
-            : undefined,
-      },
-      {
-        onSuccess: () =>
-          toast.success(
-            t("management_career_path_detail.toasts.saved_changes"),
-          ),
-        onError: (err) =>
-          toast.error(
-            (err as Error).message ||
-              t("management_career_path_detail.errors.save_failed"),
-          ),
-      },
-    );
+    try {
+      if (metadataDirty) {
+        await patch.mutateAsync({
+          name: name.trim() !== initialName ? name.trim() : undefined,
+          slug: slug.trim() !== initialSlug ? slug.trim() : undefined,
+          description:
+            description.trim() !== initialDescription
+              ? description.trim() || null
+              : undefined,
+        });
+      }
+      if (thumbnailFile) {
+        await uploadThumbnail.mutateAsync(thumbnailFile);
+        setThumbnailFile(null);
+      }
+      toast.success(t("management_career_path_detail.toasts.saved_changes"));
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : t("management_career_path_detail.errors.save_failed"),
+      );
+    }
   }
 
   return {
@@ -76,6 +90,9 @@ export function useEditForm(
     setSlug,
     description,
     setDescription,
+    thumbnailFile,
+    setThumbnailFile,
+    isPending: patch.isPending || uploadThumbnail.isPending,
     dirty,
     handleSubmit,
   };

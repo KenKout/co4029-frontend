@@ -3531,6 +3531,66 @@
       "behavior": "Đạt {{threshold}} điểm: ghi nhận một cảnh báo và đánh dấu lượt làm bài để giáo viên xem lại — buổi phỏng vấn vẫn tiếp tục."
     }
   },
+  "my_learning_programs": {
+    "title": "Chương trình học của tôi",
+    "subtitle": "Chọn và theo học một lộ trình nghề nghiệp trong mỗi chương trình.",
+    "status": {
+      "awaiting_path": "Chờ chọn lộ trình",
+      "active": "Đang học",
+      "completed": "Đã hoàn thành",
+      "withdrawn": "Đã rút",
+      "cancelled": "Đã hủy"
+    },
+    "program_summary": "Phiên bản chương trình {{version}} · đã dùng {{used}}/{{max}} lần đổi lộ trình",
+    "current_path": "Lộ trình hiện tại",
+    "course_progress": "{{completed}}/{{total}} khóa học",
+    "completed_message": "Đã hoàn thành chương trình. Không thể đổi lộ trình nữa.",
+    "choose_path": {
+      "title": "Chọn một lộ trình nghề nghiệp",
+      "description": "Mở lộ trình để xem toàn bộ roadmap trước khi chọn — nếu đổi sau đó, bạn cần được Trưởng khoa phê duyệt."
+    },
+    "explore_paths": {
+      "title": "Khám phá các lộ trình khác",
+      "description": "Xem tất cả lộ trình nghề nghiệp — việc chuyển đổi cần được Trưởng khoa phê duyệt."
+    },
+    "transition_history": "Lịch sử chuyển lộ trình",
+    "switched_away": "Đã chuyển khỏi lộ trình",
+    "percent_done": "đã hoàn thành {{percent}}%",
+    "empty": {
+      "title": "Chưa có chương trình học",
+      "description": "Manager hoặc Trưởng khoa cần ghi danh bạn vào chương trình trước khi bạn có thể chọn lộ trình."
+    },
+    "path_card": {
+      "your_path": "Lộ trình của bạn",
+      "courses": "{{count}} khóa học",
+      "required": "{{count}} bắt buộc",
+      "stages": "{{count}} giai đoạn",
+      "view_roadmap": "Xem roadmap"
+    },
+    "requests": {
+      "reviewing": "Trưởng khoa đang xem xét yêu cầu",
+      "waiting": "Đang chờ Trưởng khoa xem xét",
+      "reviewing_description": "Yêu cầu đã được mở và hồ sơ của bạn đang được kiểm tra. Chưa có thay đổi nào — bạn vẫn học lộ trình hiện tại cho đến khi có quyết định.",
+      "waiting_description": "Yêu cầu đã được gửi và đang chờ tiếp nhận.",
+      "your_reason": "Lý do của bạn: {{reason}}",
+      "cancel": "Hủy yêu cầu",
+      "approved": "Đã duyệt",
+      "rejected": "Đã từ chối",
+      "cancelled": "Bạn đã hủy",
+      "invalidated": "Đã đóng (lộ trình đích không còn khả dụng)",
+      "dean_note": "Ghi chú của Trưởng khoa: {{note}}",
+      "history": "Yêu cầu đổi lộ trình",
+      "rejection_reasons": {
+        "insufficient_justification": "Lý do được cung cấp chưa đủ thuyết phục.",
+        "progress_loss_too_high": "Việc chuyển đổi lúc này sẽ làm mất quá nhiều tiến độ.",
+        "target_path_not_suitable": "Lộ trình đích chưa phù hợp với kết quả hiện tại của bạn.",
+        "preserve_remaining_switch": "Nên giữ lượt đổi còn lại cho một lần chuyển cần thiết hơn.",
+        "advising_required": "Bạn cần được tư vấn trước khi chuyển lộ trình.",
+        "documentation_missing": "Yêu cầu còn thiếu thông tin hỗ trợ.",
+        "other": ""
+      }
+    }
+  },
   "management_career_path_detail": {
     "tabs": {
       "courses": "Khóa học",
@@ -3638,6 +3698,13 @@
       "required": "Bắt buộc",
       "student_uuid": "UUID sinh viên *",
       "organization": "Tổ chức"
+    },
+    "thumbnail": {
+      "label": "Ảnh đại diện",
+      "change": "Chọn ảnh",
+      "hint": "JPEG, PNG, WebP hoặc GIF · tối đa 5 MiB",
+      "invalid_type": "Hãy chọn ảnh JPEG, PNG, WebP hoặc GIF.",
+      "too_large": "Ảnh phải có dung lượng không quá 5 MiB."
     },
     "placeholders": {
       "position_end": "Cuối",

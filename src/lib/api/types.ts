@@ -857,9 +857,13 @@ export type AiCostsPipelineStage = Schemas["PipelineStage"];
 export type AiCostsRecentCall = Schemas["RecentCallOut"];
 export type AiCallRecord = Schemas["RecentCallOut"];
 
-export type CareerPathPublic = Schemas["CareerPathPublic"];
+export type CareerPathPublic = Schemas["CareerPathPublic"] & {
+  thumbnail_url?: string | null;
+};
 export type CareerPathCoursePublic = Schemas["CareerPathCoursePublic"];
 export type CareerPathAuthoring = Schemas["CareerPathAuthoring"] & {
+  thumbnail_object_id?: string | null;
+  thumbnail_url?: string | null;
   /** Path-level attention cap (backend migration 0070). NULL = unlimited. */
   max_concurrent?: number | null;
   /** Stage count for the management list table (backend-enriched). */

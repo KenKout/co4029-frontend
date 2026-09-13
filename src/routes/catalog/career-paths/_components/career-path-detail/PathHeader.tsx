@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, BookOpen, CheckCircle2, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CareerPathProgressRead, CareerPathPublic } from "@/lib/api/types";
+import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
+import { cn } from "@/lib/utils";
 
 export function CareerPathHeader({
   data,
@@ -23,8 +25,19 @@ export function CareerPathHeader({
         </Button>
       </Link>
       <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-m3-primary to-m3-secondary flex items-center justify-center shrink-0">
-          <GraduationCap className="h-7 w-7 text-white" />
+        <div
+          className={cn(
+            "relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br",
+            slugGradient(data.slug),
+          )}
+        >
+          {data.thumbnail_url ? (
+            <img src={data.thumbnail_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <GraduationCap className="h-7 w-7 text-white" />
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <h1 className="font-headline font-black text-2xl sm:text-3xl text-m3-on-surface tracking-tight">

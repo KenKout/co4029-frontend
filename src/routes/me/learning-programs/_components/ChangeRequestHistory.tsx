@@ -1,4 +1,5 @@
 import { CheckCircle2, Clock, Eye, History, XCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,16 +25,14 @@ import type {
 
 /** Student-facing wording for each rejection code. The dean picks a code; this
  *  is the sentence the student reads, matching the notification copy. */
-const REJECTION_REASON_TEXT: Record<PathChangeRejectionReasonCode, string> = {
-  insufficient_justification: "The stated justification was not sufficient.",
-  progress_loss_too_high: "Too much progress would be lost by switching now.",
-  target_path_not_suitable:
-    "The target path is not a suitable fit for your current record.",
-  preserve_remaining_switch:
-    "Your remaining path change is better kept for a more necessary switch.",
-  advising_required: "An advising conversation is needed before a switch.",
-  documentation_missing: "Supporting information for the request was missing.",
-  other: "",
+const REJECTION_REASON_KEYS: Record<PathChangeRejectionReasonCode, string> = {
+  insufficient_justification: "insufficient_justification",
+  progress_loss_too_high: "progress_loss_too_high",
+  target_path_not_suitable: "target_path_not_suitable",
+  preserve_remaining_switch: "preserve_remaining_switch",
+  advising_required: "advising_required",
+  documentation_missing: "documentation_missing",
+  other: "other",
 };
 
 /** Open-request banner: acknowledges receipt, and says whether it has been
@@ -47,6 +46,7 @@ export function OpenChangeRequestBanner({
   isCancelling: boolean;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const inProgress = request.status === "in_progress";
   return (
     <div
@@ -59,20 +59,20 @@ export function OpenChangeRequestBanner({
         <p className="flex items-center gap-1.5 font-semibold">
           {inProgress ? (
             <>
-              <Eye className="h-4 w-4" /> Your Faculty Dean is reviewing this
+              <Eye className="h-4 w-4" /> {t("my_learning_programs.requests.reviewing")}
             </>
           ) : (
             <>
-              <Clock className="h-4 w-4" /> Waiting for Faculty Dean review
+              <Clock className="h-4 w-4" /> {t("my_learning_programs.requests.waiting")}
             </>
           )}
         </p>
         <p className="mt-1">
           {inProgress
-            ? "Your request has been opened and your record is being checked. Nothing has changed yet — you stay on your current path until a decision is made."
-            : "Your request has been submitted and is waiting to be picked up."}
+            ? t("my_learning_programs.requests.reviewing_description")
+            : t("my_learning_programs.requests.waiting_description")}
         </p>
-        <p className="mt-1 text-xs opacity-80">Your reason: {request.reason}</p>
+        <p className="mt-1 text-xs opacity-80">{t("my_learning_programs.requests.your_reason", { reason: request.reason })}</p>
       </div>
       <Button
         variant="outline"
@@ -80,7 +80,7 @@ export function OpenChangeRequestBanner({
         disabled={isCancelling}
         onClick={onCancel}
       >
-        Cancel request
+        {t("my_learning_programs.requests.cancel")}
       </Button>
     </div>
   );
@@ -93,11 +93,12 @@ function DecidedRequestRow({
   request: PathChangeRequest;
   formatDate: (value: string) => string;
 }) {
+  const { t } = useTranslation();
   const decidedAt = request.reviewed_at ?? request.created_at;
   const rejected = request.status === "rejected";
   const approved = request.status === "approved";
-  const reasonText = request.decision_reason_code
-    ? REJECTION_REASON_TEXT[request.decision_reason_code]
+  const reasonText = request.decision_reason_code && request.decision_reason_code !== "other"
+    ? t(`my_learning_programs.requests.rejection_reasons.${REJECTION_REASON_KEYS[request.decision_reason_code]}`)
     : "";
 
   return (
@@ -112,19 +113,19 @@ function DecidedRequestRow({
             <Clock className="h-4 w-4 text-m3-on-surface-variant" />
           )}
           {approved
-            ? "Approved"
+            ? t("my_learning_programs.requests.approved")
             : rejected
-              ? "Rejected"
+              ? t("my_learning_programs.requests.rejected")
               : request.status === "cancelled"
-                ? "Cancelled by you"
-                : "Closed (target path unavailable)"}
+                ? t("my_learning_programs.requests.cancelled")
+                : t("my_learning_programs.requests.invalidated")}
         </span>
         <span className="text-xs text-m3-on-surface-variant">
           {formatDate(decidedAt)}
         </span>
       </div>
       <p className="mt-1 text-xs text-m3-on-surface-variant">
-        Your reason: {request.reason}
+        {t("my_learning_programs.requests.your_reason", { reason: request.reason })}
       </p>
       {/* The reason is the whole point of showing a rejection: a bare
           "rejected" is what makes a student re-file the same request. */}
@@ -135,7 +136,7 @@ function DecidedRequestRow({
           ) : null}
           {request.decision_reason ? (
             <p className={cn("text-xs text-m3-on-surface-variant", reasonText && "mt-1")}>
-              Dean&apos;s note: {request.decision_reason}
+              {t("my_learning_programs.requests.dean_note", { note: request.decision_reason })}
             </p>
           ) : null}
         </div>
@@ -154,6 +155,7 @@ export function ChangeRequestHistory({
   history: PathChangeRequest[];
   formatDate: (value: string) => string;
 }) {
+  const { t } = useTranslation();
   const decided = history.filter(
     (request) => request.status !== "pending" && request.status !== "in_progress",
   );
@@ -162,7 +164,7 @@ export function ChangeRequestHistory({
   return (
     <div className="space-y-2">
       <p className="flex items-center gap-2 text-sm font-semibold">
-        <History className="h-4 w-4" /> Path change requests
+        <History className="h-4 w-4" /> {t("my_learning_programs.requests.history")}
       </p>
       {decided.map((request) => (
         <DecidedRequestRow

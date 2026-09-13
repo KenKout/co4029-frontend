@@ -60,6 +60,26 @@ export function resolveIsAllowed({
 }
 
 /**
+ * Resolve the sidebar context for routes shared by every signed-in user.
+ *
+ * Shared pages do not carry a role prefix, so treating "no prefix" as
+ * student made the notification inbox replace an admin/manager/teacher
+ * sidebar with the student navigation. Permissions are already the source of
+ * truth for section access; use the same precedence here. Manager must remain
+ * ahead of teacher because manager permissions intentionally overlap the
+ * teacher set.
+ */
+export function resolveDefaultRole(perms: readonly string[]): LayoutRole {
+  return hasAnyPermission(perms, ADMIN_PERMS)
+    ? "admin"
+    : hasAnyPermission(perms, MANAGER_PERMS)
+      ? "manager"
+      : hasAnyPermission(perms, TEACHER_PERMS)
+        ? "teacher"
+        : "student";
+}
+
+/**
  * Pick nav items based on permission, not just URL — a student who
  * somehow lands on /admin/* should see the student sidebar while the
  * redirect is in flight. Manager is checked before teacher because a manager
@@ -70,6 +90,7 @@ export function resolveNavGroups({
   onAdminPath,
   onManagerPath,
   onTeacherPath,
+  defaultRole,
 }: AllowedSection): NavGroups {
   return isAllowed && onAdminPath
     ? adminNavGroups
@@ -77,7 +98,13 @@ export function resolveNavGroups({
       ? managerNavGroups
       : isAllowed && onTeacherPath
         ? teacherNavGroups
-        : studentNavGroups;
+        : defaultRole === "admin"
+          ? adminNavGroups
+          : defaultRole === "manager"
+            ? managerNavGroups
+            : defaultRole === "teacher"
+              ? teacherNavGroups
+              : studentNavGroups;
 }
 
 /** The role label handed to AppShell — same precedence as `resolveNavGroups`. */
@@ -86,6 +113,7 @@ export function resolveRole({
   onAdminPath,
   onManagerPath,
   onTeacherPath,
+  defaultRole,
 }: AllowedSection): LayoutRole {
   return isAllowed && onAdminPath
     ? ("admin" as const)
@@ -93,5 +121,5 @@ export function resolveRole({
       ? ("manager" as const)
       : isAllowed && onTeacherPath
         ? ("teacher" as const)
-        : ("student" as const);
+        : defaultRole;
 }

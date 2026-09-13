@@ -28,6 +28,8 @@ export interface AccessInputs extends SectionFlags {
 /** The URL family plus whether the user is cleared for it. */
 export interface AllowedSection extends SectionFlags {
   isAllowed: boolean;
+  /** Sidebar context for shared routes such as /notifications and /settings. */
+  defaultRole: LayoutRole;
 }
 
 /** What the layout shell renders with, once the guard has decided. */

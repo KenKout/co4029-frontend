@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, BookOpen, CheckCircle2, GraduationCap, History } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
@@ -16,6 +17,7 @@ import {
 import { PathCard } from "./_components/PathCard";
 
 function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) {
+  const { t } = useTranslation();
   const cancelChange = useCancelProgramPathChange();
   const formatDate = useFormatDate();
   const active = enrollment.attempts.find((attempt) => attempt.status === "active");
@@ -36,12 +38,15 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
               {enrollment.program_name}
             </h2>
             <span className="rounded-full bg-m3-surface-container px-2.5 py-1 text-xs font-semibold">
-              {enrollment.status.replace("_", " ")}
+              {t(`my_learning_programs.status.${enrollment.status}`)}
             </span>
           </div>
           <p className="mt-1 text-sm text-m3-on-surface-variant">
-            Program version {enrollment.program_version_no} · {enrollment.approved_switch_count}/
-            {enrollment.max_path_switches} path changes used
+            {t("my_learning_programs.program_summary", {
+              version: enrollment.program_version_no,
+              used: enrollment.approved_switch_count,
+              max: enrollment.max_path_switches,
+            })}
           </p>
         </div>
       </div>
@@ -54,14 +59,14 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
             className="flex items-center justify-between hover:opacity-80"
           >
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-m3-primary">Current path</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-m3-primary">{t("my_learning_programs.current_path")}</p>
               <p className="mt-1 font-semibold text-m3-on-surface">{currentPath.name}</p>
             </div>
             <ArrowRight className="h-5 w-5 text-m3-primary" />
           </Link>
           <div>
             <div className="mb-1 flex justify-between text-xs text-m3-on-surface-variant">
-              <span>{enrollment.current_completed_courses}/{enrollment.current_total_courses} courses</span>
+              <span>{t("my_learning_programs.course_progress", { completed: enrollment.current_completed_courses, total: enrollment.current_total_courses })}</span>
               <span>{enrollment.current_progress_percent}%</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-card/70">
@@ -76,17 +81,16 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
 
       {enrollment.status === "completed" && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
-          <CheckCircle2 className="h-5 w-5" /> Program completed. Path changes are closed.
+          <CheckCircle2 className="h-5 w-5" /> {t("my_learning_programs.completed_message")}
         </div>
       )}
 
       {enrollment.status === "awaiting_path" && (
         <div className="space-y-3">
           <div>
-            <p className="text-sm font-semibold text-m3-on-surface">Choose one career path</p>
+            <p className="text-sm font-semibold text-m3-on-surface">{t("my_learning_programs.choose_path.title")}</p>
             <p className="mt-0.5 text-xs text-m3-on-surface-variant">
-              Open a path to see its full roadmap before you commit — changing
-              later needs approval from your Faculty Dean.
+              {t("my_learning_programs.choose_path.description")}
             </p>
           </div>
           {/* Cards rather than a <select>: this is a comparison, and a
@@ -126,9 +130,9 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
             className="flex items-center justify-between rounded-xl border border-m3-outline-variant p-4 hover:bg-m3-surface-container"
           >
             <div>
-              <p className="text-sm font-semibold text-m3-on-surface">Explore other paths</p>
+              <p className="text-sm font-semibold text-m3-on-surface">{t("my_learning_programs.explore_paths.title")}</p>
               <p className="mt-0.5 text-xs text-m3-on-surface-variant">
-                Browse all career paths — switching later needs approval from your Faculty Dean.
+                {t("my_learning_programs.explore_paths.description")}
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-m3-primary" />
@@ -148,7 +152,7 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
       {enrollment.attempts.length > 1 && (
         <div className="space-y-2">
           <p className="flex items-center gap-2 text-sm font-semibold">
-            <History className="h-4 w-4" /> Transition history
+            <History className="h-4 w-4" /> {t("my_learning_programs.transition_history")}
           </p>
           {enrollment.attempts
             .filter((attempt) => attempt.status !== "active")
@@ -159,8 +163,13 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
                 <div key={attempt.id} className="flex justify-between rounded-lg bg-m3-surface-container px-3 py-2 text-sm">
                   <span>{path?.name ?? attempt.career_path_id}</span>
                   <span className="text-m3-on-surface-variant">
-                    Switched away{typeof percent === "number" ? ` · ${Math.round(percent)}% done` : ""}
-                    {attempt.ended_at ? ` · ${formatDate(attempt.ended_at)}` : ""}
+                    {[
+                      t("my_learning_programs.switched_away"),
+                      typeof percent === "number"
+                        ? t("my_learning_programs.percent_done", { percent: Math.round(percent) })
+                        : null,
+                      attempt.ended_at ? formatDate(attempt.ended_at) : null,
+                    ].filter(Boolean).join(" · ")}
                   </span>
                 </div>
               );
@@ -172,19 +181,20 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
 }
 
 export default function LearningProgramsPage() {
+  const { t } = useTranslation();
   const programs = useMyLearningPrograms();
   if (programs.isLoading) return <PageSkeleton rows={3} />;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
-      <PageHeader title="My Learning Programs" subtitle="Choose and follow one career path in each enrolled program." />
+      <PageHeader title={t("my_learning_programs.title")} subtitle={t("my_learning_programs.subtitle")} />
       {programs.data?.length ? (
         <div className="space-y-4">{programs.data.map((item) => <ProgramCard key={item.id} enrollment={item} />)}</div>
       ) : (
         <EmptyState
           icon={BookOpen}
-          title="No learning program yet"
-          description="A Manager or Faculty Dean must enroll you before you can choose a career path."
+          title={t("my_learning_programs.empty.title")}
+          description={t("my_learning_programs.empty.description")}
         />
       )}
     </div>

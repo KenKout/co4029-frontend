@@ -17,6 +17,7 @@ export interface LearningProgramPath {
   name: string;
   slug: string;
   description: string | null;
+  thumbnail_url: string | null;
   status: "draft" | "published" | "archived";
   position: number;
 }

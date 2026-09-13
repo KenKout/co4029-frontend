@@ -9,6 +9,7 @@ import {
 } from "../client";
 import { queryKeys } from "../query-keys";
 import { useInfinitePage } from "../use-infinite-page";
+import { authenticatedFetch } from "@/lib/auth";
 import type {
   CareerPathAuthoring,
   CareerPathCourseAdd,
@@ -69,6 +70,7 @@ export interface CareerPathDetailPublic {
   slug: string;
   name: string;
   description: string | null;
+  thumbnail_url: string | null;
   status: string;
   courses: CareerPathStagePublic["courses"];
   stages: CareerPathStagePublic[];
@@ -266,6 +268,51 @@ export function usePatchCareerPath(id: string) {
         ),
       });
       qc.invalidateQueries({ queryKey: queryKeys.careerPaths.list() });
+    },
+  });
+}
+
+export async function uploadCareerPathThumbnail(
+  id: string,
+  file: File,
+): Promise<CareerPathAuthoring> {
+  const response = await authenticatedFetch(
+    `/management/career-paths/${id}/thumbnail`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    },
+  );
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const payload: unknown = await response.json();
+      if (payload && typeof payload === "object" && "detail" in payload) {
+        const value = (payload as { detail: unknown }).detail;
+        detail = typeof value === "string" ? value : JSON.stringify(value);
+      }
+    } catch {
+      // Keep the HTTP status text when the response is not JSON.
+    }
+    throw new Error(detail);
+  }
+  return (await response.json()) as CareerPathAuthoring;
+}
+
+export function useUploadCareerPathThumbnail(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadCareerPathThumbnail(id, file),
+    onSuccess: (path) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.careerPaths.managementDetail(id),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.careerPaths.managementList(path.organization_id),
+      });
+      void qc.invalidateQueries({ queryKey: queryKeys.careerPaths.list() });
+      void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.mine() });
     },
   });
 }

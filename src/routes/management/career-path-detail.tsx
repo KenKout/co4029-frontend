@@ -9,7 +9,13 @@ import { PermissionDenied } from "@/components/ui/permission-denied";
 import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { usePermissions } from "@/lib/auth/use-permissions";
-import { useCreateCareerPath, useManagedCareerPath, usePathVersions } from "@/lib/api/hooks/career-paths";
+import {
+  uploadCareerPathThumbnail,
+  useCreateCareerPath,
+  useManagedCareerPath,
+  usePathVersions,
+} from "@/lib/api/hooks/career-paths";
+import { CareerPathThumbnailField } from "@/routes/management/_components/career-path-detail/CareerPathThumbnailField";
 import { CoursesTab } from "@/routes/management/_components/career-path-detail/CoursesTab";
 import { EditForm } from "@/routes/management/_components/career-path-detail/EditForm";
 import { LoadErrorBox } from "@/routes/management/_components/career-path-detail/LoadErrorBox";
@@ -133,7 +139,12 @@ function WorkspaceShell({
             id={id}
             editable={editable}
             versionId={selectedVersionId ?? undefined}
-            path={{ name: data.name, slug: data.slug, description: data.description }}
+            path={{
+              name: data.name,
+              slug: data.slug,
+              description: data.description,
+              thumbnailUrl: data.thumbnail_url,
+            }}
           />
         </main>
         <div className="lg:col-span-3 lg:sticky lg:top-24">
@@ -162,7 +173,12 @@ function TabContent({
   id: string;
   editable: boolean;
   versionId?: string;
-  path: { name: string; slug: string; description: string | null | undefined };
+  path: {
+    name: string;
+    slug: string;
+    description: string | null | undefined;
+    thumbnailUrl: string | null | undefined;
+  };
 }) {
   if (tab === "general") {
     return (
@@ -171,6 +187,7 @@ function TabContent({
         initialName={path.name}
         initialSlug={path.slug}
         initialDescription={path.description ?? ""}
+        initialThumbnailUrl={path.thumbnailUrl}
         readOnly={!editable}
       />
     );
@@ -194,7 +211,9 @@ function NewCareerPathWorkspace() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!permissions.isLoading && !permissions.hasAny("course.create", "course.update")) return <PermissionDenied />;
 
@@ -211,12 +230,30 @@ function NewCareerPathWorkspace() {
       confirmVariant: "default",
     });
     if (!accepted) return;
+    setIsSubmitting(true);
     try {
-      const path = await create.mutateAsync({ name: name.trim(), slug: slug.trim(), description: description.trim() || null });
+      const path = await create.mutateAsync({
+        name: name.trim(),
+        slug: slug.trim(),
+        description: description.trim() || null,
+      });
+      if (thumbnail) {
+        try {
+          await uploadCareerPathThumbnail(path.id, thumbnail);
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? `Career Path was created, but its thumbnail could not be uploaded: ${error.message}`
+              : "Career Path was created, but its thumbnail could not be uploaded",
+          );
+        }
+      }
       toast.success("Career Path draft created");
       void navigate({ to: "/management/career-paths/$id", params: { id: path.id }, replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create the Career Path");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -228,8 +265,8 @@ function NewCareerPathWorkspace() {
           <h1 className="truncate font-headline text-2xl font-bold text-m3-on-surface">{name || "New Career Path"}</h1>
           <p className="mt-0.5 truncate font-mono text-xs text-m3-on-surface-variant">{slug || "career-path-slug"}</p>
         </div>
-        <Button type="button" className="gap-2" disabled={create.isPending} onClick={() => void createDraft()}>
-          {create.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Create draft
+        <Button type="button" className="gap-2" disabled={isSubmitting} onClick={() => void createDraft()}>
+          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />} Create draft
         </Button>
       </header>
       <div className="grid items-start gap-6 lg:grid-cols-10">
@@ -241,6 +278,11 @@ function NewCareerPathWorkspace() {
               <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input className="font-mono" value={slug} onChange={(event) => { setSlugTouched(true); setSlug(slugify(event.target.value)); }} /></label>
             </div>
             <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+            <CareerPathThumbnailField
+              file={thumbnail}
+              onChange={setThumbnail}
+              disabled={isSubmitting}
+            />
           </section>
         </main>
         <aside className="rounded-xl border border-dashed border-m3-outline-variant p-5 text-sm text-m3-on-surface-variant lg:col-span-3">Version history becomes available after the draft is created.</aside>

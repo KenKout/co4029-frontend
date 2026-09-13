@@ -14,27 +14,16 @@ import {
 } from "@/lib/api/hooks/career-paths";
 import type { CareerPathPublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-
-const CARD_GRADIENTS = [
-  "from-blue-500 via-blue-700 to-blue-800",
-  "from-emerald-500 via-teal-500 to-cyan-600",
-  "from-pink-500 via-rose-500 to-orange-500",
-  "from-amber-500 via-orange-500 to-red-500",
-  "from-blue-500 via-cyan-500 to-teal-500",
-  "from-blue-500 via-blue-600 to-sky-500",
-];
+import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
 
 function PathCard({
   path,
-  index,
   enrolled,
 }: {
   path: CareerPathPublic;
-  index: number;
   enrolled: boolean;
 }) {
   const { t } = useTranslation();
-  const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
   return (
     <Link
       to="/catalog/career-paths/$slug"
@@ -43,7 +32,15 @@ function PathCard({
     >
       <div className="bg-card rounded-xl overflow-hidden shadow-editorial ghost-border transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-glass h-full flex flex-col cursor-pointer">
         <div className="relative aspect-video overflow-hidden shrink-0">
-          <div className={cn("absolute inset-0 bg-gradient-to-br", gradient)} />
+          {path.thumbnail_url ? (
+            <img
+              src={path.thumbnail_url}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className={cn("absolute inset-0 bg-gradient-to-br", slugGradient(path.slug))} />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           <Badge className="absolute top-3 left-3 z-10 bg-black/40 text-white border border-white/20 backdrop-blur-sm text-[10px] font-semibold tracking-wide">
             <Sparkles className="h-2.5 w-2.5 mr-1" />
@@ -54,9 +51,9 @@ function PathCard({
               {t("career_paths_page.enrolled_badge")}
             </Badge>
           )}
-          <div className="absolute inset-0 flex items-center justify-center opacity-25 group-hover:opacity-40 transition-opacity">
+          {!path.thumbnail_url ? <div className="absolute inset-0 flex items-center justify-center opacity-25 group-hover:opacity-40 transition-opacity">
             <GraduationCap className="h-16 w-16 text-white" />
-          </div>
+          </div> : null}
         </div>
 
         <div className="p-4 space-y-3 flex-1 flex flex-col">
@@ -187,11 +184,10 @@ export default function CareerPathsPage() {
           {!list.isLoading && !list.isError && items.length > 0 && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {items.map((p, i) => (
+                {items.map((p) => (
                   <PathCard
                     key={p.id}
                     path={p}
-                    index={i}
                     enrolled={enrolledIds.has(p.id)}
                   />
                 ))}
