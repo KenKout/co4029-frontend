@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { Archive, ArrowLeft, GitBranch, Plus, Route, Trash2, Users } from "lucide-react";
+import { Archive, ArrowLeft, GitBranch, History, Plus, Route, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
@@ -27,9 +27,10 @@ import { useFormatDate } from "@/lib/format/date";
 import { Tabs, type TabDef } from "@/components/ui/tabs";
 import { RosterTab } from "./_components/learning-program-detail/RosterTab";
 import { PathChangeRequestsTab } from "./_components/learning-program-detail/PathChangeRequestsTab";
+import { PathChangeHistoryTab } from "./_components/learning-program-detail/PathChangeHistoryTab";
 import { ImportStudentsDialog } from "./_components/learning-program-detail/ImportStudentsDialog";
 
-type TabKey = "general" | "roster" | "requests";
+type TabKey = "general" | "roster" | "requests" | "history";
 
 /**
  * Three concerns that used to be stacked on one scroll: authoring the
@@ -39,10 +40,11 @@ type TabKey = "general" | "roster" | "requests";
  * The count badges make the tabs self-announcing — a dean lands here and
  * sees "Path changes 3" without opening anything.
  */
-const TABS = (pending: number, enrolled: number): TabDef<TabKey>[] => [
+const TABS = (pending: number, history: number, enrolled: number): TabDef<TabKey>[] => [
   { key: "general", label: "General & paths", icon: Route },
   { key: "roster", label: "Students", icon: Users, count: enrolled || undefined },
   { key: "requests", label: "Path changes", icon: GitBranch, count: pending || undefined },
+  { key: "history", label: "History", icon: History, count: history || undefined },
 ];
 
 export default function ManagementLearningProgramDetailPage() {
@@ -52,10 +54,12 @@ export default function ManagementLearningProgramDetailPage() {
   // straight to the Path changes review queue of THIS program. Unknown or
   // absent values fall back to "general" (validateSearch drops them).
   const { tab: tabParam } = useSearch({ strict: false }) as {
-    tab?: "general" | "roster" | "requests";
+    tab?: "general" | "roster" | "requests" | "history";
   };
   const tab: TabKey =
-    tabParam === "roster" || tabParam === "requests" ? tabParam : "general";
+    tabParam === "roster" || tabParam === "requests" || tabParam === "history"
+      ? tabParam
+      : "general";
   const setTab = (next: TabKey) =>
     void navigate({
       to: "/management/learning-programs/$id",
@@ -114,6 +118,9 @@ export default function ManagementLearningProgramDetailPage() {
     (request) => request.status === "pending" || request.status === "in_progress",
   );
   const pendingCount = openRequests.length;
+  const historyRequests = (requests.data ?? []).filter(
+    (request) => request.status !== "pending" && request.status !== "in_progress",
+  );
   const currentPaths = data.paths;
 
   async function removePath(pathId: string, pathName: string) {
@@ -152,7 +159,7 @@ export default function ManagementLearningProgramDetailPage() {
       <div className="grid items-start gap-6 lg:grid-cols-10">
         <main className="space-y-6 lg:col-span-7">
           <Tabs<TabKey>
-            tabs={TABS(pendingCount, (roster.data ?? []).length)}
+            tabs={TABS(pendingCount, historyRequests.length, (roster.data ?? []).length)}
             value={tab}
             onChange={setTab}
             ariaLabel="Learning program sections"
@@ -248,6 +255,13 @@ export default function ManagementLearningProgramDetailPage() {
                   "Path change approved",
                 )
               }
+            />
+          )}
+
+          {tab === "history" && (
+            <PathChangeHistoryTab
+              requests={historyRequests}
+              roster={roster.data ?? []}
             />
           )}
         </main>

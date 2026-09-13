@@ -772,7 +772,7 @@ const managementLearningProgramDetailRoute = createRoute({
   path: "/management/learning-programs/$id",
   validateSearch: (
     search: Record<string, unknown>,
-  ): { tab?: "general" | "roster" | "requests" } => ({
+  ): { tab?: "general" | "roster" | "requests" | "history" } => ({
     // Deep-link from a dean notification: open the Path changes tab
     // directly (action_url `/management/learning-programs/{id}?tab=requests`).
     // Unknown params are dropped, not rejected, so a malformed link still
@@ -781,7 +781,8 @@ const managementLearningProgramDetailRoute = createRoute({
       typeof search.tab === "string" &&
       (search.tab === "general" ||
         search.tab === "roster" ||
-        search.tab === "requests")
+        search.tab === "requests" ||
+        search.tab === "history")
         ? search.tab
         : undefined,
   }),
