@@ -3632,9 +3632,7 @@
     },
     "impact": {
       "title": "{{count}} học viên đang đi trên lộ trình này",
-      "body": "Mọi chỉnh sửa áp dụng ngay cho tất cả học viên — thêm khóa học bắt buộc vào giai đoạn chưa hoàn thành, tăng chỉ tiêu hoặc siết khóa sẽ thay đổi lộ trình của họ giữa chừng.",
-      "stage_line": "Giai đoạn {{position}}: {{count}} học viên vẫn còn giai đoạn này phía trước ({{inStage}} đang ở giai đoạn này).",
-      "stage_unnamed": "Giai đoạn {{position}}"
+      "body": "Việc phát hành bản nháp này sẽ không chuyển họ sang lộ trình mới: họ hoàn thành trên phiên bản đã bắt đầu. Thay đổi của bạn chỉ áp dụng cho học viên ghi danh sau khi phát hành."
     },
     "versions": {
       "fork": "Bản mới",

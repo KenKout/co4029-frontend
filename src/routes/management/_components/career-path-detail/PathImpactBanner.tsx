@@ -4,12 +4,22 @@ import { usePathImpact } from "@/lib/api/hooks/career-paths";
 import type { CareerPathImpactRead } from "@/lib/api/types";
 
 /**
- * Gap 3 §2.1 — "warn at the point of edit".
+ * Gap 3 §2.1 — "warn at the point of edit", corrected for version pinning.
  *
- * Shown on the management detail page for a PUBLISHED path with active
- * enrollments: tells the manager who is walking the path before they edit
- * it, so a silent change becomes an informed one. Per-stage counts come
- * from GET /management/career-paths/{id}/impact.
+ * Shows the manager how many students are walking the path before they edit
+ * it. What it must NOT claim is that the edit reaches them: this banner only
+ * renders while a draft exists (`editable` requires `hasDraft`), and
+ * `publish_path` keeps existing enrollments pinned to the version they
+ * started on. A draft — published or not — changes the route only for
+ * students who enrol afterwards.
+ *
+ * The per-stage breakdown the impact endpoint returns is deliberately NOT
+ * rendered. Forking clones stages into new rows, while student progress
+ * latches reference the source version's stage ids, so no latch can match a
+ * draft stage: the numbers collapse to "every student still has every stage
+ * ahead, and they are all on stage 1" whatever the students have actually
+ * done. Restoring the list means resolving each draft stage back to the
+ * published stage it was cloned from, server-side.
  */
 export function PathImpactBanner({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -22,8 +32,6 @@ export function PathImpactBanner({ id }: { id: string }) {
   if (data.active_enrollments === 0) {
     return null;
   }
-
-  const affected = data.stages.filter((s) => s.students_not_completed > 0);
 
   return (
     <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
@@ -38,21 +46,6 @@ export function PathImpactBanner({ id }: { id: string }) {
           <p className="mt-0.5 text-amber-700">
             {t("management_career_path_detail.impact.body")}
           </p>
-          {affected.length > 0 && (
-            <ul className="mt-2 space-y-0.5 text-xs text-amber-700">
-              {affected.map((s) => (
-                <li key={s.stage_id}>
-                  {t("management_career_path_detail.impact.stage_line", {
-                    stage: s.title ?? t("management_career_path_detail.impact.stage_unnamed", {
-                      position: s.position,
-                    }),
-                    count: s.students_not_completed,
-                    inStage: s.students_in_stage,
-                  })}
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       </div>
     </div>
