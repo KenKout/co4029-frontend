@@ -28,6 +28,8 @@ export interface OrgUnitTableProps {
   onSelect?: (node: OrgUnitNode) => void;
   /** Row actions (add child / edit / delete). */
   actions?: (node: OrgUnitNode) => ReactNode;
+  /** Optional contextual marker beside a Faculty name (for example, the caller's Dean scope). */
+  nameAdornment?: (node: OrgUnitNode) => ReactNode;
   /** `{unitId: count}` for the Courses column. Omit to hide the column. */
   courseCounts?: Map<string, number>;
   /** `{unitId: count}` for the People column. Omit to hide the column. */
@@ -43,6 +45,7 @@ export function OrgUnitTable({
   selectedId,
   onSelect,
   actions,
+  nameAdornment,
   courseCounts,
   peopleCounts,
   programCounts,
@@ -82,9 +85,12 @@ export function OrgUnitTable({
         sortValue: (n) => n.name.toLowerCase(),
         cell: (n) => (
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-text-strong">
-              {n.name}
-            </p>
+            <div className="flex min-w-0 items-center gap-2">
+              <p className="truncate text-sm font-semibold text-text-strong">
+                {n.name}
+              </p>
+              {nameAdornment?.(n)}
+            </div>
             {n.code ? (
               <p className="mt-0.5 truncate font-mono text-[11px] text-text-muted">
                 {n.code}
@@ -137,7 +143,7 @@ export function OrgUnitTable({
       ),
     });
     return cols;
-  }, [t, courseCounts, peopleCounts, programCounts, formatDate]);
+  }, [t, courseCounts, peopleCounts, programCounts, formatDate, nameAdornment]);
 
   return (
     <DataTable

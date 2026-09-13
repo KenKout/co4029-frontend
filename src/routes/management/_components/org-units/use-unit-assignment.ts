@@ -22,6 +22,17 @@ export interface UnitPerson {
   roles: string[];
 }
 
+/** Active affiliations shown in a Faculty roster. Kept separate from the
+ * add-people candidates: an appointed Dean may have no teacher/manager role. */
+export function peopleForFaculty(
+  people: UnitPerson[],
+  facultyId: string | null,
+): UnitPerson[] {
+  return facultyId
+    ? people.filter((person) => person.facultyIds.includes(facultyId))
+    : [];
+}
+
 /** Direct staff affiliations for one Faculty; Course ownership is immutable. */
 export function useUnitAssignment(
   orgId: string | undefined,
@@ -136,12 +147,13 @@ export function useUnitAssignment(
     },
   });
 
+  // The roster is every active Faculty affiliation, not the narrower
+  // add-people candidate list. A Dean may hold only `hod` (no manager/teacher
+  // role), and deriving this from `allPeople` made that Dean disappear from
+  // the Faculty immediately after appointment.
   const peopleInUnit = useMemo(
-    () =>
-      facultyId
-        ? allPeople.filter((person) => person.facultyIds.includes(facultyId))
-        : [],
-    [allPeople, facultyId],
+    () => peopleForFaculty(allOrganizationPeople, facultyId),
+    [allOrganizationPeople, facultyId],
   );
 
   async function assignPeople(userIds: string[]) {

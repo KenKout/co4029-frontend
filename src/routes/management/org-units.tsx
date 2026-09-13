@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { BookOpen, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { BookOpen, Pencil, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -71,6 +72,13 @@ export default function ManagementOrgUnitsPage() {
     () => new Map(flattenOrgUnits(c.nodes).map((u) => [u.id, u.name])),
     [c.nodes],
   );
+  const deanFaculties = useMemo(
+    () =>
+      c.deanUnitIds
+        .map((id) => ({ id, name: unitsById.get(id) }))
+        .filter((row): row is { id: string; name: string } => Boolean(row.name)),
+    [c.deanUnitIds, unitsById],
+  );
   const prefix = "management_org_units";
 
   const canManage = permissions.hasAny("org_unit.manage", "system.administer");
@@ -97,6 +105,46 @@ export default function ManagementOrgUnitsPage() {
         }
       />
 
+      {c.isMasterDean ? (
+        <div className="flex items-start gap-3 rounded-xl border border-m3-primary/25 bg-m3-primary-fixed/30 p-4">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-m3-primary" />
+          <div>
+            <p className="text-sm font-semibold text-text-strong">
+              {t(`${prefix}.master_dean_scope_title`)}
+            </p>
+            <p className="mt-0.5 text-xs text-text-muted">
+              {t(`${prefix}.master_dean_scope_description`)}
+            </p>
+          </div>
+        </div>
+      ) : deanFaculties.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-m3-primary/25 bg-m3-primary-fixed/30 p-4">
+          <ShieldCheck className="h-5 w-5 shrink-0 text-m3-primary" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-text-strong">
+              {t(`${prefix}.your_dean_scope_title`)}
+            </p>
+            <p className="mt-0.5 text-xs text-text-muted">
+              {t(`${prefix}.your_dean_scope_description`)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {deanFaculties.map((faculty) => (
+              <Button
+                key={faculty.id}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 bg-white text-xs"
+                onClick={() => c.setSelectedId(faculty.id)}
+              >
+                {faculty.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {c.isError ? (
         <div className="rounded-lg border border-border bg-surface-elev p-5">
           <p className="text-sm text-danger">{t(`${prefix}.load_failed`)}</p>
@@ -111,6 +159,17 @@ export default function ManagementOrgUnitsPage() {
               courseCounts={courseCounts}
               peopleCounts={peopleCounts}
               programCounts={programCounts}
+              nameAdornment={(node) =>
+                c.deanUnitIds.includes(node.id) ? (
+                  <Badge
+                    variant="outline"
+                    className="border-m3-primary/30 bg-m3-primary-fixed/40 text-m3-primary"
+                  >
+                    <ShieldCheck />
+                    {t(`${prefix}.you_are_dean`)}
+                  </Badge>
+                ) : null
+              }
               emptyState={t(`${prefix}.empty_title`)}
               actions={
                 c.isMasterDean
@@ -131,9 +190,17 @@ export default function ManagementOrgUnitsPage() {
             {c.selected ? (
               <div className="space-y-4">
                 <div>
-                  <p className="font-headline text-base font-bold text-text-strong">
-                    {c.selected.name}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-headline text-base font-bold text-text-strong">
+                      {c.selected.name}
+                    </p>
+                    {c.deanUnitIds.includes(c.selected.id) ? (
+                      <Badge className="bg-m3-primary text-white">
+                        <ShieldCheck />
+                        {t(`${prefix}.you_are_dean`)}
+                      </Badge>
+                    ) : null}
+                  </div>
                   <p className="mt-0.5 text-xs text-text-muted">
                     {t(`${prefix}.unit_types.${c.selected.unit_type}`, {
                       defaultValue: c.selected.unit_type,
