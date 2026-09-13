@@ -1210,6 +1210,17 @@
       "cap_warning_other": "You have {{count}} courses open in this path. Finishing some before starting more will help you keep up.",
       "not_started_yet": "Not started",
       "units_done": "{{done}}/{{total}} done"
+    },
+    "roadmap": {
+      "title": "Roadmap",
+      "subtitle": "Stages unlock in order as you complete them.",
+      "stage_fallback": "Stage {{position}}",
+      "stage_empty": "No courses in this stage yet.",
+      "counts_required": "{{count}} required",
+      "counts_optional": "{{count}} optional",
+      "counts_min_optional": "complete at least {{count}}",
+      "unlock_after_previous_required": "After previous required courses",
+      "unlock_after_previous_stage": "After previous stage"
     }
   },
   "study_cards_due": {

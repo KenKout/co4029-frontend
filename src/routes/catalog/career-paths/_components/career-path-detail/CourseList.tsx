@@ -5,7 +5,9 @@ import type {
   CareerPathCoursePublic,
   CourseProgressSummary,
 } from "@/lib/api/types";
-import { CourseRow } from "./CourseRow";
+import { CourseListRow } from "@/routes/courses/_components/courses-list/CourseListRow";
+import { RequirementTag } from "./StageRoadmap";
+import { CourseProgressMeta } from "./CourseRow";
 
 export function CareerPathCourseList({
   courses,
@@ -31,11 +33,22 @@ export function CareerPathCourseList({
       ) : (
         <div className="space-y-2">
           {courses.map((c, i) => (
-            <CourseRow
+            <CourseListRow
               key={c.course_id}
               course={c}
-              index={i}
-              progress={progressByCourseId.get(c.course_id)}
+              leading={
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed font-headline text-sm font-bold text-m3-primary">
+                  {i + 1}
+                </span>
+              }
+              meta={
+                <>
+                  <RequirementTag required={c.is_required} />
+                  <CourseProgressMeta
+                    progress={progressByCourseId.get(c.course_id)}
+                  />
+                </>
+              }
             />
           ))}
         </div>

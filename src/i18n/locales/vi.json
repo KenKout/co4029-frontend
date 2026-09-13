@@ -1133,6 +1133,17 @@
       "cap_warning_other": "Bạn đang mở {{count}} khóa học trong lộ trình này. Hãy hoàn thành một vài khóa trước khi mở thêm để theo kịp.",
       "not_started_yet": "Chưa bắt đầu",
       "units_done": "Đã xong {{done}}/{{total}}"
+    },
+    "roadmap": {
+      "title": "Lộ trình",
+      "subtitle": "Các giai đoạn mở lần lượt khi bạn hoàn thành.",
+      "stage_fallback": "Giai đoạn {{position}}",
+      "stage_empty": "Giai đoạn này chưa có khóa học nào.",
+      "counts_required": "{{count}} bắt buộc",
+      "counts_optional": "{{count}} tự chọn",
+      "counts_min_optional": "hoàn thành ít nhất {{count}}",
+      "unlock_after_previous_required": "Sau các khóa bắt buộc trước đó",
+      "unlock_after_previous_stage": "Sau giai đoạn trước"
     }
   },
   "study_cards_due": {
