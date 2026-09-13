@@ -2,7 +2,13 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { GraduationCap, Plus, ShieldCheck, ShieldPlus, User, X } from "lucide-react";
-import { Avatar, AvatarFallback, avatarColor, avatarInitials } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/use-confirm";
@@ -126,7 +132,13 @@ export function UnitContentsPanel({
             </Button>
           ) : null}
         </div>
-        <div className="mt-3 space-y-4">
+        <div
+          className="mt-3 max-h-[45vh] space-y-4 overflow-y-auto overscroll-contain pr-1"
+          role="region"
+          aria-label={t(`${prefix}.people_in_unit`, {
+            count: assignments.peopleInUnit.length,
+          })}
+        >
           {deans.length > 0 ? (
             <PeopleGroup
               label={t(`${prefix}.faculty_leadership`, { count: deans.length })}
@@ -291,6 +303,9 @@ function PersonRow({
       }`}
     >
       <Avatar size="sm" className={avatarColor(person.userId)}>
+        {person.avatarUrl ? (
+          <AvatarImage src={person.avatarUrl} alt={person.displayName} />
+        ) : null}
         <AvatarFallback>
           {avatarInitials(person.displayName, { uppercase: true })}
         </AvatarFallback>

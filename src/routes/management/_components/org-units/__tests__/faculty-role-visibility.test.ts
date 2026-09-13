@@ -15,6 +15,7 @@ function person(overrides: Partial<UnitPerson>): UnitPerson {
     userId: "user-1",
     displayName: "Demo user",
     email: "demo@example.com",
+    avatarUrl: null,
     facultyIds: [],
     roleCodesByFaculty: {},
     roles: [],

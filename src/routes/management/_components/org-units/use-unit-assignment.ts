@@ -17,6 +17,7 @@ export interface UnitPerson {
   userId: string;
   displayName: string;
   email: string;
+  avatarUrl: string | null;
   facultyIds: string[];
   roleCodesByFaculty: Record<string, string[]>;
   roles: string[];
@@ -88,6 +89,7 @@ export function useUnitAssignment(
               user?.primary_email ??
               membership.user_id,
             email: user?.primary_email ?? "",
+            avatarUrl: user?.profile?.avatar_url ?? null,
             facultyIds: facultyIdsByUser.get(membership.user_id) ?? [],
             roleCodesByFaculty:
               facultyRoleCodesByUser.get(membership.user_id) ?? {},
@@ -205,7 +207,10 @@ export function useUnitAssignment(
 
 type ManagedUser = {
   id: string;
-  profile?: { display_name?: string | null } | null;
+  profile?: {
+    display_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
   primary_email?: string;
   roles?: string[];
 };
@@ -215,7 +220,10 @@ function indexUsersById(
 ): Map<
   string,
   {
-    profile?: { display_name?: string | null } | null;
+    profile?: {
+      display_name?: string | null;
+      avatar_url?: string | null;
+    } | null;
     primary_email?: string;
     roles?: string[];
   }
@@ -223,7 +231,10 @@ function indexUsersById(
   const map = new Map<
     string,
     {
-      profile?: { display_name?: string | null } | null;
+      profile?: {
+        display_name?: string | null;
+        avatar_url?: string | null;
+      } | null;
       primary_email?: string;
       roles?: string[];
     }
