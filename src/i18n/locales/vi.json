@@ -1673,7 +1673,16 @@
     "view_progress": "Xem tiến độ",
     "ai_chip": "Hỗ trợ bởi AI",
     "enrolled_count_other": "Bạn đang theo học {{count}} khóa học.",
-    "enrolled_count_one": "Bạn đang theo học {{count}} khóa học."
+    "enrolled_count_one": "Bạn đang theo học {{count}} khóa học.",
+    "awaiting_path_intro": "Hãy chọn lộ trình nghề nghiệp để mở khóa học của bạn.",
+    "no_enrollments_intro": "Bạn chưa được phân công nội dung nào. Giảng viên hoặc phòng đào tạo sẽ ghi danh cho bạn.",
+    "choose_path": {
+      "title": "Chọn lộ trình nghề nghiệp",
+      "body_one": "{{program}} có {{count}} lộ trình. Hãy chọn để nhận khóa học của bạn.",
+      "body_other": "{{program}} có {{count}} lộ trình. Hãy so sánh và chọn lộ trình bạn muốn theo đuổi — đó là thứ sẽ lấp đầy khóa học cho bảng điều khiển của bạn.",
+      "body_many": "Bạn có {{count}} chương trình đang chờ bạn chọn lộ trình.",
+      "cta": "So sánh các lộ trình"
+    }
   },
   "admin": {
     "audit": {

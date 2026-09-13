@@ -2,11 +2,13 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMyCourses } from "@/lib/api/hooks/courses";
+import { useMyLearningPrograms } from "@/lib/api/hooks/learning-programs";
 import { useNotifications } from "@/lib/api/hooks/notifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { useSrDashboardSummary } from "@/lib/api/hooks/spaced-repetition";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
+import { ChoosePathPrompt } from "./_components/dashboard/ChoosePathPrompt";
 import DashboardStatsSection from "./_components/dashboard/DashboardStatsSection";
 import MyCoursesSection from "./_components/dashboard/MyCoursesSection";
 import NotificationsSection from "./_components/dashboard/NotificationsSection";
@@ -21,6 +23,7 @@ export default function DashboardPage() {
   const { items: notifications, isLoading: notificationsLoading } =
     useNotifications();
   const { data: sr, isLoading: srLoading } = useSrDashboardSummary();
+  const { data: programs } = useMyLearningPrograms();
 
   const firstName = getAuthDisplayName(user).split(" ")[0];
   const initials = getAuthUserInitials(user);
@@ -28,6 +31,10 @@ export default function DashboardPage() {
   const visibleCourses = myCourses.slice(0, 8);
   const enrolledCount = myCourses.length;
   const unreadCount = notifications.filter((n) => n.read_at === null).length;
+  const programEnrollments = programs ?? [];
+  const awaitingPath = programEnrollments.some(
+    (e) => e.status === "awaiting_path",
+  );
 
   function scrollCarousel(direction: "left" | "right") {
     if (!carouselRef.current) return;
@@ -59,12 +66,19 @@ export default function DashboardPage() {
               {t("dashboard.welcome", { name: firstName })}
             </h1>
             <p className="text-m3-on-surface-variant text-base">
-              {enrolledCount > 0
-                ? t("dashboard.enrolled_count", { count: enrolledCount })
-                : t("dashboard.explore_intro")}
+              {/* Three states. A student awaiting a path and a student with no
+                  programme at all both have zero courses, but only one of them
+                  has something they can do about it. */}
+              {awaitingPath
+                ? t("dashboard.awaiting_path_intro")
+                : enrolledCount > 0
+                  ? t("dashboard.enrolled_count", { count: enrolledCount })
+                  : t("dashboard.no_enrollments_intro")}
             </p>
           </div>
         </header>
+
+        <ChoosePathPrompt enrollments={programEnrollments} />
 
         <DashboardStatsSection
           stats={{

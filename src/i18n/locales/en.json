@@ -1764,7 +1764,16 @@
     "view_progress": "View progress",
     "ai_chip": "AI-powered",
     "enrolled_count_other": "You are enrolled in {{count}} courses.",
-    "enrolled_count_one": "You are enrolled in {{count}} course."
+    "enrolled_count_one": "You are enrolled in {{count}} course.",
+    "awaiting_path_intro": "Choose your career path to unlock your courses.",
+    "no_enrollments_intro": "Nothing is assigned to you yet. Your instructor or training office enrols you.",
+    "choose_path": {
+      "title": "Choose your career path",
+      "body_one": "{{program}} offers {{count}} path. Pick one to get your courses.",
+      "body_other": "{{program}} offers {{count}} paths. Compare them and pick the one you want to follow — that is what fills your dashboard with courses.",
+      "body_many": "You have {{count}} programmes waiting for you to choose a path.",
+      "cta": "Compare paths"
+    }
   },
   "admin": {
     "audit": {
