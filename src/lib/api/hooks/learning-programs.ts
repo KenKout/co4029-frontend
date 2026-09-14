@@ -197,7 +197,7 @@ export function useDecidePathChange(programId: string) {
       apiPost<PathChangeRequest>(
         `/management/learning-programs/path-change-requests/${requestId}/${approve ? "approve" : "reject"}`,
         approve
-          ? { reason: reason ?? null }
+          ? { reason: reason ?? null, note: note ?? null }
           : {
               reason_code: reasonCode,
               reason: reason ?? null,

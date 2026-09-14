@@ -112,6 +112,9 @@ function DecidedRequestRow({
   const decidedAt = request.reviewed_at ?? request.created_at;
   const rejected = request.status === "rejected";
   const approved = request.status === "approved";
+  const deanNote =
+    request.decision_note ??
+    (request.decision_reason_code === null ? request.decision_reason : null);
   const reasonText = request.decision_reason_code && request.decision_reason_code !== "other"
     ? t(`my_learning_programs.requests.rejection_reasons.${REJECTION_REASON_KEYS[request.decision_reason_code]}`)
     : "";
@@ -156,11 +159,21 @@ function DecidedRequestRow({
           {reasonText ? (
             <p className="text-xs font-medium text-text-strong">{reasonText}</p>
           ) : null}
-          {request.decision_reason ? (
+          {request.decision_reason_code === "other" && request.decision_reason ? (
             <p className={cn("text-xs text-m3-on-surface-variant", reasonText && "mt-1")}>
-              {t("my_learning_programs.requests.dean_note", { note: request.decision_reason })}
+              {request.decision_reason}
             </p>
           ) : null}
+          {deanNote ? (
+            <p className="mt-1 text-xs text-m3-on-surface-variant">
+              {t("my_learning_programs.requests.dean_note", { note: deanNote })}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {approved && deanNote ? (
+        <div className="mt-2 rounded-md bg-emerald-50 px-2.5 py-2 text-xs text-emerald-800">
+          {t("my_learning_programs.requests.dean_note", { note: deanNote })}
         </div>
       ) : null}
     </div>

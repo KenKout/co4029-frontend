@@ -3748,6 +3748,7 @@
       "cancel": "Cancel",
       "close": "Close",
       "approve": "Approve",
+      "approving": "Approving…",
       "reject": "Reject",
       "mark_in_progress": "Mark in progress",
       "marking": "Marking…",
@@ -3781,6 +3782,7 @@
       "details_saved": "Program details saved",
       "save_failed": "Could not save",
       "approved": "Path change approved",
+      "approve_failed": "Could not approve the path change",
       "in_progress": "Marked in progress — the student has been notified",
       "in_progress_failed": "Could not mark the request",
       "rejected": "Path change rejected — the student has been notified",
@@ -3865,6 +3867,10 @@
           "hint": "Enter the specific reason in the required field below."
         }
       }
+    },
+    "approve": {
+      "note": "Note to the student",
+      "note_placeholder": "Add an optional note about this approval…"
     },
     "history": {
       "title": "Career Path change history",

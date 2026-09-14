@@ -13,7 +13,6 @@ import { useAdminUsersSearch } from "@/lib/api/hooks/admin-organizations";
 import { getApiErrorMessage } from "@/lib/api/error-codes";
 import {
   useArchiveLearningProgram,
-  useDecidePathChange,
   useEnrollProgramStudents,
   useLearningProgramOptions,
   useLearningProgramVersion,
@@ -77,7 +76,6 @@ export default function ManagementLearningProgramDetailPage() {
   const publish = usePublishLearningProgram(id);
   const archive = useArchiveLearningProgram(id);
   const enroll = useEnrollProgramStudents(id);
-  const decide = useDecidePathChange(id);
   const { confirm, dialog } = useConfirm();
   const formatDate = useFormatDate();
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
@@ -250,15 +248,6 @@ export default function ManagementLearningProgramDetailPage() {
               programId={id}
               requests={openRequests}
               roster={roster.data ?? []}
-              onApprove={(request) =>
-                void confirmedAction(
-                  t("management_learning_program_detail.confirm.approve_title"),
-                  t("management_learning_program_detail.confirm.approve_description"),
-                  t("management_learning_program_detail.actions.approve"),
-                  () => decide.mutateAsync({ requestId: request.id, approve: true }),
-                  t("management_learning_program_detail.toast.approved"),
-                )
-              }
             />
           )}
 

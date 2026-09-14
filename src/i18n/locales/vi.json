@@ -3578,6 +3578,7 @@
       "cancel": "Hủy",
       "close": "Đóng",
       "approve": "Phê duyệt",
+      "approving": "Đang phê duyệt…",
       "reject": "Từ chối",
       "mark_in_progress": "Bắt đầu xem xét",
       "marking": "Đang cập nhật…",
@@ -3611,6 +3612,7 @@
       "details_saved": "Đã lưu thông tin chương trình",
       "save_failed": "Không thể lưu",
       "approved": "Đã phê duyệt đổi lộ trình",
+      "approve_failed": "Không thể phê duyệt đổi lộ trình",
       "in_progress": "Đã bắt đầu xem xét — sinh viên đã được thông báo",
       "in_progress_failed": "Không thể cập nhật yêu cầu",
       "rejected": "Đã từ chối đổi lộ trình — sinh viên đã được thông báo",
@@ -3695,6 +3697,10 @@
           "hint": "Nhập lý do cụ thể vào trường bắt buộc bên dưới."
         }
       }
+    },
+    "approve": {
+      "note": "Ghi chú cho sinh viên",
+      "note_placeholder": "Thêm ghi chú không bắt buộc cho quyết định phê duyệt…"
     },
     "history": {
       "title": "Lịch sử đổi lộ trình",
