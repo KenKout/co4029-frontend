@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { MoveRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const LINK_CLASS =
   "hover:text-blue-400 transition-colors inline-flex items-center gap-2 group";
@@ -26,20 +27,24 @@ const ARROW_CLASS =
  */
 
 export function FooterPlatformColumn() {
+  const { i18n } = useTranslation();
+  const vi = i18n.resolvedLanguage?.startsWith("vi");
   return (
     <div className="lg:col-span-3">
       <h4 className="font-semibold text-white mb-6 tracking-wide text-sm uppercase">
-        Platform
+        {vi ? "Nền tảng" : "Platform"}
       </h4>
       <ul className="space-y-3 text-sm text-slate-400">
         <li>
           <Link to="/courses" className={LINK_CLASS}>
-            <MoveRight className={ARROW_CLASS} /> Course Library
+            <MoveRight className={ARROW_CLASS} />{" "}
+            {vi ? "Thư viện khóa học" : "Course Library"}
           </Link>
         </li>
         <li>
           <Link to="/catalog/career-paths" className={LINK_CLASS}>
-            <MoveRight className={ARROW_CLASS} /> Learning Paths
+            <MoveRight className={ARROW_CLASS} />{" "}
+            {vi ? "Lộ trình học tập" : "Learning Paths"}
           </Link>
         </li>
       </ul>
@@ -48,15 +53,18 @@ export function FooterPlatformColumn() {
 }
 
 export function FooterSupportColumn() {
+  const { i18n } = useTranslation();
+  const vi = i18n.resolvedLanguage?.startsWith("vi");
   return (
     <div className="lg:col-span-3">
       <h4 className="font-semibold text-white mb-6 tracking-wide text-sm uppercase">
-        Support
+        {vi ? "Hỗ trợ" : "Support"}
       </h4>
       <ul className="space-y-3 text-sm text-slate-400">
         <li>
           <Link to="/help" className={LINK_CLASS}>
-            <MoveRight className={ARROW_CLASS} /> Help Center
+            <MoveRight className={ARROW_CLASS} />{" "}
+            {vi ? "Trung tâm trợ giúp" : "Help Center"}
           </Link>
         </li>
       </ul>

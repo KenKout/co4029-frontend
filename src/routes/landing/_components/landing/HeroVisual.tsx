@@ -1,14 +1,14 @@
 import { ArrowDown, Check, FileText, GitBranch } from "lucide-react";
+import { useLandingCopy } from "./use-landing-copy";
 
 export default function HeroVisual() {
+  const { c } = useLandingCopy();
   return (
     <figure className="relative min-w-0 rounded-2xl border border-white/20 bg-white p-5 text-slate-900 shadow-2xl sm:p-7">
       <figcaption className="mb-6 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-4">
-        <span className="text-sm font-semibold">
-          One lesson. Connected learning.
-        </span>
+        <span className="text-sm font-semibold">{c.visual.caption}</span>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-          Illustrative example
+          {c.visual.example}
         </span>
       </figcaption>
       <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -17,12 +17,10 @@ export default function HeroVisual() {
         </span>
         <div className="min-w-0">
           <p className="text-xs font-medium text-slate-500">
-            01 / TEACHING MATERIAL
+            {c.visual.material}
           </p>
-          <p className="mt-1 font-semibold">Introduction to databases</p>
-          <p className="mt-1 text-xs text-slate-600">
-            Your lesson notes and learning outcomes
-          </p>
+          <p className="mt-1 font-semibold">{c.visual.lesson}</p>
+          <p className="mt-1 text-xs text-slate-600">{c.visual.notes}</p>
         </div>
       </div>
       <ArrowDown
@@ -32,10 +30,10 @@ export default function HeroVisual() {
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-blue-800">
           <GitBranch className="h-4 w-4" aria-hidden="true" />
-          02 / CONCEPTS FOR REVIEW
+          {c.visual.concepts}
         </p>
         <ol className="mt-4 flex flex-wrap items-center gap-2 text-sm font-medium">
-          {["Tables", "Keys", "Relationships"].map((concept) => (
+          {c.visual.conceptList.map((concept) => (
             <li
               key={concept}
               className="rounded-lg border border-blue-200 bg-white px-3 py-2"
@@ -46,7 +44,7 @@ export default function HeroVisual() {
         </ol>
         <p className="mt-4 flex items-center gap-2 text-xs text-blue-800">
           <Check className="h-4 w-4" aria-hidden="true" />
-          Instructor reviews before publication
+          {c.visual.review}
         </p>
       </div>
       <ArrowDown
@@ -54,14 +52,10 @@ export default function HeroVisual() {
         aria-hidden="true"
       />
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-        <p className="text-xs font-semibold text-amber-900">
-          03 / NEXT LEARNING STEP
-        </p>
-        <p className="mt-2 text-sm font-semibold">
-          Revisit how foreign keys connect tables
-        </p>
+        <p className="text-xs font-semibold text-amber-900">{c.visual.next}</p>
+        <p className="mt-2 text-sm font-semibold">{c.visual.revisit}</p>
         <p className="mt-1 text-xs leading-relaxed text-slate-600">
-          Use assessment evidence to guide the next practice activity.
+          {c.visual.evidence}
         </p>
       </div>
     </figure>

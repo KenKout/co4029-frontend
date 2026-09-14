@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { FooterBottomBar } from "./footer/bottom-bar";
 import { FooterBrandColumn } from "./footer/brand-column";
 import {
@@ -7,6 +8,8 @@ import {
 } from "./footer/link-columns";
 
 export default function Footer() {
+  const { i18n } = useTranslation();
+  const vi = i18n.resolvedLanguage?.startsWith("vi");
   return (
     <footer className="relative bg-[#0b1120] border-t border-white/10 overflow-hidden text-slate-300">
       {/* High-tech background accents */}
@@ -44,28 +47,28 @@ export default function Footer() {
           to="/policy/$slug"
           params={{ slug: "privacy" }}
         >
-          Privacy Policy
+          {vi ? "Chính sách quyền riêng tư" : "Privacy Policy"}
         </Link>
         <Link
           className="hover:text-white transition-colors"
           to="/policy/$slug"
           params={{ slug: "terms" }}
         >
-          Terms of Service
+          {vi ? "Điều khoản dịch vụ" : "Terms of Service"}
         </Link>
         <Link
           className="hover:text-white transition-colors"
           to="/policy/$slug"
           params={{ slug: "cookies" }}
         >
-          Cookie Policy
+          {vi ? "Chính sách cookie" : "Cookie Policy"}
         </Link>
         {/* Academic policies (learning-program, career-path) are NOT listed
             here: they are seeded drafts, only meaningful once an admin has
             reviewed/published them, and the /policies page lists whatever
             the server actually serves instead of hardcoding slugs. */}
         <Link className="hover:text-white transition-colors" to="/help">
-          Help
+          {vi ? "Trợ giúp" : "Help"}
         </Link>
       </FooterBottomBar>
     </footer>

@@ -5,28 +5,12 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
+import { useLandingCopy } from "./use-landing-copy";
 
-const safeguards = [
-  {
-    icon: CheckCircle2,
-    title: "Human approval",
-    description:
-      "Instructors review AI-proposed concepts and learning content.",
-  },
-  {
-    icon: FileSearch,
-    title: "Traceable alignment",
-    description: "Learning evidence stays connected to outcomes and sources.",
-  },
-  {
-    icon: LockKeyhole,
-    title: "Scoped access",
-    description:
-      "Roles and institutional boundaries shape what people can access.",
-  },
-];
+const safeguardIcons = [CheckCircle2, FileSearch, LockKeyhole];
 
 export default function GovernanceSection() {
+  const { c } = useLandingCopy();
   return (
     <section
       aria-labelledby="responsible-ai-title"
@@ -39,17 +23,15 @@ export default function GovernanceSection() {
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
         <div className="space-y-5">
-          <AIInsightChip pulse={false}>Responsible AI by design</AIInsightChip>
+          <AIInsightChip pulse={false}>{c.governance.kicker}</AIInsightChip>
           <h2
             id="responsible-ai-title"
             className="font-headline text-3xl font-extrabold leading-tight text-white sm:text-4xl"
           >
-            AI supports academic judgment. It does not replace it.
+            {c.governance.title}
           </h2>
           <p className="max-w-xl text-base leading-relaxed text-white/70">
-            aBridgeAI helps educators structure knowledge, identify learning
-            gaps and act on evidence while keeping academic decisions with the
-            people accountable for student outcomes.
+            {c.governance.body}
           </p>
         </div>
 
@@ -63,25 +45,26 @@ export default function GovernanceSection() {
             </span>
             <div>
               <p className="font-headline font-bold text-white">
-                Academic governance
+                {c.governance.heading}
               </p>
-              <p className="text-sm text-white/55">
-                Built into the learning workflow
-              </p>
+              <p className="text-sm text-white/55">{c.governance.subheading}</p>
             </div>
           </div>
           <ul className="grid gap-4 sm:grid-cols-3">
-            {safeguards.map(({ icon: Icon, title, description }) => (
-              <li key={title} className="rounded-xl bg-white/[0.05] p-4">
-                <Icon className="h-5 w-5 text-[#bfdbfe]" aria-hidden="true" />
-                <h3 className="mt-4 font-headline font-bold text-white">
-                  {title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/60">
-                  {description}
-                </p>
-              </li>
-            ))}
+            {c.governance.safeguards.map(({ title, description }, index) => {
+              const Icon = safeguardIcons[index];
+              return (
+                <li key={title} className="rounded-xl bg-white/[0.05] p-4">
+                  <Icon className="h-5 w-5 text-[#bfdbfe]" aria-hidden="true" />
+                  <h3 className="mt-4 font-headline font-bold text-white">
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">
+                    {description}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

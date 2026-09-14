@@ -4,12 +4,14 @@
  * of that file to prove the previously-dead `href="#"` links are wired.
  */
 export function FooterBottomBar({ children }: { children: React.ReactNode }) {
+  const { i18n } = useTranslation();
+  const vi = i18n.resolvedLanguage?.startsWith("vi");
   return (
     <div className="relative max-w-7xl mx-auto px-6 lg:px-8 border-t border-white/10 py-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-xs text-slate-500 font-medium">
-          &copy; {new Date().getFullYear()} aBridgeAI Learning Systems. All
-          rights reserved.
+          &copy; {new Date().getFullYear()} aBridgeAI Learning Systems.{" "}
+          {vi ? "Đã đăng ký bản quyền." : "All rights reserved."}
         </div>
         <div className="flex gap-6 text-xs font-medium text-slate-400">
           {children}
@@ -18,3 +20,4 @@ export function FooterBottomBar({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+import { useTranslation } from "react-i18next";

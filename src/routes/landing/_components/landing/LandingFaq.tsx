@@ -1,73 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { useLandingCopy } from "./use-landing-copy";
 
 export default function LandingFaq() {
-  const questions = [
-    {
-      question: "Can I explore before signing in?",
-      answer: (
-        <>
-          Yes. The sample workflow on this page is available without an account.
-          To{" "}
-          <Link
-            to="/courses"
-            className="font-medium text-primary underline underline-offset-4"
-          >
-            browse the course catalog
-          </Link>
-          , you will be asked to sign in. Learning activities also depend on
-          your enrollment and permissions.
-        </>
-      ),
-    },
-    {
-      question: "Who reviews what AI creates?",
-      answer: (
-        <>
-          Instructors review AI-proposed concepts and learning content before
-          publication. AI helps structure the material; academic review stays
-          with educators.
-        </>
-      ),
-    },
-    {
-      question: "Is the sample a real course or student result?",
-      answer: (
-        <>
-          No. The database lesson and sample answer illustrate the workflow.
-          They are not a live product session, a published course or real
-          student performance data.
-        </>
-      ),
-    },
-    {
-      question: "How do I get access to a course?",
-      answer: (
-        <>
-          Sign in, browse the catalog and open a course to see its details and
-          enrollment options. Some courses are restricted to an organization or
-          department; contact the course owner if you need access.
-        </>
-      ),
-    },
-    {
-      question: "Where can our teaching team get help?",
-      answer: (
-        <>
-          Start with the{" "}
-          <Link
-            to="/help"
-            className="font-medium text-primary underline underline-offset-4"
-          >
-            help center
-          </Link>{" "}
-          for guidance on courses, learning and accounts. For teaching
-          permissions or organizational access, contact your organization’s
-          administrator.
-        </>
-      ),
-    },
-  ];
+  const { c } = useLandingCopy();
   return (
     <section
       id="faq"
@@ -76,30 +12,47 @@ export default function LandingFaq() {
     >
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-          Before you begin
+          {c.faq.kicker}
         </p>
         <h2
           id="faq-title"
           className="mt-3 font-headline text-3xl font-bold tracking-tight text-text-strong sm:text-4xl"
         >
-          A few useful answers.
+          {c.faq.title}
         </h2>
         <p className="mt-4 text-sm leading-relaxed text-text-muted">
-          Understand the workflow and how to get started.
+          {c.faq.body}
         </p>
       </div>
       <div className="divide-y divide-border border-y border-border">
-        {questions.map(({ question, answer }) => (
-          <details key={question} className="group py-1">
+        {c.faq.items.map((item) => (
+          <details key={item.question} className="group py-1">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-semibold text-text-strong [&::-webkit-details-marker]:hidden">
-              {question}
+              {item.question}
               <Plus
                 className="h-5 w-5 shrink-0 text-primary transition-transform group-open:rotate-45"
                 aria-hidden="true"
               />
             </summary>
             <p className="pb-5 pr-6 text-sm leading-relaxed text-text-muted">
-              {answer}
+              {item.answerBefore}{" "}
+              {"link" in item && item.link === "catalog" && (
+                <Link
+                  to="/courses"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  {c.faq.catalog}
+                </Link>
+              )}
+              {"link" in item && item.link === "help" && (
+                <Link
+                  to="/help"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  {c.faq.help}
+                </Link>
+              )}{" "}
+              {"answerAfter" in item ? item.answerAfter : ""}
             </p>
           </details>
         ))}

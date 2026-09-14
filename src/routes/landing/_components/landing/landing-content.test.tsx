@@ -6,10 +6,12 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import LandingPage from "../../landing";
+import i18n from "@/i18n";
 
 async function renderLanding() {
+  await i18n.changeLanguage("en");
   const root = createRootRoute();
   const index = createRoute({
     getParentRoute: () => root,
@@ -73,6 +75,41 @@ describe("public landing content", () => {
     expect(
       within(panel).getByText("A lesson you already teach"),
     ).toBeInTheDocument();
+  });
+
+  it("switches all landing content between English and Vietnamese", async () => {
+    await renderLanding();
+    fireEvent.click(screen.getAllByRole("button", { name: "VI" })[0]);
+    expect(
+      await screen.findByText("Tài liệu môn học của bạn."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Lộ trình học tập rõ ràng hơn."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Quyết định rõ ràng hơn cho mọi người."),
+    ).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe("vi");
+    fireEvent.click(screen.getAllByRole("button", { name: "EN" })[0]);
+    expect(
+      await screen.findByText("Clearer decisions for everyone involved."),
+    ).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe("en");
+  });
+
+  it("jumps immediately when reduced motion is requested", async () => {
+    await renderLanding();
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn().mockReturnValue({ matches: true }),
+    });
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    fireEvent.click(
+      screen.getByRole("link", { name: "See a sample workflow" }),
+    );
+    expect(window.location.hash).toBe("#sample-workflow");
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    scrollTo.mockRestore();
   });
 
   it("opens mobile navigation and closes it on Escape or a section choice", async () => {
