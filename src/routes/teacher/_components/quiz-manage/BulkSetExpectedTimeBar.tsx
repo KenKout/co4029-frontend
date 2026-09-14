@@ -20,6 +20,8 @@ import { BulkSetExpectedTimeRow } from "./BulkSetExpectedTimeRow";
  *   constructive actions.
  */
 export function BulkSetExpectedTimeBar({
+  courseId,
+  selectedQuestionIds,
   totalQuestions,
   selectedCount,
   bulkSeconds,
@@ -32,10 +34,11 @@ export function BulkSetExpectedTimeBar({
   onApprove,
   approveValid,
   approving,
-  onAddToBank,
-  addingToBank,
+  onAddedToBank,
   onDeleteSelected,
 }: {
+  courseId: string;
+  selectedQuestionIds: string[];
   totalQuestions: number;
   selectedCount: number;
   bulkSeconds: string;
@@ -48,8 +51,7 @@ export function BulkSetExpectedTimeBar({
   onApprove: () => void | Promise<void>;
   approveValid: boolean;
   approving: boolean;
-  onAddToBank: () => void;
-  addingToBank: boolean;
+  onAddedToBank: () => void;
   /** Stage every selected question for deletion (combo-undo window). */
   onDeleteSelected: () => void;
 }) {
@@ -78,6 +80,8 @@ export function BulkSetExpectedTimeBar({
 
       {hasSelection && (
         <BulkSetExpectedTimeActions
+          courseId={courseId}
+          selectedQuestionIds={selectedQuestionIds}
           bulkSeconds={bulkSeconds}
           onBulkSecondsChange={onBulkSecondsChange}
           onApply={onApply}
@@ -86,8 +90,7 @@ export function BulkSetExpectedTimeBar({
           onApprove={onApprove}
           approveValid={approveValid}
           approving={approving}
-          onAddToBank={onAddToBank}
-          addingToBank={addingToBank}
+          onAddedToBank={onAddedToBank}
           onDeleteSelected={onDeleteSelected}
         />
       )}

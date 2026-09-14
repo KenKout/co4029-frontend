@@ -39,6 +39,8 @@ export interface ConfirmDialogProps {
   extraContent?: React.ReactNode;
   /** Optional popup sizing/layout overrides for content-heavy confirmations. */
   popupClassName?: string;
+  /** Optional backdrop override for screens where backdrop filters are costly. */
+  backdropClassName?: string;
   /**
    * When true, clicking the backdrop (outside the popup) dismisses the dialog.
    * Off by default: AlertDialog intentionally blocks outside-click dismissal so
@@ -74,6 +76,7 @@ export function ConfirmDialog({
   confirmDisabled = false,
   extraContent,
   popupClassName,
+  backdropClassName,
   dismissOnBackdrop = false,
   showCancel = true,
 }: ConfirmDialogProps) {
@@ -91,6 +94,7 @@ export function ConfirmDialog({
             "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
             "transition-opacity duration-200",
             "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0",
+            backdropClassName,
           )}
         />
         <AlertDialogPrimitive.Popup

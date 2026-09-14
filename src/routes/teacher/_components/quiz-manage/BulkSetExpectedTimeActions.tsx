@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Clock, Library, Loader2, Save, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, Save, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AddToCuratedBankButton } from "./AddToCuratedBankDialog";
 
 /**
  * Action zone of the bulk action bar. Only rendered when there IS a selection,
@@ -18,8 +19,9 @@ export function BulkSetExpectedTimeActions({
   onApprove,
   approveValid,
   approving,
-  onAddToBank,
-  addingToBank,
+  courseId,
+  selectedQuestionIds,
+  onAddedToBank,
   onDeleteSelected,
 }: {
   bulkSeconds: string;
@@ -30,8 +32,9 @@ export function BulkSetExpectedTimeActions({
   onApprove: () => void | Promise<void>;
   approveValid: boolean;
   approving: boolean;
-  onAddToBank: () => void;
-  addingToBank: boolean;
+  courseId: string;
+  selectedQuestionIds: string[];
+  onAddedToBank: () => void;
   /** Stage every selected question for deletion (combo-undo window). */
   onDeleteSelected: () => void;
 }) {
@@ -103,21 +106,11 @@ export function BulkSetExpectedTimeActions({
         {t("teacher_quiz_manage.bulk_time.approve_short")}
       </Button>
 
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={onAddToBank}
-        disabled={addingToBank}
-        className="h-9 gap-1.5"
-      >
-        {addingToBank ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <Library className="h-3.5 w-3.5" />
-        )}
-        Add to bank
-      </Button>
+      <AddToCuratedBankButton
+        courseId={courseId}
+        ids={selectedQuestionIds}
+        onCleared={onAddedToBank}
+      />
 
       {/* Group 3: destructive, pushed to the far edge and visually split
           from the constructive actions above. No confirm dialog: the

@@ -28,8 +28,8 @@ export function KgLayoutToggle({
         className={cn(
           "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors h-auto whitespace-normal",
           layoutMode === "circular"
-            ? "bg-m3-primary text-white"
-            : "text-m3-on-surface-variant hover:text-m3-primary",
+            ? "bg-m3-primary text-white hover:bg-m3-primary/90 hover:text-white"
+            : "text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary",
         )}
       >
         <Circle className="h-3.5 w-3.5" />
@@ -42,8 +42,8 @@ export function KgLayoutToggle({
         className={cn(
           "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors h-auto whitespace-normal",
           layoutMode === "tree"
-            ? "bg-m3-primary text-white"
-            : "text-m3-on-surface-variant hover:text-m3-primary",
+            ? "bg-m3-primary text-white hover:bg-m3-primary/90 hover:text-white"
+            : "text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-primary",
         )}
       >
         <Workflow className="h-3.5 w-3.5" />

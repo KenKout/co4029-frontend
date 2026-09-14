@@ -1,8 +1,14 @@
+import { useState } from "react";
+import { Library, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getApiErrorMessage } from "@/lib/api/error-codes";
-import type { CopyToCuratedBankMutation } from "@/lib/api/hooks/quizzes";
+import {
+  useCopyQuizQuestionsToCuratedBank,
+  type CopyToCuratedBankMutation,
+} from "@/lib/api/hooks/quizzes";
 
 /**
  * "Add selected questions to the curated bank" confirm dialog.
@@ -50,6 +56,7 @@ export function AddToCuratedBankDialog({
         }
         toast.success(parts.join(". ") + ".");
       }
+      onOpenChange(false);
       onCleared();
     } catch (error) {
       toast.error(
@@ -70,7 +77,53 @@ export function AddToCuratedBankDialog({
       confirmLabel="Add to bank"
       confirmVariant="default"
       isPending={mutation.isPending}
+      backdropClassName="backdrop-blur-none"
       onConfirm={() => void handleAddSelectedToBank()}
     />
+  );
+}
+
+/**
+ * Own the dialog state next to its trigger instead of in QuestionsTab.
+ * Opening this confirmation must not re-render every question editor in the
+ * tab — a long quiz can contain dozens of comparatively heavy cards.
+ */
+export function AddToCuratedBankButton({
+  courseId,
+  ids,
+  onCleared,
+}: {
+  courseId: string;
+  ids: string[];
+  onCleared: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const mutation = useCopyQuizQuestionsToCuratedBank(courseId);
+
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => setOpen(true)}
+        disabled={mutation.isPending}
+        className="h-9 gap-1.5"
+      >
+        {mutation.isPending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Library className="h-3.5 w-3.5" />
+        )}
+        Add to bank
+      </Button>
+      <AddToCuratedBankDialog
+        ids={ids}
+        mutation={mutation}
+        open={open}
+        onOpenChange={setOpen}
+        onCleared={onCleared}
+      />
+    </>
   );
 }

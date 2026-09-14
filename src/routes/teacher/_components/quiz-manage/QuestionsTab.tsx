@@ -3,12 +3,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import type { PendingQuestionDelete } from "@/lib/api/hooks/quizzes";
-import { useCopyQuizQuestionsToCuratedBank } from "@/lib/api/hooks/quizzes";
 import type {
   CourseLearningOutcomeAuthoring,
   QuizQuestionAuthoring,
 } from "@/lib/api/types";
-import { AddToCuratedBankDialog } from "./AddToCuratedBankDialog";
 import { BulkSetExpectedTimeBar } from "./BulkSetExpectedTimeBar";
 import { QuestionsBulkDeleteDialog } from "./QuestionsBulkDeleteDialog";
 import { QuestionsSaveBar } from "./QuestionsSaveBar";
@@ -104,8 +102,6 @@ export function QuestionsTab({
   onDirtyCountChange?: (count: number) => void;
 }) {
   const { t } = useTranslation();
-  const addToBank = useCopyQuizQuestionsToCuratedBank(courseId);
-  const [confirmBankCount, setConfirmBankCount] = useState<number | null>(null);
   const {
     bulkSet,
     bulkApprove,
@@ -209,13 +205,6 @@ export function QuestionsTab({
         }
         onConfirm={handleDeleteSelectedConfirmed}
       />
-      <AddToCuratedBankDialog
-        ids={Array.from(selectedIds)}
-        mutation={addToBank}
-        open={confirmBankCount !== null}
-        onOpenChange={(open) => setConfirmBankCount(open ? selectedIds.size : null)}
-        onCleared={onClearSelection}
-      />
       <div className="col-span-12 lg:col-span-8 space-y-4 min-w-0">
         {/* The combo-undo snackbar lives at page level (QuizManagePage) so a
             queued delete stays visible from the Preview tab too. */}
@@ -232,6 +221,8 @@ export function QuestionsTab({
             frozen, so hide the whole bar rather than leave dead controls. */}
         {!published && (
           <BulkSetExpectedTimeBar
+            courseId={courseId}
+            selectedQuestionIds={Array.from(selectedIds)}
             totalQuestions={questions.length}
             selectedCount={selectedIds.size}
             bulkSeconds={bulkSeconds}
@@ -244,8 +235,7 @@ export function QuestionsTab({
             onApprove={handleApproveBulk}
             approveValid={selectedIds.size > 0}
             approving={bulkApprove.isPending}
-            onAddToBank={() => setConfirmBankCount(selectedIds.size)}
-            addingToBank={addToBank.isPending}
+            onAddedToBank={onClearSelection}
             onDeleteSelected={() => setConfirmBulkDelete(selectedIds.size)}
           />
         )}

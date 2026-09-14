@@ -77,7 +77,7 @@ export function SettingsSection({
         keepMounted
         className="h-[var(--collapsible-panel-height)] overflow-hidden transition-[height] duration-300 ease-out data-[ending-style]:h-0 data-[starting-style]:h-0"
       >
-        <div className="mt-5 space-y-4 border-t border-m3-outline-variant/20 pt-5">
+        <div className="space-y-4 border-t border-m3-outline-variant/20 pt-5">
           {children}
         </div>
       </Collapsible.Panel>
