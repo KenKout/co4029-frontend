@@ -2962,7 +2962,7 @@
       "resume_title": "Tiếp tục bài kiểm tra ở chế độ toàn màn hình",
       "resume_description": "Bài kiểm tra này được giám sát. Bài chạy ở chế độ toàn màn hình, và việc thoát toàn màn hình trước khi nộp sẽ được ghi lại để giáo viên xem xét. Câu trả lời đã lưu của bạn vẫn ở đó.",
       "resume_confirm": "Bật toàn màn hình và tiếp tục",
-      "cancel": "Để sau"
+      "cancel": "Quay lại"
     },
     "fullscreen": {
       "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem ({{count}} lần).",
