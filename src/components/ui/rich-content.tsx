@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { cn } from "@/lib/utils";
 
@@ -11,13 +12,30 @@ import { cn } from "@/lib/utils";
  *
  * - ``plain``    → rendered as escaped text (never parsed as markup). Newlines
  *   preserved via ``whitespace-pre-wrap``.
- * - ``markdown`` → rendered with ReactMarkdown (matches the lesson-notes
- *   convention). Wrapped in a compact ``prose`` block.
+ * - ``markdown`` → rendered with ReactMarkdown **plus GitHub-Flavoured
+ *   Markdown**, wrapped in a compact ``prose`` block. GFM is what supplies
+ *   tables, strikethrough, task lists and bare-URL autolinking; react-markdown
+ *   on its own implements CommonMark, which has none of them. Without it a
+ *   pipe table was parsed as one ordinary paragraph and rendered as a wall of
+ *   literal ``|`` characters — which is exactly how the published policy pages
+ *   were displaying their tables.
  * - ``html``     → the string is already nh3-sanitized server-side, so it is
  *   safe to inject. We still scope it inside a ``prose`` container.
  *
  * Unknown/absent format falls back to ``plain`` — the safest default.
  */
+/** Table styling shared by every markdown surface. Written as element-scoped
+ *  utilities rather than a `prose-table:` variant so the rules reach the cells
+ *  as well as the table element. */
+const TABLE_PROSE =
+  "[&_table]:my-4 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto " +
+  "[&_table]:border-collapse [&_table]:text-sm " +
+  "[&_thead]:bg-m3-surface-container " +
+  "[&_th]:border [&_th]:border-m3-outline-variant/50 [&_th]:px-3 [&_th]:py-2 " +
+  "[&_th]:text-left [&_th]:font-semibold " +
+  "[&_td]:border [&_td]:border-m3-outline-variant/40 [&_td]:px-3 [&_td]:py-2 " +
+  "[&_td]:align-top";
+
 export function RichContent({
   value,
   format,
@@ -40,11 +58,12 @@ export function RichContent({
       <div
         className={cn(
           "prose prose-sm max-w-none prose-headings:font-headline prose-headings:text-m3-on-surface prose-p:text-m3-on-surface prose-a:text-m3-primary prose-code:text-m3-primary",
+          TABLE_PROSE,
           inline && "prose-p:my-0",
           className,
         )}
       >
-        <ReactMarkdown>{text}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
       </div>
     );
   }

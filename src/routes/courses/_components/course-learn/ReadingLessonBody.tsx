@@ -1,6 +1,6 @@
 import { ExternalLink, FileText, Maximize2 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
+import { RichContent } from "@/components/ui/rich-content";
 import type { LessonPublic } from "@/lib/api/types";
 import type { Translate } from "./types";
 
@@ -108,8 +108,12 @@ export function ReadingLessonBody({
         ))}
 
       {hasNotes && (
-        <article className="prose prose-sm max-w-none prose-headings:font-headline prose-headings:text-m3-on-surface prose-p:text-m3-on-surface-variant prose-a:text-m3-primary">
-          <ReactMarkdown>{lesson.notes_markdown ?? ""}</ReactMarkdown>
+        <article>
+          <RichContent
+            value={lesson.notes_markdown}
+            format="markdown"
+            className="prose-p:text-m3-on-surface-variant"
+          />
         </article>
       )}
 
