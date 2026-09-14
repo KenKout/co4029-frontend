@@ -28,7 +28,7 @@ const copy = vi.hoisted<Record<string, string>>(() => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string) => copy[key] ?? key.split(".").at(-1) ?? key,
+    t: (key: string) => copy[key] ?? key.split(".").pop() ?? key,
   }),
 }));
 
