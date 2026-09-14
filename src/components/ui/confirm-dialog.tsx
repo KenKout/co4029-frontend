@@ -37,6 +37,8 @@ export interface ConfirmDialogProps {
   confirmDisabled?: boolean;
   /** Optional content rendered above the action row (e.g. a spinner row). */
   extraContent?: React.ReactNode;
+  /** Optional popup sizing/layout overrides for content-heavy confirmations. */
+  popupClassName?: string;
   /**
    * When true, clicking the backdrop (outside the popup) dismisses the dialog.
    * Off by default: AlertDialog intentionally blocks outside-click dismissal so
@@ -71,6 +73,7 @@ export function ConfirmDialog({
   isPending = false,
   confirmDisabled = false,
   extraContent,
+  popupClassName,
   dismissOnBackdrop = false,
   showCancel = true,
 }: ConfirmDialogProps) {
@@ -93,11 +96,13 @@ export function ConfirmDialog({
         <AlertDialogPrimitive.Popup
           className={cn(
             "fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2",
+            "max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain",
             "rounded-xl border border-m3-outline-variant/40 bg-white p-6 shadow-2xl",
             "outline-none",
             "transition-all duration-200",
             "data-[starting-style]:opacity-0 data-[starting-style]:scale-95",
             "data-[ending-style]:opacity-0 data-[ending-style]:scale-95",
+            popupClassName,
           )}
         >
           <AlertDialogPrimitive.Title className="font-headline text-lg font-bold text-text-strong">

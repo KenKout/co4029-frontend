@@ -208,6 +208,7 @@ export function PathChangeRequestsSection({
   onReject: (
     request: PathChangeRequest,
     reasonCode: PathChangeRejectionReasonCode,
+    reason: string,
     note: string,
   ) => Promise<unknown>;
   onMarkInProgress: (request: PathChangeRequest) => void;
@@ -283,8 +284,8 @@ export function PathChangeRequestsSection({
             t("management_learning_program_detail.requests.unknown_student")
           }
           isPending={Boolean(isRejecting)}
-          onReject={(reasonCode, note) => {
-            void onReject(rejectTarget, reasonCode, note).then(() =>
+          onReject={(reasonCode, reason, note) => {
+            void onReject(rejectTarget, reasonCode, reason, note).then(() =>
               setRejectTarget(null),
             );
           }}

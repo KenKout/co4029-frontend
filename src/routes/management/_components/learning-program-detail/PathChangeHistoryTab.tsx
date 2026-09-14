@@ -274,6 +274,7 @@ export function PathChangeHistoryTab({
         row.toPath,
         row.request.reason,
         row.request.decision_reason ?? "",
+        row.request.decision_note ?? "",
         row.request.decision_reason_code
           ? t(
               `management_learning_program_detail.history.reasons.${row.request.decision_reason_code}`,
@@ -378,9 +379,20 @@ export function PathChangeHistoryTab({
                 {t(
                   `management_learning_program_detail.history.reasons.${row.request.decision_reason_code}`,
                 )}
-                {row.request.decision_reason
+                {row.request.decision_reason_code === "other" &&
+                row.request.decision_reason
                   ? ` · ${row.request.decision_reason}`
                   : ""}
+              </p>
+            ) : null}
+            {row.request.decision_note ||
+            (row.request.decision_reason_code !== "other" &&
+              row.request.decision_reason) ? (
+              <p className="mt-1 text-text-muted">
+                <span className="font-semibold text-text-strong">
+                  {t("management_learning_program_detail.history.decision_note")}
+                </span>{" "}
+                {row.request.decision_note ?? row.request.decision_reason}
               </p>
             ) : null}
           </div>

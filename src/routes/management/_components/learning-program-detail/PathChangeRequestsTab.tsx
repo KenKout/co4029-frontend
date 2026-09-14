@@ -70,13 +70,14 @@ export function PathChangeRequestsTab({
         }
         onApprove={onApprove}
         isRejecting={decide.isPending}
-        onReject={(request, reasonCode, note) =>
+        onReject={(request, reasonCode, reason, note) =>
           decide
             .mutateAsync({
               requestId: request.id,
               approve: false,
               reasonCode,
-              reason: note || undefined,
+              reason: reason || undefined,
+              note: note || undefined,
             })
             .then(() =>
               toast.success(t("management_learning_program_detail.toast.rejected")),

@@ -147,15 +147,12 @@ export function useProgramChangeRequests(id: string) {
 export function useDecidePathChange(programId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ requestId, approve, reason, reasonCode }: { requestId: string; approve: boolean; reason?: string; reasonCode?: PathChangeRejectionReasonCode }) =>
+    mutationFn: ({ requestId, approve, reason, reasonCode, note }: { requestId: string; approve: boolean; reason?: string; reasonCode?: PathChangeRejectionReasonCode; note?: string }) =>
       apiPost<PathChangeRequest>(
         `/management/learning-programs/path-change-requests/${requestId}/${approve ? "approve" : "reject"}`,
-        // Rejection carries a structured reason CODE (required by the backend)
-        // plus optional detail; approval has nothing to justify, so it keeps the
-        // bare free-text shape.
         approve
           ? { reason: reason ?? null }
-          : { reason_code: reasonCode, reason: reason ?? null },
+          : { reason_code: reasonCode, reason: reason ?? null, note: note ?? null },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.learningPrograms.requests(programId) });

@@ -3828,11 +3828,12 @@
     },
     "reject": {
       "title": "Reject path change for {{name}}?",
-      "description": "The student keeps their current path and is notified with the reason you pick. This does not use up one of their path changes.",
-      "reason": "Reason",
+      "description": "Choose a reason category. If you choose Other, enter the specific reason separately. A note is always optional.",
+      "reason": "Reason category",
+      "other_reason": "Reason",
       "note": "Note to the student",
       "optional": "(optional)",
-      "required_placeholder": "Explain the reason for this rejection…",
+      "other_reason_placeholder": "Enter the reason not covered by the categories above…",
       "optional_placeholder": "Add any detail the student should know…",
       "reasons": {
         "insufficient_justification": { "label": "Justification is not sufficient", "hint": "The stated reason does not support a path change." },
@@ -3841,7 +3842,7 @@
         "preserve_remaining_switch": { "label": "Keep the remaining switch for later", "hint": "The student's remaining budget is better saved." },
         "advising_required": { "label": "Advising conversation needed first", "hint": "Discuss with the student before any switch." },
         "documentation_missing": { "label": "Supporting information missing", "hint": "Required evidence was not provided with the request." },
-        "other": { "label": "Other (explain below)", "hint": "A written explanation is required." }
+        "other": { "label": "Other", "hint": "Enter the specific reason in the required field below." }
       }
     },
     "history": {
@@ -3861,6 +3862,7 @@
       "time": "Time",
       "reason": "Reason",
       "decision_reason": "Decision reason",
+      "decision_note": "Dean's note:",
       "all_reasons": "All reasons",
       "student_reason": "Student:",
       "decision": "Decision:",

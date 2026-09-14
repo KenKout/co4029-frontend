@@ -151,6 +151,8 @@ export interface PathChangeRequest {
   /** Set only on rejection. */
   decision_reason_code: PathChangeRejectionReasonCode | null;
   decision_reason: string | null;
+  /** Optional dean guidance, stored separately from a custom `other` reason. */
+  decision_note: string | null;
   new_attempt_id: string | null;
   created_at: string;
 }

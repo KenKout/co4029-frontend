@@ -17,10 +17,9 @@ import type { PathChangeRejectionReasonCode } from "@/lib/api/types";
  * unreportable. So the reason is a CHOICE from the common cases, and the
  * backend requires it.
  *
- * `other` is the escape hatch and it flips the note field to REQUIRED — the
- * whole point of stepping outside the list is saying what the list could not.
- * The dean's note is always allowed on top of a canned reason, because "your
- * justification was insufficient" is more useful with a sentence attached.
+ * `other` is the escape hatch and reveals a separate REQUIRED reason field —
+ * the whole point of stepping outside the list is saying what the list could
+ * not. The dean's note remains optional for every category.
  *
  * The list is a radio group rather than a `<select>`: there are seven options,
  * they are the substance of the decision, and a dropdown hides six of them
@@ -53,19 +52,25 @@ export function RejectPathChangeDialog({
   /** Whose request this is — shown so a dean reviewing a queue cannot mis-target. */
   studentName: string;
   isPending: boolean;
-  onReject: (reasonCode: PathChangeRejectionReasonCode, note: string) => void;
+  onReject: (
+    reasonCode: PathChangeRejectionReasonCode,
+    reason: string,
+    note: string,
+  ) => void;
 }) {
   const { t } = useTranslation();
   const [reasonCode, setReasonCode] =
     useState<PathChangeRejectionReasonCode | null>(null);
+  const [otherReason, setOtherReason] = useState("");
   const [note, setNote] = useState("");
 
-  const noteRequired = reasonCode === "other";
   const canSubmit =
-    reasonCode !== null && (!noteRequired || note.trim().length > 0);
+    reasonCode !== null &&
+    (reasonCode !== "other" || otherReason.trim().length > 0);
 
   function reset() {
     setReasonCode(null);
+    setOtherReason("");
     setNote("");
   }
 
@@ -87,11 +92,12 @@ export function RejectPathChangeDialog({
       }
       cancelLabel={t("management_learning_program_detail.actions.cancel")}
       confirmVariant="destructive"
+      popupClassName="max-w-xl"
       isPending={isPending}
       confirmDisabled={!canSubmit}
       onConfirm={() => {
         if (!reasonCode) return;
-        onReject(reasonCode, note.trim());
+        onReject(reasonCode, otherReason.trim(), note.trim());
       }}
       extraContent={
         <div className="space-y-3">
@@ -100,7 +106,7 @@ export function RejectPathChangeDialog({
               {t("management_learning_program_detail.reject.reason")}{" "}
               <span className="text-destructive">*</span>
             </legend>
-            <div className="space-y-1.5">
+            <div className="grid gap-1.5 sm:grid-cols-2">
               {REASONS.map((reason) => {
                 const selected = reasonCode === reason.code;
                 return (
@@ -120,7 +126,10 @@ export function RejectPathChangeDialog({
                       value={reason.code}
                       checked={selected}
                       disabled={isPending}
-                      onChange={() => setReasonCode(reason.code)}
+                      onChange={() => {
+                        setReasonCode(reason.code);
+                        if (reason.code !== "other") setOtherReason("");
+                      }}
                     />
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-text-strong">
@@ -140,28 +149,42 @@ export function RejectPathChangeDialog({
             </div>
           </fieldset>
 
+          {reasonCode === "other" ? (
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-text-strong">
+                {t("management_learning_program_detail.reject.other_reason")}{" "}
+                <span className="text-destructive">*</span>
+              </span>
+              <Textarea
+                variant="low"
+                rows={2}
+                maxLength={4000}
+                value={otherReason}
+                disabled={isPending}
+                placeholder={t(
+                  "management_learning_program_detail.reject.other_reason_placeholder",
+                )}
+                onChange={(event) => setOtherReason(event.target.value)}
+              />
+            </label>
+          ) : null}
+
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-text-strong">
               {t("management_learning_program_detail.reject.note")}{" "}
-              {noteRequired ? (
-                <span className="text-destructive">*</span>
-              ) : (
-                <span className="font-normal text-text-muted">
-                  {t("management_learning_program_detail.reject.optional")}
-                </span>
-              )}
+              <span className="font-normal text-text-muted">
+                {t("management_learning_program_detail.reject.optional")}
+              </span>
             </span>
             <Textarea
               variant="low"
-              rows={3}
+              rows={2}
               maxLength={2000}
               value={note}
               disabled={isPending}
-              placeholder={
-                noteRequired
-                  ? t("management_learning_program_detail.reject.required_placeholder")
-                  : t("management_learning_program_detail.reject.optional_placeholder")
-              }
+              placeholder={t(
+                "management_learning_program_detail.reject.optional_placeholder",
+              )}
               onChange={(event) => setNote(event.target.value)}
             />
           </label>
