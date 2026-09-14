@@ -38,27 +38,63 @@ export interface RosterRow {
   courseCount: number;
 }
 
+type RosterUser = {
+  display_name?: string | null;
+  primary_email?: string;
+  avatar_url?: string | null;
+};
+
+interface RosterTabProps {
+  roster: LearningProgramEnrollment[];
+  canEnroll: boolean;
+  onOpenPicker: () => void;
+  onOpenImport: () => void;
+}
+
+function toRosterRow(
+  item: LearningProgramEnrollment,
+  user: RosterUser | undefined,
+): RosterRow {
+  const selectedPathIds = new Set(
+    item.attempts
+      .filter(
+        (attempt) =>
+          attempt.status === "active" || attempt.status === "completed",
+      )
+      .map((attempt) => attempt.career_path_id),
+  );
+  const pathNames = item.paths
+    .filter((path) => selectedPathIds.has(path.career_path_id))
+    .map((path) => path.name);
+
+  return {
+    enrollmentId: item.id,
+    studentId: item.student_id,
+    displayName:
+      user?.display_name?.trim() || user?.primary_email || item.student_id,
+    email: user?.primary_email ?? "",
+    avatarUrl: user?.avatar_url ?? null,
+    status: item.status,
+    pathName: pathNames.length > 0 ? pathNames.join(", ") : null,
+    progressPercent: item.current_progress_percent,
+    completedCourses: item.current_completed_courses,
+    courseCount: item.current_total_courses,
+  };
+}
+
 export function RosterTab({
   roster,
   canEnroll,
   onOpenPicker,
   onOpenImport,
-}: {
-  roster: LearningProgramEnrollment[];
-  canEnroll: boolean;
-  onOpenPicker: () => void;
-  onOpenImport: () => void;
-}) {
+}: RosterTabProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
-  const studentIds = useMemo(
-    () => roster.map((r) => r.student_id),
-    [roster],
-  );
+  const studentIds = useMemo(() => roster.map((r) => r.student_id), [roster]);
   const users = useUsersByIds(studentIds);
   const usersById = useMemo(() => {
-    const map = new Map<string, { display_name?: string | null; primary_email?: string; avatar_url?: string | null }>();
+    const map = new Map<string, RosterUser>();
     for (const u of users.data ?? []) map.set(u.id, u);
     return map;
   }, [users.data]);
@@ -66,28 +102,7 @@ export function RosterTab({
   const rows = useMemo<RosterRow[]>(() => {
     const needle = search.trim().toLowerCase();
     return roster
-      .map((item) => {
-        // The path a student is on is the ACTIVE attempt, not the first one:
-        // a student who switched has several attempts and only one is live.
-        const active = item.attempts.find((a) => a.status === "active");
-        const path = item.paths.find(
-          (p) => p.career_path_id === active?.career_path_id,
-        );
-        const user = usersById.get(item.student_id);
-        return {
-          enrollmentId: item.id,
-          studentId: item.student_id,
-          displayName:
-            user?.display_name?.trim() || user?.primary_email || item.student_id,
-          email: user?.primary_email ?? "",
-          avatarUrl: user?.avatar_url ?? null,
-          status: item.status,
-          pathName: path?.name ?? null,
-          progressPercent: item.current_progress_percent,
-          completedCourses: item.current_completed_courses,
-          courseCount: item.current_total_courses,
-        };
-      })
+      .map((item) => toRosterRow(item, usersById.get(item.student_id)))
       .filter(
         (r) =>
           !needle ||
@@ -193,7 +208,9 @@ export function RosterTab({
           <DataTableToolbar
             search={search}
             onSearchChange={setSearch}
-            searchPlaceholder={t("management_learning_program_detail.roster.search")}
+            searchPlaceholder={t(
+              "management_learning_program_detail.roster.search",
+            )}
           />
           {canEnroll ? (
             <div className="flex gap-2">
@@ -208,7 +225,9 @@ export function RosterTab({
               </Button>
               <Button size="sm" className="gap-2" onClick={onOpenPicker}>
                 <UserPlus className="h-4 w-4" />
-                {t("management_learning_program_detail.actions.enroll_students")}
+                {t(
+                  "management_learning_program_detail.actions.enroll_students",
+                )}
               </Button>
             </div>
           ) : null}

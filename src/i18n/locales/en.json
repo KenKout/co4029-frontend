@@ -3836,13 +3836,34 @@
       "other_reason_placeholder": "Enter the reason not covered by the categories above…",
       "optional_placeholder": "Add any detail the student should know…",
       "reasons": {
-        "insufficient_justification": { "label": "Justification is not sufficient", "hint": "The stated reason does not support a path change." },
-        "progress_loss_too_high": { "label": "Too much progress would be lost", "hint": "Switching now would discard significant completed work." },
-        "target_path_not_suitable": { "label": "Target path is not a suitable fit", "hint": "The requested path does not match the student's record." },
-        "preserve_remaining_switch": { "label": "Keep the remaining switch for later", "hint": "The student's remaining budget is better saved." },
-        "advising_required": { "label": "Advising conversation needed first", "hint": "Discuss with the student before any switch." },
-        "documentation_missing": { "label": "Supporting information missing", "hint": "Required evidence was not provided with the request." },
-        "other": { "label": "Other", "hint": "Enter the specific reason in the required field below." }
+        "insufficient_justification": {
+          "label": "Justification is not sufficient",
+          "hint": "The stated reason does not support a path change."
+        },
+        "progress_loss_too_high": {
+          "label": "Too much progress would be lost",
+          "hint": "Switching now would discard significant completed work."
+        },
+        "target_path_not_suitable": {
+          "label": "Target path is not a suitable fit",
+          "hint": "The requested path does not match the student's record."
+        },
+        "preserve_remaining_switch": {
+          "label": "Keep the remaining switch for later",
+          "hint": "The student's remaining budget is better saved."
+        },
+        "advising_required": {
+          "label": "Advising conversation needed first",
+          "hint": "Discuss with the student before any switch."
+        },
+        "documentation_missing": {
+          "label": "Supporting information missing",
+          "hint": "Required evidence was not provided with the request."
+        },
+        "other": {
+          "label": "Other",
+          "hint": "Enter the specific reason in the required field below."
+        }
       }
     },
     "history": {
@@ -3871,8 +3892,21 @@
       "unknown_student": "Unknown student",
       "empty": "No completed Career Path changes yet",
       "empty_filtered": "No history matches these filters",
-      "results": { "approved": "Approved", "rejected": "Rejected", "cancelled": "Cancelled by student", "invalidated": "Invalidated" },
-      "reasons": { "insufficient_justification": "Insufficient justification", "progress_loss_too_high": "Progress loss too high", "target_path_not_suitable": "Target path not suitable", "preserve_remaining_switch": "Preserve remaining switch", "advising_required": "Advising required", "documentation_missing": "Documentation missing", "other": "Other" }
+      "results": {
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled by student",
+        "invalidated": "Invalidated"
+      },
+      "reasons": {
+        "insufficient_justification": "Insufficient justification",
+        "progress_loss_too_high": "Progress loss too high",
+        "target_path_not_suitable": "Target path not suitable",
+        "preserve_remaining_switch": "Preserve remaining switch",
+        "advising_required": "Advising required",
+        "documentation_missing": "Documentation missing",
+        "other": "Other"
+      }
     },
     "versions": {
       "title": "Versions",
@@ -3880,7 +3914,12 @@
       "not_published": "Not published",
       "published_by": "by {{name}}"
     },
-    "student_picker": { "title": "Enroll students", "search": "Search students by name or email", "empty": "No student found", "added": "Enrolled" },
+    "student_picker": {
+      "title": "Enroll students",
+      "search": "Search students by name or email",
+      "empty": "No student found",
+      "added": "Enrolled"
+    },
     "import": {
       "title": "Import students from CSV",
       "finished": "Import finished",
@@ -3900,7 +3939,7 @@
   },
   "my_learning_programs": {
     "title": "My Learning Programs",
-    "subtitle": "Choose and follow one career path in each enrolled program.",
+    "subtitle": "Choose and complete one or more career paths in each enrolled program.",
     "status": {
       "awaiting_path": "Awaiting path",
       "active": "Active",
@@ -3908,17 +3947,18 @@
       "withdrawn": "Withdrawn",
       "cancelled": "Cancelled"
     },
-    "program_summary": "Program version {{version}} · {{used}}/{{max}} path changes used",
-    "current_path": "Current path",
+    "program_summary": "Program version {{version}} · {{selected}}/{{pathMax}} paths selected · {{used}}/{{max}} path changes used",
+    "selected_paths": "Selected paths",
+    "path_completed": "Path completed",
     "course_progress": "{{completed}}/{{total}} courses",
-    "completed_message": "Program completed. Path changes are closed.",
+    "completed_message": "Program completed. Every selected path is complete and new selections are closed.",
     "choose_path": {
-      "title": "Choose one career path",
-      "description": "Open a path to see its full roadmap before you commit — changing later needs approval from your Faculty Dean."
+      "title": "Choose a career path",
+      "description": "Open a path to review its roadmap. You can add more paths without approval while slots remain."
     },
     "explore_paths": {
       "title": "Explore other paths",
-      "description": "Browse all career paths — switching later needs approval from your Faculty Dean."
+      "description": "Browse paths to add another while slots remain, or request an approved replacement when full."
     },
     "transition_history": "Transition history",
     "switched_away": "Switched away",

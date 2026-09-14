@@ -1,6 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, BookOpen, CheckCircle2, GraduationCap, History } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  GraduationCap,
+  History,
+} from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -16,14 +22,140 @@ import {
 } from "./_components/ChangeRequestHistory";
 import { PathCard } from "./_components/PathCard";
 
-function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) {
+function SelectedPaths({
+  enrollment,
+  attempts,
+}: {
+  enrollment: LearningProgramEnrollment;
+  attempts: LearningProgramEnrollment["attempts"];
+}) {
+  const { t } = useTranslation();
+  return (
+    <section className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-m3-primary">
+        {t("my_learning_programs.selected_paths")}
+      </p>
+      {attempts.map((attempt) => {
+        const path = enrollment.paths.find(
+          (item) => item.career_path_id === attempt.career_path_id,
+        );
+        if (!path) return null;
+        return (
+          <div
+            key={attempt.id}
+            className="rounded-xl bg-m3-primary-container/40 p-4 space-y-3"
+          >
+            <Link
+              to="/catalog/career-paths/$slug"
+              params={{ slug: path.slug }}
+              className="flex items-center justify-between hover:opacity-80"
+            >
+              <div>
+                <p className="font-semibold text-m3-on-surface">{path.name}</p>
+                {attempt.status === "completed" ? (
+                  <p className="mt-0.5 text-xs font-semibold text-emerald-700">
+                    {t("my_learning_programs.path_completed")}
+                  </p>
+                ) : null}
+              </div>
+              <ArrowRight className="h-5 w-5 text-m3-primary" />
+            </Link>
+            <div>
+              <div className="mb-1 flex justify-between text-xs text-m3-on-surface-variant">
+                <span>
+                  {t("my_learning_programs.course_progress", {
+                    completed: attempt.completed_courses,
+                    total: attempt.total_courses,
+                  })}
+                </span>
+                <span>{attempt.progress_percent}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-card/70">
+                <div
+                  className="h-full rounded-full bg-m3-primary"
+                  style={{ width: `${attempt.progress_percent}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+function TransitionHistory({
+  enrollment,
+}: {
+  enrollment: LearningProgramEnrollment;
+}) {
+  const { t } = useTranslation();
+  const formatDateTime = useFormatDateTimeMedium();
+  const attempts = enrollment.attempts.filter(
+    (attempt) =>
+      attempt.status === "switched_out" || attempt.status === "cancelled",
+  );
+  if (attempts.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <p className="flex items-center gap-2 text-sm font-semibold">
+        <History className="h-4 w-4" />{" "}
+        {t("my_learning_programs.transition_history")}
+      </p>
+      {attempts.map((attempt) => {
+        const path = enrollment.paths.find(
+          (item) => item.career_path_id === attempt.career_path_id,
+        );
+        const percent = attempt.exit_snapshot?.overall_percent;
+        const details = [
+          t("my_learning_programs.switched_away"),
+          typeof percent === "number"
+            ? t("my_learning_programs.percent_done", {
+                percent: Math.round(percent),
+              })
+            : null,
+          t("my_learning_programs.transition_started_at", {
+            value: formatDateTime(attempt.selected_at),
+          }),
+          attempt.ended_at
+            ? t("my_learning_programs.transition_ended_at", {
+                value: formatDateTime(attempt.ended_at),
+              })
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
+        return (
+          <div
+            key={attempt.id}
+            className="flex justify-between rounded-lg bg-m3-surface-container px-3 py-2 text-sm"
+          >
+            <span>{path?.name ?? attempt.career_path_id}</span>
+            <span className="text-m3-on-surface-variant">{details}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProgramCard({
+  enrollment,
+}: {
+  enrollment: LearningProgramEnrollment;
+}) {
   const { t } = useTranslation();
   const cancelChange = useCancelProgramPathChange();
-  const formatDateTime = useFormatDateTimeMedium();
-  const active = enrollment.attempts.find((attempt) => attempt.status === "active");
-  const currentPath = enrollment.paths.find((path) => path.career_path_id === active?.career_path_id);
+  const selectedAttempts = enrollment.attempts.filter(
+    (attempt) => attempt.status === "active" || attempt.status === "completed",
+  );
+  const selectedIds = new Set(
+    selectedAttempts.map((attempt) => attempt.career_path_id),
+  );
   const available = enrollment.paths.filter(
-    (path) => path.status !== "archived" && path.career_path_id !== active?.career_path_id,
+    (path) =>
+      path.status !== "archived" && !selectedIds.has(path.career_path_id),
   );
 
   return (
@@ -44,6 +176,8 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
           <p className="mt-1 text-sm text-m3-on-surface-variant">
             {t("my_learning_programs.program_summary", {
               version: enrollment.program_version_no,
+              selected: enrollment.selected_path_count,
+              pathMax: enrollment.max_career_paths,
               used: enrollment.approved_switch_count,
               max: enrollment.max_path_switches,
             })}
@@ -51,44 +185,23 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
         </div>
       </div>
 
-      {currentPath && (
-        <div className="rounded-xl bg-m3-primary-container/40 p-4 space-y-3">
-          <Link
-            to="/catalog/career-paths/$slug"
-            params={{ slug: currentPath.slug }}
-            className="flex items-center justify-between hover:opacity-80"
-          >
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-m3-primary">{t("my_learning_programs.current_path")}</p>
-              <p className="mt-1 font-semibold text-m3-on-surface">{currentPath.name}</p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-m3-primary" />
-          </Link>
-          <div>
-            <div className="mb-1 flex justify-between text-xs text-m3-on-surface-variant">
-              <span>{t("my_learning_programs.course_progress", { completed: enrollment.current_completed_courses, total: enrollment.current_total_courses })}</span>
-              <span>{enrollment.current_progress_percent}%</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-card/70">
-              <div
-                className="h-full rounded-full bg-m3-primary"
-                style={{ width: `${enrollment.current_progress_percent}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {selectedAttempts.length > 0 ? (
+        <SelectedPaths enrollment={enrollment} attempts={selectedAttempts} />
+      ) : null}
 
       {enrollment.status === "completed" && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
-          <CheckCircle2 className="h-5 w-5" /> {t("my_learning_programs.completed_message")}
+          <CheckCircle2 className="h-5 w-5" />{" "}
+          {t("my_learning_programs.completed_message")}
         </div>
       )}
 
       {enrollment.status === "awaiting_path" && (
         <div className="space-y-3">
           <div>
-            <p className="text-sm font-semibold text-m3-on-surface">{t("my_learning_programs.choose_path.title")}</p>
+            <p className="text-sm font-semibold text-m3-on-surface">
+              {t("my_learning_programs.choose_path.title")}
+            </p>
             <p className="mt-0.5 text-xs text-m3-on-surface-variant">
               {t("my_learning_programs.choose_path.description")}
             </p>
@@ -110,8 +223,9 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
         </div>
       )}
 
-      {enrollment.status === "active" && available.length > 0 && (
-        enrollment.pending_change_request ? (
+      {enrollment.status === "active" &&
+        available.length > 0 &&
+        (enrollment.pending_change_request ? (
           <OpenChangeRequestBanner
             request={enrollment.pending_change_request}
             isCancelling={cancelChange.isPending}
@@ -130,58 +244,24 @@ function ProgramCard({ enrollment }: { enrollment: LearningProgramEnrollment }) 
             className="flex items-center justify-between rounded-xl border border-m3-outline-variant p-4 hover:bg-m3-surface-container"
           >
             <div>
-              <p className="text-sm font-semibold text-m3-on-surface">{t("my_learning_programs.explore_paths.title")}</p>
+              <p className="text-sm font-semibold text-m3-on-surface">
+                {t("my_learning_programs.explore_paths.title")}
+              </p>
               <p className="mt-0.5 text-xs text-m3-on-surface-variant">
                 {t("my_learning_programs.explore_paths.description")}
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-m3-primary" />
           </Link>
-        )
-      )}
+        ))}
 
       {/* Decided requests — including rejections with the dean's reason.
           Rendered regardless of enrolment status: a student whose program has
           since completed should still be able to read why a past request was
           refused. */}
-      <ChangeRequestHistory
-        history={enrollment.change_request_history ?? []}
-      />
+      <ChangeRequestHistory history={enrollment.change_request_history ?? []} />
 
-      {enrollment.attempts.length > 1 && (
-        <div className="space-y-2">
-          <p className="flex items-center gap-2 text-sm font-semibold">
-            <History className="h-4 w-4" /> {t("my_learning_programs.transition_history")}
-          </p>
-          {enrollment.attempts
-            .filter((attempt) => attempt.status !== "active")
-            .map((attempt) => {
-              const path = enrollment.paths.find((item) => item.career_path_id === attempt.career_path_id);
-              const percent = attempt.exit_snapshot?.overall_percent;
-              return (
-                <div key={attempt.id} className="flex justify-between rounded-lg bg-m3-surface-container px-3 py-2 text-sm">
-                  <span>{path?.name ?? attempt.career_path_id}</span>
-                  <span className="text-m3-on-surface-variant">
-                    {[
-                      t("my_learning_programs.switched_away"),
-                      typeof percent === "number"
-                        ? t("my_learning_programs.percent_done", { percent: Math.round(percent) })
-                        : null,
-                      t("my_learning_programs.transition_started_at", {
-                        value: formatDateTime(attempt.selected_at),
-                      }),
-                      attempt.ended_at
-                        ? t("my_learning_programs.transition_ended_at", {
-                            value: formatDateTime(attempt.ended_at),
-                          })
-                        : null,
-                    ].filter(Boolean).join(" · ")}
-                  </span>
-                </div>
-              );
-            })}
-        </div>
-      )}
+      <TransitionHistory enrollment={enrollment} />
     </article>
   );
 }
@@ -193,9 +273,16 @@ export default function LearningProgramsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
-      <PageHeader title={t("my_learning_programs.title")} subtitle={t("my_learning_programs.subtitle")} />
+      <PageHeader
+        title={t("my_learning_programs.title")}
+        subtitle={t("my_learning_programs.subtitle")}
+      />
       {programs.data?.length ? (
-        <div className="space-y-4">{programs.data.map((item) => <ProgramCard key={item.id} enrollment={item} />)}</div>
+        <div className="space-y-4">
+          {programs.data.map((item) => (
+            <ProgramCard key={item.id} enrollment={item} />
+          ))}
+        </div>
       ) : (
         <EmptyState
           icon={BookOpen}

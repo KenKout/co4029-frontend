@@ -61,6 +61,9 @@ export interface ProgramPathAttempt {
   selected_at: string;
   ended_at: string | null;
   exit_snapshot: Record<string, unknown> | null;
+  progress_percent: number;
+  completed_courses: number;
+  total_courses: number;
 }
 
 export interface LearningProgramEnrollment {
@@ -76,6 +79,8 @@ export interface LearningProgramEnrollment {
   program_version_no: number;
   max_path_switches: number;
   approved_switch_count: number;
+  max_career_paths: number;
+  selected_path_count: number;
   current_progress_percent: number;
   current_completed_courses: number;
   current_total_courses: number;

@@ -3554,40 +3554,222 @@
   "management_learning_program_detail": {
     "back": "Chương trình học",
     "not_found": "Không tìm thấy chương trình học.",
-    "tabs": { "general": "Thông tin & lộ trình", "roster": "Sinh viên", "requests": "Yêu cầu đổi lộ trình", "history": "Lịch sử", "aria": "Các mục của chương trình học" },
-    "status": { "draft": "Bản nháp", "published": "Đã xuất bản", "archived": "Đã lưu trữ" },
-    "actions": { "publish": "Xuất bản", "archive": "Lưu trữ", "save": "Lưu thay đổi", "create_version": "Phiên bản mới", "create_path": "Tạo lộ trình mới", "add_path": "Thêm lộ trình", "enroll_students": "Ghi danh sinh viên", "import_csv": "Nhập CSV", "cancel": "Hủy", "close": "Đóng", "approve": "Phê duyệt", "reject": "Từ chối", "mark_in_progress": "Bắt đầu xem xét", "marking": "Đang cập nhật…", "rejecting": "Đang từ chối…", "reject_request": "Từ chối yêu cầu" },
-    "confirm": { "publish_title": "Xuất bản phiên bản chương trình này?", "publish_description": "Sau khi xuất bản, phiên bản này sẽ được đóng băng cho các lượt ghi danh mới.", "archive_title": "Lưu trữ chương trình học này?", "archive_description": "Các lượt ghi danh hiện tại vẫn tiếp tục, nhưng hệ thống sẽ chặn ghi danh mới.", "approve_title": "Phê duyệt yêu cầu đổi lộ trình?", "approve_description": "Tiến độ lộ trình hiện tại được chụp lại và sinh viên được chuyển sang lộ trình đích.", "new_version_title": "Tạo phiên bản chương trình mới?", "new_version_description": "Các lộ trình và cấu hình từ phiên bản đã xuất bản mới nhất sẽ được sao chép sang bản nháp có thể chỉnh sửa.", "remove_path_title": "Xóa {{name}} khỏi bản nháp này?", "remove_path_description": "Chỉ bản nháp chương trình hiện tại thay đổi. Các phiên bản đã xuất bản và lượt ghi danh hiện có vẫn giữ lộ trình đã ghim.", "remove_path": "Xóa lộ trình" },
-    "toast": { "action_failed": "Thao tác thất bại", "published": "Đã xuất bản chương trình", "archived": "Đã lưu trữ chương trình", "version_created": "Đã tạo phiên bản nháp", "path_removed": "Đã xóa lộ trình khỏi bản nháp", "path_remove_failed": "Không thể xóa lộ trình", "paths_added": "Đã thêm lộ trình", "paths_add_failed": "Không thể thêm lộ trình", "students_enrolled": "Đã ghi danh sinh viên", "students_enroll_failed": "Không thể ghi danh sinh viên", "details_saved": "Đã lưu thông tin chương trình", "save_failed": "Không thể lưu", "approved": "Đã phê duyệt đổi lộ trình", "in_progress": "Đã bắt đầu xem xét — sinh viên đã được thông báo", "in_progress_failed": "Không thể cập nhật yêu cầu", "rejected": "Đã từ chối đổi lộ trình — sinh viên đã được thông báo", "reject_failed": "Không thể từ chối yêu cầu" },
+    "tabs": {
+      "general": "Thông tin & lộ trình",
+      "roster": "Sinh viên",
+      "requests": "Yêu cầu đổi lộ trình",
+      "history": "Lịch sử",
+      "aria": "Các mục của chương trình học"
+    },
+    "status": {
+      "draft": "Bản nháp",
+      "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ"
+    },
+    "actions": {
+      "publish": "Xuất bản",
+      "archive": "Lưu trữ",
+      "save": "Lưu thay đổi",
+      "create_version": "Phiên bản mới",
+      "create_path": "Tạo lộ trình mới",
+      "add_path": "Thêm lộ trình",
+      "enroll_students": "Ghi danh sinh viên",
+      "import_csv": "Nhập CSV",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "approve": "Phê duyệt",
+      "reject": "Từ chối",
+      "mark_in_progress": "Bắt đầu xem xét",
+      "marking": "Đang cập nhật…",
+      "rejecting": "Đang từ chối…",
+      "reject_request": "Từ chối yêu cầu"
+    },
+    "confirm": {
+      "publish_title": "Xuất bản phiên bản chương trình này?",
+      "publish_description": "Sau khi xuất bản, phiên bản này sẽ được đóng băng cho các lượt ghi danh mới.",
+      "archive_title": "Lưu trữ chương trình học này?",
+      "archive_description": "Các lượt ghi danh hiện tại vẫn tiếp tục, nhưng hệ thống sẽ chặn ghi danh mới.",
+      "approve_title": "Phê duyệt yêu cầu đổi lộ trình?",
+      "approve_description": "Tiến độ lộ trình hiện tại được chụp lại và sinh viên được chuyển sang lộ trình đích.",
+      "new_version_title": "Tạo phiên bản chương trình mới?",
+      "new_version_description": "Các lộ trình và cấu hình từ phiên bản đã xuất bản mới nhất sẽ được sao chép sang bản nháp có thể chỉnh sửa.",
+      "remove_path_title": "Xóa {{name}} khỏi bản nháp này?",
+      "remove_path_description": "Chỉ bản nháp chương trình hiện tại thay đổi. Các phiên bản đã xuất bản và lượt ghi danh hiện có vẫn giữ lộ trình đã ghim.",
+      "remove_path": "Xóa lộ trình"
+    },
+    "toast": {
+      "action_failed": "Thao tác thất bại",
+      "published": "Đã xuất bản chương trình",
+      "archived": "Đã lưu trữ chương trình",
+      "version_created": "Đã tạo phiên bản nháp",
+      "path_removed": "Đã xóa lộ trình khỏi bản nháp",
+      "path_remove_failed": "Không thể xóa lộ trình",
+      "paths_added": "Đã thêm lộ trình",
+      "paths_add_failed": "Không thể thêm lộ trình",
+      "students_enrolled": "Đã ghi danh sinh viên",
+      "students_enroll_failed": "Không thể ghi danh sinh viên",
+      "details_saved": "Đã lưu thông tin chương trình",
+      "save_failed": "Không thể lưu",
+      "approved": "Đã phê duyệt đổi lộ trình",
+      "in_progress": "Đã bắt đầu xem xét — sinh viên đã được thông báo",
+      "in_progress_failed": "Không thể cập nhật yêu cầu",
+      "rejected": "Đã từ chối đổi lộ trình — sinh viên đã được thông báo",
+      "reject_failed": "Không thể từ chối yêu cầu"
+    },
     "readonly_version": "Đang xem phiên bản chương trình v{{version}} đã đóng băng. Chọn bản nháp/phiên bản hiện tại để chỉnh sửa.",
-    "general": { "title": "Thông tin chung", "name": "Tên chương trình", "slug": "Slug", "description": "Mô tả", "switches": "Số lần được đổi lộ trình", "switches_hint": "Số lần sinh viên có thể yêu cầu đổi lộ trình trong chương trình này; mỗi lần cần Trưởng khoa phê duyệt (0 nghĩa là khóa lựa chọn). Áp dụng cho chương trình v{{version}}; sinh viên đã ghi danh giữ giới hạn của phiên bản lúc ghi danh.", "switches_error": "Nhập số nguyên từ 0 đến 100." },
-    "paths": { "title": "Lộ trình nghề nghiệp", "description": "Các phiên bản lộ trình đã xuất bản được ghim trong chương trình v{{version}}.", "version_status": "Lộ trình v{{version}} · {{status}}", "remove_aria": "Xóa {{name}}", "picker_title": "Thêm lộ trình", "picker_search": "Tìm theo tên hoặc slug", "picker_empty": "Không tìm thấy lộ trình đã xuất bản", "picker_added": "Đã thêm" },
-    "roster": { "student": "Sinh viên", "chosen_path": "Lộ trình đã chọn", "no_path": "Chưa chọn lộ trình", "status": "Trạng thái", "progress": "Tiến độ", "search": "Tìm theo tên, email hoặc lộ trình…", "empty": "Chưa có sinh viên được ghi danh", "empty_filtered": "Không có sinh viên phù hợp" },
-    "requests": { "title": "Yêu cầu đổi lộ trình", "description": "Bắt đầu xem xét để thông báo cho sinh viên rằng hồ sơ đang được kiểm tra. Khi từ chối, cần cung cấp lý do và sinh viên sẽ nhận được lý do đó.", "awaiting": "Chờ xem xét", "in_progress": "Đang xem xét", "requested_at": "Đã gửi {{value}}", "review_started_at": "Bắt đầu xem xét {{value}}", "empty": "Không có yêu cầu đang mở.", "unknown_student": "Sinh viên không xác định" },
+    "general": {
+      "title": "Thông tin chung",
+      "name": "Tên chương trình",
+      "slug": "Slug",
+      "description": "Mô tả",
+      "switches": "Số lần được đổi lộ trình",
+      "switches_hint": "Số lần sinh viên có thể yêu cầu đổi lộ trình trong chương trình này; mỗi lần cần Trưởng khoa phê duyệt (0 nghĩa là khóa lựa chọn). Áp dụng cho chương trình v{{version}}; sinh viên đã ghi danh giữ giới hạn của phiên bản lúc ghi danh.",
+      "switches_error": "Nhập số nguyên từ 0 đến 100."
+    },
+    "paths": {
+      "title": "Lộ trình nghề nghiệp",
+      "description": "Các phiên bản lộ trình đã xuất bản được ghim trong chương trình v{{version}}.",
+      "version_status": "Lộ trình v{{version}} · {{status}}",
+      "remove_aria": "Xóa {{name}}",
+      "picker_title": "Thêm lộ trình",
+      "picker_search": "Tìm theo tên hoặc slug",
+      "picker_empty": "Không tìm thấy lộ trình đã xuất bản",
+      "picker_added": "Đã thêm"
+    },
+    "roster": {
+      "student": "Sinh viên",
+      "chosen_path": "Lộ trình đã chọn",
+      "no_path": "Chưa chọn lộ trình",
+      "status": "Trạng thái",
+      "progress": "Tiến độ",
+      "search": "Tìm theo tên, email hoặc lộ trình…",
+      "empty": "Chưa có sinh viên được ghi danh",
+      "empty_filtered": "Không có sinh viên phù hợp"
+    },
+    "requests": {
+      "title": "Yêu cầu đổi lộ trình",
+      "description": "Bắt đầu xem xét để thông báo cho sinh viên rằng hồ sơ đang được kiểm tra. Khi từ chối, cần cung cấp lý do và sinh viên sẽ nhận được lý do đó.",
+      "awaiting": "Chờ xem xét",
+      "in_progress": "Đang xem xét",
+      "requested_at": "Đã gửi {{value}}",
+      "review_started_at": "Bắt đầu xem xét {{value}}",
+      "empty": "Không có yêu cầu đang mở.",
+      "unknown_student": "Sinh viên không xác định"
+    },
     "reject": {
-      "title": "Từ chối yêu cầu đổi lộ trình của {{name}}?", "description": "Chọn nhóm lý do. Nếu chọn Khác, hãy nhập lý do cụ thể ở trường riêng. Ghi chú luôn không bắt buộc.", "reason": "Nhóm lý do", "other_reason": "Lý do", "note": "Ghi chú cho sinh viên", "optional": "(không bắt buộc)", "other_reason_placeholder": "Nhập lý do chưa có trong các nhóm phía trên…", "optional_placeholder": "Thêm thông tin sinh viên cần biết…",
+      "title": "Từ chối yêu cầu đổi lộ trình của {{name}}?",
+      "description": "Chọn nhóm lý do. Nếu chọn Khác, hãy nhập lý do cụ thể ở trường riêng. Ghi chú luôn không bắt buộc.",
+      "reason": "Nhóm lý do",
+      "other_reason": "Lý do",
+      "note": "Ghi chú cho sinh viên",
+      "optional": "(không bắt buộc)",
+      "other_reason_placeholder": "Nhập lý do chưa có trong các nhóm phía trên…",
+      "optional_placeholder": "Thêm thông tin sinh viên cần biết…",
       "reasons": {
-        "insufficient_justification": { "label": "Lý do chưa đủ thuyết phục", "hint": "Lý do được cung cấp chưa đủ để hỗ trợ việc đổi lộ trình." },
-        "progress_loss_too_high": { "label": "Mất quá nhiều tiến độ", "hint": "Chuyển lúc này sẽ làm mất đáng kể kết quả đã hoàn thành." },
-        "target_path_not_suitable": { "label": "Lộ trình đích chưa phù hợp", "hint": "Lộ trình yêu cầu không phù hợp với hồ sơ của sinh viên." },
-        "preserve_remaining_switch": { "label": "Giữ lượt đổi còn lại cho lần sau", "hint": "Nên giữ giới hạn đổi còn lại của sinh viên cho trường hợp cần thiết hơn." },
-        "advising_required": { "label": "Cần tư vấn trước", "hint": "Cần trao đổi với sinh viên trước khi chuyển lộ trình." },
-        "documentation_missing": { "label": "Thiếu thông tin hỗ trợ", "hint": "Yêu cầu chưa cung cấp đủ bằng chứng cần thiết." },
-        "other": { "label": "Khác", "hint": "Nhập lý do cụ thể vào trường bắt buộc bên dưới." }
+        "insufficient_justification": {
+          "label": "Lý do chưa đủ thuyết phục",
+          "hint": "Lý do được cung cấp chưa đủ để hỗ trợ việc đổi lộ trình."
+        },
+        "progress_loss_too_high": {
+          "label": "Mất quá nhiều tiến độ",
+          "hint": "Chuyển lúc này sẽ làm mất đáng kể kết quả đã hoàn thành."
+        },
+        "target_path_not_suitable": {
+          "label": "Lộ trình đích chưa phù hợp",
+          "hint": "Lộ trình yêu cầu không phù hợp với hồ sơ của sinh viên."
+        },
+        "preserve_remaining_switch": {
+          "label": "Giữ lượt đổi còn lại cho lần sau",
+          "hint": "Nên giữ giới hạn đổi còn lại của sinh viên cho trường hợp cần thiết hơn."
+        },
+        "advising_required": {
+          "label": "Cần tư vấn trước",
+          "hint": "Cần trao đổi với sinh viên trước khi chuyển lộ trình."
+        },
+        "documentation_missing": {
+          "label": "Thiếu thông tin hỗ trợ",
+          "hint": "Yêu cầu chưa cung cấp đủ bằng chứng cần thiết."
+        },
+        "other": {
+          "label": "Khác",
+          "hint": "Nhập lý do cụ thể vào trường bắt buộc bên dưới."
+        }
       }
     },
     "history": {
-      "title": "Lịch sử đổi lộ trình", "description": "Xem lại kết quả xử lý, lý do của sinh viên và lộ trình chuyển đổi chính xác. Các yêu cầu đang mở nằm trong tab Yêu cầu đổi lộ trình.", "students": "Sinh viên", "student_filter": "Lọc theo sinh viên", "student_search": "Tìm và chọn sinh viên…", "student_empty": "Không có sinh viên có lịch sử đổi lộ trình", "remove_filter": "Bỏ {{name}} khỏi bộ lọc", "search": "Tìm lộ trình hoặc lý do…", "time_filter": "Lọc theo thời điểm xử lý", "student": "Sinh viên", "transition": "Chuyển đổi lộ trình", "result": "Kết quả", "all_results": "Tất cả kết quả", "time": "Thời điểm", "reason": "Lý do", "decision_reason": "Lý do quyết định", "decision_note": "Ghi chú của trưởng khoa:", "all_reasons": "Tất cả lý do", "student_reason": "Sinh viên:", "decision": "Quyết định:", "requested_at": "Đã gửi {{value}}", "unavailable_path": "Lộ trình không còn khả dụng", "unknown_student": "Sinh viên không xác định", "empty": "Chưa có yêu cầu đổi lộ trình đã hoàn tất", "empty_filtered": "Không có lịch sử phù hợp với bộ lọc",
-      "results": { "approved": "Đã phê duyệt", "rejected": "Đã từ chối", "cancelled": "Sinh viên đã hủy", "invalidated": "Đã vô hiệu hóa" },
-      "reasons": { "insufficient_justification": "Lý do chưa đủ thuyết phục", "progress_loss_too_high": "Mất quá nhiều tiến độ", "target_path_not_suitable": "Lộ trình đích chưa phù hợp", "preserve_remaining_switch": "Giữ lượt đổi còn lại", "advising_required": "Cần tư vấn", "documentation_missing": "Thiếu thông tin hỗ trợ", "other": "Lý do khác" }
+      "title": "Lịch sử đổi lộ trình",
+      "description": "Xem lại kết quả xử lý, lý do của sinh viên và lộ trình chuyển đổi chính xác. Các yêu cầu đang mở nằm trong tab Yêu cầu đổi lộ trình.",
+      "students": "Sinh viên",
+      "student_filter": "Lọc theo sinh viên",
+      "student_search": "Tìm và chọn sinh viên…",
+      "student_empty": "Không có sinh viên có lịch sử đổi lộ trình",
+      "remove_filter": "Bỏ {{name}} khỏi bộ lọc",
+      "search": "Tìm lộ trình hoặc lý do…",
+      "time_filter": "Lọc theo thời điểm xử lý",
+      "student": "Sinh viên",
+      "transition": "Chuyển đổi lộ trình",
+      "result": "Kết quả",
+      "all_results": "Tất cả kết quả",
+      "time": "Thời điểm",
+      "reason": "Lý do",
+      "decision_reason": "Lý do quyết định",
+      "decision_note": "Ghi chú của trưởng khoa:",
+      "all_reasons": "Tất cả lý do",
+      "student_reason": "Sinh viên:",
+      "decision": "Quyết định:",
+      "requested_at": "Đã gửi {{value}}",
+      "unavailable_path": "Lộ trình không còn khả dụng",
+      "unknown_student": "Sinh viên không xác định",
+      "empty": "Chưa có yêu cầu đổi lộ trình đã hoàn tất",
+      "empty_filtered": "Không có lịch sử phù hợp với bộ lọc",
+      "results": {
+        "approved": "Đã phê duyệt",
+        "rejected": "Đã từ chối",
+        "cancelled": "Sinh viên đã hủy",
+        "invalidated": "Đã vô hiệu hóa"
+      },
+      "reasons": {
+        "insufficient_justification": "Lý do chưa đủ thuyết phục",
+        "progress_loss_too_high": "Mất quá nhiều tiến độ",
+        "target_path_not_suitable": "Lộ trình đích chưa phù hợp",
+        "preserve_remaining_switch": "Giữ lượt đổi còn lại",
+        "advising_required": "Cần tư vấn",
+        "documentation_missing": "Thiếu thông tin hỗ trợ",
+        "other": "Lý do khác"
+      }
     },
-    "versions": { "title": "Phiên bản", "description": "Lịch sử đã xuất bản chỉ được xem.", "not_published": "Chưa xuất bản", "published_by": "bởi {{name}}" },
-    "student_picker": { "title": "Ghi danh sinh viên", "search": "Tìm sinh viên theo tên hoặc email", "empty": "Không tìm thấy sinh viên", "added": "Đã ghi danh" },
-    "import": { "title": "Nhập sinh viên từ CSV", "finished": "Đã nhập xong", "description": "Mỗi dòng là một sinh viên. Cột bắt buộc: email. Không bắt buộc: given_name, family_name, display_name.", "finished_description": "Các dòng thất bại được liệt kê bên dưới cùng lý do.", "importing": "Đang nhập…", "dropzone": "Thả file danh sách CSV vào đây", "csv_only": "Chỉ nhận CSV", "enrolled": "Đã ghi danh", "new_accounts": "Tài khoản mới", "already_in": "Đã có trong chương trình", "failed_rows": "Không thể nhập {{count}} dòng", "failed_rows_other": "Không thể nhập {{count}} dòng", "row": "Dòng {{number}}", "all_imported": "Đã nhập tất cả các dòng." }
+    "versions": {
+      "title": "Phiên bản",
+      "description": "Lịch sử đã xuất bản chỉ được xem.",
+      "not_published": "Chưa xuất bản",
+      "published_by": "bởi {{name}}"
+    },
+    "student_picker": {
+      "title": "Ghi danh sinh viên",
+      "search": "Tìm sinh viên theo tên hoặc email",
+      "empty": "Không tìm thấy sinh viên",
+      "added": "Đã ghi danh"
+    },
+    "import": {
+      "title": "Nhập sinh viên từ CSV",
+      "finished": "Đã nhập xong",
+      "description": "Mỗi dòng là một sinh viên. Cột bắt buộc: email. Không bắt buộc: given_name, family_name, display_name.",
+      "finished_description": "Các dòng thất bại được liệt kê bên dưới cùng lý do.",
+      "importing": "Đang nhập…",
+      "dropzone": "Thả file danh sách CSV vào đây",
+      "csv_only": "Chỉ nhận CSV",
+      "enrolled": "Đã ghi danh",
+      "new_accounts": "Tài khoản mới",
+      "already_in": "Đã có trong chương trình",
+      "failed_rows": "Không thể nhập {{count}} dòng",
+      "failed_rows_other": "Không thể nhập {{count}} dòng",
+      "row": "Dòng {{number}}",
+      "all_imported": "Đã nhập tất cả các dòng."
+    }
   },
   "my_learning_programs": {
     "title": "Chương trình học của tôi",
-    "subtitle": "Chọn và theo học một lộ trình nghề nghiệp trong mỗi chương trình.",
+    "subtitle": "Chọn và hoàn thành một hoặc nhiều lộ trình nghề nghiệp trong mỗi chương trình.",
     "status": {
       "awaiting_path": "Chờ chọn lộ trình",
       "active": "Đang học",
@@ -3595,17 +3777,18 @@
       "withdrawn": "Đã rút",
       "cancelled": "Đã hủy"
     },
-    "program_summary": "Phiên bản chương trình {{version}} · đã dùng {{used}}/{{max}} lần đổi lộ trình",
-    "current_path": "Lộ trình hiện tại",
+    "program_summary": "Phiên bản {{version}} · đã chọn {{selected}}/{{pathMax}} lộ trình · đã dùng {{used}}/{{max}} lần đổi",
+    "selected_paths": "Các lộ trình đã chọn",
+    "path_completed": "Đã hoàn thành lộ trình",
     "course_progress": "{{completed}}/{{total}} khóa học",
-    "completed_message": "Đã hoàn thành chương trình. Không thể đổi lộ trình nữa.",
+    "completed_message": "Đã hoàn thành chương trình và toàn bộ lộ trình đã chọn. Không thể chọn thêm lộ trình.",
     "choose_path": {
-      "title": "Chọn một lộ trình nghề nghiệp",
-      "description": "Mở lộ trình để xem toàn bộ roadmap trước khi chọn — nếu đổi sau đó, bạn cần được Trưởng khoa phê duyệt."
+      "title": "Chọn lộ trình nghề nghiệp",
+      "description": "Mở lộ trình để xem roadmap. Có thể thêm lộ trình không cần phê duyệt khi vẫn còn chỗ."
     },
     "explore_paths": {
       "title": "Khám phá các lộ trình khác",
-      "description": "Xem tất cả lộ trình nghề nghiệp — việc chuyển đổi cần được Trưởng khoa phê duyệt."
+      "description": "Thêm lộ trình khi còn chỗ, hoặc gửi yêu cầu thay thế cần Trưởng khoa phê duyệt khi đã đủ giới hạn."
     },
     "transition_history": "Lịch sử chuyển lộ trình",
     "switched_away": "Đã chuyển khỏi lộ trình",
