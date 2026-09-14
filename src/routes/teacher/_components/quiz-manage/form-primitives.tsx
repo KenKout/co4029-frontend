@@ -24,20 +24,63 @@ export function SettingsSection({
   defaultOpen?: boolean;
   collapsible?: boolean;
 }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+
+  if (!collapsible) {
+    return (
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <h3 className="font-headline text-base font-extrabold text-m3-on-surface">
+            {title}
+          </h3>
+          {description ? (
+            <p className="text-xs text-m3-on-surface-variant">{description}</p>
+          ) : null}
+        </div>
+        <div className="space-y-4">{children}</div>
+      </section>
+    );
+  }
+
   return (
-    <Collapsible.Root defaultOpen={defaultOpen} render={<section />} className="space-y-4">
-      <div className="space-y-1">
-        <h3 className="font-headline font-extrabold text-base text-m3-on-surface">
-          {collapsible ? <Collapsible.Trigger render={<Button type="button" variant="ghost" />} className="group h-auto w-full min-w-0 justify-between gap-3 whitespace-normal p-0 text-left font-inherit hover:bg-transparent">
-            <span>{title}</span>
-            <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 transition-transform group-data-[panel-open]:rotate-180" />
-          </Collapsible.Trigger> : title}
-        </h3>
-        {description && (
-          <p className="text-xs text-m3-on-surface-variant">{description}</p>
-        )}
-      </div>
-      {collapsible ? <Collapsible.Panel keepMounted className="space-y-4">{children}</Collapsible.Panel> : <div className="space-y-4">{children}</div>}
+    <Collapsible.Root
+      open={open}
+      onOpenChange={setOpen}
+      render={<section />}
+      className="block"
+    >
+      <Collapsible.Trigger
+        aria-label={title}
+        className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block font-headline text-base font-extrabold text-m3-on-surface">
+            {title}
+          </span>
+          {description ? (
+            <span className="block text-xs text-m3-on-surface-variant">
+              {description}
+            </span>
+          ) : null}
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            "h-5 w-5 shrink-0 text-m3-on-surface-variant transition-transform duration-300",
+            open && "rotate-180",
+          )}
+        />
+      </Collapsible.Trigger>
+      {/* Feedback and override editors own unsaved local drafts. Keep them
+          mounted so visually collapsing a section cannot reset work. */}
+      <Collapsible.Panel
+        keepMounted
+        className="h-[var(--collapsible-panel-height)] overflow-hidden transition-[height] duration-300 ease-out data-[ending-style]:h-0 data-[starting-style]:h-0"
+      >
+        <div className="mt-5 space-y-4 border-t border-m3-outline-variant/20 pt-5">
+          {children}
+        </div>
+      </Collapsible.Panel>
     </Collapsible.Root>
   );
 }
