@@ -3587,7 +3587,7 @@
     },
     "confirm": {
       "publish_title": "Xuất bản phiên bản chương trình này?",
-      "publish_description": "Sau khi xuất bản, phiên bản này sẽ được đóng băng cho các lượt ghi danh mới.",
+      "publish_description": "Sau khi xuất bản, phiên bản này sẽ được đóng băng. Sinh viên mới sẽ tự động vào lộ trình mặc định.",
       "archive_title": "Lưu trữ chương trình học này?",
       "archive_description": "Các lượt ghi danh hiện tại vẫn tiếp tục, nhưng hệ thống sẽ chặn ghi danh mới.",
       "approve_title": "Phê duyệt yêu cầu đổi lộ trình?",
@@ -3607,6 +3607,8 @@
       "path_remove_failed": "Không thể xóa lộ trình",
       "paths_added": "Đã thêm lộ trình",
       "paths_add_failed": "Không thể thêm lộ trình",
+      "default_path_saved": "Đã cập nhật lộ trình mặc định",
+      "default_path_failed": "Không thể cập nhật lộ trình mặc định",
       "students_enrolled": "Đã ghi danh sinh viên",
       "students_enroll_failed": "Không thể ghi danh sinh viên",
       "details_saved": "Đã lưu thông tin chương trình",
@@ -3630,13 +3632,17 @@
     },
     "paths": {
       "title": "Lộ trình nghề nghiệp",
-      "description": "Các phiên bản lộ trình đã xuất bản được ghim trong chương trình v{{version}}.",
+      "description": "Các phiên bản lộ trình đã xuất bản được ghim trong chương trình v{{version}}. Sinh viên mới tự động bắt đầu ở lộ trình mặc định.",
       "version_status": "Lộ trình v{{version}} · {{status}}",
       "remove_aria": "Xóa {{name}}",
       "picker_title": "Thêm lộ trình",
       "picker_search": "Tìm theo tên hoặc slug",
       "picker_empty": "Không tìm thấy lộ trình đã xuất bản",
-      "picker_added": "Đã thêm"
+      "picker_added": "Đã thêm",
+      "default_badge": "Mặc định",
+      "set_default": "Đặt làm mặc định",
+      "default_remove_hint": "Hãy chọn lộ trình mặc định khác trước khi xóa",
+      "default_required": "Hãy chọn một lộ trình nghề nghiệp mặc định trước khi xuất bản phiên bản này."
     },
     "roster": {
       "student": "Sinh viên",

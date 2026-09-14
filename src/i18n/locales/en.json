@@ -3757,7 +3757,7 @@
     },
     "confirm": {
       "publish_title": "Publish this program version?",
-      "publish_description": "Publishing freezes this version for new enrollments.",
+      "publish_description": "Publishing freezes this version. New students will be enrolled into its default Career Path automatically.",
       "archive_title": "Archive this Learning Program?",
       "archive_description": "Existing enrollments continue, but new enrollments will be blocked.",
       "approve_title": "Approve path change?",
@@ -3777,6 +3777,8 @@
       "path_remove_failed": "Could not remove the Career Path",
       "paths_added": "Career Paths added",
       "paths_add_failed": "Could not add paths",
+      "default_path_saved": "Default Career Path updated",
+      "default_path_failed": "Could not update the default Career Path",
       "students_enrolled": "Students enrolled",
       "students_enroll_failed": "Could not enroll students",
       "details_saved": "Program details saved",
@@ -3800,13 +3802,17 @@
     },
     "paths": {
       "title": "Career Paths",
-      "description": "Published path versions pinned in program v{{version}}.",
+      "description": "Published path versions pinned in program v{{version}}. New students start in the default path automatically.",
       "version_status": "Career Path v{{version}} · {{status}}",
       "remove_aria": "Remove {{name}}",
       "picker_title": "Add Career Paths",
       "picker_search": "Search by name or slug",
       "picker_empty": "No published Career Path found",
-      "picker_added": "Added"
+      "picker_added": "Added",
+      "default_badge": "Default",
+      "set_default": "Set as default",
+      "default_remove_hint": "Choose another default before removing this path",
+      "default_required": "Choose one default Career Path before publishing this version."
     },
     "roster": {
       "student": "Student",

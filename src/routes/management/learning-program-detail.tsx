@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { Archive, ArrowLeft, GitBranch, History, Plus, Route, Trash2, Users } from "lucide-react";
+import { Archive, ArrowLeft, GitBranch, History, Plus, Route, Star, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
 import { Input } from "@/components/ui/input";
@@ -122,6 +123,7 @@ export default function ManagementLearningProgramDetailPage() {
     (request) => request.status !== "pending" && request.status !== "in_progress",
   );
   const currentPaths = data.paths;
+  const hasDefaultPath = currentPaths.some((path) => path.is_default);
 
   async function removePath(pathId: string, pathName: string) {
     const accepted = await confirm({
@@ -145,13 +147,22 @@ export default function ManagementLearningProgramDetailPage() {
     }
   }
 
+  async function setDefaultPath(pathId: string) {
+    try {
+      await update.mutateAsync({ default_career_path_id: pathId });
+      toast.success(t("management_learning_program_detail.toast.default_path_saved"));
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.default_path_failed")));
+    }
+  }
+
   return (
     <div className="space-y-6 pb-16">
       {dialog}
       <Link to="/management/learning-programs" className="inline-flex items-center gap-2 text-sm font-semibold text-m3-primary"><ArrowLeft className="h-4 w-4" /> {t("management_learning_program_detail.back")}</Link>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div><div className="flex flex-wrap items-center gap-2"><h1 className="font-headline text-3xl font-black">{data.name}</h1><span className="rounded-full bg-m3-surface-container px-3 py-1 text-xs font-semibold">{t(`management_learning_program_detail.status.${data.status}`)}</span></div><p className="mt-1 font-mono text-xs text-m3-on-surface-variant">{data.slug}</p></div>
-        {!readOnly && <div className="flex gap-2">{isDraft && <Button onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.publish_title"), t("management_learning_program_detail.confirm.publish_description"), t("management_learning_program_detail.actions.publish"), () => publish.mutateAsync(), t("management_learning_program_detail.toast.published"))}>{t("management_learning_program_detail.actions.publish")}</Button>}{data.status !== "archived" && <Button variant="outline" className="gap-2" onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.archive_title"), t("management_learning_program_detail.confirm.archive_description"), t("management_learning_program_detail.actions.archive"), () => archive.mutateAsync(), t("management_learning_program_detail.toast.archived"))}><Archive className="h-4 w-4" /> {t("management_learning_program_detail.actions.archive")}</Button>}</div>}
+        {!readOnly && <div className="flex gap-2">{isDraft && <Button disabled={!hasDefaultPath} title={!hasDefaultPath ? t("management_learning_program_detail.paths.default_required") : undefined} onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.publish_title"), t("management_learning_program_detail.confirm.publish_description"), t("management_learning_program_detail.actions.publish"), () => publish.mutateAsync(), t("management_learning_program_detail.toast.published"))}>{t("management_learning_program_detail.actions.publish")}</Button>}{data.status !== "archived" && <Button variant="outline" className="gap-2" onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.archive_title"), t("management_learning_program_detail.confirm.archive_description"), t("management_learning_program_detail.actions.archive"), () => archive.mutateAsync(), t("management_learning_program_detail.toast.archived"))}><Archive className="h-4 w-4" /> {t("management_learning_program_detail.actions.archive")}</Button>}</div>}
       </header>
       {readOnly && <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">{t("management_learning_program_detail.readonly_version", { version: data.current_version.version_no })}</div>}
 
@@ -191,6 +202,11 @@ export default function ManagementLearningProgramDetailPage() {
                     </Button>
                   </div>
                 )}</div>
+                {isDraft && data.paths.length > 0 && !hasDefaultPath && (
+                  <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    {t("management_learning_program_detail.paths.default_required")}
+                  </p>
+                )}
                 <div className="space-y-2">
                   {data.paths.map((path) => (
                     <div
@@ -206,6 +222,7 @@ export default function ManagementLearningProgramDetailPage() {
                           <p className="truncate font-semibold">
                             {path.position}. {path.name}
                           </p>
+                          {path.is_default && <Badge className="mt-1"><Star className="h-3 w-3" /> {t("management_learning_program_detail.paths.default_badge")}</Badge>}
                           <p className="mt-1 text-xs text-m3-on-surface-variant">
                             {t("management_learning_program_detail.paths.version_status", {
                               version: path.career_path_version_no,
@@ -216,12 +233,26 @@ export default function ManagementLearningProgramDetailPage() {
                         <ArrowLeft className="h-4 w-4 shrink-0 rotate-180 text-m3-primary" />
                       </Link>
                       {isDraft && (
+                        !path.is_default ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={update.isPending}
+                            onClick={() => void setDefaultPath(path.career_path_id)}
+                          >
+                            <Star className="h-4 w-4" /> {t("management_learning_program_detail.paths.set_default")}
+                          </Button>
+                        ) : null
+                      )}
+                      {isDraft && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           aria-label={t("management_learning_program_detail.paths.remove_aria", { name: path.name })}
-                          disabled={update.isPending}
+                          disabled={update.isPending || path.is_default}
+                          title={path.is_default ? t("management_learning_program_detail.paths.default_remove_hint") : undefined}
                           onClick={() => void removePath(path.career_path_id, path.name)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -266,7 +297,7 @@ export default function ManagementLearningProgramDetailPage() {
         </aside>
       </div>
 
-      {pathPickerOpen && <EntityMultiSelectDialog title={t("management_learning_program_detail.paths.picker_title")} searchPlaceholder={t("management_learning_program_detail.paths.picker_search")} items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { void update.mutateAsync({ career_path_ids: composePathIds(rows.map((row) => row.id)) }).then(() => toast.success(t("management_learning_program_detail.toast.paths_added"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.paths_add_failed")))); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText={t("management_learning_program_detail.paths.picker_empty")} alreadyAddedLabel={t("management_learning_program_detail.paths.picker_added")} />}
+      {pathPickerOpen && <EntityMultiSelectDialog title={t("management_learning_program_detail.paths.picker_title")} searchPlaceholder={t("management_learning_program_detail.paths.picker_search")} items={pathCandidates} alreadySelectedIds={new Set(data.paths.map((path) => path.career_path_id))} isLoading={options.isLoading} query={pathQuery} onQueryChange={setPathQuery} onConfirm={(rows) => { const addedPathIds = rows.map((row) => row.id); const defaultPathId = data.paths.find((path) => path.is_default)?.career_path_id ?? data.paths[0]?.career_path_id ?? addedPathIds[0] ?? null; void update.mutateAsync({ career_path_ids: composePathIds(addedPathIds), default_career_path_id: defaultPathId }).then(() => toast.success(t("management_learning_program_detail.toast.paths_added"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.paths_add_failed")))); setPathPickerOpen(false); }} onClose={() => setPathPickerOpen(false)} emptyText={t("management_learning_program_detail.paths.picker_empty")} alreadyAddedLabel={t("management_learning_program_detail.paths.picker_added")} />}
       {importOpen && <ImportStudentsDialog programId={id} onClose={() => setImportOpen(false)} />}
       {studentPickerOpen && <EntityMultiSelectDialog title={t("management_learning_program_detail.student_picker.title")} searchPlaceholder={t("management_learning_program_detail.student_picker.search")} items={studentCandidates} alreadySelectedIds={new Set((roster.data ?? []).map((row) => row.student_id))} isLoading={users.isLoading} query={studentQuery} onQueryChange={setStudentQuery} onConfirm={(rows) => { void enroll.mutateAsync(rows.map((row) => row.id)).then(() => toast.success(t("management_learning_program_detail.toast.students_enrolled"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.students_enroll_failed")))); setStudentPickerOpen(false); }} onClose={() => setStudentPickerOpen(false)} emptyText={t("management_learning_program_detail.student_picker.empty")} alreadyAddedLabel={t("management_learning_program_detail.student_picker.added")} />}
     </div>

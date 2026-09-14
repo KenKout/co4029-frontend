@@ -20,6 +20,7 @@ export interface LearningProgramPath {
   thumbnail_url: string | null;
   status: "draft" | "published" | "archived";
   position: number;
+  is_default: boolean;
 }
 
 export interface LearningProgramVersion {
@@ -58,6 +59,7 @@ export interface ProgramPathAttempt {
   career_path_version_id: string;
   previous_attempt_id: string | null;
   status: "active" | "completed" | "switched_out" | "cancelled";
+  selection_source: "student" | "program_default" | "path_change";
   selected_at: string;
   ended_at: string | null;
   exit_snapshot: Record<string, unknown> | null;
@@ -101,6 +103,7 @@ export interface LearningProgramCreate {
   description?: string | null;
   max_path_switches?: number;
   career_path_ids: string[];
+  default_career_path_id?: string | null;
 }
 
 export interface LearningProgramOption {

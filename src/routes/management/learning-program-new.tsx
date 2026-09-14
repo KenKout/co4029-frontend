@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Plus, X } from "lucide-react";
+import { Plus, Star, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
@@ -31,6 +32,7 @@ export default function ManagementLearningProgramNewPage() {
   // program created before this field existed silently got 3.
   const [maxPathSwitches, setMaxPathSwitches] = useState("3");
   const [selectedPathIds, setSelectedPathIds] = useState<string[]>([]);
+  const [defaultPathId, setDefaultPathId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -81,6 +83,7 @@ export default function ManagementLearningProgramNewPage() {
         description: description.trim() || null,
         max_path_switches: switches,
         career_path_ids: selectedPathIds,
+        default_career_path_id: defaultPathId,
       });
       toast.success("Learning Program draft created");
       void navigate({ to: "/management/learning-programs/$id", params: { id: program.id }, replace: true });
@@ -118,12 +121,12 @@ export default function ManagementLearningProgramNewPage() {
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
           <section className="space-y-3 border-t border-m3-outline-variant/30 pt-5">
             <div className="flex items-center justify-between gap-3"><div><h2 className="font-headline font-bold">Career Paths</h2><p className="text-xs text-m3-on-surface-variant">Choose by name; exact published versions are pinned on creation.</p></div><Button type="button" variant="outline" className="gap-2" onClick={() => setPickerOpen(true)}><Plus className="h-4 w-4" /> Add paths</Button></div>
-            <div className="space-y-2">{selectedPaths.map((path) => <div key={path.id} className="flex items-center justify-between rounded-lg bg-m3-surface-container p-3"><div><p className="text-sm font-semibold">{path.name}</p><p className="font-mono text-xs text-m3-on-surface-variant">{path.slug}</p></div><Button type="button" variant="ghost" size="icon" aria-label={`Remove ${path.name}`} onClick={() => setSelectedPathIds((ids) => ids.filter((id) => id !== path.id))}><X className="h-4 w-4" /></Button></div>)}</div>
+            <div className="space-y-2">{selectedPaths.map((path) => { const isDefault = path.id === defaultPathId; return <div key={path.id} className="flex items-center justify-between gap-3 rounded-lg bg-m3-surface-container p-3"><div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate text-sm font-semibold">{path.name}</p>{isDefault && <Badge><Star className="h-3 w-3" /> Default</Badge>}</div><p className="font-mono text-xs text-m3-on-surface-variant">{path.slug}</p></div><div className="flex shrink-0 items-center gap-1">{!isDefault && <Button type="button" variant="outline" size="sm" onClick={() => setDefaultPathId(path.id)}>Set as default</Button>}<Button type="button" variant="ghost" size="icon" aria-label={`Remove ${path.name}`} onClick={() => { const remaining = selectedPathIds.filter((id) => id !== path.id); setSelectedPathIds(remaining); if (isDefault) setDefaultPathId(remaining[0] ?? null); }}><X className="h-4 w-4" /></Button></div></div>; })}</div>
           </section>
         </main>
         <aside className="rounded-xl border border-dashed border-m3-outline-variant p-5 text-sm text-m3-on-surface-variant lg:col-span-3">Version history and publishing controls become available after draft creation.</aside>
       </div>
-      {pickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={candidates} alreadySelectedIds={new Set(selectedPathIds)} isLoading={false} query={query} onQueryChange={setQuery} onConfirm={(rows) => { setSelectedPathIds((ids) => [...new Set([...ids, ...rows.map((row) => row.id)])]); setPickerOpen(false); setQuery(""); }} onClose={() => { setPickerOpen(false); setQuery(""); }} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
+      {pickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={candidates} alreadySelectedIds={new Set(selectedPathIds)} isLoading={false} query={query} onQueryChange={setQuery} onConfirm={(rows) => { const addedIds = rows.map((row) => row.id); setSelectedPathIds((ids) => [...new Set([...ids, ...addedIds])]); setDefaultPathId((current) => current ?? addedIds[0] ?? null); setPickerOpen(false); setQuery(""); }} onClose={() => { setPickerOpen(false); setQuery(""); }} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
     </div>
   );
 }
