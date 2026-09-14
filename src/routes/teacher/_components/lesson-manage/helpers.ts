@@ -1,4 +1,4 @@
-import type { LessonRead } from "@/lib/api/types/teacher";
+import type { LearningMaterial, LessonRead } from "@/lib/api/types/teacher";
 
 /* ── Downloadable-resource type, keyed off the uploaded file's extension ── */
 
@@ -41,6 +41,13 @@ export function materialTypeForFile(
   if (SLIDE_EXTS.includes(ext)) return "slides";
   if (CODE_EXTS.includes(ext)) return "code";
   return "other";
+}
+
+/** Count versions whose ingestion (including KG build) actually completed. */
+export function readyMaterialCount(materials: LearningMaterial[]): number {
+  return materials.filter(
+    (material) => material.latest_version?.processing_status === "ready",
+  ).length;
 }
 
 /* ── Dirty tracking ──

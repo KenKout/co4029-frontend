@@ -42,7 +42,7 @@ export function VideoPlayerSurface({
   return streamUrl ? (
     <div className="rounded-xl overflow-hidden shadow-xl shadow-m3-primary/5 bg-black">
       <MediaPlayer
-        src={{ src: streamUrl, type: "video/mp4" }}
+        src={streamUrl}
         className="w-full aspect-video"
         load="play"
       >

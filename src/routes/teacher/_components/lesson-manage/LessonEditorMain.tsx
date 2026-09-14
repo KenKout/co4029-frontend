@@ -5,6 +5,7 @@ import { LessonHeaderSection } from "./LessonHeaderSection";
 import { LessonResourcesSection } from "./LessonResourcesSection";
 import { LessonKnowledgeGraphSection } from "./LessonKnowledgeGraphSection";
 import { LessonDiscussionSection } from "./LessonDiscussionSection";
+import { readyMaterialCount } from "./helpers";
 import type {
   LessonAiTwins,
   LessonEditorState,
@@ -53,7 +54,7 @@ export function LessonEditorMain({
           setNotes={editor.setNotes}
           notesRef={editor.notesRef}
           estimatedMinutes={editor.estimatedMinutes}
-          streamUrl={data.videoStreamData?.stream_url}
+          streamUrl={data.videoStreamData?.url}
           onVideoUpload={videoUpload.handleVideoUpload}
           uploading={editor.uploadingVideo}
         />
@@ -82,7 +83,7 @@ export function LessonEditorMain({
 
       <LessonKnowledgeGraphSection
         lessonId={data.lessonId}
-        readyCount={data.aiMaterials.filter((m) => m.current_version_id).length}
+        readyCount={readyMaterialCount(data.aiMaterials)}
       />
 
       {/* ── Discussion topics — same panel students see, manage-gated ── */}

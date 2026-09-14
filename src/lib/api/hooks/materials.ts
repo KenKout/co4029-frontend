@@ -28,7 +28,6 @@ import type {
   ReprocessOut,
   UploadCompleteOut,
 } from "../types";
-import type { StreamUrlResponse } from "../types/common";
 import type {
   LearningMaterial,
   LessonKnowledgeGraph,
@@ -334,7 +333,7 @@ export function useTeacherMaterialStreamUrl(
   return useQuery({
     queryKey: ["teacher", "materials", materialId, "stream-url"],
     queryFn: () =>
-      apiFetch<StreamUrlResponse>(
+      apiFetch<MaterialStreamUrl>(
         `/teacher/materials/${materialId}/stream-url`,
       ),
     enabled: !!materialId,
