@@ -740,7 +740,7 @@ export function useAuditHttp(
     queryFn: () => {
       const params = new URLSearchParams({ since: sinceIso, limit: "200" });
       if (untilIso) params.set("until", untilIso);
-      if (path) params.set("path_pattern", path);
+      if (path) params.set("path_contains", path);
       if (userId) params.set("user_id", userId);
       if (eventKind) params.set("event_kind", eventKind);
       if (requestId) params.set("request_id", requestId);

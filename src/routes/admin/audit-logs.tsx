@@ -301,7 +301,7 @@ function HttpAuditTable({
   } = useAuditHttp(
     sinceIso,
     untilIso,
-    debouncedPath ? `${debouncedPath}%` : undefined,
+    debouncedPath || undefined,
     undefined,
     initialEvent,
     requestId,
