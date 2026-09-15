@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
@@ -18,6 +18,9 @@ export function useInterviewRouteDataWithRef(slug: string, configRef: string) {
 
   const startSession = useStartInterviewSession(configId);
   const { data: previousSessions, isLoading: previousSessionsLoading } = useMyInterviewSessions(configId);
+  // Consent state mirrors use-interview-route-data.ts so the with-ref variant
+  // (curriculum route) satisfies the shared InterviewBase contract.
+  const [recordingConsentAccepted, setRecordingConsentAccepted] = useState(false);
   const resumableSession = useMemo(
     () =>
       previousSessions?.find((session) => {
@@ -57,5 +60,7 @@ export function useInterviewRouteDataWithRef(slug: string, configRef: string) {
     resumableSession,
     pastAttempts,
     lastAttempt,
+    recordingConsentAccepted,
+    setRecordingConsentAccepted,
   };
 }

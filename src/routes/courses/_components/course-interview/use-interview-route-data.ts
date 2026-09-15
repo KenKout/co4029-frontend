@@ -19,7 +19,10 @@ export function useInterviewRouteData() {
   const { t, i18n } = useTranslation();
   // Route: /courses/$slug/interview/$moduleId
   // $moduleId carries the interview_config_id (set by course-learn link)
-  const { slug, moduleId } = useParams({ strict: false });
+  const { slug, moduleId } = useParams({ strict: false }) as {
+    slug: string;
+    moduleId: string;
+  };
   const configId = moduleId;
   const [recordingConsentAccepted, setRecordingConsentAccepted] = useState(false);
 
