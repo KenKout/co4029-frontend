@@ -12,9 +12,9 @@
  *
  * Replaces `useFullscreenDeterrent`. The differences that
  * matter:
- *  - No consent prompt and no dismissal at the initial gate: entering is part
- *    of starting. After an unexpected interview exit, the interview gate may
- *    explicitly acknowledge a Continue-windowed choice; quiz never uses it.
+ *  - No consent prompt and no dismissal: entering is part of starting, and the
+ *    only way out of the gate is a granted fullscreen request (or the session
+ *    ending / the candidate leaving through the normal leave flow).
  *  - `requestState` tells the gate screen what to show: requesting (spinner,
  *    submit locked), denied (retry guidance), unsupported (change browser).
  *  - An unexpected exit (Escape / F11) increments `exitCount` for the
@@ -60,8 +60,6 @@ export interface AssessmentFullscreenGate {
   enter: () => Promise<boolean>;
   /** Programmatic exit (start failure, session end). Intentional by default. */
   exit: (intentional?: boolean) => Promise<void>;
-  /** Allow the interview to continue in a window after an acknowledged exit. */
-  continueWindowed: () => void;
   /** True while a live session must be locked: active but not fullscreen. */
   requiredOpen: boolean;
   /** Unexpected (not ours) exits this session — integrity messaging. */
@@ -96,11 +94,9 @@ export function useAssessmentFullscreenGate(
   const [requestState, setRequestState] =
     useState<FullscreenRequestState>("idle");
   const [exitCount, setExitCount] = useState(0);
-  const [windowedAllowed, setWindowedAllowed] = useState(false);
 
   const handleFullscreenLost = useCallback(() => {
     setExitCount((count) => count + 1);
-    setWindowedAllowed(false);
     // The browser revoked fullscreen on its own; the next request is a fresh
     // user gesture, so drop any stale granted/denied state.
     setRequestState("idle");
@@ -137,21 +133,16 @@ export function useAssessmentFullscreenGate(
     [fullscreen],
   );
 
-  const continueWindowed = useCallback(() => {
-    setWindowedAllowed(true);
-  }, []);
-
   // Session ended (results, retry cleared the session, left the flow): reset
   // the policy so a NEW attempt starts clean, and drop any lingering state.
   useEffect(() => {
     if (active) return;
     setRequestState("idle");
     setExitCount(0);
-    setWindowedAllowed(false);
   }, [active]);
 
   const isFullscreen = fullscreen.isFullscreen;
-  const requiredOpen = active && !isFullscreen && !windowedAllowed;
+  const requiredOpen = active && !isFullscreen;
 
   return {
     supported: fullscreen.supported,
@@ -160,7 +151,6 @@ export function useAssessmentFullscreenGate(
     requestState,
     enter,
     exit,
-    continueWindowed,
     requiredOpen,
     exitCount,
   };

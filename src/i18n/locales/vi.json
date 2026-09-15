@@ -3240,17 +3240,12 @@
     "fullscreen": {
       "enter_and_start": "Vào toàn màn hình và bắt đầu",
       "enter_and_resume": "Vào toàn màn hình và tiếp tục",
-      "exit_button": "Thoát toàn màn hình",
       "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
       "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần)."
     },
     "fullscreen_gate": {
       "title": "Bắt buộc toàn màn hình",
-      "description": "Buổi phỏng vấn chạy ở chế độ toàn màn hình. Hãy trở lại toàn màn hình để tiếp tục — câu trả lời vẫn được giữ nguyên và đồng hồ (nếu có) không bị ảnh hưởng.",
-      "exit_title": "Thoát chế độ toàn màn hình?",
-      "exit_description": "Bạn đã thoát toàn màn hình. Hãy quay lại toàn màn hình hoặc tiếp tục phỏng vấn trong cửa sổ bình thường.",
-      "back": "Quay lại",
-      "continue_windowed": "Tiếp tục",
+      "description": "Buổi phỏng vấn chạy ở chế độ toàn màn hình. Quay lại toàn màn hình để tiếp tục — câu trả lời của bạn vẫn an toàn, đồng hồ (nếu có) không bị ảnh hưởng.",
       "requesting": "Đang yêu cầu toàn màn hình…",
       "reenter": "Vào lại toàn màn hình",
       "denied": "Trình duyệt đã từ chối yêu cầu toàn màn hình. Bấm lại nút bên dưới — và cho phép toàn màn hình nếu trình duyệt hỏi.",
@@ -4697,8 +4692,6 @@
         "shuffle_o_desc": "Hoán đổi thứ tự đáp án trong mỗi câu hỏi.",
         "show_hints_label": "Hiển thị gợi ý",
         "show_hints_desc": "Cho phép học viên xem gợi ý trong khi làm.",
-        "require_camera_label": "Bắt buộc bật camera",
-        "require_camera_desc": "Học viên phải cấp quyền và duy trì camera hoạt động trong khi làm. Dữ liệu camera không được ghi, tải lên hoặc phân tích.",
         "reminders_label": "Nhắc ôn tập",
         "reminders_desc": "Gửi nhắc nhở khi đến lúc ôn lại bài."
       },

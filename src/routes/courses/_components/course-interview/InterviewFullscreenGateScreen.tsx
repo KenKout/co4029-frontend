@@ -18,7 +18,6 @@ export function InterviewFullscreenGateScreen({
       keyPrefix="course_interview.fullscreen_gate"
       exitWarningKey="course_interview.fullscreen.exit_warning_recorded"
       timerNoteKey="course_interview.fullscreen_timer_note.timer_continues"
-      allowContinueWindowed={iv.fullscreenGate.exitCount > 0}
       // For a graded attempt the server clock keeps running while the
       // candidate sits on this screen.
       timerContinues={iv.assessmentStartedAtMs !== null}

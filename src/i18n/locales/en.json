@@ -3411,17 +3411,12 @@
     "fullscreen": {
       "enter_and_start": "Enter fullscreen and start",
       "enter_and_resume": "Enter fullscreen and resume",
-      "exit_button": "Exit fullscreen",
       "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
       "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far)."
     },
     "fullscreen_gate": {
       "title": "Fullscreen required",
       "description": "Your interview runs in fullscreen. Return to fullscreen to continue — your answers are safe, and the interview timer (if any) is unaffected.",
-      "exit_title": "Leave fullscreen?",
-      "exit_description": "You left fullscreen. Go back to fullscreen, or continue the interview in a regular window.",
-      "back": "Back",
-      "continue_windowed": "Continue",
       "requesting": "Requesting fullscreen…",
       "reenter": "Re-enter fullscreen",
       "denied": "The browser refused the fullscreen request. Press the button again — and allow fullscreen if the browser asks.",
@@ -4868,8 +4863,6 @@
         "shuffle_o_desc": "Randomize option order within each question.",
         "show_hints_label": "Show hints",
         "show_hints_desc": "Let students view hints while attempting.",
-        "require_camera_label": "Require camera",
-        "require_camera_desc": "Students must grant access and keep a camera active during the quiz. Camera data is not recorded, uploaded, or analyzed.",
         "reminders_label": "Review reminders",
         "reminders_desc": "Send a reminder when review is due."
       },

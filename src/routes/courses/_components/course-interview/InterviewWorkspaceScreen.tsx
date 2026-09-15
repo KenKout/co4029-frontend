@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useVoiceAssistant } from "@livekit/components-react";
 import { toast } from "sonner";
@@ -24,7 +24,6 @@ import type {
   InterviewCourse,
 } from "./use-course-interview";
 import { WorkspaceRoomBanners } from "./WorkspaceRoomBanners";
-import { InterviewExitFullscreenDialog } from "./InterviewExitFullscreenDialog";
 import { useRoomRejoinState } from "./use-room-rejoin-state";
 import { useAutoplayUnlock } from "./use-autoplay-unlock";
 import { useWorkspaceControllerBridge } from "./use-workspace-controller-bridge";
@@ -47,8 +46,6 @@ export function InterviewWorkspaceScreen({
   config: InterviewConfig;
 }) {
   const { t } = useTranslation();
-  const [exitFullscreenDialogOpen, setExitFullscreenDialogOpen] =
-    useState(false);
   const questioning = iv.phase === "questioning";
   // A restored transcript WITH real progress means this page load resumed an
   // in-progress session (refresh / voice-drop fallback). A brand-new session
@@ -164,14 +161,6 @@ export function InterviewWorkspaceScreen({
   );
   useWorkspaceControllerBridge({ iv, chat, agentOwnsTheVoice });
 
-  const confirmExitFullscreen = async () => {
-    setExitFullscreenDialogOpen(false);
-    // A deliberate exit is not an integrity "unexpected exit". The explicit
-    // Continue choice acknowledges the fallback before releasing fullscreen.
-    iv.fullscreenGate.continueWindowed();
-    await iv.fullscreenGate.exit(true);
-  };
-
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <InterviewHeader
@@ -200,18 +189,7 @@ export function InterviewWorkspaceScreen({
           })
         }
         onEndInterview={iv.openEndDialog}
-        onExitFullscreen={
-          iv.fullscreenGate.isFullscreen
-            ? () => setExitFullscreenDialogOpen(true)
-            : undefined
-        }
         endInterviewDisabled={iv.endInterviewDisabled}
-      />
-
-      <InterviewExitFullscreenDialog
-        open={exitFullscreenDialogOpen}
-        onOpenChange={setExitFullscreenDialogOpen}
-        onConfirm={() => void confirmExitFullscreen()}
       />
 
       {/* Coarse step indicator: Setup → Interview → Completed (spec §4). */}

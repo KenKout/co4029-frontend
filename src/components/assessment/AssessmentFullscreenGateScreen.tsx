@@ -12,9 +12,11 @@ import type { AssessmentFullscreenGate } from "@/lib/hooks/useAssessmentFullscre
  *
  * Deliberately neutral: it receives NO transcript, question or answer content,
  * so a locked gate cannot leak a single character of the assessment. It offers
- * no continue-windowed path at the initial gate. After a live interview exits
- * fullscreen, its gate explicitly offers Back (re-enter) and Continue (accept
- * the windowed fallback); quiz does not pass that option.
+ * no continue-windowed path — the only way forward is a granted fullscreen
+ * request (the Re-enter button, a user gesture as browsers require); leaving
+ * happens through the normal leave flow (nav/back, which the leave blocker
+ * still intercepts). Escape and backdrop clicks are ignored: ConfirmDialog's
+ * alert-dialog primitive only closes via `onOpenChange`, which we no-op here.
  *
  * The copy is the only thing that ever differs between the two assessments, so
  * the translation namespace is a prop rather than the screen being duplicated.
@@ -25,21 +27,19 @@ export function AssessmentFullscreenGateScreen({
   exitWarningKey,
   timerNoteKey,
   timerContinues = false,
-  allowContinueWindowed = false,
 }: {
   gate: AssessmentFullscreenGate;
-  /** Namespace holding title/description/requesting/reenter/unsupported. */
+  /** Namespace holding title/description/requesting/reenter/denied/unsupported. */
   keyPrefix: string;
   /** Pluralised "we recorded this exit" key — lives in the take namespace. */
   exitWarningKey: string;
   /** "the clock keeps running" key, shown only when `timerContinues`. */
   timerNoteKey: string;
-  timerContinues?: boolean;
   /**
-   * True for interview only: after an unexpected exit, expose Back / Continue.
-   * Quiz keeps the hard fullscreen gate and leaves this false.
+   * True when a server-side clock keeps running while the participant sits on
+   * this screen. The gate must say so, or the wait reads as a pause.
    */
-  allowContinueWindowed?: boolean;
+  timerContinues?: boolean;
 }) {
   const { t } = useTranslation();
   const requesting = gate.requestState === "requesting";
@@ -63,16 +63,8 @@ export function AssessmentFullscreenGateScreen({
         onOpenChange={() => undefined}
         showCancel={false}
         isPending={requesting}
-        title={t(
-          allowContinueWindowed
-            ? `${keyPrefix}.exit_title`
-            : `${keyPrefix}.title`,
-        )}
-        description={t(
-          allowContinueWindowed
-            ? `${keyPrefix}.exit_description`
-            : `${keyPrefix}.description`,
-        )}
+        title={t(`${keyPrefix}.title`)}
+        description={t(`${keyPrefix}.description`)}
         extraContent={
           <>
             {unsupported
@@ -97,17 +89,10 @@ export function AssessmentFullscreenGateScreen({
             )}
             {requesting
               ? t(`${keyPrefix}.requesting`)
-              : allowContinueWindowed
-                ? t(`${keyPrefix}.continue_windowed`)
-                : t(`${keyPrefix}.reenter`)}
+              : t(`${keyPrefix}.reenter`)}
           </span>
         }
-        cancelLabel={allowContinueWindowed ? t(`${keyPrefix}.back`) : undefined}
-        showCancel={allowContinueWindowed}
-        onCancel={allowContinueWindowed ? () => void gate.enter() : undefined}
-        onConfirm={() =>
-          allowContinueWindowed ? gate.continueWindowed() : void gate.enter()
-        }
+        onConfirm={() => void gate.enter()}
       />
     </div>
   );
