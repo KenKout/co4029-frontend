@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { ArrowLeft, Clock, Timer } from "lucide-react";
@@ -28,17 +29,17 @@ function StartedAtChip({ quizStartedAt }: { quizStartedAt: number }) {
 
 function ExitQuizButton({
   session,
+  slug,
   compact,
-}: {
-  session: QuizStageProps["session"];
-  compact?: boolean;
-}) {
+}: QuizStageProps & { compact?: boolean }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [exiting, setExiting] = useState(false);
   const exit = async () => {
     if (exiting) return;
     setExiting(true);
     await session.handleExit();
+    void navigate({ to: "/courses/$slug/learn", params: { slug } });
   };
   return (
     <Button
@@ -49,12 +50,12 @@ function ExitQuizButton({
           ? "rounded-xl text-m3-on-surface-variant hover:text-m3-primary shrink-0"
           : "rounded-xl text-m3-on-surface-variant hover:text-m3-primary gap-1.5 text-xs font-bold px-3"
       }
-      aria-label={t("course_quiz.actions.exit")}
+      aria-label={t("course_quiz.labels.back_to_course")}
       onClick={() => void exit()}
       disabled={exiting}
     >
       <ArrowLeft className="h-4 w-4" />
-      {!compact && t("course_quiz.actions.exit")}
+  {!compact && t("course_detail.back_to_course")}
     </Button>
   );
 }
@@ -67,7 +68,7 @@ function ExitQuizButton({
 function MobileTakeBar({
   session,
   quiz,
-  slug: _slug,
+  slug,
   progressPct,
 }: QuizStageProps & { progressPct: number }) {
   const { taking, activeAttemptId, activeIdx, displayQuestions, attempts, pageSize, changePageSize, quizElapsed } =
@@ -78,7 +79,7 @@ function MobileTakeBar({
     <div className="lg:hidden sticky top-16 z-10 bg-white/95 backdrop-blur-md border-b border-m3-outline-variant/30 py-2 px-3 sm:px-6 mb-6 -mx-4 sm:-mx-6 -mt-6 shadow-sm">
       {/* Row 1: back · quiz name · config + monitor icons */}
       <div className="flex items-center gap-2">
-        <ExitQuizButton session={session} compact />
+        <ExitQuizButton session={session} quiz={quiz} slug={slug} compact />
         <span className="flex-1 min-w-0 truncate font-headline font-bold text-sm sm:text-base text-m3-on-surface">
           {quiz.title}
         </span>
@@ -131,7 +132,7 @@ function MobileTakeBar({
 function DesktopTakeBar({
   session,
   quiz,
-  slug: _slug,
+  slug,
   courseTitle,
 }: QuizStageProps & { courseTitle: string }) {
   const { taking, activeAttemptId, quizStartedAt, quizElapsed } = session;
@@ -140,7 +141,7 @@ function DesktopTakeBar({
     <div className="hidden lg:block sticky top-16 z-10 bg-m3-surface/95 backdrop-blur-md border-b border-m3-outline-variant/30 py-4 mb-6 px-4 sm:px-6 lg:px-10 -mx-4 sm:-mx-6 lg:-mx-10 -mt-6 shadow-sm">
       <div className="w-full flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3 flex-wrap -ml-3">
-          <ExitQuizButton session={session} />
+          <ExitQuizButton session={session} quiz={quiz} slug={slug} />
           <span className="text-m3-on-surface-variant text-sm font-medium hidden sm:block">
             {courseTitle}
           </span>
