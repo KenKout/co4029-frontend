@@ -100,6 +100,30 @@ export function MaterialCard({
     );
   }
 
+  function handleToggleVisibility() {
+    const visible = !material.visible_to_students;
+    updateMaterial.mutate(
+      { visible_to_students: visible },
+      {
+        onSuccess: () =>
+          toast.success(
+            t(
+              visible
+                ? "teacher_lesson_materials.toasts.shown_to_students"
+                : "teacher_lesson_materials.toasts.hidden_from_students",
+            ),
+          ),
+        onError: (err) => {
+          if (err instanceof ApiError && err.status === 403) {
+            toast.error(t("teacher_lesson_materials.toasts.edit_forbidden"));
+            return;
+          }
+          toast.error((err as Error).message);
+        },
+      },
+    );
+  }
+
   const enablingAI = updateMaterial.isPending || reprocess.isPending;
 
   return (
@@ -131,9 +155,13 @@ export function MaterialCard({
           notQueued={notQueued}
           enablingAI={enablingAI}
           reprocessPending={reprocess.isPending}
+          visible={material.visible_to_students}
+          visibilityPending={updateMaterial.isPending}
+          canShow={procKey === "ready"}
           showVersions={showVersions}
           onEnableAI={handleEnableAI}
           onReprocess={handleReprocess}
+          onToggleVisibility={handleToggleVisibility}
           onToggleVersions={() => setShowVersions((v) => !v)}
           onDelete={onDelete}
         />

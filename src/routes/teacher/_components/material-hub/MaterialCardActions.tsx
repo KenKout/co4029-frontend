@@ -1,4 +1,12 @@
-import { History, Loader2, RefreshCw, Sparkles, Trash2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  History,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -15,9 +23,13 @@ export function MaterialCardActions({
   notQueued,
   enablingAI,
   reprocessPending,
+  visible,
+  visibilityPending,
+  canShow,
   showVersions,
   onEnableAI,
   onReprocess,
+  onToggleVisibility,
   onToggleVersions,
   onDelete,
 }: {
@@ -26,18 +38,25 @@ export function MaterialCardActions({
   notQueued: boolean;
   enablingAI: boolean;
   reprocessPending: boolean;
+  visible: boolean;
+  visibilityPending: boolean;
+  canShow: boolean;
   showVersions: boolean;
   onEnableAI: () => void;
   onReprocess: () => void;
+  onToggleVisibility: () => void;
   onToggleVersions: () => void;
   onDelete: (id: string) => void;
 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-      {/* Visibility toggle removed from Material history — student
-          visibility is controlled via Downloadable Resources / lesson
-          Publish, so it doesn't belong on the AI-material history card. */}
+    <div className="flex shrink-0 items-center gap-1">
+      <VisibilityButton
+        visible={visible}
+        pending={visibilityPending}
+        canShow={canShow}
+        onToggle={onToggleVisibility}
+      />
       {notQueued && (
         <Button
           variant="ghost"
@@ -89,5 +108,49 @@ export function MaterialCardActions({
         <Trash2 className="h-3.5 w-3.5" />
       </Button>
     </div>
+  );
+}
+
+function VisibilityButton({
+  visible,
+  pending,
+  canShow,
+  onToggle,
+}: {
+  visible: boolean;
+  pending: boolean;
+  canShow: boolean;
+  onToggle: () => void;
+}) {
+  const { t } = useTranslation();
+  const label = t(
+    visible
+      ? "teacher_lesson_materials.actions.toggle_visibility_hide"
+      : "teacher_lesson_materials.actions.toggle_visibility_show",
+  );
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn(
+        "h-8 w-8",
+        visible
+          ? "text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700"
+          : "text-m3-on-surface-variant",
+      )}
+      title={label}
+      aria-label={label}
+      disabled={pending || (!visible && !canShow)}
+      onClick={onToggle}
+    >
+      {pending ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : visible ? (
+        <Eye className="h-3.5 w-3.5" />
+      ) : (
+        <EyeOff className="h-3.5 w-3.5" />
+      )}
+    </Button>
   );
 }
