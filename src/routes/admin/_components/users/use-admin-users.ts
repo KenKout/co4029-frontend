@@ -12,7 +12,7 @@ import { useOrganizations } from "@/lib/api/hooks/admin-organizations";
 import type { User } from "@/lib/api/types";
 
 import type { UserWithRoles } from "./types";
-import { buildUserColumns } from "./users-columns";
+import { buildUserIdentityColumns } from "./users-columns";
 
 /**
  * Permission gate, role/org catalogs, the server-side table and the column
@@ -55,7 +55,7 @@ export function useAdminUsers() {
   });
 
   const columns = useMemo(
-    () => buildUserColumns(t, labelFor, formatDate),
+    () => buildUserIdentityColumns(t, labelFor, formatDate),
     [t, labelFor, formatDate],
   );
 

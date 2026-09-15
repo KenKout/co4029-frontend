@@ -1,14 +1,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserPlus, Upload } from "lucide-react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { GradientProgress } from "@/components/ui/gradient-progress";
@@ -114,26 +108,12 @@ export function RosterTab({
         sortable: true,
         sortValue: (r) => r.displayName.toLowerCase(),
         cell: (r) => (
-          <div className="flex min-w-0 items-center gap-3">
-            <Avatar size="sm" className={avatarColor(r.studentId)}>
-              {r.avatarUrl ? (
-                <AvatarImage src={r.avatarUrl} alt={r.displayName} />
-              ) : null}
-              <AvatarFallback>
-                {avatarInitials(r.displayName, { uppercase: true })}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-text-strong">
-                {r.displayName}
-              </p>
-              {r.email ? (
-                <p className="mt-0.5 truncate text-[11px] text-text-muted">
-                  {r.email}
-                </p>
-              ) : null}
-            </div>
-          </div>
+          <UserEmailIdentity
+            id={r.studentId}
+            displayName={r.displayName}
+            avatarUrl={r.avatarUrl}
+            email={r.email}
+          />
         ),
       },
       {

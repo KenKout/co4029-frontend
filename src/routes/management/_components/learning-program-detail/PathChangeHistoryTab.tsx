@@ -3,14 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import {
   DataTableToolbar,
   type CustomTimeRange,
@@ -296,22 +290,13 @@ export function PathChangeHistoryTab({
             params={{ userId: row.studentId }}
             className="flex min-w-[180px] items-center gap-3 rounded-lg"
           >
-            <Avatar size="sm" className={avatarColor(row.studentId)}>
-              {row.avatarUrl ? (
-                <AvatarImage src={row.avatarUrl} alt={row.displayName} />
-              ) : null}
-              <AvatarFallback>
-                {avatarInitials(row.displayName, { uppercase: true })}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold hover:text-m3-primary">
-                {row.displayName}
-              </p>
-              {row.email ? (
-                <p className="truncate text-[11px] text-text-muted">{row.email}</p>
-              ) : null}
-            </div>
+            <UserEmailIdentity
+              id={row.studentId}
+              displayName={row.displayName}
+              avatarUrl={row.avatarUrl}
+              email={row.email}
+              className="hover:[&_p:first-child]:text-m3-primary"
+            />
           </Link>
         ),
       },

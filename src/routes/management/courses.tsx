@@ -11,13 +11,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import type { CourseAuthoring } from "@/lib/api/types";
 import { ImportSyllabusDialog } from "./_components/courses/ImportSyllabusDialog";
 import { useOrgUnitTree, type OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
@@ -88,22 +82,11 @@ function InstructorCell({ course, t }: { course: CourseAuthoring; t: TFn }) {
     );
   }
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <Avatar size="sm" className={avatarColor(instructor.user_id)}>
-        {instructor.avatar_url && (
-          <AvatarImage
-            src={instructor.avatar_url}
-            alt={instructor.display_name}
-          />
-        )}
-        <AvatarFallback>
-          {avatarInitials(instructor.display_name, { uppercase: true })}
-        </AvatarFallback>
-      </Avatar>
-      <span className="text-sm text-text-strong truncate">
-        {instructor.display_name}
-      </span>
-    </div>
+    <UserEmailIdentity
+      id={instructor.user_id}
+      displayName={instructor.display_name}
+      avatarUrl={instructor.avatar_url}
+    />
   );
 }
 

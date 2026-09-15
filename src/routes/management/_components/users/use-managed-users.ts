@@ -11,7 +11,7 @@ import { useListRoles } from "@/lib/api/hooks/admin";
 import type { RoleAssignmentRead } from "@/lib/api/types";
 
 import type { UserWithRoles } from "@/routes/admin/_components/users/types";
-import { buildUserColumns } from "@/routes/admin/_components/users/users-columns";
+import { buildUserIdentityColumns } from "@/routes/admin/_components/users/users-columns";
 
 /**
  * Manager-facing org user administration (org-scoped account management).
@@ -77,7 +77,7 @@ export function useManagedUsers() {
   });
 
   const columns = useMemo(
-    () => buildUserColumns(t, labelFor, formatDate),
+    () => buildUserIdentityColumns(t, labelFor, formatDate),
     [t, labelFor, formatDate],
   );
 

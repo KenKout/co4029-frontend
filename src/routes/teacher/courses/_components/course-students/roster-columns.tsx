@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
 
-import { avatarColor, avatarInitials } from "@/components/ui/avatar";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { GradientProgress } from "@/components/ui/gradient-progress";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { Clock } from "lucide-react";
 import type { RosterStudent } from "@/lib/api/types/teacher";
 import { cn } from "@/lib/utils";
@@ -35,45 +35,22 @@ export function buildRosterColumns(
       cell: (student) => {
         const enroll =
           ENROLL_META[student.enrollment_status] ?? ENROLL_META.active;
-        const initials = avatarInitials(student.display_name);
-        const aColor = avatarColor(student.student_id);
         return (
-          <div className="flex items-center gap-3 min-w-0">
-            {student.avatar_url ? (
-              <img
-                src={student.avatar_url}
-                alt=""
-                className="w-10 h-10 rounded-full object-cover shrink-0"
-              />
-            ) : (
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 uppercase",
-                  aColor,
-                )}
-              >
-                {initials || "?"}
-              </div>
-            )}
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-m3-on-surface truncate">
-                  {student.display_name}
-                </span>
-                <span
-                  className={cn(
-                    "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
-                    enroll.badge,
-                  )}
-                >
-                  {enroll.label}
-                </span>
-              </div>
-              <p className="text-xs text-m3-on-surface-variant truncate mt-0.5">
-                {student.primary_email}
-              </p>
-            </div>
-          </div>
+          <UserEmailIdentity
+            id={student.student_id}
+            displayName={student.display_name}
+            avatarUrl={student.avatar_url}
+            email={student.primary_email}
+          >
+            <span
+              className={cn(
+                "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                enroll.badge,
+              )}
+            >
+              {enroll.label}
+            </span>
+          </UserEmailIdentity>
         );
       },
     },

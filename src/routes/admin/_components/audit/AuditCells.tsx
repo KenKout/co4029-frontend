@@ -3,14 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Copy, Mail, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { Tooltip } from "@/components/ui/tooltip";
+import { UserIdentity } from "@/components/ui/user-identity";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
 import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
@@ -18,7 +12,11 @@ export type AuditUser = NonNullable<
   ReturnType<typeof useUsersByIds>["data"]
 >[number];
 
-/** Shared user-identity cell: avatar + display name + email + copy UUID. */
+/**
+ * Shared user-identity cell: avatar + display name + email; for an
+ * unresolvable id, the raw UUID + copy affordance. Draws via the shared
+ * UserIdentity block.
+ */
 export function UserIdentityCell({
   userId,
   users,
@@ -39,7 +37,6 @@ export function UserIdentityCell({
 
   const user = users?.find((u) => u.id === userId);
   const displayName = getUserDisplayName(user, userId);
-  const avatarUrl = getUserAvatarUrl(user);
 
   const copyId = () => {
     void navigator.clipboard.writeText(userId).then(
@@ -52,26 +49,18 @@ export function UserIdentityCell({
   };
 
   return (
-    <div className="flex items-center gap-3 min-w-0">
-      <Avatar size="sm" className={avatarColor(userId)}>
-        {avatarUrl && (
-          <AvatarImage src={avatarUrl} alt={displayName} />
-        )}
-        <AvatarFallback>
-          {avatarInitials(displayName, { uppercase: true })}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-text-strong truncate">
-          {displayName}
-        </p>
-        {user ? (
-          <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
+    <UserIdentity
+      id={userId}
+      displayName={displayName}
+      avatarUrl={getUserAvatarUrl(user)}
+      subtitle={
+        user ? (
+          <>
             <Mail className="h-3 w-3 shrink-0" />
             <span className="truncate">{user.primary_email}</span>
-          </p>
+          </>
         ) : (
-          <p className="text-xs font-mono text-text-muted flex items-center gap-1 mt-0.5">
+          <>
             <span className="truncate">{userId}</span>
             <Tooltip
               content={
@@ -88,10 +77,11 @@ export function UserIdentityCell({
                 <Copy className="h-3 w-3" />
               </Button>
             </Tooltip>
-          </p>
-        )}
-      </div>
-    </div>
+          </>
+        )
+      }
+      subtitleClassName={user ? undefined : "font-mono gap-1"}
+    />
   );
 }
 

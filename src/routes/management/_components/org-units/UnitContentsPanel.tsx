@@ -2,15 +2,9 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { GraduationCap, Plus, ShieldCheck, ShieldPlus, User, X } from "lucide-react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
@@ -302,19 +296,14 @@ function PersonRow({
           : "border-transparent hover:bg-m3-surface-container-low"
       }`}
     >
-      <Avatar size="sm" className={avatarColor(person.userId)}>
-        {person.avatarUrl ? (
-          <AvatarImage src={person.avatarUrl} alt={person.displayName} />
-        ) : null}
-        <AvatarFallback>
-          {avatarInitials(person.displayName, { uppercase: true })}
-        </AvatarFallback>
-      </Avatar>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs text-text-strong">{person.displayName}</p>
-        {person.email ? (
-          <p className="truncate text-[10px] text-text-muted">{person.email}</p>
-        ) : null}
+        <UserEmailIdentity
+          id={person.userId}
+          displayName={person.displayName}
+          avatarUrl={person.avatarUrl}
+          email={person.email}
+          subtitleClassName="text-[10px]"
+        />
         <div className="mt-1 flex flex-wrap gap-1">
           {roles.map((role) => (
             <Badge

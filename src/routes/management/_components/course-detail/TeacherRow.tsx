@@ -1,18 +1,12 @@
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { ClipboardCheck, ClipboardEdit, Mail, Trash2 } from "lucide-react";
+import { ClipboardCheck, ClipboardEdit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { useRemoveTeacher, useSetTeacherTitles } from "@/lib/api/hooks/dept";
 import { ApiError } from "@/lib/api/client";
 import type { TeacherAssignmentRead } from "@/lib/api/types";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { cn } from "@/lib/utils";
 
 /**
@@ -87,28 +81,14 @@ export function TeacherIdentityCell({
   const { t } = useTranslation();
   const name = assignment.display_name || t("dept_course_detail.no_name");
   return (
-    <div className="flex items-center gap-3 min-w-0">
-      <Avatar size="sm" className={avatarColor(assignment.user_id)}>
-        {assignment.avatar_url && (
-          <AvatarImage src={assignment.avatar_url} alt={name} />
-        )}
-        <AvatarFallback>
-          {avatarInitials(name, { uppercase: true })}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <p className="text-sm font-semibold text-text-strong truncate">
-            {name}
-          </p>
-          <TeacherTitleBadges assignment={assignment} />
-        </div>
-        <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
-          <Mail className="h-3 w-3 shrink-0" />
-          <span className="truncate">{assignment.primary_email}</span>
-        </p>
-      </div>
-    </div>
+    <UserEmailIdentity
+      id={assignment.user_id}
+      displayName={name}
+      avatarUrl={assignment.avatar_url}
+      email={assignment.primary_email}
+    >
+      <TeacherTitleBadges assignment={assignment} />
+    </UserEmailIdentity>
   );
 }
 

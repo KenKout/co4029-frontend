@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -16,13 +15,7 @@ import { SectionActionCard } from "./SectionActionCard";
 import { StudentPickerDialog } from "./StudentPickerDialog";
 import type { TFunction } from "i18next";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { useStudentsTab } from "./use-students-tab";
 import { useRemoveCareerPathStudent } from "@/lib/api/hooks/career-paths";
 import { RemoveRowButtons } from "./RemoveRowButtons";
@@ -105,29 +98,15 @@ function buildStudentColumns(
             <Link
               to="/management/users/$userId"
               params={{ userId: row.student_id }}
-              className="flex min-w-0 items-center gap-3 hover:text-m3-primary"
               onClick={(e) => e.stopPropagation()}
+              className="flex min-w-0 items-center gap-3 hover:[&_p:first-child]:text-m3-primary"
             >
-              <Avatar size="sm" className={avatarColor(row.student_id)}>
-                {row.student_avatar_url && (
-                  <AvatarImage
-                    src={row.student_avatar_url}
-                    alt={displayName}
-                  />
-                )}
-                <AvatarFallback>
-                  {avatarInitials(displayName, { uppercase: true })}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-text-strong">
-                  {displayName}
-                </p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-xs text-text-muted">
-                  <Mail className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{row.student_email}</span>
-                </p>
-              </div>
+              <UserEmailIdentity
+                id={row.student_id}
+                displayName={displayName}
+                avatarUrl={row.student_avatar_url}
+                email={row.student_email}
+              />
             </Link>
           );
         },

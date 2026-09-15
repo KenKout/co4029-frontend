@@ -1,20 +1,14 @@
-import { Building2, Mail } from "lucide-react";
+import { Building2 } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { UserStatusBadge as StatusBadge } from "@/components/ui/status-badges";
 import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
 import { RoleBadges } from "./RoleBadges";
 import type { TFn, UserWithRoles } from "./types";
 
-export function buildUserColumns(
+export function buildUserIdentityColumns(
   t: TFn,
   labelFor: (code: string) => string,
   formatDate: (iso: string | null | undefined) => string,
@@ -27,27 +21,13 @@ export function buildUserColumns(
       sortable: true,
       cell: (u) => {
         const displayName = getUserDisplayName(u);
-        const avatarUrl = getUserAvatarUrl(u);
         return (
-          <div className="flex items-center gap-3 min-w-0">
-            <Avatar size="sm" className={avatarColor(u.id)}>
-              {avatarUrl && (
-                <AvatarImage src={avatarUrl} alt={displayName} />
-              )}
-              <AvatarFallback>
-                {avatarInitials(displayName, { uppercase: true })}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-text-strong truncate">
-                {displayName}
-              </p>
-              <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
-                <Mail className="h-3 w-3 shrink-0" />
-                <span className="truncate">{u.primary_email}</span>
-              </p>
-            </div>
-          </div>
+          <UserEmailIdentity
+            id={u.id}
+            displayName={displayName}
+            avatarUrl={getUserAvatarUrl(u)}
+            email={u.primary_email}
+          />
         );
       },
     },

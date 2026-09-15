@@ -1,13 +1,5 @@
-import { Mail } from "lucide-react";
-
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import type { MembershipRead } from "@/lib/api/types/admin-organizations";
 import type { User } from "@/lib/api/types";
@@ -58,30 +50,13 @@ export function MembershipList({ c }: { c: MembershipsTabController }) {
       }),
       cell: (m) => {
         const u = userById.get(m.user_id);
-        const displayName = memberDisplayName(m, u);
-        const avatarUrl = getUserAvatarUrl(u);
         return (
-          <div className="flex items-center gap-3 min-w-0">
-            <Avatar size="sm" className={avatarColor(m.user_id)}>
-              {avatarUrl && (
-                <AvatarImage src={avatarUrl} alt={displayName} />
-              )}
-              <AvatarFallback>
-                {avatarInitials(displayName, { uppercase: true })}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-text-strong truncate">
-                {displayName}
-              </p>
-              <p className="text-xs text-text-muted flex items-center gap-1.5 mt-0.5">
-                <Mail className="h-3 w-3 shrink-0" />
-                <span className="truncate">
-                  {u?.primary_email ?? m.user_id}
-                </span>
-              </p>
-            </div>
-          </div>
+          <UserEmailIdentity
+            id={m.user_id}
+            displayName={memberDisplayName(m, u)}
+            avatarUrl={getUserAvatarUrl(u)}
+            email={u?.primary_email ?? m.user_id}
+          />
         );
       },
     },

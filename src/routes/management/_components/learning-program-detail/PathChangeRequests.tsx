@@ -2,14 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Eye, Loader2 } from "lucide-react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  avatarColor,
-  avatarInitials,
-} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
 import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
@@ -95,33 +89,20 @@ function RequesterCell({
     user,
     t("management_learning_program_detail.requests.unknown_student"),
   );
-  const avatarUrl = getUserAvatarUrl(user);
-  const email = user?.primary_email ?? "";
   return (
-    <div className="flex min-w-0 items-center gap-3">
-      <Link
-        to="/management/users/$userId"
-        params={{ userId: studentId }}
-        className="flex min-w-0 items-center gap-3 rounded-lg"
-      >
-        <Avatar size="sm" className={avatarColor(studentId)}>
-          {avatarUrl ? (
-            <AvatarImage src={avatarUrl} alt={displayName} />
-          ) : null}
-          <AvatarFallback>
-            {avatarInitials(displayName, { uppercase: true })}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-text-strong hover:text-m3-primary">
-            {displayName}
-          </p>
-          {email ? (
-            <p className="mt-0.5 truncate text-[11px] text-text-muted">{email}</p>
-          ) : null}
-        </div>
-      </Link>
-    </div>
+    <Link
+      to="/management/users/$userId"
+      params={{ userId: studentId }}
+      className="flex min-w-0 items-center gap-3 rounded-lg"
+    >
+      <UserEmailIdentity
+        id={studentId}
+        displayName={displayName}
+        avatarUrl={getUserAvatarUrl(user)}
+        email={user?.primary_email ?? ""}
+        className="hover:[&_p:first-child]:text-m3-primary"
+      />
+    </Link>
   );
 }
 
