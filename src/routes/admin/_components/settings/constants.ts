@@ -16,6 +16,7 @@ export const GROUP_ORDER = [
   "spaced_repetition",
   "notifications",
   "courses",
+  "careerpath",
 ] as const;
 
 export const GROUP_LABELS: Record<string, string> = {
@@ -27,6 +28,7 @@ export const GROUP_LABELS: Record<string, string> = {
   spaced_repetition: "Spaced repetition",
   notifications: "Notifications",
   courses: "Courses",
+  careerpath: "Learning programs",
 };
 
 // A few groups only take effect on the next ingest of a document — changing

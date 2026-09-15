@@ -17,6 +17,11 @@ function slugify(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+function parseCareerPathLimit(value: string, ceiling: number): number | null {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= ceiling ? parsed : null;
+}
+
 export default function ManagementLearningProgramNewPage() {
   const navigate = useNavigate();
   const options = useLearningProgramOptions();
@@ -31,6 +36,7 @@ export default function ManagementLearningProgramNewPage() {
   // (3) so the form states the policy instead of leaving it invisible — every
   // program created before this field existed silently got 3.
   const [maxPathSwitches, setMaxPathSwitches] = useState("3");
+  const [maxCareerPaths, setMaxCareerPaths] = useState("1");
   const [selectedPathIds, setSelectedPathIds] = useState<string[]>([]);
   const [defaultPathId, setDefaultPathId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -47,6 +53,7 @@ export default function ManagementLearningProgramNewPage() {
       .map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug, selectable: path.selectable, notSelectableReason: path.not_selectable_reason }));
   }, [options.data?.career_paths, query]);
   const selectedPaths = (options.data?.career_paths ?? []).filter((path) => selectedPathIds.includes(path.id));
+  const maxCareerPathsCeiling = options.data?.max_career_paths_per_program ?? 10;
 
   if (options.isLoading) return <PageSkeleton rows={4} />;
 
@@ -61,6 +68,11 @@ export default function ManagementLearningProgramNewPage() {
     const switches = Number.parseInt(maxPathSwitches, 10);
     if (!Number.isInteger(switches) || switches < 0 || switches > 100) {
       toast.error("Path changes allowed must be a whole number between 0 and 100");
+      return;
+    }
+    const careerPathLimit = parseCareerPathLimit(maxCareerPaths, maxCareerPathsCeiling);
+    if (careerPathLimit === null) {
+      toast.error(`Career paths per student must be a whole number between 1 and ${maxCareerPathsCeiling}`);
       return;
     }
     const accepted = await confirm({
@@ -82,6 +94,7 @@ export default function ManagementLearningProgramNewPage() {
         slug: slug.trim(),
         description: description.trim() || null,
         max_path_switches: switches,
+        max_career_paths_per_enrollment: careerPathLimit,
         career_path_ids: selectedPathIds,
         default_career_path_id: defaultPathId,
       });
@@ -117,6 +130,11 @@ export default function ManagementLearningProgramNewPage() {
               Each switch still needs Faculty Dean approval. 0 locks the choice
               permanently.
             </span>
+          </label>
+          <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+            Career paths per student
+            <Input type="number" min={1} max={maxCareerPathsCeiling} value={maxCareerPaths} onChange={(event) => setMaxCareerPaths(event.target.value)} />
+            <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">Students must complete every selected path. Organization limit: {maxCareerPathsCeiling}.</span>
           </label>
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
           <section className="space-y-3 border-t border-m3-outline-variant/30 pt-5">

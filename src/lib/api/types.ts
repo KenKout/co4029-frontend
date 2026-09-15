@@ -1167,6 +1167,7 @@ export type {
   PathChangeRejectionReasonCode,
   PathChangeRequest,
   PathChangeRequestStatus,
+  PathRequestKind,
   ProgramPathAttempt,
 } from "./types/learning-programs";
 

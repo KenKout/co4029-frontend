@@ -48,6 +48,12 @@ const TABS = (t: (key: string) => string, pending: number, history: number, enro
   { key: "history", label: t("management_learning_program_detail.tabs.history"), icon: History, count: history || undefined },
 ];
 
+function getPublishBlockedReason(t: (key: string) => string, hasDefault: boolean, limitFits: boolean): string | undefined {
+  if (!hasDefault) return t("management_learning_program_detail.paths.default_required");
+  if (!limitFits) return t("management_learning_program_detail.paths.limit_exceeds_paths");
+  return undefined;
+}
+
 export default function ManagementLearningProgramDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -124,6 +130,8 @@ export default function ManagementLearningProgramDetailPage() {
   );
   const currentPaths = data.paths;
   const hasDefaultPath = currentPaths.some((path) => path.is_default);
+  const pathLimitFits = data.current_version.max_career_paths_per_enrollment <= currentPaths.length;
+  const publishBlockedReason = getPublishBlockedReason(t, hasDefaultPath, pathLimitFits);
 
   async function removePath(pathId: string, pathName: string) {
     const accepted = await confirm({
@@ -162,7 +170,7 @@ export default function ManagementLearningProgramDetailPage() {
       <Link to="/management/learning-programs" className="inline-flex items-center gap-2 text-sm font-semibold text-m3-primary"><ArrowLeft className="h-4 w-4" /> {t("management_learning_program_detail.back")}</Link>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div><div className="flex flex-wrap items-center gap-2"><h1 className="font-headline text-3xl font-black">{data.name}</h1><span className="rounded-full bg-m3-surface-container px-3 py-1 text-xs font-semibold">{t(`management_learning_program_detail.status.${data.status}`)}</span></div><p className="mt-1 font-mono text-xs text-m3-on-surface-variant">{data.slug}</p></div>
-        {!readOnly && <div className="flex gap-2">{isDraft && <Button disabled={!hasDefaultPath} title={!hasDefaultPath ? t("management_learning_program_detail.paths.default_required") : undefined} onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.publish_title"), t("management_learning_program_detail.confirm.publish_description"), t("management_learning_program_detail.actions.publish"), () => publish.mutateAsync(), t("management_learning_program_detail.toast.published"))}>{t("management_learning_program_detail.actions.publish")}</Button>}{data.status !== "archived" && <Button variant="outline" className="gap-2" onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.archive_title"), t("management_learning_program_detail.confirm.archive_description"), t("management_learning_program_detail.actions.archive"), () => archive.mutateAsync(), t("management_learning_program_detail.toast.archived"))}><Archive className="h-4 w-4" /> {t("management_learning_program_detail.actions.archive")}</Button>}</div>}
+        {!readOnly && <div className="flex gap-2">{isDraft && <Button disabled={Boolean(publishBlockedReason)} title={publishBlockedReason} onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.publish_title"), t("management_learning_program_detail.confirm.publish_description"), t("management_learning_program_detail.actions.publish"), () => publish.mutateAsync(), t("management_learning_program_detail.toast.published"))}>{t("management_learning_program_detail.actions.publish")}</Button>}{data.status !== "archived" && <Button variant="outline" className="gap-2" onClick={() => void confirmedAction(t("management_learning_program_detail.confirm.archive_title"), t("management_learning_program_detail.confirm.archive_description"), t("management_learning_program_detail.actions.archive"), () => archive.mutateAsync(), t("management_learning_program_detail.toast.archived"))}><Archive className="h-4 w-4" /> {t("management_learning_program_detail.actions.archive")}</Button>}</div>}
       </header>
       {readOnly && <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">{t("management_learning_program_detail.readonly_version", { version: data.current_version.version_no })}</div>}
 
@@ -177,7 +185,7 @@ export default function ManagementLearningProgramDetailPage() {
 
           {tab === "general" && (
             <>
-              <ProgramGeneral key={data.current_version.id} data={data} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
+              <ProgramGeneral key={data.current_version.id} data={data} maxCareerPathsCeiling={options.data?.max_career_paths_per_program ?? 10} readOnly={readOnly || !isDraft} onSave={(payload) => update.mutateAsync(payload)} />
               <section className="space-y-4 rounded-xl bg-card p-5 ghost-border">
                 <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-headline text-lg font-bold">{t("management_learning_program_detail.paths.title")}</h2><p className="text-sm text-m3-on-surface-variant">{t("management_learning_program_detail.paths.description", { version: data.current_version.version_no })}</p></div>{isDraft && (
                   <div className="flex flex-wrap items-center gap-2">
@@ -313,7 +321,7 @@ export default function ManagementLearningProgramDetailPage() {
  * versioning it, and the hint says so rather than leaving a manager to guess
  * whether a change is retroactive (it is not).
  */
-function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null; max_path_switches?: number }) => Promise<unknown> }) {
+function ProgramGeneral({ data, maxCareerPathsCeiling, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; maxCareerPathsCeiling: number; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null; max_path_switches?: number; max_career_paths_per_enrollment?: number }) => Promise<unknown> }) {
   const { t } = useTranslation();
   const [name, setName] = useState(data.name);
   const [slug, setSlug] = useState(data.slug);
@@ -321,10 +329,13 @@ function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnTy
   const [maxPathSwitches, setMaxPathSwitches] = useState(
     String(data.current_version.max_path_switches),
   );
+  const [maxCareerPaths, setMaxCareerPaths] = useState(String(data.current_version.max_career_paths_per_enrollment));
 
   const switches = Number.parseInt(maxPathSwitches, 10);
   const switchesValid =
     Number.isInteger(switches) && switches >= 0 && switches <= 100;
+  const careerPathLimit = Number.parseInt(maxCareerPaths, 10);
+  const careerPathLimitValid = Number.isInteger(careerPathLimit) && careerPathLimit >= 1 && careerPathLimit <= maxCareerPathsCeiling;
 
   return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">{t("management_learning_program_detail.general.title")}</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.name")} <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.slug")} <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div>
     <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -348,5 +359,11 @@ function ProgramGeneral({ data, readOnly, onSave }: { data: NonNullable<ReturnTy
         </span>
       )}
     </label>
-    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.description")}<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim() || !switchesValid} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, max_path_switches: switches }).then(() => toast.success(t("management_learning_program_detail.toast.details_saved"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.save_failed"))))}>{t("management_learning_program_detail.actions.save")}</Button></div>}</section>;
+    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+      {t("management_learning_program_detail.general.career_path_limit")}
+      <Input type="number" min={1} max={maxCareerPathsCeiling} disabled={readOnly} value={maxCareerPaths} onChange={(event) => setMaxCareerPaths(event.target.value)} />
+      <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">{t("management_learning_program_detail.general.career_path_limit_hint", { ceiling: maxCareerPathsCeiling, version: data.current_version.version_no })}</span>
+      {!readOnly && !careerPathLimitValid && <span className="block text-[11px] font-normal normal-case tracking-normal text-red-600">{t("management_learning_program_detail.general.career_path_limit_error", { ceiling: maxCareerPathsCeiling })}</span>}
+    </label>
+    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.description")}<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim() || !switchesValid || !careerPathLimitValid} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, max_path_switches: switches, max_career_paths_per_enrollment: careerPathLimit }).then(() => toast.success(t("management_learning_program_detail.toast.details_saved"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.save_failed"))))}>{t("management_learning_program_detail.actions.save")}</Button></div>}</section>;
 }

@@ -3800,7 +3800,10 @@
       "description": "Description",
       "switches": "Path changes allowed",
       "switches_hint": "How many Career Path switches a student may request in this program, each needing Faculty Dean approval (0 locks the choice). Applies to program v{{version}}; students already enrolled keep the budget of the version they enrolled under.",
-      "switches_error": "Enter a whole number between 0 and 100."
+      "switches_error": "Enter a whole number between 0 and 100.",
+      "career_path_limit": "Career paths per student",
+      "career_path_limit_hint": "Students may select up to this many paths in program v{{version}} and must complete every selected path. Organization limit: {{ceiling}}.",
+      "career_path_limit_error": "Enter a whole number between 1 and {{ceiling}}."
     },
     "paths": {
       "title": "Career Paths",
@@ -3814,7 +3817,8 @@
       "default_badge": "Default",
       "set_default": "Set as default",
       "default_remove_hint": "Choose another default before removing this path",
-      "default_required": "Choose one default Career Path before publishing this version."
+      "default_required": "Choose one default Career Path before publishing this version.",
+      "limit_exceeds_paths": "The student path limit cannot exceed the number of Career Paths in this program."
     },
     "roster": {
       "student": "Student",
@@ -3834,7 +3838,9 @@
       "requested_at": "Requested {{value}}",
       "review_started_at": "Review started {{value}}",
       "empty": "No open requests.",
-      "unknown_student": "Unknown student"
+      "unknown_student": "Unknown student",
+      "kind_change": "Switch",
+      "kind_drop": "Drop"
     },
     "reject": {
       "title": "Reject path change for {{name}}?",
@@ -3920,7 +3926,8 @@
         "advising_required": "Advising required",
         "documentation_missing": "Documentation missing",
         "other": "Other"
-      }
+      },
+      "dropped": "Dropped"
     },
     "versions": {
       "title": "Versions",
@@ -4015,6 +4022,17 @@
         "documentation_missing": "Supporting information for the request was missing.",
         "other": ""
       }
+    },
+    "drop_path": {
+      "action": "Drop this path",
+      "title": "Request to drop \"{{path}}\"?",
+      "description": "Your Faculty Dean must approve this. If they do, \"{{path}}\" is removed from this program and your progress on it is saved but closed. It uses one of your {{count}} remaining path changes, and dropping does not give it back.",
+      "confirm": "Submit request",
+      "submitting": "Submitting…",
+      "submitted": "Drop request submitted — waiting for your Faculty Dean's approval",
+      "failed": "Could not submit the drop request",
+      "reason_label": "Reason for dropping",
+      "reason_placeholder": "Tell your Faculty Dean why you want to drop this path…"
     }
   },
   "management_career_path_detail": {
@@ -6018,9 +6036,18 @@
       "knowledge_graph": "Knowledge graph",
       "retrieval": "Retrieval",
       "spaced_repetition": "Spaced repetition",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "careerpath": "Learning programs"
     },
     "item": {
+      "learning_program__max_concurrent_enrollments": {
+        "label": "Concurrent programs per student",
+        "description": "Maximum awaiting or active Learning Program enrollments per student in this organization. Completed enrollments do not count."
+      },
+      "learning_program__max_career_paths_per_enrollment": {
+        "label": "Career paths per program ceiling",
+        "description": "Maximum per-program path limit a manager may configure. Published versions and existing selections keep their pinned limit if this ceiling is lowered."
+      },
       "ai__llm_timeout_seconds": {
         "label": "LLM timeout — batch (seconds)",
         "description": "Per-call timeout for background/batch LLM roles (extraction, enrichment, KG extraction, OCR). Raise it for long large-context ingest calls; lower it to fail a stalled endpoint sooner."

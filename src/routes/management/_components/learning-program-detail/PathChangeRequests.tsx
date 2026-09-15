@@ -18,6 +18,7 @@ import type {
   PathChangeRejectionReasonCode,
   PathChangeRequest,
   PathChangeRequestStatus,
+  PathRequestKind,
 } from "@/lib/api/types";
 import {
   RejectButton,
@@ -56,6 +57,25 @@ const STATUS_CHIP: Record<
   in_progress: {
     labelKey: "management_learning_program_detail.requests.in_progress",
     className: "bg-m3-primary-fixed text-m3-primary",
+  },
+};
+
+/**
+ * What the student is asking for, as a chip beside the status.
+ *
+ * The row shows the reason and the status but never named the destination, so
+ * before this a dean could not tell a switch from a drop without opening the
+ * request — and the two decisions are not interchangeable: approving a drop
+ * removes a path and grants nothing back.
+ */
+const KIND_CHIP: Record<PathRequestKind, { labelKey: string; className: string }> = {
+  change: {
+    labelKey: "management_learning_program_detail.requests.kind_change",
+    className: "bg-m3-surface-container-high text-text-muted",
+  },
+  drop: {
+    labelKey: "management_learning_program_detail.requests.kind_drop",
+    className: "bg-rose-100 text-rose-900",
   },
 };
 
@@ -129,6 +149,7 @@ function RequestRow({
   const { t } = useTranslation();
   const acknowledged = request.status === "in_progress";
   const chip = STATUS_CHIP[acknowledged ? "in_progress" : "pending"];
+  const kindChip = KIND_CHIP[request.kind];
   const formatDateTime = useFormatDateTimeMedium();
 
   return (
@@ -142,6 +163,14 @@ function RequestRow({
           )}
         >
           {t(chip.labelKey)}
+        </span>
+        <span
+          className={cn(
+            "ml-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold",
+            kindChip.className,
+          )}
+        >
+          {t(kindChip.labelKey)}
         </span>
         <p className="mt-1 truncate text-sm" title={request.reason}>
           {request.reason}

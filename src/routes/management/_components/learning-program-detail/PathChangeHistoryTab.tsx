@@ -119,7 +119,7 @@ function boundsForRange(
 
 function pathName(
   enrollment: LearningProgramEnrollment,
-  careerPathId: string | undefined,
+  careerPathId: string | null | undefined,
   unavailableLabel: string,
 ): string {
   if (!careerPathId) return unavailableLabel;
@@ -133,7 +133,7 @@ function buildRows(
   requests: PathChangeRequest[],
   roster: LearningProgramEnrollment[],
   usersById: Map<string, HistoryUser>,
-  labels: { unknownStudent: string; unavailablePath: string },
+  labels: { unknownStudent: string; unavailablePath: string; dropped: string },
 ): HistoryRow[] {
   const enrollmentById = new Map(roster.map((item) => [item.id, item]));
 
@@ -160,11 +160,14 @@ function buildRows(
           fromAttempt?.career_path_id,
           labels.unavailablePath,
         ),
-        toPath: pathName(
-          enrollment,
-          request.target_career_path_id,
-          labels.unavailablePath,
-        ),
+        toPath:
+          request.kind === "drop"
+            ? labels.dropped
+            : pathName(
+                enrollment,
+                request.target_career_path_id,
+                labels.unavailablePath,
+              ),
         result: request.status,
         occurredAt: request.reviewed_at ?? request.created_at,
       },
@@ -217,6 +220,7 @@ export function PathChangeHistoryTab({
       buildRows(requests, roster, usersById, {
         unknownStudent: t("management_learning_program_detail.history.unknown_student"),
         unavailablePath: t("management_learning_program_detail.history.unavailable_path"),
+        dropped: t("management_learning_program_detail.history.dropped"),
       }),
     [requests, roster, t, usersById],
   );

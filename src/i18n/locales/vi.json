@@ -3629,7 +3629,10 @@
       "description": "Mô tả",
       "switches": "Số lần được đổi lộ trình",
       "switches_hint": "Số lần sinh viên có thể yêu cầu đổi lộ trình trong chương trình này; mỗi lần cần Trưởng khoa phê duyệt (0 nghĩa là khóa lựa chọn). Áp dụng cho chương trình v{{version}}; sinh viên đã ghi danh giữ giới hạn của phiên bản lúc ghi danh.",
-      "switches_error": "Nhập số nguyên từ 0 đến 100."
+      "switches_error": "Nhập số nguyên từ 0 đến 100.",
+      "career_path_limit": "Số lộ trình mỗi sinh viên",
+      "career_path_limit_hint": "Sinh viên có thể chọn tối đa số lộ trình này trong chương trình v{{version}} và phải hoàn thành tất cả lộ trình đã chọn. Giới hạn của tổ chức: {{ceiling}}.",
+      "career_path_limit_error": "Nhập số nguyên từ 1 đến {{ceiling}}."
     },
     "paths": {
       "title": "Lộ trình nghề nghiệp",
@@ -3643,7 +3646,8 @@
       "default_badge": "Mặc định",
       "set_default": "Đặt làm mặc định",
       "default_remove_hint": "Hãy chọn lộ trình mặc định khác trước khi xóa",
-      "default_required": "Hãy chọn một lộ trình nghề nghiệp mặc định trước khi xuất bản phiên bản này."
+      "default_required": "Hãy chọn một lộ trình nghề nghiệp mặc định trước khi xuất bản phiên bản này.",
+      "limit_exceeds_paths": "Giới hạn lộ trình của sinh viên không được vượt quá số lộ trình có trong chương trình."
     },
     "roster": {
       "student": "Sinh viên",
@@ -3663,7 +3667,9 @@
       "requested_at": "Đã gửi {{value}}",
       "review_started_at": "Bắt đầu xem xét {{value}}",
       "empty": "Không có yêu cầu đang mở.",
-      "unknown_student": "Sinh viên không xác định"
+      "unknown_student": "Sinh viên không xác định",
+      "kind_change": "Đổi",
+      "kind_drop": "Bỏ"
     },
     "reject": {
       "title": "Từ chối yêu cầu đổi lộ trình của {{name}}?",
@@ -3749,7 +3755,8 @@
         "advising_required": "Cần tư vấn",
         "documentation_missing": "Thiếu thông tin hỗ trợ",
         "other": "Lý do khác"
-      }
+      },
+      "dropped": "Đã bỏ"
     },
     "versions": {
       "title": "Phiên bản",
@@ -3844,6 +3851,17 @@
         "documentation_missing": "Yêu cầu còn thiếu thông tin hỗ trợ.",
         "other": ""
       }
+    },
+    "drop_path": {
+      "action": "Bỏ lộ trình này",
+      "title": "Đề nghị bỏ lộ trình \"{{path}}\"?",
+      "description": "Trưởng khoa phải phê duyệt đề nghị này. Nếu được duyệt, \"{{path}}\" sẽ được gỡ khỏi chương trình và tiến độ của bạn được lưu lại nhưng đóng lại. Đề nghị này dùng một trong {{count}} lần đổi lộ trình còn lại của bạn và sẽ không được hoàn lại.",
+      "confirm": "Gửi đề nghị",
+      "submitting": "Đang gửi…",
+      "submitted": "Đã gửi đề nghị bỏ lộ trình — đang chờ Trưởng khoa phê duyệt",
+      "failed": "Không thể gửi đề nghị bỏ lộ trình",
+      "reason_label": "Lý do bỏ lộ trình",
+      "reason_placeholder": "Cho Trưởng khoa biết vì sao bạn muốn bỏ lộ trình này…"
     }
   },
   "management_career_path_detail": {
@@ -5992,9 +6010,18 @@
       "knowledge_graph": "Đồ thị tri thức",
       "retrieval": "Truy xuất",
       "spaced_repetition": "Lặp lại ngắt quãng",
-      "notifications": "Thông báo"
+      "notifications": "Thông báo",
+      "careerpath": "Chương trình học"
     },
     "item": {
+      "learning_program__max_concurrent_enrollments": {
+        "label": "Số chương trình đồng thời mỗi sinh viên",
+        "description": "Số lượt ghi danh Chương trình học đang chờ chọn lộ trình hoặc đang hoạt động tối đa của mỗi sinh viên trong tổ chức. Lượt đã hoàn thành không được tính."
+      },
+      "learning_program__max_career_paths_per_enrollment": {
+        "label": "Trần số lộ trình mỗi chương trình",
+        "description": "Giới hạn trên cho số lộ trình mỗi chương trình mà quản lý được phép cấu hình. Phiên bản đã xuất bản và lựa chọn hiện có vẫn giữ giới hạn đã ghim nếu trần này được hạ xuống."
+      },
       "ai__llm_timeout_seconds": {
         "label": "Thời gian chờ LLM — hàng loạt (giây)",
         "description": "Thời gian chờ mỗi lần gọi cho các vai trò LLM nền/hàng loạt (trích xuất, làm giàu dữ liệu, trích xuất đồ thị tri thức, OCR). Tăng lên cho các lần nạp dữ liệu dài với ngữ cảnh lớn; giảm xuống để phát hiện endpoint bị treo sớm hơn."

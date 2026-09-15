@@ -28,6 +28,7 @@ export interface LearningProgramVersion {
   version_no: number;
   status: "draft" | "published";
   max_path_switches: number;
+  max_career_paths_per_enrollment: number;
   published_at: string | null;
   published_by: string | null;
   published_by_name: string | null;
@@ -102,6 +103,7 @@ export interface LearningProgramCreate {
   name: string;
   description?: string | null;
   max_path_switches?: number;
+  max_career_paths_per_enrollment?: number;
   career_path_ids: string[];
   default_career_path_id?: string | null;
 }
@@ -120,6 +122,7 @@ export interface LearningProgramAuthoringOptions {
   faculties: LearningProgramOption[];
   career_paths: LearningProgramOption[];
   default_faculty_id: string | null;
+  max_career_paths_per_program: number;
 }
 
 /** Why a Faculty Dean rejected a path-change request. Mirrors the backend
@@ -143,12 +146,21 @@ export type PathChangeRequestStatus =
   | "cancelled"
   | "invalidated";
 
+/** What a student asked for. Mirrors the backend `PATH_REQUEST_KINDS` tuple
+ *  and the `ck_path_change_requests_kind` CHECK constraint. */
+export type PathRequestKind = "change" | "drop";
+
 export interface PathChangeRequest {
   id: string;
   program_enrollment_id: string;
   from_attempt_id: string;
-  target_career_path_id: string;
-  target_career_path_version_id: string;
+  /** `change` moves the attempt to another path; `drop` ends it with no
+   *  replacement. Both share this queue, the single-open-request slot and the
+   *  switch budget. */
+  kind: PathRequestKind;
+  /** Null on a `drop`, which has no destination. */
+  target_career_path_id: string | null;
+  target_career_path_version_id: string | null;
   reason: string;
   status: PathChangeRequestStatus;
   /** When a dean acknowledged the request (no decision implied). */

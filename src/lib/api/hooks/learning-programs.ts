@@ -296,6 +296,36 @@ export function useRequestProgramPathChange() {
   });
 }
 
+/**
+ * Ask a Faculty Dean to end one Career Path without taking another.
+ *
+ * `fromAttemptId` is required, unlike a change: a drop is only legal while two
+ * or more paths are active, so there is never a single obvious attempt to
+ * infer. Cancelling uses `useCancelProgramPathChange` — one queue, one slot.
+ */
+export function useRequestProgramPathDrop() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      enrollmentId,
+      fromAttemptId,
+      reason,
+    }: {
+      enrollmentId: string;
+      fromAttemptId: string;
+      reason: string;
+    }) =>
+      apiPost<PathChangeRequest>(
+        `/me/learning-program-enrollments/${enrollmentId}/path-drop-requests`,
+        { from_attempt_id: fromAttemptId, reason },
+      ),
+    onSuccess: () =>
+      void qc.invalidateQueries({
+        queryKey: queryKeys.learningPrograms.mine(),
+      }),
+  });
+}
+
 export function useCancelProgramPathChange() {
   const qc = useQueryClient();
   return useMutation({

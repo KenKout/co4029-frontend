@@ -20,6 +20,7 @@ import {
   ChangeRequestHistory,
   OpenChangeRequestBanner,
 } from "./_components/ChangeRequestHistory";
+import { DropPathRequest } from "./_components/DropPathRequest";
 import { PathCard } from "./_components/PathCard";
 
 function SelectedPaths({
@@ -77,6 +78,17 @@ function SelectedPaths({
                 />
               </div>
             </div>
+            {/* Only on a path still being studied: a completed path is a
+                result, not a commitment to walk back. */}
+            {attempt.status === "active" ? (
+              <div className="flex justify-end">
+                <DropPathRequest
+                  enrollment={enrollment}
+                  attemptId={attempt.id}
+                  pathName={path.name}
+                />
+              </div>
+            ) : null}
           </div>
         );
       })}
