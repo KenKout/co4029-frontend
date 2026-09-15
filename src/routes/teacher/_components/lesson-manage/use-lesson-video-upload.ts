@@ -19,7 +19,12 @@ export function useLessonVideoUpload({
   data: LessonManageData;
   editor: LessonEditorState;
 }) {
-  const { updateLesson, initVideoUpload, completeVideoUpload } = data;
+  const {
+    updateLesson,
+    initVideoUpload,
+    completeVideoUpload,
+    bulkSetVisibility,
+  } = data;
 
   async function handleVideoUpload(file: File) {
     if (editor.uploadingVideo) return;
@@ -58,6 +63,10 @@ export function useLessonVideoUpload({
           storage_object_id: init.storage_object_id,
           checksum_sha256: checksum,
         },
+      });
+      await bulkSetVisibility.mutateAsync({
+        materialIds: [init.material_id],
+        visible: true,
       });
       await updateLesson.mutateAsync({ primary_material_id: init.material_id });
       toast.success(t("teacher_common.video_uploaded"));
