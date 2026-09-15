@@ -4,12 +4,58 @@ import { ArrowLeft } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { SectionHeader } from "@/components/ui/section-header";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { useCourse } from "@/lib/api/hooks/courses";
+import { useUsersByIdMap } from "@/lib/api/hooks/user-identities";
 import { useStudentSrDetail } from "@/lib/api/hooks/spaced-repetition";
 
 import { LessonRetentionSection } from "./_components/sr-student-detail/LessonRetentionSection";
 import { RecentReviewsSection } from "./_components/sr-student-detail/RecentReviewsSection";
 import { useFormatRelative } from "./_components/sr-student-detail/use-format-relative";
+
+/**
+ * Back arrow + the student identity block + page subtitle. Split out so the
+ * page component stays under the complexity cap.
+ */
+function StudentDetailHeader({
+  courseId,
+  studentId,
+  fallbackName,
+  loadingLabel,
+}: {
+  courseId: string;
+  studentId: string;
+  fallbackName: string | undefined;
+  loadingLabel: string;
+}) {
+  const { t } = useTranslation();
+  const userById = useUsersByIdMap([studentId]);
+  const studentUser = userById.get(studentId);
+  return (
+    <div className="flex items-center gap-3">
+      <Link
+        to="/teacher/courses/$courseId/at-risk"
+        params={{ courseId }}
+        className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
+        aria-label={t("teacher_sr_cohort.back")}
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Link>
+      <div className="flex items-center gap-3 min-w-0">
+        <UserEmailIdentity
+          id={studentId}
+          displayName={
+            studentUser?.profile?.display_name || fallbackName || loadingLabel
+          }
+          avatarUrl={studentUser?.profile?.avatar_url ?? null}
+          email={studentUser?.primary_email ?? null}
+          size="lg"
+        />
+        <SectionHeader title={t("teacher_sr_student_detail.subtitle")} />
+      </div>
+    </div>
+  );
+}
 
 /**
  * One student's spaced-repetition detail: per-lesson retention plus the most
@@ -29,7 +75,6 @@ export default function TeacherSrStudentDetailPage() {
   const { data, isLoading } = useStudentSrDetail(courseId, studentId, {
     recentReviewsLimit: 20,
   });
-
   const lessons = data?.lessons ?? [];
   const reviews = data?.recent_reviews ?? [];
 
@@ -59,20 +104,12 @@ export default function TeacherSrStudentDetailPage() {
           ]}
         />
 
-        <div className="flex items-center gap-3">
-          <Link
-            to="/teacher/courses/$courseId/at-risk"
-            params={{ courseId }}
-            className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-            aria-label={t("teacher_sr_cohort.back")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <SectionHeader
-            title={data?.name ?? t("common.loading")}
-            subtitle={t("teacher_sr_student_detail.subtitle")}
-          />
-        </div>
+        <StudentDetailHeader
+          courseId={courseId}
+          studentId={studentId}
+          fallbackName={data?.name}
+          loadingLabel={t("common.loading")}
+        />
 
         <LessonRetentionSection lessons={lessons} isLoading={isLoading} t={t} />
 

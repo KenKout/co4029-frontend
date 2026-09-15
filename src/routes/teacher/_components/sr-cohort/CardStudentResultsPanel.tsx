@@ -1,10 +1,35 @@
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
+import { UserEmailIdentity } from "@/components/ui/user-identity";
+import { useUsersByIdMap } from "@/lib/api/hooks/user-identities";
 import type { CardStudentResult } from "@/lib/api/hooks/spaced-repetition";
 import { useRelDate } from "@/lib/format/date";
 
 import type { TranslateFn } from "./types";
+
+/**
+ * Per-student identity cell: avatar + name via one batch `/users/by-ids`
+ * lookup for the expanded panel, falling back to the row's own name.
+ */
+function CardStudentIdentity({
+  studentId,
+  fallbackName,
+}: {
+  studentId: string;
+  fallbackName: string;
+}) {
+  const byId = useUsersByIdMap([studentId]);
+  const u = byId.get(studentId);
+  return (
+    <UserEmailIdentity
+      id={studentId}
+      displayName={u?.profile?.display_name || fallbackName}
+      avatarUrl={u?.profile?.avatar_url ?? null}
+      email={u?.primary_email ?? null}
+    />
+  );
+}
 
 function LastResultCell({
   result,
@@ -87,12 +112,7 @@ export function CardStudentResultsPanel({
             key={r.student_id}
             className="grid grid-cols-[1fr_90px_110px_120px] gap-3 px-4 py-2.5 items-center"
           >
-            <span
-              className="text-sm text-m3-on-surface truncate"
-              title={r.name}
-            >
-              {r.name}
-            </span>
+            <CardStudentIdentity studentId={r.student_id} fallbackName={r.name} />
             <LastResultCell result={r} t={t} />
             <span className="text-xs text-m3-on-surface-variant text-center tabular-nums">
               {r.review_count > 0

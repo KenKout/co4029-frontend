@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 
 import { GradientProgress } from "@/components/ui/gradient-progress";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 
 import { formatHours } from "./helpers";
 import { RosterStatusBadge } from "./RosterStatusBadge";
@@ -30,16 +31,12 @@ export function RosterProgressRow({
       params={{ courseId, studentId: row.user_id }}
       className="grid grid-cols-[1fr_120px_140px_120px_100px] gap-4 items-center px-6 py-3 hover:bg-m3-surface-container-low transition-colors cursor-pointer"
     >
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-m3-on-surface truncate">
-          {row.display_name}
-        </p>
-        {row.email && (
-          <p className="text-xs text-m3-on-surface-variant truncate">
-            {row.email}
-          </p>
-        )}
-      </div>
+      <UserEmailIdentity
+        id={row.user_id}
+        displayName={row.display_name}
+        avatarUrl={row.avatar_url}
+        email={row.email}
+      />
       <span className="text-sm text-m3-on-surface-variant tabular-nums">
         {row.completed_lessons}/{row.total_lessons}
       </span>

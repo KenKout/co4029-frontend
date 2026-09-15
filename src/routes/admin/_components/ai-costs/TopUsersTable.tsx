@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
+import { useUsersByIdMap } from "@/lib/api/hooks/user-identities";
 import type { AiCostsByUser as AiCostsByUserRow } from "@/lib/api/types";
 import { useFormatters } from "./use-formatters";
 
@@ -7,15 +9,24 @@ import { useFormatters } from "./use-formatters";
 export function TopUsersTable({ rows }: { rows: AiCostsByUserRow[] }) {
   const { t } = useTranslation();
   const fmt = useFormatters();
+  const byId = useUsersByIdMap(rows.map((r) => r.user_id));
   const columns: DataTableColumn<AiCostsByUserRow>[] = [
     {
       id: "user",
       header: t("admin.ai_costs.cols.user"),
       sortable: true,
       sortValue: (r) => r.display_name ?? "",
-      cell: (r) => (
-        <span className="font-medium text-text-strong">{r.display_name}</span>
-      ),
+      cell: (r) => {
+        const u = byId.get(r.user_id);
+        return (
+          <UserEmailIdentity
+            id={r.user_id}
+            displayName={u?.profile?.display_name || r.display_name || r.user_id}
+            avatarUrl={u?.profile?.avatar_url ?? null}
+            email={u?.primary_email ?? null}
+          />
+        );
+      },
     },
     {
       id: "cost",

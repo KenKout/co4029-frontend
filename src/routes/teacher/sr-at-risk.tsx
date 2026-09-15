@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { DataTable } from "@/components/ui/data-table";
 import { SectionHeader } from "@/components/ui/section-header";
 import { useCourse } from "@/lib/api/hooks/courses";
+import { useUsersByIdMap } from "@/lib/api/hooks/user-identities";
 import { useAtRiskStudents } from "@/lib/api/hooks/spaced-repetition";
 import { useRelDate } from "@/lib/format/date";
 
@@ -42,7 +43,11 @@ export default function TeacherSrAtRiskPage() {
   const goToDetail = (studentId: string) =>
     void navigate({ to: SR_DETAIL_TO, params: { courseId, studentId } });
 
-  const columns = buildAtRiskColumns({ courseId, t, relDate });
+  const userById = useUsersByIdMap(
+    (students ?? []).map((s) => s.student_id),
+  );
+
+  const columns = buildAtRiskColumns({ courseId, t, relDate, userById });
 
   return (
     <div className="min-h-screen pb-12">

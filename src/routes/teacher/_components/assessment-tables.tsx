@@ -8,11 +8,32 @@ import {
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { formatDateTimeMedium } from "@/lib/format/date";
+import { useUsersByIdMap } from "@/lib/api/hooks/user-identities";
 import type {
   InterviewSessionTeacherRead,
   QuizAttemptTeacherRead,
 } from "@/lib/api/types";
+
+/**
+ * Student identity cell backed by one shared `/users/by-ids` lookup for the
+ * whole table: avatar + name + email (name/email fall back to the row's own
+ * fields when the id does not resolve).
+ */
+function useStudentIdentityMap(
+  rows: { student_id: string; student_name?: string | null }[],
+) {
+  const byId = useUsersByIdMap(rows.map((r) => r.student_id));
+  return (row: { student_id: string; student_name?: string | null }) => {
+    const u = byId.get(row.student_id);
+    return {
+      displayName: u?.profile?.display_name || row.student_name || row.student_id,
+      email: u?.primary_email ?? null,
+      avatarUrl: u?.profile?.avatar_url ?? null,
+    };
+  };
+}
 
 /** The tables' date cells: locale-aware medium date + time (or em dash). */
 function useTableDateFormatter() {
@@ -100,17 +121,24 @@ export function QuizAttemptsTable({
   onRowClick,
 }: QuizAttemptsTableProps) {
   const fmtDate = useTableDateFormatter();
+  const identityOf = useStudentIdentityMap(attempts);
   const columns: DataTableColumn<QuizAttemptTeacherRead>[] = [
     ...(showStudentColumn
       ? [
           {
             id: "student",
             header: "Student",
-            cell: (a: QuizAttemptTeacherRead) => (
-              <span className="font-medium text-m3-on-surface">
-                {a.student_name ?? a.student_id}
-              </span>
-            ),
+            cell: (a: QuizAttemptTeacherRead) => {
+              const s = identityOf(a);
+              return (
+                <UserEmailIdentity
+                  id={a.student_id}
+                  displayName={s.displayName}
+                  avatarUrl={s.avatarUrl}
+                  email={s.email}
+                />
+              );
+            },
           } satisfies DataTableColumn<QuizAttemptTeacherRead>,
         ]
       : []),
@@ -252,17 +280,24 @@ export function InterviewSessionsTable({
   onRowClick,
 }: InterviewSessionsTableProps) {
   const fmtDate = useTableDateFormatter();
+  const identityOf = useStudentIdentityMap(sessions);
   const columns: DataTableColumn<InterviewSessionTeacherRead>[] = [
     ...(showStudentColumn
       ? [
           {
             id: "student",
             header: "Student",
-            cell: (s: InterviewSessionTeacherRead) => (
-              <span className="font-medium text-m3-on-surface">
-                {s.student_name ?? s.student_id}
-              </span>
-            ),
+            cell: (s: InterviewSessionTeacherRead) => {
+              const identity = identityOf(s);
+              return (
+                <UserEmailIdentity
+                  id={s.student_id}
+                  displayName={identity.displayName}
+                  avatarUrl={identity.avatarUrl}
+                  email={identity.email}
+                />
+              );
+            },
           } satisfies DataTableColumn<InterviewSessionTeacherRead>,
         ]
       : []),

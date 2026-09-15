@@ -19,6 +19,8 @@ export type ProgressRow = Omit<
   completion_percent: number;
   display_name: string;
   email: string;
+  /** Presigned by the backend; undefined when storage has no photo. */
+  avatar_url?: string | null;
 };
 
 /** Roster lookup: student id → display name + email. */

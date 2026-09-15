@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Clock, Eye } from "lucide-react";
 
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import type { useRelDate } from "@/lib/format/date";
 import type { AtRiskStudent } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,8 @@ export interface AtRiskColumnDeps {
   courseId: string;
   t: TranslateFn;
   relDate: ReturnType<typeof useRelDate>;
+  /** id → User, from the page's one shared `/users/by-ids` lookup. */
+  userById: Map<string, import("@/lib/api/types").User>;
 }
 
 /** Student / why-flagged / priority columns for the at-risk roster table. */
@@ -50,27 +53,37 @@ export function buildAtRiskColumns({
   courseId,
   t,
   relDate,
+  userById,
 }: AtRiskColumnDeps): DataTableColumn<AtRiskStudent>[] {
   return [
     {
       id: "student",
       header: t("teacher_sr_at_risk.cols.student"),
-      cell: (s) => (
-        <div className="min-w-0">
+      cell: (s) => {
+        const u = userById.get(s.student_id);
+        return (
           <Link
             to={SR_DETAIL_TO}
             params={{ courseId, studentId: s.student_id }}
             onClick={(e) => e.stopPropagation()}
-            className="block max-w-[24ch] truncate text-sm font-semibold text-m3-on-surface hover:text-m3-primary hover:underline"
+            className="flex min-w-0 items-center gap-3 max-w-[26ch]"
           >
-            {s.name}
+            <UserEmailIdentity
+              id={s.student_id}
+              displayName={u?.profile?.display_name || s.name}
+              avatarUrl={u?.profile?.avatar_url ?? null}
+              email={u?.primary_email ?? null}
+              subtitle={
+                <>
+                  <Clock className="h-3 w-3 shrink-0" />
+                  {relDate(s.last_active_at)}
+                </>
+              }
+              className="min-w-0"
+            />
           </Link>
-          <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
-            <Clock className="h-3 w-3" />
-            {relDate(s.last_active_at)}
-          </span>
-        </div>
-      ),
+        );
+      },
     },
     {
       id: "why_flagged",
