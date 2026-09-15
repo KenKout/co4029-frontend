@@ -12,6 +12,7 @@ import {
   makeMarkdownApplier,
 } from "@/components/ui/markdown-toolbar";
 import { LessonEditorSection } from "./LessonEditorSection";
+import { MarkdownEditorSurface } from "./MarkdownEditorSurface";
 
 /**
  * Markdown lesson-notes editor for video-type lessons: a formatting toolbar
@@ -44,48 +45,50 @@ export function VideoLessonNotes({
             {t("teacher_lesson_manage.sections.lesson_notes_hint")}
           </p>
         </div>
-        <div className="flex items-center gap-1 p-1.5 bg-m3-surface-container-low rounded-xl">
-          <ToolbarBtn
-            icon={Bold}
-            label="Bold"
-            onClick={() => applyMarkdown("**")}
-          />
-          <ToolbarBtn
-            icon={Italic}
-            label="Italic"
-            onClick={() => applyMarkdown("*")}
-          />
-          <span className="w-px h-4 bg-m3-outline-variant/30 mx-0.5" />
-          <ToolbarBtn
-            icon={List}
-            label="Bullet List"
-            onClick={() => applyBlock("- ")}
-          />
-          <ToolbarBtn
-            icon={LinkIcon}
-            label="Insert Link"
-            onClick={() => applyMarkdown("[", "](url)")}
-          />
-          <ToolbarBtn
-            icon={Code}
-            label="Inline Code"
-            onClick={() => applyMarkdown("`")}
-          />
-          <ToolbarBtn
-            icon={Image}
-            label="Insert Image"
-            onClick={() => applyMarkdown("![alt](", ")")}
-          />
-        </div>
       </div>
-      <textarea
-        ref={notesRef}
-        className="min-h-[320px] w-full resize-y rounded-xl border border-m3-outline-variant/10 bg-m3-surface-container-lowest p-4 font-body text-base leading-relaxed text-m3-on-surface shadow-sm outline-none transition-all placeholder:text-m3-on-surface-variant/40 focus:ring-2 focus:ring-m3-secondary/20 sm:p-6"
+      <MarkdownEditorSurface
+        value={notes}
+        onChange={setNotes}
+        editorRef={notesRef}
+        minHeight="min-h-[320px]"
         placeholder={
           "Write lesson notes in Markdown…\n\nYou can use **bold**, *italic*, lists, code blocks, and more."
         }
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
+        toolbar={
+          <>
+            <ToolbarBtn
+              icon={Bold}
+              label="Bold"
+              onClick={() => applyMarkdown("**")}
+            />
+            <ToolbarBtn
+              icon={Italic}
+              label="Italic"
+              onClick={() => applyMarkdown("*")}
+            />
+            <span className="w-px h-4 bg-m3-outline-variant/30 mx-0.5" />
+            <ToolbarBtn
+              icon={List}
+              label="Bullet List"
+              onClick={() => applyBlock("- ")}
+            />
+            <ToolbarBtn
+              icon={LinkIcon}
+              label="Insert Link"
+              onClick={() => applyMarkdown("[", "](url)")}
+            />
+            <ToolbarBtn
+              icon={Code}
+              label="Inline Code"
+              onClick={() => applyMarkdown("`")}
+            />
+            <ToolbarBtn
+              icon={Image}
+              label="Insert Image"
+              onClick={() => applyMarkdown("![alt](", ")")}
+            />
+          </>
+        }
       />
     </LessonEditorSection>
   );

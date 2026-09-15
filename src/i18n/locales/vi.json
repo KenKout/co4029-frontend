@@ -5541,7 +5541,10 @@
     },
     "editor": {
       "label": "Trình soạn thảo Markdown",
-      "hint": "Văn bản thuần hoặc Markdown"
+      "hint": "Văn bản thuần hoặc Markdown",
+      "write": "Soạn thảo",
+      "preview": "Xem trước",
+      "empty_preview": "Bắt đầu soạn thảo để xem nội dung hiển thị."
     },
     "actions": {
       "archive": "Lưu trữ",

@@ -5714,7 +5714,10 @@
     },
     "editor": {
       "label": "Markdown Editor",
-      "hint": "Plain text or Markdown"
+      "hint": "Plain text or Markdown",
+      "write": "Write",
+      "preview": "Preview",
+      "empty_preview": "Start writing to see the rendered preview."
     },
     "actions": {
       "archive": "Archive",
