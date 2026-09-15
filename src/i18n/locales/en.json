@@ -599,6 +599,8 @@
     "reading_open_fullscreen": "Open fullscreen",
     "reading_material_unavailable": "Reading material is not available right now.",
     "reading_empty": "No reading content has been added yet.",
+    "video_loading": "Loading video…",
+    "video_unavailable": "This video is not available right now.",
     "mark_complete": {
       "mark_done": "Mark as complete",
       "completed": "Completed"

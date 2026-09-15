@@ -715,6 +715,10 @@ function Composer({
   const replyName =
     replyTo?.author?.display_name?.trim() || t("discussion.unknown_author");
 
+  useEffect(() => {
+    if (replyTo) inputRef.current?.focus();
+  }, [replyTo]);
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmed = body.trim();

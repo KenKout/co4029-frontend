@@ -21,7 +21,7 @@ import { LearnBreadcrumb } from "./_components/course-learn/LearnBreadcrumb";
 import { LessonHeadingBlock } from "./_components/course-learn/LessonHeadingBlock";
 import {
   LessonPlayerFrame,
-  VideoEngagementTracker,
+  LessonVideoPlayer,
 } from "./_components/course-learn/LessonPlayerFrame";
 import { LessonTabsSection } from "./_components/course-learn/LessonTabsSection";
 import { NoLessonsNotice } from "./_components/course-learn/NoLessonsNotice";
@@ -654,10 +654,11 @@ function LessonMainPane({
   ) : activeLesson?.lesson_type === "reading" ? (
     <ReadingLessonPane lesson={activeLesson} courseId={courseId} />
   ) : activeLesson ? (
-    <>
-      <VideoEngagementTracker lesson={activeLesson} courseId={courseId} />
-      <LessonPlayerFrame containerRef={playerRef} showPlayButton />
-    </>
+    <LessonVideoPlayer
+      lesson={activeLesson}
+      courseId={courseId}
+      containerRef={playerRef}
+    />
   ) : (
     <LessonPlayerFrame containerRef={playerRef} />
   );

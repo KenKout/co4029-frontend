@@ -547,6 +547,8 @@
     "reading_open_fullscreen": "Mở toàn màn hình",
     "reading_material_unavailable": "Tài liệu đọc hiện chưa khả dụng.",
     "reading_empty": "Bài học này chưa có nội dung đọc.",
+    "video_loading": "Đang tải video…",
+    "video_unavailable": "Video này hiện chưa khả dụng.",
     "mark_complete": {
       "mark_done": "Đánh dấu hoàn thành",
       "completed": "Đã hoàn thành"

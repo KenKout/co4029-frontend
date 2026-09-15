@@ -20,8 +20,7 @@ import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/Cur
 import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
 import { LessonTabsSection } from "@/routes/courses/_components/course-learn/LessonTabsSection";
 import {
-  LessonPlayerFrame,
-  VideoEngagementTracker,
+  LessonVideoPlayer,
 } from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
 import {
   useCurriculumItems,
@@ -483,10 +482,11 @@ function LessonContentPane({
     );
   }
   return (
-    <>
-      <VideoEngagementTracker lesson={activeLesson} courseId={courseId} />
-      <LessonPlayerFrame containerRef={playerRef} showPlayButton />
-    </>
+    <LessonVideoPlayer
+      lesson={activeLesson}
+      courseId={courseId}
+      containerRef={playerRef}
+    />
   );
 }
 
