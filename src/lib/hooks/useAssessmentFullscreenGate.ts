@@ -22,6 +22,12 @@
  *    where in-flight narration is cut — but never re-enters by itself: a
  *    browser requires a user gesture, so the gate screen's Re-enter button
  *    is the path back.
+ *  - The exit verdict can be DEFERRED: `pendingExit` is true from the moment
+ *    fullscreen is lost until the caller calls `resolveExit(accepted)`. The
+ *    interview gate uses this to show a Back / Continue confirmation — an
+ *    accidental Escape that is undone by re-entering fullscreen is NOT scored,
+ *    while an accepted windowed exit is. `pendingExit` clears by itself when
+ *    the browser re-enters fullscreen on its own (F11) or the session ends.
  *  - Everything resets when the session is no longer active.
  */
 
@@ -60,6 +66,19 @@ export interface AssessmentFullscreenGate {
   enter: () => Promise<boolean>;
   /** Programmatic exit (start failure, session end). Intentional by default. */
   exit: (intentional?: boolean) => Promise<void>;
+  /**
+   * True while an unexpected exit awaits its verdict. The interview gate
+   * shows its Back / Continue confirmation during this window; calling
+   * `resolveExit` settles it. Quiz never reads this and keeps the hard gate.
+   */
+  pendingExit: boolean;
+  /**
+   * Settle a pending exit. `accepted=false` means the participant is going
+   * back to fullscreen (Back): the exit is confirmed as accidental and the
+   * caller may suppress its integrity recording. `accepted=true` means they
+   * chose to continue windowed (Continue): record it.
+   */
+  resolveExit: (accepted: boolean) => void;
   /** True while a live session must be locked: active but not fullscreen. */
   requiredOpen: boolean;
   /** Unexpected (not ours) exits this session — integrity messaging. */
@@ -94,13 +113,27 @@ export function useAssessmentFullscreenGate(
   const [requestState, setRequestState] =
     useState<FullscreenRequestState>("idle");
   const [exitCount, setExitCount] = useState(0);
+  // Set when fullscreen is lost unexpectedly, cleared by resolveExit, by the
+  // browser re-entering fullscreen, or by the session ending. While set, the
+  // exit's integrity recording is still deferrable.
+  const [pendingExit, setPendingExit] = useState(false);
 
   const handleFullscreenLost = useCallback(() => {
     setExitCount((count) => count + 1);
+    setPendingExit(true);
     // The browser revoked fullscreen on its own; the next request is a fresh
     // user gesture, so drop any stale granted/denied state.
     setRequestState("idle");
     onUnexpectedExitRef.current?.();
+  }, []);
+
+  const resolveExit = useCallback((accepted: boolean) => {
+    setPendingExit(false);
+    if (!accepted) {
+      // Back = accidental exit, undone. Retract the exit we optimistically
+      // counted so the recorded warning count stays honest.
+      setExitCount((count) => Math.max(0, count - 1));
+    }
   }, []);
 
   const fullscreen = useAssessmentFullscreen(active, {
@@ -144,6 +177,12 @@ export function useAssessmentFullscreenGate(
   const isFullscreen = fullscreen.isFullscreen;
   const requiredOpen = active && !isFullscreen;
 
+  // Self-clearing: the participant answered the browser's own re-entry
+  // gesture (F11) or the session ended while the dialog was up.
+  useEffect(() => {
+    if (pendingExit && (isFullscreen || !active)) setPendingExit(false);
+  }, [pendingExit, isFullscreen, active]);
+
   return {
     supported: fullscreen.supported,
     isFullscreen,
@@ -151,6 +190,8 @@ export function useAssessmentFullscreenGate(
     requestState,
     enter,
     exit,
+    pendingExit,
+    resolveExit,
     requiredOpen,
     exitCount,
   };

@@ -169,7 +169,10 @@ export function useInterviewProgress(
   // `interviewActive` is already false once `finishResult` lands (and for the
   // prestart screen), so passing it here stops monitoring at exactly the moment
   // the assessment ends. Recording during the live session is unchanged.
-  useIntegrityReporter(interviewActive ? sessionId : null, {
+  const {
+    holdNextFullscreenExit,
+    resolveHeldFullscreenExit,
+  } = useIntegrityReporter(interviewActive ? sessionId : null, {
     onWarning: handleIntegrityWarning,
     onThresholdWarning: handleIntegrityThreshold,
   });
@@ -178,8 +181,16 @@ export function useInterviewProgress(
   // so the timer/integrity hooks above keep running behind the gate screen;
   // the narration-cancel callback cuts the client voice the moment
   // fullscreen is lost mid-speech.
+  //
+  // Accidental-exit confirmation: each unexpected exit ALSO arms the
+  // reporter's hold, so the fullscreen_exit event waits while the gate's
+  // Back / Continue dialog is up. The gate screen settles it — Back drops
+  // the held event (accidental Escape, not scored), Continue records it.
   const fullscreenGate = useAssessmentFullscreenGate(interviewActive, {
-    onUnexpectedExit: () => speech.narration.cancel(),
+    onUnexpectedExit: () => {
+      speech.narration.cancel();
+      holdNextFullscreenExit();
+    },
   });
 
   // Once the session is over, restore the normal app shell (sidebar back).
@@ -204,6 +215,7 @@ export function useInterviewProgress(
     outcomeProgress,
     questionPacing,
     fullscreenGate,
+    resolveHeldFullscreenExit,
     agentStatus,
   };
 }

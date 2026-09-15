@@ -3251,6 +3251,13 @@
       "denied": "Trình duyệt đã từ chối yêu cầu toàn màn hình. Bấm lại nút bên dưới — và cho phép toàn màn hình nếu trình duyệt hỏi.",
       "unsupported": "Trình duyệt hoặc thiết bị này không hỗ trợ toàn màn hình. Vui lòng chuyển sang trình duyệt máy tính (Chrome, Edge, Firefox hoặc Safari) rồi quay lại buổi phỏng vấn."
     },
+    "fullscreen_exit_confirm": {
+      "title": "Thoát toàn màn hình?",
+      "description": "Bạn vừa nhấn Escape và thoát khỏi chế độ toàn màn hình. Bạn có thật sự muốn thoát không?",
+      "warning": "Nếu tiếp tục ở ngoài toàn màn hình, buổi phỏng vấn của bạn sẽ bị cộng {{points}} điểm integrity.",
+      "back": "Quay lại toàn màn hình",
+      "continue": "Thoát toàn màn hình"
+    },
     "fullscreen_timer_note": {
       "timer_continues": "Đồng hồ chấm điểm đang chạy và vẫn tiếp tục chạy trong lúc bạn ở ngoài toàn màn hình."
     },

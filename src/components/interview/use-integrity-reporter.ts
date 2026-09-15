@@ -55,7 +55,12 @@ export interface IntegrityReporterOptions {
 export function useIntegrityReporter(
   sessionId: string | null | undefined,
   options: IntegrityReporterOptions = {},
-) {
+): {
+  /** Arm the hold: the NEXT fullscreen_exit is deferred until resolved. */
+  holdNextFullscreenExit: () => void;
+  /** Settle the held exit: record=true enqueues it, record=false drops it. */
+  resolveHeldFullscreenExit: (record: boolean) => void;
+} {
   const report = useReportIntegrityEvents(sessionId);
   const pendingRef = useRef<IntegrityEvent[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -65,10 +70,18 @@ export function useIntegrityReporter(
   onWarningRef.current = options.onWarning;
   const onThresholdRef = useRef(options.onThresholdWarning);
   onThresholdRef.current = options.onThresholdWarning;
-  // Blurs awaiting their one-macrotask `document.hidden` check. A set, not a
-  // single handle: two blurs in a row are two signals, and only a tab switch
-  // may cancel them. See the listener comments below.
-  const pendingBlursRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  // The held fullscreen exit: an event that has happened (the browser DID
+  // leave fullscreen) but whose scoring is deferred until the gate dialog is
+  // answered. `holdTimerRef` bounds the hold — if the dialog is never
+  // answered (tab closed mid-dialog is moot, but a stuck render must not
+  // swallow the signal forever) the event records after HOLD_TIMEOUT_MS.
+  const heldFsExitRef = useRef<IntegrityEvent | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const HOLD_TIMEOUT_MS = 60_000;
+
+  // Set by `holdNextFullscreenExit`; the NEXT enqueued fullscreen_exit is
+  // parked in `heldFsExitRef` instead of the queue until released.
+  const holdNextRef = useRef(false);
 
   const flush = useCallback(() => {
     if (!sessionId || pendingRef.current.length === 0) return;
@@ -90,6 +103,33 @@ export function useIntegrityReporter(
         /* intentionally silent */
       });
   }, [sessionId, report]);
+
+  const resolveHeldFullscreenExit = useCallback(
+    (record: boolean) => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
+      holdNextRef.current = false;
+      const held = heldFsExitRef.current;
+      heldFsExitRef.current = null;
+      if (held && record) {
+        // Straight into the pending queue; the batch timer scheduled here
+        // sends it with the next flush.
+        pendingRef.current.push(held);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(flush, BATCH_DELAY_MS);
+      }
+    },
+    [flush],
+  );
+  const holdNextFullscreenExit = useCallback(() => {
+    holdNextRef.current = true;
+  }, []);
+  // Blurs awaiting their one-macrotask `document.hidden` check. A set, not a
+  // single handle: two blurs in a row are two signals, and only a tab switch
+  // may cancel them. See the listener comments below.
+  const pendingBlursRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const enqueue = useCallback(
     (event: IntegrityEvent) => {
@@ -148,11 +188,35 @@ export function useIntegrityReporter(
       // WebKit-prefixed property so a Safari exit (which never touches
       // `document.fullscreenElement`) is still recorded.
       if (currentFullscreenElement()) return;
-      enqueue({
+      const event: IntegrityEvent = {
         event_type: "fullscreen_exit",
         severity: "warning",
         metadata: { client_event_id: newClientEventId() },
-      });
+      };
+      if (holdNextRef.current) {
+        // The gate wants to ask "accidental?" first: hold the event while its
+        // Back / Continue dialog is up (bounded by the hold timer so a stuck
+        // dialog cannot swallow the signal forever). The gate settles it via
+        // `resolveHeldFullscreenExit` — Back drops the event, Continue sends
+        // it to the normal queue.
+        heldFsExitRef.current = event;
+        if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = setTimeout(() => {
+          holdTimerRef.current = null;
+          const held = heldFsExitRef.current;
+          heldFsExitRef.current = null;
+          if (held) {
+            pendingRef.current.push(held);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(flush, BATCH_DELAY_MS);
+          }
+        }, HOLD_TIMEOUT_MS);
+        // The immediate toast nudge still fires: the exit DID happen; only
+        // its scoring is deferred.
+        onWarningRef.current?.("fullscreen_exit");
+        return;
+      }
+      enqueue(event);
       onWarningRef.current?.("fullscreen_exit");
     }
 
@@ -176,7 +240,15 @@ export function useIntegrityReporter(
       for (const handle of pendingBlursRef.current) clearTimeout(handle);
       pendingBlursRef.current.clear();
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      // An exit still held at unmount records as normal (the session is
+      // ending — there is no dialog left to answer).
+      const stillHeld = heldFsExitRef.current;
+      heldFsExitRef.current = null;
+      if (stillHeld) pendingRef.current.push(stillHeld);
       flush();
     };
   }, [sessionId, enqueue, flush]);
+
+  return { holdNextFullscreenExit, resolveHeldFullscreenExit };
 }

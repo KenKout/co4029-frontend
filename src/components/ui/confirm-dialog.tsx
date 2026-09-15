@@ -55,6 +55,12 @@ export interface ConfirmDialogProps {
    * "cancel" that unlocks the dialog, so no such button may exist to click.
    */
   showCancel?: boolean;
+  /**
+   * Optional extra action button rendered before the cancel/confirm row.
+   * Used when a dialog needs a third choice (e.g. the interview accidental-
+   * exit dialog's "Continue windowed" alongside Back and Re-enter).
+   */
+  extraButtons?: React.ReactNode;
 }
 
 /**
@@ -79,6 +85,7 @@ export function ConfirmDialog({
   backdropClassName,
   dismissOnBackdrop = false,
   showCancel = true,
+  extraButtons,
 }: ConfirmDialogProps) {
   return (
     <AlertDialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -121,6 +128,7 @@ export function ConfirmDialog({
           {extraContent ? <div className="mt-4">{extraContent}</div> : null}
 
           <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+            {extraButtons}
             {showCancel ? (
               <AlertDialogPrimitive.Close
                 render={

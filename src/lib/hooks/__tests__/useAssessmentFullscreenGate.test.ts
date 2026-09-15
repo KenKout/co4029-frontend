@@ -136,6 +136,51 @@ describe("useAssessmentFullscreenGate", () => {
 
     expect(result.current.exitCount).toBe(2);
     expect(onExitCallback).toHaveBeenCalledTimes(2);
+    // The unexpected exits are pending a verdict (the interview's accidental-
+    // exit dialog decides what they meant).
+    expect(result.current.pendingExit).toBe(true);
+  });
+
+  it("resolveExit(false) retracts the exit and clears the pending flag", () => {
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
+
+    act(() => onUnexpectedExit?.());
+    expect(result.current.pendingExit).toBe(true);
+    expect(result.current.exitCount).toBe(1);
+
+    act(() => result.current.resolveExit(false));
+    expect(result.current.pendingExit).toBe(false);
+    // Accidental exit, undone: no longer counted.
+    expect(result.current.exitCount).toBe(0);
+    // Still locked though — not fullscreen until the participant re-enters.
+    expect(result.current.requiredOpen).toBe(true);
+  });
+
+  it("resolveExit(true) keeps the exit recorded and clears the pending flag", () => {
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
+
+    act(() => onUnexpectedExit?.());
+    act(() => result.current.resolveExit(true));
+    expect(result.current.pendingExit).toBe(false);
+    expect(result.current.exitCount).toBe(1);
+    expect(result.current.requiredOpen).toBe(true);
+  });
+
+  it("clears the pending flag by itself when fullscreen is regained", () => {
+    const { result, rerender } = renderHook(() =>
+      useAssessmentFullscreenGate(true),
+    );
+
+    act(() => onUnexpectedExit?.());
+    expect(result.current.pendingExit).toBe(true);
+
+    // F11 re-entry: the browser regains fullscreen without resolveExit. The
+    // mock's module-level flag doesn't trigger a render by itself, so force
+    // the rerender the real fullscreenchange listener would cause.
+    fullscreenState.isFullscreen = true;
+    rerender();
+    expect(result.current.pendingExit).toBe(false);
+    expect(result.current.requiredOpen).toBe(false);
   });
 
   it("never re-enters on its own after an unexpected exit", () => {

@@ -3422,6 +3422,13 @@
       "denied": "The browser refused the fullscreen request. Press the button again — and allow fullscreen if the browser asks.",
       "unsupported": "This browser or device cannot go fullscreen. Please switch to a desktop browser (Chrome, Edge, Firefox or Safari) and return to the interview."
     },
+    "fullscreen_exit_confirm": {
+      "title": "Exit fullscreen?",
+      "description": "You pressed Escape and left fullscreen. Did you mean to exit?",
+      "warning": "If you continue outside fullscreen, {{points}} integrity points will be added to your session.",
+      "back": "Back to fullscreen",
+      "continue": "Exit fullscreen"
+    },
     "fullscreen_timer_note": {
       "timer_continues": "The graded timer is running and keeps running while you are outside fullscreen."
     },
