@@ -117,6 +117,9 @@ async function persistAnswerToServer(args: {
  * arrays and their original declaration order, since `handleFinalSubmit` is a
  * dependency of the auto-submit effect that must trail them.
  */
+// This hook intentionally owns the complete attempt action lifecycle, including
+// camera preflight, autosave, timeout submission, and password flow.
+// eslint-disable-next-line max-lines-per-function
 export function useAttemptActions(args: {
   t: TFunction;
   state: AttemptSessionState;
@@ -129,6 +132,9 @@ export function useAttemptActions(args: {
   startAttempt: StartAttemptMutation;
   submitAnswer: SubmitAnswerMutation;
   submitAttempt: SubmitAttemptMutation;
+  ensureCamera: () => Promise<boolean>;
+  stopCamera: () => void;
+  requireCamera: boolean;
   /**
    * Request the mandatory fullscreen gate. Must be called from the start
    * click itself — browsers grant `requestFullscreen()` only under a user
@@ -149,6 +155,9 @@ export function useAttemptActions(args: {
     submitAnswer,
     submitAttempt,
     enterFullscreen,
+    ensureCamera,
+    stopCamera,
+    requireCamera,
   } = args;
   const { activeIdx, activeAttemptId, statuses } = state;
   const { passwordInput } = passwordGate;
@@ -172,6 +181,7 @@ export function useAttemptActions(args: {
       // a refusal must not block the attempt from starting — the gate screen
       // takes over instead, and no question is rendered until it is granted.
       void enterFullscreen();
+      if (requireCamera && !(await ensureCamera())) return;
       try {
         const result = await startAttempt.mutateAsync({
           idempotency_key: startIdempotencyKeyRef.current,
@@ -180,10 +190,19 @@ export function useAttemptActions(args: {
         applyStartedAttempt(ctx, result);
         startIdempotencyKeyRef.current = null;
       } catch (err) {
+        stopCamera();
         reportStartFailure(ctx, err);
       }
     },
-    [startAttempt, focusTime, enterFullscreen, t],
+    [
+      startAttempt,
+      focusTime,
+      enterFullscreen,
+      ensureCamera,
+      stopCamera,
+      requireCamera,
+      t,
+    ],
   );
 
   const submitPassword = useCallback(() => {

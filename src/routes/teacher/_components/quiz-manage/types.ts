@@ -22,6 +22,7 @@ export interface SettingsDraft {
   shuffle_questions: boolean;
   shuffle_options: boolean;
   show_hints: boolean;
+  require_camera: boolean;
   reminders_enabled: boolean;
   // Moodle-style headline-score policy (migration 0033).
   grading_method: "highest" | "average" | "first" | "last";

@@ -8,6 +8,7 @@ import { QuizPageQuestions } from "./QuizPageQuestions";
 import { QuizTakingFooter } from "./QuizTakingFooter";
 import { QuizSummaryDialog } from "./QuizSummaryDialog";
 import { QuizTakingTopBar } from "./QuizTakingTopBar";
+import { QuizCameraPreview } from "./QuizGuardScreens";
 import type { QuizStageProps } from "./types";
 
 /**
@@ -91,6 +92,7 @@ export function QuizTakingStage({
         courseTitle={courseTitle}
         progressPct={view.progressPct}
       />
+      <QuizCameraPreview camera={session.camera} />
 
       <div className="w-full px-4 sm:px-6 lg:px-8 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

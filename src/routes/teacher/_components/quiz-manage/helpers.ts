@@ -81,6 +81,7 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     shuffle_questions: quiz.shuffle_questions,
     shuffle_options: quiz.shuffle_options,
     show_hints: quiz.show_hints,
+    require_camera: Boolean(quiz.require_camera),
     reminders_enabled: quiz.reminders_enabled,
     grading_method: quiz.grading_method ?? "highest",
     available_from: isoToLocalInput(quiz.available_from),

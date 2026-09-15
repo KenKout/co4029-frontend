@@ -15,6 +15,13 @@ export type {
 } from "./quizzes/integrity";
 export { useReportQuizIntegrityEvents } from "./quizzes/integrity";
 
+export {
+  useClaimQuizAttemptSession,
+  useQuizAttemptHeartbeat,
+  useReleaseQuizAttemptSession,
+  useTakeoverQuizAttemptSession,
+} from "./quizzes/session";
+
 export type {
   QuizAttemptProgressAnswer,
   QuizAttemptProgressRead,

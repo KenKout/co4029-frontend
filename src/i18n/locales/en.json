@@ -3195,6 +3195,7 @@
       "required_title": "Camera required",
       "required_label": "Camera required",
       "optional_label": "Camera not required",
+      "preview_aria": "Local camera preview",
       "privacy": "Camera is used locally only to verify an active video track; no camera data is recorded, uploaded, or analyzed.",
       "interrupted_description": "An active video track is required to continue. No camera video is recorded, uploaded, or analyzed.",
       "checking": "Checking camera…",
@@ -3332,7 +3333,8 @@
       "close_hint": "Close",
       "close_config": "Close settings",
       "close_integrity": "Close monitoring info",
-      "close_summary": "Close question list"
+      "close_summary": "Close question list",
+      "exit": "Exit quiz"
     },
     "errors": {
       "rate_limited": "Too many requests, please try again later",

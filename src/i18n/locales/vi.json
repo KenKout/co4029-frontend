@@ -3024,6 +3024,7 @@
       "required_title": "Cần bật camera",
       "required_label": "Camera bắt buộc",
       "optional_label": "Camera không bắt buộc",
+      "preview_aria": "Xem trước camera cục bộ",
       "privacy": "Camera chỉ được dùng cục bộ để kiểm tra luồng video; không ghi, tải lên hoặc phân tích dữ liệu.",
       "interrupted_description": "Camera phải có một luồng video đang hoạt động để tiếp tục. Không có video nào được ghi, tải lên hoặc phân tích.",
       "checking": "Đang kiểm tra camera…",
@@ -3154,7 +3155,8 @@
       "close_hint": "Đóng",
       "close_config": "Đóng cài đặt",
       "close_integrity": "Đóng thông tin giám sát",
-      "close_summary": "Đóng danh sách câu hỏi"
+      "close_summary": "Đóng danh sách câu hỏi",
+      "exit": "Thoát bài quiz"
     },
     "errors": {
       "rate_limited": "Quá nhiều yêu cầu, vui lòng thử lại sau",

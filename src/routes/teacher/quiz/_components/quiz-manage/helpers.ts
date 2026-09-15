@@ -127,6 +127,7 @@ export function settingsPatchFromDraft(
     shuffle_questions: draft.shuffle_questions,
     shuffle_options: draft.shuffle_options,
     show_hints: draft.show_hints,
+    require_camera: draft.require_camera,
     reminders_enabled: draft.reminders_enabled,
     grading_method: draft.grading_method,
     available_from: localInputToIso(draft.available_from),

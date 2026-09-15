@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useMyQuizAttempts,
@@ -7,7 +7,10 @@ import {
   useStudentQuiz,
   useSubmitQuizAnswer,
   useSubmitQuizAttempt,
+  useClaimQuizAttemptSession,
+  useTakeoverQuizAttemptSession,
 } from "@/lib/api/hooks/quizzes";
+import { ApiError } from "@/lib/api/client";
 import type { QuizQuestionPublic } from "@/lib/api/types";
 import { useQuestionFocusTime } from "@/lib/quiz/use-question-focus-time";
 import { useQuizIntegrityReporter } from "@/lib/hooks/useQuizIntegrityReporter";
@@ -18,6 +21,8 @@ import { useAttemptPagination } from "@/lib/quiz/quiz-attempt-session/use-attemp
 import { useAttemptSessionState } from "@/lib/quiz/quiz-attempt-session/use-attempt-session-state";
 import { useAttemptTimers } from "@/lib/quiz/quiz-attempt-session/use-attempt-timers";
 import { usePasswordGate } from "@/lib/quiz/quiz-attempt-session/use-password-gate";
+import { useQuizCamera } from "@/lib/quiz/use-quiz-camera";
+import { useQuizAttemptTabGuard } from "@/lib/quiz/use-quiz-attempt-tab-guard";
 
 /**
  * Owns the entire quiz-taking attempt lifecycle for a given quiz: server data
@@ -34,6 +39,8 @@ import { usePasswordGate } from "@/lib/quiz/quiz-attempt-session/use-password-ga
  * ordering on commit) is part of this hook's behaviour, not an implementation
  * detail.
  */
+// This hook is the single state-machine owner for the live quiz workspace.
+// eslint-disable-next-line max-lines-per-function, complexity
 export function useQuizAttemptSession(quizId: string) {
   const { t } = useTranslation();
 
@@ -62,6 +69,17 @@ export function useQuizAttemptSession(quizId: string) {
 
   const state = useAttemptSessionState();
   const { taking, activeAttemptId, activeIdx, submittedSummary } = state;
+  const camera = useQuizCamera(
+    Boolean(quiz?.require_camera),
+    submittedSummary == null,
+  );
+  const guardedAttemptId = submittedSummary
+    ? null
+    : activeAttemptId ?? inProgressAttempt?.id ?? null;
+  const tabGuard = useQuizAttemptTabGuard(quizId, guardedAttemptId);
+  const claimSession = useClaimQuizAttemptSession(inProgressAttempt?.id);
+  const takeoverSession = useTakeoverQuizAttemptSession(inProgressAttempt?.id);
+  const [sessionConflict, setSessionConflict] = useState<string | null>(null);
 
   // --- Per-question attention timing ---------------------------------------
   // Replaces the old "elapsed since first seen" measure, which only held when
@@ -156,7 +174,60 @@ export function useQuizAttemptSession(quizId: string) {
     submitAnswer,
     submitAttempt,
     enterFullscreen: fullscreen.enter,
+    ensureCamera: camera.ensureActive,
+    stopCamera: camera.stop,
+    requireCamera: Boolean(quiz?.require_camera),
   });
+
+  const requestResume = useCallback(async () => {
+    if (!inProgressAttempt) return;
+    if (camera.required && !(await camera.ensureActive())) return;
+    void fullscreen.enter();
+    try {
+      await claimSession.mutateAsync();
+      setSessionConflict(null);
+      setResumeRequested(true);
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 409 || error.status === 503)) {
+        setSessionConflict(
+          error.status === 503
+            ? "quiz_session_guard_unavailable"
+            : error.code ?? "attempt_active_elsewhere",
+        );
+      }
+    }
+  }, [camera, claimSession, fullscreen, inProgressAttempt]);
+
+  const takeoverAndResume = useCallback(async () => {
+    if (!inProgressAttempt) return;
+    if (camera.required && !(await camera.ensureActive())) return;
+    void fullscreen.enter();
+    try {
+      await takeoverSession.mutateAsync();
+      setSessionConflict(null);
+      setResumeRequested(true);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 503) {
+        setSessionConflict("quiz_session_guard_unavailable");
+      }
+    }
+  }, [camera, fullscreen, inProgressAttempt, takeoverSession]);
+
+  const handleExit = useCallback(async () => {
+    await actions.handleSaveOnly();
+    try {
+      await tabGuard.releaseServerOwnership();
+    } catch {
+      // The server TTL is the fallback if Redis is unavailable during exit.
+    }
+    camera.stop();
+    await fullscreen.exit();
+    state.setTaking(null);
+    state.setActiveAttemptId(null);
+    state.setStatuses([]);
+    state.setSubmittedSummary(null);
+    setResumeRequested(false);
+  }, [actions.handleSaveOnly, camera, fullscreen, state, tabGuard]);
 
   // Once the user clicks Resume, hold on the skeleton while the resume payload
   // loads instead of flashing the intro panel before hydrating.
@@ -217,15 +288,15 @@ export function useQuizAttemptSession(quizId: string) {
     handleSaveOnly: actions.handleSaveOnly,
     handleSaveNext: actions.handleSaveNext,
     handleFinalSubmit: actions.handleFinalSubmit,
-    requestResume: () => {
-      // Resume skips `handleStartAttempt` (it hydrates from the in-progress
-      // attempt), so it needs its own fullscreen request on the click.
-      void fullscreen.enter();
-      setResumeRequested(true);
-    },
+    requestResume,
+    takeoverAndResume,
+    handleExit,
     resumeRequested,
     resuming,
     // mandatory fullscreen gate — live for every attempt
     fullscreen,
+    camera,
+    tabGuard,
+    sessionConflict,
   };
 }

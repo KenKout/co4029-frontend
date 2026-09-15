@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { QuizIntroPanel } from "@/routes/courses/_components/QuizIntroPanel";
 import { QuizStartDialog } from "./QuizStartDialog";
+import { QuizCameraErrorNotice } from "./QuizGuardScreens";
 import type { QuizStageProps } from "./types";
 
 /**
@@ -113,6 +114,7 @@ export function QuizIntroStage({
         slug={slug}
         courseTitle={courseTitle}
       />
+      <QuizCameraErrorNotice camera={session.camera} />
 
       <QuizStartDialog
         open={confirming !== null}
