@@ -184,6 +184,9 @@ describe("logoutAndRedirect()", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(init.keepalive).toBe(true);
+    const headers = new Headers(init.headers);
+    expect(headers.get("Authorization")).toBe("Bearer access-token-1");
+    expect(headers.get("Content-Type")).toBe("application/json");
     expect(JSON.parse(init.body as string)).toEqual({
       refresh_token: "refresh-token-1",
     });

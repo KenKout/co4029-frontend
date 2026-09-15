@@ -487,13 +487,15 @@ export function logoutAndRedirect(redirectTo = "/login"): void {
   const session = getStoredAuthSession();
 
   if (session) {
-    void fetch(apiUrl("/auth/logout"), {
-      method: "POST",
-      headers: withAuthorization(session.accessToken),
-      body: JSON.stringify({ refresh_token: session.refreshToken }),
-      keepalive: true,
-      cache: "no-store",
-    }).catch(() => {
+    void fetch(
+      apiUrl("/auth/logout"),
+      withDefaultHeaders({
+        method: "POST",
+        headers: withAuthorization(session.accessToken),
+        body: JSON.stringify({ refresh_token: session.refreshToken }),
+        keepalive: true,
+      }),
+    ).catch(() => {
       // Best effort, and deliberately unobserved: nothing may defer the
       // redirect below.
     });
@@ -529,10 +531,6 @@ export async function logout() {
     // while the logout POST and the dashboard's react-query teardown are still
     // in flight. That interleaving deadlocks the main thread: the tab freezes
     // hard, with no console output and no network entry to explain it.
-    //
-    // Restored from a18f918 after merge c169448 reverted it wholesale. Pinned
-    // by "keeps the session in storage until the revoke settles" in
-    // __tests__/logout.test.ts — do not reorder without that test going red.
     clearAuthSession();
     sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
   }
