@@ -14,6 +14,7 @@ import {
   MaterialDeleteButton,
   RecentlyDeletedSection,
 } from "../material-hub";
+import { LessonEditorSection } from "./LessonEditorSection";
 
 /**
  * Material history — folded in from the former AI Material Hub page. Live
@@ -38,7 +39,7 @@ export function MaterialHistorySection({ lessonId }: { lessonId: string }) {
       : undefined;
 
   return (
-    <section className="space-y-5">
+    <LessonEditorSection>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="font-headline font-bold text-2xl text-m3-primary">
           {t("teacher_lesson_manage.sections.material_history")}
@@ -119,6 +120,6 @@ export function MaterialHistorySection({ lessonId }: { lessonId: string }) {
       )}
 
       <RecentlyDeletedSection lessonId={lessonId} />
-    </section>
+    </LessonEditorSection>
   );
 }

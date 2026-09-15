@@ -3,6 +3,7 @@ import { Paperclip, Loader2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { ResourceCard } from "./ResourceCard";
+import { LessonEditorSection } from "./LessonEditorSection";
 import type {
   LessonAiTwins,
   LessonEditorState,
@@ -31,7 +32,7 @@ export function LessonResourcesSection({
   const { needsPreviewFix, hiddenReadyTwinIds } = twins;
 
   return (
-    <section className="space-y-5">
+    <LessonEditorSection>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="font-headline font-bold text-2xl text-m3-primary">
           {t("teacher_lesson_manage.sections.downloadable_resources")}
@@ -78,7 +79,7 @@ export function LessonResourcesSection({
       )}
 
       <FileDropzone
-        onFile={resourceUpload.handleResourceFile}
+        onFile={(file) => void resourceUpload.handleResourceFile(file)}
         busy={editor.attachingResource}
         busyLabel="Uploading…"
         idleTitle="Attach New Resource"
@@ -102,6 +103,6 @@ export function LessonResourcesSection({
           {t("teacher_lesson_manage.ai_optin.hint")}
         </span>
       </label>
-    </section>
+    </LessonEditorSection>
   );
 }

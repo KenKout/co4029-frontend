@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { LessonDiscussionPanel } from "@/routes/courses/_components/LessonDiscussionPanel";
+import { LessonEditorSection } from "./LessonEditorSection";
 
 /**
  * Discussion section — same section chrome as Material history / Knowledge
@@ -11,11 +12,11 @@ import { LessonDiscussionPanel } from "@/routes/courses/_components/LessonDiscus
 export function LessonDiscussionSection({ lessonId }: { lessonId: string }) {
   const { t } = useTranslation();
   return (
-    <section className="space-y-5">
+    <LessonEditorSection>
       <h2 className="font-headline font-bold text-2xl text-m3-primary">
         {t("teacher_lesson_manage.sections.discussion")}
       </h2>
       <LessonDiscussionPanel lessonId={lessonId} />
-    </section>
+    </LessonEditorSection>
   );
 }

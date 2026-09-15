@@ -5681,7 +5681,11 @@
       "failed": "AI: failed"
     },
     "video": {
-      "empty": "Drag & drop a video here, or click to choose"
+      "empty": "Drag & drop a video here, or click to choose",
+      "minutes_estimated": "min estimated",
+      "upload": "Upload Video",
+      "replace": "Replace Video",
+      "uploading": "Uploading…"
     },
     "resource_ai": {
       "show": "Show to students (enables the live preview on their page)",
@@ -5699,6 +5703,10 @@
       "reading_content": "Reading Content",
       "reading_content_hint": "Write in Markdown or plain text",
       "read_stats": "~{{words}} words · {{minutes}} min read",
+      "video_content": "Video Content",
+      "video_content_hint": "Upload or replace the primary video for this lesson",
+      "lesson_notes": "Lesson Notes",
+      "lesson_notes_hint": "Add context, key points, or a transcript in Markdown",
       "downloadable_resources": "Downloadable Resources",
       "material_history": "Material history",
       "knowledge_graph": "Knowledge Graph",

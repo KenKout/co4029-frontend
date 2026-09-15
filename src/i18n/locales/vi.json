@@ -5508,7 +5508,11 @@
       "failed": "AI: thất bại"
     },
     "video": {
-      "empty": "Kéo thả video vào đây, hoặc nhấp để chọn"
+      "empty": "Kéo thả video vào đây, hoặc nhấp để chọn",
+      "minutes_estimated": "phút ước tính",
+      "upload": "Tải video lên",
+      "replace": "Thay video",
+      "uploading": "Đang tải lên…"
     },
     "resource_ai": {
       "show": "Hiện cho học viên (bật xem trước trực tiếp trên trang của họ)",
@@ -5526,6 +5530,10 @@
       "reading_content": "Nội dung bài đọc",
       "reading_content_hint": "Viết bằng Markdown hoặc văn bản thuần túy",
       "read_stats": "~{{words}} từ · {{minutes}} phút đọc",
+      "video_content": "Nội dung video",
+      "video_content_hint": "Tải lên hoặc thay thế video chính của bài học này",
+      "lesson_notes": "Ghi chú bài học",
+      "lesson_notes_hint": "Thêm ngữ cảnh, ý chính hoặc bản ghi bằng Markdown",
       "downloadable_resources": "Tài nguyên tải xuống",
       "material_history": "Lịch sử tài liệu",
       "knowledge_graph": "Đồ thị tri thức",

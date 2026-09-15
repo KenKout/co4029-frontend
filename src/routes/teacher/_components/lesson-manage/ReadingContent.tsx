@@ -9,7 +9,11 @@ import {
   Code,
   AlignLeft,
 } from "lucide-react";
-import { ToolbarBtn, makeMarkdownApplier } from "@/components/ui/markdown-toolbar";
+import {
+  ToolbarBtn,
+  makeMarkdownApplier,
+} from "@/components/ui/markdown-toolbar";
+import { LessonEditorSection } from "./LessonEditorSection";
 
 /**
  * Reading-type lesson content: a markdown editor with a formatting toolbar and
@@ -33,8 +37,8 @@ export function ReadingContent({
   const wordCount = notes.trim() ? notes.trim().split(/\s+/).length : 0;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
+    <LessonEditorSection>
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-headline font-bold text-2xl text-m3-primary">
             {t("teacher_lesson_manage.sections.reading_content")}
@@ -102,7 +106,7 @@ export function ReadingContent({
             grow it as needed. */}
         <textarea
           ref={notesRef}
-          className="min-h-[240px] w-full p-8 bg-m3-surface-container-lowest text-m3-on-surface leading-relaxed text-base outline-none resize-y font-body placeholder:text-m3-on-surface-variant/40"
+          className="min-h-[240px] w-full resize-y bg-m3-surface-container-lowest p-4 font-body text-base leading-relaxed text-m3-on-surface outline-none placeholder:text-m3-on-surface-variant/40 sm:p-6"
           placeholder={
             "# Introduction\n\nWrite your reading material here.\n\n## Key Concepts\n\n- Concept 1\n- Concept 2\n\n**Bold text**, *italic text*, `inline code`"
           }
@@ -110,6 +114,6 @@ export function ReadingContent({
           onChange={(e) => setNotes(e.target.value)}
         />
       </div>
-    </section>
+    </LessonEditorSection>
   );
 }

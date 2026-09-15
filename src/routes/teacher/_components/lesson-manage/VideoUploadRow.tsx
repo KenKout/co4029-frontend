@@ -1,4 +1,5 @@
 import { Upload, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -17,17 +18,19 @@ export function VideoUploadRow({
   /** Opens the hidden file input owned by the parent. */
   onPickFile: () => void;
 }) {
+  const { t } = useTranslation();
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       {estimatedMinutes && (
         <span className="text-xs text-m3-on-surface-variant font-medium">
           <span className="font-bold text-m3-on-surface">
             {estimatedMinutes}
           </span>{" "}
-          min estimated
+          {t("teacher_lesson_manage.video.minutes_estimated")}
         </span>
       )}
-      <Button variant="ghost"
+      <Button
+        variant="ghost"
         type="button"
         disabled={uploading}
         onClick={onPickFile}
@@ -39,10 +42,10 @@ export function VideoUploadRow({
           <Upload className="h-4 w-4" />
         )}
         {uploading
-          ? "Uploading…"
+          ? t("teacher_lesson_manage.video.uploading")
           : streamUrl
-            ? "Replace Video"
-            : "Upload Video"}
+            ? t("teacher_lesson_manage.video.replace")
+            : t("teacher_lesson_manage.video.upload")}
       </Button>
     </div>
   );
