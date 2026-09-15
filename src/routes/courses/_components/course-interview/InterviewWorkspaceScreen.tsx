@@ -37,6 +37,8 @@ import { WorkspaceStage } from "./WorkspaceStage";
  * the stage, the bottom input surface and the submission slot split into
  * siblings.
  */
+// The workspace intentionally owns the live room, pacing, and all exit dialogs.
+// eslint-disable-next-line max-lines-per-function
 export function InterviewWorkspaceScreen({
   iv,
   course,
@@ -164,14 +166,6 @@ export function InterviewWorkspaceScreen({
   );
   useWorkspaceControllerBridge({ iv, chat, agentOwnsTheVoice });
 
-  const confirmExitFullscreen = async () => {
-    setExitFullscreenDialogOpen(false);
-    // A deliberate exit is not an integrity "unexpected exit". The explicit
-    // Continue choice acknowledges the fallback before releasing fullscreen.
-    iv.fullscreenGate.continueWindowed();
-    await iv.fullscreenGate.exit(true);
-  };
-
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <InterviewHeader
@@ -211,7 +205,11 @@ export function InterviewWorkspaceScreen({
       <InterviewExitFullscreenDialog
         open={exitFullscreenDialogOpen}
         onOpenChange={setExitFullscreenDialogOpen}
-        onConfirm={() => void confirmExitFullscreen()}
+        onConfirm={() => {
+          setExitFullscreenDialogOpen(false);
+          iv.fullscreenGate.continueWindowed();
+          void iv.fullscreenGate.exit(true);
+        }}
       />
 
       {/* Coarse step indicator: Setup → Interview → Completed (spec §4). */}
