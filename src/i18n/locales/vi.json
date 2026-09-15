@@ -3023,6 +3023,7 @@
     "camera": {
       "required_title": "Cần bật camera",
       "required_label": "Camera bắt buộc",
+      "enable": "Bật camera",
       "optional_label": "Camera không bắt buộc",
       "preview_aria": "Xem trước camera cục bộ",
       "privacy": "Camera chỉ được dùng cục bộ để kiểm tra luồng video; không ghi, tải lên hoặc phân tích dữ liệu.",

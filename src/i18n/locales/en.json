@@ -3194,6 +3194,7 @@
     "camera": {
       "required_title": "Camera required",
       "required_label": "Camera required",
+      "enable": "Enable camera",
       "optional_label": "Camera not required",
       "preview_aria": "Local camera preview",
       "privacy": "Camera is used locally only to verify an active video track; no camera data is recorded, uploaded, or analyzed.",

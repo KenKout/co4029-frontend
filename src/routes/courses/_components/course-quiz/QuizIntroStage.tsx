@@ -123,13 +123,20 @@ export function QuizIntroStage({
         }}
         isResume={confirming === "resume"}
         isPending={startAttempt.isPending || resumeRequested}
+        cameraRequired={session.camera.required}
+        cameraActive={session.camera.active}
+        cameraChecking={session.camera.checking}
         onConfirm={() => {
+          if (session.camera.required && !session.camera.active) {
+            void session.camera.ensureActive();
+            return;
+          }
           // Close first so the dialog does not sit over the take screen, then
           // act — still inside this click's activation, so the fullscreen
           // request the action makes is honoured.
           const action = confirming;
           setConfirming(null);
-          if (action === "resume") requestResume();
+          if (action === "resume") void requestResume();
           else if (action === "start") void handleStartAttempt();
         }}
       />

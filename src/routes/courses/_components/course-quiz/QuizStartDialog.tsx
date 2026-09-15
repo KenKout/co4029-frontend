@@ -24,12 +24,18 @@ export function QuizStartDialog({
   onConfirm,
   isPending,
   isResume = false,
+  cameraRequired = false,
+  cameraActive = false,
+  cameraChecking = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   isPending: boolean;
   isResume?: boolean;
+  cameraRequired?: boolean;
+  cameraActive?: boolean;
+  cameraChecking?: boolean;
 }) {
   const { t } = useTranslation();
   const prefix = isResume
@@ -44,17 +50,19 @@ export function QuizStartDialog({
       description={t(`${prefix}_description`)}
       confirmLabel={
         <span className="flex items-center gap-2">
-          {isPending ? (
+          {isPending || cameraChecking ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <Maximize className="h-4 w-4" aria-hidden="true" />
           )}
-          {t(`${prefix}_confirm`)}
+          {cameraRequired && !cameraActive
+            ? t("course_quiz.camera.enable")
+            : t(`${prefix}_confirm`)}
         </span>
       }
       cancelLabel={t("course_quiz.start_dialog.cancel")}
       onConfirm={onConfirm}
-      isPending={isPending}
+      isPending={isPending || cameraChecking}
       confirmVariant="default"
       // Harmless to cancel — the attempt has not started — so an outside click
       // means "not yet" rather than being swallowed.
