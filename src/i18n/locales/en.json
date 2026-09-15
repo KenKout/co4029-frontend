@@ -3172,6 +3172,42 @@
     "fullscreen_timer_note": {
       "timer_continues": "The quiz timer is running and keeps running while you are outside fullscreen."
     },
+    "tab_guard": {
+      "title": "Quiz already open in this browser",
+      "description": "Return to the existing tab or move the quiz to this tab.",
+      "return_to_list": "Return to quiz list",
+      "continue_here": "Continue in this tab",
+      "transferring": "Transferring…"
+    },
+    "session_replaced": {
+      "title": "Quiz session moved",
+      "description": "The quiz was moved to another tab or browser. Your saved progress is safe."
+    },
+    "session_conflict": {
+      "title": "Quiz is open elsewhere",
+      "description": "Another browser is working on this quiz. Move ownership to this session to continue here.",
+      "takeover": "Move quiz here",
+      "retry": "Retry session check",
+      "unavailable_title": "Quiz session check unavailable",
+      "unavailable_description": "Session synchronization is temporarily unavailable. Your local progress is preserved; try again shortly."
+    },
+    "camera": {
+      "required_title": "Camera required",
+      "required_label": "Camera required",
+      "optional_label": "Camera not required",
+      "privacy": "Camera is used locally only to verify an active video track; no camera data is recorded, uploaded, or analyzed.",
+      "interrupted_description": "An active video track is required to continue. No camera video is recorded, uploaded, or analyzed.",
+      "checking": "Checking camera…",
+      "turn_back_on": "Turn camera back on",
+      "try_again": "Try again",
+      "errors": {
+        "permission-denied": "Camera permission was denied. Allow camera access in browser settings, then try again.",
+        "no-camera": "No camera was found. Connect a camera, then try again.",
+        "camera-unavailable": "The camera is unavailable or being used by another application.",
+        "unsupported": "This browser does not support camera access. Use a modern browser, then try again.",
+        "inactive-track": "The camera did not return an active video track. Try again."
+      }
+    },
     "empty": {
       "no_questions_title": "No questions available",
       "no_questions_body": "This quiz doesn't have any approved questions to show right now. Your teacher may still be finalizing it — please check back later."
@@ -3372,12 +3408,17 @@
     "fullscreen": {
       "enter_and_start": "Enter fullscreen and start",
       "enter_and_resume": "Enter fullscreen and resume",
+      "exit_button": "Exit fullscreen",
       "exit_warning_recorded_one": "This exit was recorded for your teacher to review ({{count}} time so far).",
       "exit_warning_recorded_other": "This exit was recorded for your teacher to review ({{count}} times so far)."
     },
     "fullscreen_gate": {
       "title": "Fullscreen required",
       "description": "Your interview runs in fullscreen. Return to fullscreen to continue — your answers are safe, and the interview timer (if any) is unaffected.",
+      "exit_title": "Leave fullscreen?",
+      "exit_description": "You left fullscreen. Go back to fullscreen, or continue the interview in a regular window.",
+      "back": "Back",
+      "continue_windowed": "Continue",
       "requesting": "Requesting fullscreen…",
       "reenter": "Re-enter fullscreen",
       "denied": "The browser refused the fullscreen request. Press the button again — and allow fullscreen if the browser asks.",
@@ -4824,6 +4865,8 @@
         "shuffle_o_desc": "Randomize option order within each question.",
         "show_hints_label": "Show hints",
         "show_hints_desc": "Let students view hints while attempting.",
+        "require_camera_label": "Require camera",
+        "require_camera_desc": "Students must grant access and keep a camera active during the quiz. Camera data is not recorded, uploaded, or analyzed.",
         "reminders_label": "Review reminders",
         "reminders_desc": "Send a reminder when review is due."
       },

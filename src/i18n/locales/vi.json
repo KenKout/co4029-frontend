@@ -3001,6 +3001,42 @@
     "fullscreen_timer_note": {
       "timer_continues": "Đồng hồ bài kiểm tra đang chạy và vẫn tiếp tục chạy trong lúc bạn ở ngoài toàn màn hình."
     },
+    "tab_guard": {
+      "title": "Bài quiz đã mở trong trình duyệt này",
+      "description": "Quay lại tab đang làm bài hoặc chuyển bài quiz sang tab này.",
+      "return_to_list": "Về danh sách quiz",
+      "continue_here": "Tiếp tục ở tab này",
+      "transferring": "Đang chuyển…"
+    },
+    "session_replaced": {
+      "title": "Phiên làm bài đã được chuyển",
+      "description": "Quiz đã được chuyển sang tab hoặc trình duyệt khác. Tiến độ đã lưu vẫn an toàn."
+    },
+    "session_conflict": {
+      "title": "Quiz đang được mở ở nơi khác",
+      "description": "Một trình duyệt khác đang làm quiz này. Chuyển quyền sang phiên này để tiếp tục tại đây.",
+      "takeover": "Chuyển quiz sang đây",
+      "retry": "Thử kiểm tra lại",
+      "unavailable_title": "Không thể kiểm tra phiên làm bài",
+      "unavailable_description": "Dịch vụ đồng bộ phiên đang tạm thời không khả dụng. Tiến độ cục bộ vẫn được giữ; hãy thử lại sau."
+    },
+    "camera": {
+      "required_title": "Cần bật camera",
+      "required_label": "Camera bắt buộc",
+      "optional_label": "Camera không bắt buộc",
+      "privacy": "Camera chỉ được dùng cục bộ để kiểm tra luồng video; không ghi, tải lên hoặc phân tích dữ liệu.",
+      "interrupted_description": "Camera phải có một luồng video đang hoạt động để tiếp tục. Không có video nào được ghi, tải lên hoặc phân tích.",
+      "checking": "Đang kiểm tra camera…",
+      "turn_back_on": "Bật lại camera",
+      "try_again": "Thử lại",
+      "errors": {
+        "permission-denied": "Quyền camera bị từ chối. Hãy cho phép camera trong cài đặt trình duyệt rồi thử lại.",
+        "no-camera": "Không tìm thấy camera. Hãy kết nối camera rồi thử lại.",
+        "camera-unavailable": "Camera không khả dụng hoặc đang được ứng dụng khác sử dụng.",
+        "unsupported": "Trình duyệt này không hỗ trợ camera. Hãy dùng trình duyệt hiện đại rồi thử lại.",
+        "inactive-track": "Camera không trả về luồng video đang hoạt động. Hãy thử lại."
+      }
+    },
     "empty": {
       "no_questions_title": "Chưa có câu hỏi",
       "no_questions_body": "Bài kiểm tra này hiện chưa có câu hỏi nào được duyệt để hiển thị. Giáo viên có thể vẫn đang hoàn thiện — vui lòng quay lại sau."
@@ -3201,12 +3237,17 @@
     "fullscreen": {
       "enter_and_start": "Vào toàn màn hình và bắt đầu",
       "enter_and_resume": "Vào toàn màn hình và tiếp tục",
+      "exit_button": "Thoát toàn màn hình",
       "exit_warning_recorded_one": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần).",
       "exit_warning_recorded_other": "Lần thoát này đã được ghi lại để giáo viên xem lại ({{count}} lần)."
     },
     "fullscreen_gate": {
       "title": "Bắt buộc toàn màn hình",
-      "description": "Buổi phỏng vấn chạy ở chế độ toàn màn hình. Quay lại toàn màn hình để tiếp tục — câu trả lời của bạn vẫn an toàn, đồng hồ (nếu có) không bị ảnh hưởng.",
+      "description": "Buổi phỏng vấn chạy ở chế độ toàn màn hình. Hãy trở lại toàn màn hình để tiếp tục — câu trả lời vẫn được giữ nguyên và đồng hồ (nếu có) không bị ảnh hưởng.",
+      "exit_title": "Thoát chế độ toàn màn hình?",
+      "exit_description": "Bạn đã thoát toàn màn hình. Hãy quay lại toàn màn hình hoặc tiếp tục phỏng vấn trong cửa sổ bình thường.",
+      "back": "Quay lại",
+      "continue_windowed": "Tiếp tục",
       "requesting": "Đang yêu cầu toàn màn hình…",
       "reenter": "Vào lại toàn màn hình",
       "denied": "Trình duyệt đã từ chối yêu cầu toàn màn hình. Bấm lại nút bên dưới — và cho phép toàn màn hình nếu trình duyệt hỏi.",
@@ -4653,6 +4694,8 @@
         "shuffle_o_desc": "Hoán đổi thứ tự đáp án trong mỗi câu hỏi.",
         "show_hints_label": "Hiển thị gợi ý",
         "show_hints_desc": "Cho phép học viên xem gợi ý trong khi làm.",
+        "require_camera_label": "Bắt buộc bật camera",
+        "require_camera_desc": "Học viên phải cấp quyền và duy trì camera hoạt động trong khi làm. Dữ liệu camera không được ghi, tải lên hoặc phân tích.",
         "reminders_label": "Nhắc ôn tập",
         "reminders_desc": "Gửi nhắc nhở khi đến lúc ôn lại bài."
       },

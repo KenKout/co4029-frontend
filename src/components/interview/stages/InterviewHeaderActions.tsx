@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { PhoneOff, Volume2, VolumeX } from "lucide-react";
+import { PhoneOff, Volume2, VolumeX, Minimize2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,12 +12,14 @@ export function InterviewHeaderActions({
   showVoiceControl,
   onEndInterview,
   endInterviewDisabled,
+  onExitFullscreen,
 }: {
   voiceOn: boolean;
   onToggleVoice: () => void;
   showVoiceControl: boolean;
   onEndInterview: (() => void) | undefined;
   endInterviewDisabled: boolean;
+  onExitFullscreen: (() => void) | undefined;
 }) {
   const { t } = useTranslation();
 
@@ -50,6 +52,19 @@ export function InterviewHeaderActions({
           ) : (
             <VolumeX className="h-4 w-4" />
           )}
+        </Button>
+      )}
+      {onExitFullscreen && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-lg"
+          onClick={onExitFullscreen}
+          className="size-11 rounded-lg sm:size-9"
+          aria-label={t("course_interview.fullscreen.exit_button")}
+          title={t("course_interview.fullscreen.exit_button")}
+        >
+          <Minimize2 className="h-4 w-4" aria-hidden="true" />
         </Button>
       )}
       {onEndInterview && (

@@ -148,6 +148,20 @@ describe("useAssessmentFullscreenGate", () => {
     expect(result.current.requiredOpen).toBe(true);
   });
 
+  it("allows an interview to continue windowed only after acknowledging an exit", () => {
+    const { result } = renderHook(() => useAssessmentFullscreenGate(true));
+
+    act(() => onUnexpectedExit?.());
+    expect(result.current.requiredOpen).toBe(true);
+
+    act(() => result.current.continueWindowed());
+    expect(result.current.requiredOpen).toBe(false);
+
+    // A later browser exit is a fresh warning, not an implicit permanent opt-out.
+    act(() => onUnexpectedExit?.());
+    expect(result.current.requiredOpen).toBe(true);
+  });
+
   it("resets request state and exit count when the session ends", () => {
     const { result, rerender } = renderHook(
       ({ active }) => useAssessmentFullscreenGate(active),

@@ -47,6 +47,7 @@ export type InterviewHeaderProps = {
   voiceOn: boolean;
   onToggleVoice: () => void;
   onEndInterview?: () => void;
+  onExitFullscreen?: () => void;
   /** Disable the end button (e.g. while the closing is already underway). */
   endInterviewDisabled?: boolean;
   showVoiceControl?: boolean;

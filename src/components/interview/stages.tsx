@@ -45,6 +45,7 @@ export function InterviewHeader({
   onToggleVoice,
   onEndInterview,
   endInterviewDisabled = false,
+  onExitFullscreen,
   showVoiceControl = true,
   questionElapsed,
   questionLingering = false,
@@ -89,6 +90,7 @@ export function InterviewHeader({
             showVoiceControl={showVoiceControl}
             onEndInterview={onEndInterview}
             endInterviewDisabled={endInterviewDisabled}
+            onExitFullscreen={onExitFullscreen}
           />
         </div>
       </div>
