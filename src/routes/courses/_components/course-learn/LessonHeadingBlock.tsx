@@ -23,7 +23,7 @@ export function LessonHeadingBlock({
 }) {
   return (
     <div className="space-y-3">
-      <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-m3-primary tracking-tight leading-none">
+      <h1 className="break-words font-headline text-2xl font-extrabold leading-tight tracking-tight text-m3-primary sm:text-4xl">
         {title}
       </h1>
       <div className="flex flex-wrap items-center justify-between gap-3">

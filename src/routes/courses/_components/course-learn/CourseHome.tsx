@@ -43,15 +43,17 @@ function ClampedDescription({ text }: { text: string }) {
         {text}
       </p>
       {overflowing && (
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           type="button"
           onClick={() => setClamped((v) => !v)}
-          className="mt-1 text-xs font-bold text-m3-primary underline underline-offset-2 cursor-pointer"
+          className="mt-1 h-auto cursor-pointer p-0 text-xs font-bold text-m3-primary underline underline-offset-2 hover:bg-transparent"
         >
           {clamped
             ? t("course_learn.home.show_more")
             : t("course_learn.home.show_less")}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -88,12 +90,12 @@ export function CourseHome({
   return (
     <div className="space-y-6" data-testid="course-learn-home">
       {/* Hero: title + resume/start CTA + progress */}
-      <GlassCard className="p-6 sm:p-8 space-y-5">
+      <GlassCard className="space-y-5 p-4 sm:p-8">
         <div className="space-y-2">
           <span className="text-xs font-headline font-semibold uppercase tracking-wider text-m3-secondary">
             {t("course_learn.home.eyebrow")}
           </span>
-          <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-m3-primary tracking-tight leading-none">
+          <h1 className="break-words font-headline text-2xl font-extrabold leading-tight tracking-tight text-m3-primary sm:text-4xl">
             {course.title}
           </h1>
           {course.description && (
@@ -123,9 +125,9 @@ export function CourseHome({
         {/* Continue / Start CTA. pt-1 + border-t separates it from the
             progress bar above — otherwise at 100% the fully-filled bar and
             this button share the same gradient-primary fill and visually merge. */}
-        <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-m3-outline-variant/15">
+        <div className="flex flex-col items-stretch gap-3 border-t border-m3-outline-variant/15 pt-4 sm:flex-row sm:items-center">
           <Button
-            className="rounded-xl gradient-primary text-white font-bold gap-2"
+            className="gap-2 rounded-xl font-bold text-white gradient-primary sm:w-auto"
             onClick={() => onSelect(resumeIdx)}
             data-testid="course-learn-home-resume"
           >
@@ -147,7 +149,7 @@ export function CourseHome({
             )}
           </Button>
           {resumeLabel && !allDone && (
-            <span className="text-xs text-m3-on-surface-variant truncate max-w-[240px]">
+            <span className="truncate text-xs text-m3-on-surface-variant sm:max-w-[240px]">
               {t("course_learn.home.next_up")}: {resumeLabel}
             </span>
           )}

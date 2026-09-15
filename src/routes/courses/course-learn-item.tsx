@@ -19,9 +19,7 @@ import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledge
 import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/CurriculumSidebar";
 import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
 import { LessonTabsSection } from "@/routes/courses/_components/course-learn/LessonTabsSection";
-import {
-  LessonVideoPlayer,
-} from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
+import { LessonVideoPlayer } from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
 import {
   useCurriculumItems,
   useInProgressInterviewSessions,
@@ -375,12 +373,12 @@ function LessonItemView({
   }
 
   return (
-    <div className="min-h-screen pb-24">
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+    <div className="min-h-screen pb-16 sm:pb-24">
+      <div className="mx-auto max-w-[1800px] px-3 pt-2 sm:px-6 lg:px-8">
         {/* 70/30: player + knowledge map in the main column, curriculum rail
             on the right (desktop) / below the content on mobile. */}
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          <div className="flex-1 min-w-0 flex flex-col gap-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
+          <div className="flex min-w-0 flex-1 flex-col gap-4 sm:gap-6">
             <LessonContentPane
               activeLesson={activeLesson}
               courseId={courseId}

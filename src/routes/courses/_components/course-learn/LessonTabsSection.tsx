@@ -41,14 +41,15 @@ export function LessonTabsSection({
 }) {
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-m3-outline-variant/20">
-        <div className="flex gap-1 flex-wrap">
+      <div className="flex flex-col justify-between gap-4 border-t border-m3-outline-variant/20 pt-4 md:flex-row md:items-center">
+        <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((tab) => (
-            <Button variant="ghost"
+            <Button
+              variant="ghost"
               key={tab}
               onClick={() => onTabChange(tab)}
               className={cn(
-                "px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 h-auto whitespace-normal",
+                "h-auto shrink-0 whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition-all duration-200",
                 activeTab === tab
                   ? "bg-m3-secondary text-white shadow-ai-glow"
                   : "text-m3-on-surface-variant hover:text-m3-primary hover:bg-m3-surface-container",
@@ -59,29 +60,33 @@ export function LessonTabsSection({
           ))}
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3 md:shrink-0">
           <Button
             variant="outline"
             size="sm"
-            className="rounded-xl ghost-border text-xs font-bold"
+            className="min-w-0 rounded-xl ghost-border px-2 text-xs font-bold sm:px-3"
             onClick={onPrev}
             disabled={!hasPrev}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             {hasPrev ? (
-              <span className="max-w-[120px] truncate">{prevLabel}</span>
+              <span className="min-w-0 truncate sm:max-w-[120px]">
+                {prevLabel}
+              </span>
             ) : (
               "Previous"
             )}
           </Button>
           <Button
             size="sm"
-            className="rounded-xl gradient-primary text-white text-xs font-bold flex items-center gap-1.5"
+            className="flex min-w-0 items-center gap-1.5 rounded-xl px-2 text-xs font-bold text-white gradient-primary sm:px-3"
             onClick={onNext}
             disabled={!hasNext}
           >
             {hasNext ? (
-              <span className="max-w-[120px] truncate">Next: {nextLabel}</span>
+              <span className="min-w-0 truncate sm:max-w-[120px]">
+                Next: {nextLabel}
+              </span>
             ) : (
               "Finished"
             )}
@@ -92,7 +97,7 @@ export function LessonTabsSection({
 
       <div className="pb-4">
         {activeTab === "Lesson Notes" && (
-          <GlassCard className="p-6 sm:p-8">
+          <GlassCard className="p-4 sm:p-8">
             <div className="flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4 text-m3-secondary" />
               <h4 className="font-headline font-bold text-m3-on-surface text-sm">
@@ -122,7 +127,7 @@ function ResourcesPanel({
   resources: LessonResourcePublic[] | undefined;
 }) {
   return (
-    <GlassCard className="p-6 sm:p-8">
+    <GlassCard className="p-4 sm:p-8">
       <div className="flex items-center gap-2 mb-5">
         <Download className="h-4 w-4 text-m3-secondary" />
         <h4 className="font-headline font-bold text-m3-on-surface text-sm">

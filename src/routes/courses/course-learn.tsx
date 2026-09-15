@@ -12,7 +12,11 @@ import { useCourseBySlug, useCourseContent } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
-import type { InstructorRead, LessonPublic, ModulePublic } from "@/lib/api/types";
+import type {
+  InstructorRead,
+  LessonPublic,
+  ModulePublic,
+} from "@/lib/api/types";
 import { CourseHome } from "./_components/course-learn/CourseHome";
 import type { CourseHomeProps } from "./_components/course-learn/CourseHome";
 import { CurriculumSidebar } from "./_components/course-learn/CurriculumSidebar";
@@ -374,8 +378,8 @@ function CourseLearnLoaded({
   }
 
   return (
-    <div className="min-h-screen pb-24">
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div className="min-h-screen pb-16 sm:pb-24">
+      <div className="mx-auto max-w-[1800px] px-3 pt-4 sm:px-6 sm:pt-6 lg:px-8">
         <LearnBreadcrumb
           slug={slug}
           courseTitle={course.title}
@@ -404,8 +408,8 @@ function CourseLearnLoaded({
         </div>
         ─────────────────────────────────────────────── */}
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          <div className="flex-1 min-w-0 flex flex-col gap-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
+          <div className="flex min-w-0 flex-1 flex-col gap-4 sm:gap-6">
             <LessonMainPane
               showHome={showHome}
               lessonUnavailable={lessonUnavailable}
