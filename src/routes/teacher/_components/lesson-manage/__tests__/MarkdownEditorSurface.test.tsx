@@ -15,7 +15,9 @@ describe("MarkdownEditorSurface", () => {
     const user = userEvent.setup();
     render(
       <MarkdownEditorSurface
-        value={"# Lesson title\n\n| Topic | Status |\n| --- | --- |\n| Keys | Ready |"}
+        value={
+          "# Lesson title\n\n**Important**\n\n- First item\n\n> Remember this\n\n`code`\n\n| Topic | Status |\n| --- | --- |\n| Keys | Ready |"
+        }
         onChange={vi.fn()}
         editorRef={createRef<HTMLTextAreaElement>()}
         placeholder="Write content"
@@ -26,7 +28,15 @@ describe("MarkdownEditorSurface", () => {
     await user.click(screen.getByRole("tab", { name: "Preview" }));
 
     expect(screen.getByRole("heading", { name: "Lesson title" })).toBeVisible();
+    expect(screen.getByText("Important").tagName).toBe("STRONG");
+    expect(screen.getByText("First item").closest("ul")).toBeInTheDocument();
+    expect(screen.getByText("Remember this").closest("blockquote")).toBeInTheDocument();
+    expect(screen.getByText("code").tagName).toBe("CODE");
     expect(screen.getByRole("table")).toBeVisible();
+    expect(screen.getByRole("tabpanel").firstElementChild).toHaveClass(
+      "[&_ul]:list-disc",
+      "[&_pre]:bg-slate-950",
+    );
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 

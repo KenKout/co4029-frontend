@@ -3,7 +3,10 @@ import { AlignLeft, Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
-import { RichContent } from "@/components/ui/rich-content";
+import {
+  MARKDOWN_DOCUMENT_CLASS,
+  RichContent,
+} from "@/components/ui/rich-content";
 import { cn } from "@/lib/utils";
 
 type EditorTab = "write" | "preview";
@@ -86,7 +89,11 @@ export function MarkdownEditorSurface({
       ) : (
         <div className={cn(minHeight, "bg-white p-4 sm:p-6")} role="tabpanel">
           {value.trim() ? (
-            <RichContent value={value} format="markdown" />
+            <RichContent
+              value={value}
+              format="markdown"
+              className={MARKDOWN_DOCUMENT_CLASS}
+            />
           ) : (
             <p className="text-sm italic text-m3-on-surface-variant">
               {t("teacher_lesson_manage.editor.empty_preview")}

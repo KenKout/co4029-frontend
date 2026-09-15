@@ -36,6 +36,28 @@ const TABLE_PROSE =
   "[&_td]:border [&_td]:border-m3-outline-variant/40 [&_td]:px-3 [&_td]:py-2 " +
   "[&_td]:align-top";
 
+/**
+ * Full document rhythm for Markdown authoring previews.
+ */
+export const MARKDOWN_DOCUMENT_CLASS =
+  "[&_h1]:mb-4 [&_h1]:mt-7 [&_h1]:font-headline [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:leading-tight " +
+  "[&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-headline [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:leading-snug " +
+  "[&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:font-headline [&_h3]:text-xl [&_h3]:font-semibold " +
+  "[&_h1:first-child]:mt-0 [&_h2:first-child]:mt-0 [&_h3:first-child]:mt-0 " +
+  "[&_p]:my-3 [&_p]:leading-7 " +
+  "[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-6 " +
+  "[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-6 " +
+  "[&_li]:pl-1 [&_li>p]:my-1 " +
+  "[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-m3-primary/30 " +
+  "[&_blockquote]:bg-m3-primary/5 [&_blockquote]:px-4 [&_blockquote]:py-1 [&_blockquote]:italic " +
+  "[&_strong]:font-bold [&_em]:italic " +
+  "[&_a]:font-medium [&_a]:text-m3-primary [&_a]:underline [&_a]:underline-offset-2 " +
+  "[&_code]:rounded [&_code]:bg-m3-surface-container-high [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-sm [&_code]:text-m3-primary " +
+  "[&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-slate-950 [&_pre]:p-4 " +
+  "[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-slate-100 " +
+  "[&_img]:my-5 [&_img]:max-w-full [&_img]:rounded-xl " +
+  "[&_hr]:my-6 [&_hr]:border-m3-outline-variant/30";
+
 export function RichContent({
   value,
   format,
