@@ -30,7 +30,9 @@ describe("MarkdownEditorSurface", () => {
     expect(screen.getByRole("heading", { name: "Lesson title" })).toBeVisible();
     expect(screen.getByText("Important").tagName).toBe("STRONG");
     expect(screen.getByText("First item").closest("ul")).toBeInTheDocument();
-    expect(screen.getByText("Remember this").closest("blockquote")).toBeInTheDocument();
+    expect(
+      screen.getByText("Remember this").closest("blockquote"),
+    ).toBeInTheDocument();
     expect(screen.getByText("code").tagName).toBe("CODE");
     expect(screen.getByRole("table")).toBeVisible();
     expect(screen.getByRole("tabpanel").firstElementChild).toHaveClass(
@@ -53,7 +55,9 @@ describe("MarkdownEditorSurface", () => {
     );
 
     await user.click(screen.getByRole("tab", { name: "Preview" }));
-    expect(screen.getByText("Start writing to see the rendered preview.")).toBeVisible();
+    expect(
+      screen.getByText("Start writing to see the rendered preview."),
+    ).toBeVisible();
 
     await user.click(screen.getByRole("tab", { name: "Write" }));
     expect(screen.getByPlaceholderText("Write content")).toBeVisible();
