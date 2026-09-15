@@ -1273,6 +1273,8 @@ export interface DiscussionComment {
   author_id: string;
   body: string;
   parent_comment_id: string | null;
+  /** Exact message selected by Reply; parent_comment_id remains the visual root. */
+  reply_to_comment_id?: string | null;
   created_at: string;
   updated_at: string;
   author: DiscussionCommentAuthor | null;

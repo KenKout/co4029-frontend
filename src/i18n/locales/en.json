@@ -951,6 +951,7 @@
     },
     "assign_placeholder": "Choose an instructor…",
     "assign_no_match": "No instructor matches that search.",
+    "remove_selection": "Remove {{name}} from the selection",
     "assign_none_available": "No instructors in this organization yet. Give a teacher the instructor role first.",
     "assign_all_assigned": "Every instructor in this organization is already on this course.",
     "readiness": {
@@ -3072,6 +3073,7 @@
     "mentions_badge_other": "{{count}} replies to you",
     "closed_badge": "Closed for new comments",
     "reply": "Reply",
+    "reply_quote_label": "Go to message from {{name}}",
     "replying_to": "Replying to {{name}}",
     "reply_placeholder": "Reply to {{name}}…",
     "send": "Send",

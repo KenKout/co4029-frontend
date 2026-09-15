@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Check, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SearchInput } from "@/components/ui/search-input";
+import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select";
 import { useAssignableTeachers, useAssignTeacher } from "@/lib/api/hooks/dept";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,8 @@ export function AssignTeacherForm({
   maxCount: number | undefined;
 }) {
   const { t } = useTranslation();
-  const [userId, setUserId] = useState("");
+  const [userIds, setUserIds] = useState<string[]>([]);
+  const [working, setWorking] = useState(false);
   const [isInstructor, setIsInstructor] = useState(false);
   const [isAssistant, setIsAssistant] = useState(true);
   const assign = useAssignTeacher(courseId);
@@ -52,6 +53,10 @@ export function AssignTeacherForm({
   const assignedCount = (candidates ?? []).length - available.length;
 
   const atMax = maxCount !== undefined && currentCount >= maxCount;
+  const remainingSlots =
+    maxCount === undefined
+      ? Number.POSITIVE_INFINITY
+      : Math.max(0, maxCount - currentCount);
 
   // At least one title must stay checked (a course-scoped teacher cannot be
   // titleless — server CHECK + 409).
@@ -73,25 +78,47 @@ export function AssignTeacherForm({
     label: teacher.display_name
       ? `${teacher.display_name} · ${teacher.primary_email}`
       : teacher.primary_email,
+    disabled:
+      userIds.length >= remainingSlots && !userIds.includes(teacher.user_id),
   }));
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!userId) return;
-    assign.mutate(
-      { user_id: userId, is_instructor: isInstructor, is_assistant: isAssistant },
-      {
-        onSuccess: () => {
-          toast.success(t("dept_course_detail.success.assigned"));
-          setUserId("");
-        },
-        onError: (err) => {
-          const detail =
-            err instanceof ApiError ? err.body || err.message : String(err);
-          toast.error(t("dept_course_detail.errors.assign_failed", { detail }));
-        },
-      },
-    );
+    const selected = userIds
+      .filter((id) => available.some((teacher) => teacher.user_id === id))
+      .slice(0, remainingSlots);
+    if (selected.length === 0 || working) return;
+
+    setWorking(true);
+    const failed: Array<{ id: string; detail: string }> = [];
+    for (const userId of selected) {
+      try {
+        await assign.mutateAsync({
+          user_id: userId,
+          is_instructor: isInstructor,
+          is_assistant: isAssistant,
+        });
+      } catch (err) {
+        failed.push({
+          id: userId,
+          detail:
+            err instanceof ApiError ? err.body || err.message : String(err),
+        });
+      }
+    }
+    setWorking(false);
+
+    if (failed.length > 0) {
+      setUserIds(failed.map(({ id }) => id));
+      toast.error(
+        t("dept_course_detail.errors.assign_failed", {
+          detail: failed.map(({ detail }) => detail).join("; "),
+        }),
+      );
+      return;
+    }
+    setUserIds([]);
+    toast.success(t("dept_course_detail.success.assigned"));
   };
 
   const noCandidates = !isLoading && available.length === 0;
@@ -116,20 +143,24 @@ export function AssignTeacherForm({
     // sits inside the table's own toolbar, so staffing, search and assignment
     // share one container instead of four.
     <form
-      onSubmit={handleSubmit}
+      onSubmit={(event) => void handleSubmit(event)}
       className="flex flex-wrap items-center gap-2"
       aria-label={t("dept_course_detail.assign_label")}
     >
       {/* Bounded: a name picker does not need the full page width, and at
           1400px the unconstrained input dwarfed everything beside it. */}
-      <div className="flex w-full min-w-0 items-center gap-2 sm:w-80">
-        <TeacherSearchCombobox
+      <div className="w-full min-w-0 sm:w-[28rem]">
+        <SearchableMultiSelect
           options={options}
-          value={userId}
-          onValueChange={setUserId}
-          disabled={assign.isPending || isLoading || !canAssign}
+          value={userIds}
+          onValueChange={(next) => setUserIds(next.slice(0, remainingSlots))}
+          label={t("dept_course_detail.assign_label")}
           placeholder={t("dept_course_detail.assign_placeholder")}
-          emptyLabel={t("dept_course_detail.assign_no_match")}
+          emptyText={t("dept_course_detail.assign_no_match")}
+          removeLabel={(label) =>
+            t("dept_course_detail.remove_selection", { name: label })
+          }
+          disabled={working || isLoading || !canAssign}
         />
       </div>
 
@@ -148,15 +179,13 @@ export function AssignTeacherForm({
       <Button
         type="submit"
         size="sm"
-        disabled={assign.isPending || !userId || !canAssign}
+        disabled={working || userIds.length === 0 || !canAssign}
       >
         <UserPlus className="h-3.5 w-3.5" />
         {t("dept_course_detail.assign_button")}
       </Button>
 
-      {notice ? (
-        <p className="text-[11px] text-text-muted">{notice}</p>
-      ) : null}
+      {notice ? <p className="text-[11px] text-text-muted">{notice}</p> : null}
     </form>
   );
 }
@@ -190,131 +219,5 @@ function TitleFlagOption({
       />
       {label}
     </Button>
-  );
-}
-
-/**
- * Searchable teacher picker over the ALREADY-fetched assignable list.
- *
- * A plain `<Select>` forced the manager to scan an unsorted dropdown; this
- * one filters by name/email as they type. The list is small (org teachers),
- * so filtering is client-side over the fetched candidates — no extra
- * endpoint needed. Selecting collapses to a chip; clicking the chip reopens
- * the search to change the pick.
- */
-function TeacherSearchCombobox({
-  options,
-  value,
-  onValueChange,
-  disabled,
-  placeholder,
-  emptyLabel,
-}: {
-  options: { value: string; label: string }[];
-  value: string;
-  onValueChange: (next: string) => void;
-  disabled?: boolean;
-  placeholder: string;
-  emptyLabel: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const selected = options.find((o) => o.value === value);
-
-  // Escape closes the popover from anywhere (the input, the chip, or a
-  // blurred state); click-outside is handled by the invisible backdrop
-  // rendered under the list.
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
-
-  const q = query.trim().toLowerCase();
-  const filtered = q
-    ? options.filter((o) => o.label.toLowerCase().includes(q))
-    : options;
-
-  function openSearch() {
-    setQuery("");
-    setOpen(true);
-  }
-
-  function pick(next: string) {
-    onValueChange(next);
-    setQuery("");
-    setOpen(false);
-  }
-
-  // A closed pick shows the selected teacher as a chip; opening it (or
-  // nothing picked yet) shows the search input with the live-filtered list.
-  if (selected && !open) {
-    return (
-      <Button
-        variant="outline"
-        type="button"
-        onClick={openSearch}
-        disabled={disabled}
-        className="flex h-auto flex-1 min-w-0 items-center justify-start gap-2 px-3 py-2 text-sm cursor-pointer"
-      >
-        <Check className="h-4 w-4 shrink-0 text-emerald-600" />
-        <span className="min-w-0 truncate">{selected.label}</span>
-      </Button>
-    );
-  }
-
-  return (
-    <div className="relative flex-1 min-w-0">
-      <SearchInput
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        // Click must reopen even when the input already holds focus after
-        // an Escape close — focus() on a focused input fires no onFocus.
-        onClick={() => setOpen(true)}
-        placeholder={placeholder}
-        disabled={disabled}
-        wrapperClassName="flex-1 min-w-0"
-      />
-      {open && (
-        <>
-          {/* Invisible backdrop: a click anywhere outside the list closes it.
-              z-9 keeps it under the z-10 list but above the page content. */}
-          <div
-            className="fixed inset-0 z-[9]"
-            onClick={() => setOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="absolute z-10 mt-1 w-full rounded-md border border-border bg-white shadow-lg max-h-64 overflow-auto">
-            {filtered.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-text-muted">{emptyLabel}</p>
-            ) : (
-              <ul role="listbox" aria-label={placeholder}>
-                {filtered.map((opt) => (
-                  <li key={opt.value}>
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      role="option"
-                      aria-selected={opt.value === value}
-                      onClick={() => pick(opt.value)}
-                      className="w-full justify-start rounded-none px-3 py-2 text-sm cursor-pointer"
-                    >
-                      {opt.label}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </>
-      )}
-    </div>
   );
 }

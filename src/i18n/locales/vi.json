@@ -866,6 +866,7 @@
     },
     "assign_placeholder": "Chọn giảng viên…",
     "assign_no_match": "Không tìm thấy giảng viên phù hợp.",
+    "remove_selection": "Bỏ {{name}} khỏi danh sách đã chọn",
     "assign_none_available": "Đơn vị này chưa có giảng viên nào. Hãy cấp quyền giảng viên cho một người trước.",
     "assign_all_assigned": "Mọi giảng viên của đơn vị này đã được phân công vào khóa học.",
     "readiness": {
@@ -5873,6 +5874,7 @@
     "mentions_badge_other": "{{count}} trả lời cho bạn",
     "closed_badge": "Đã đóng bình luận",
     "reply": "Trả lời",
+    "reply_quote_label": "Đi tới tin nhắn của {{name}}",
     "replying_to": "Đang trả lời {{name}}",
     "reply_placeholder": "Trả lời {{name}}…",
     "send": "Gửi",

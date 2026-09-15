@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useRef, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { CornerDownRight, Lock, Pencil, Send, Trash2, X } from "lucide-react";
@@ -314,14 +314,20 @@ function CommentList({
 }) {
   const { t } = useTranslation();
   const [replyTo, setReplyTo] = useState<DiscussionComment | null>(null);
+  const [highlightedCommentId, setHighlightedCommentId] = useState<
+    string | null
+  >(null);
+  const highlightTimer = useRef<number | null>(null);
 
   // Threads are one level deep server-side (a reply to a reply is re-parented
   // onto the top-level comment), so grouping is a single pass rather than a
   // recursive render.
-  const { roots, childrenOf } = useMemo(() => {
+  const { roots, childrenOf, commentsById, mentionNames } = useMemo(() => {
     const kids = new Map<string, DiscussionComment[]>();
+    const byId = new Map<string, DiscussionComment>();
     const tops: DiscussionComment[] = [];
     for (const c of comments) {
+      byId.set(c.id, c);
       if (c.parent_comment_id) {
         const list = kids.get(c.parent_comment_id) ?? [];
         list.push(c);
@@ -330,8 +336,43 @@ function CommentList({
         tops.push(c);
       }
     }
-    return { roots: tops, childrenOf: kids };
+    const names = Array.from(
+      new Set(
+        comments
+          .map((comment) => comment.author?.display_name?.trim())
+          .filter((name): name is string => Boolean(name)),
+      ),
+    ).sort((left, right) => right.length - left.length);
+    return {
+      roots: tops,
+      childrenOf: kids,
+      commentsById: byId,
+      mentionNames: names,
+    };
   }, [comments]);
+
+  useEffect(
+    () => () => {
+      if (highlightTimer.current !== null) {
+        window.clearTimeout(highlightTimer.current);
+      }
+    },
+    [],
+  );
+
+  function navigateToComment(commentId: string) {
+    document
+      .getElementById(`discussion-comment-${commentId}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedCommentId(commentId);
+    if (highlightTimer.current !== null) {
+      window.clearTimeout(highlightTimer.current);
+    }
+    highlightTimer.current = window.setTimeout(
+      () => setHighlightedCommentId(null),
+      2_000,
+    );
+  }
 
   return (
     <>
@@ -353,19 +394,39 @@ function CommentList({
                   topicId={topicId}
                   scope={scope}
                   onReply={setReplyTo}
+                  mentionNames={mentionNames}
+                  highlighted={highlightedCommentId === comment.id}
+                  onNavigateToComment={navigateToComment}
                 />
                 {(childrenOf.get(comment.id) ?? []).length > 0 && (
                   <ul className="mt-3 space-y-3 border-l-2 border-m3-outline-variant/40 pl-4 sm:pl-6">
-                    {(childrenOf.get(comment.id) ?? []).map((reply) => (
-                      <li key={reply.id}>
-                        <CommentRow
-                          comment={reply}
-                          topicId={topicId}
-                          scope={scope}
-                          onReply={setReplyTo}
-                        />
-                      </li>
-                    ))}
+                    {(childrenOf.get(comment.id) ?? []).map((reply) => {
+                      const directTarget = commentsById.get(
+                        reply.reply_to_comment_id ??
+                          reply.parent_comment_id ??
+                          "",
+                      );
+                      // Direct replies to the root keep the old compact UI.
+                      // A quote is only needed when this reply targeted
+                      // another reply that still renders in the thread.
+                      const quotedReply = directTarget?.parent_comment_id
+                        ? directTarget
+                        : null;
+                      return (
+                        <li key={reply.id}>
+                          <CommentRow
+                            comment={reply}
+                            topicId={topicId}
+                            scope={scope}
+                            onReply={setReplyTo}
+                            mentionNames={mentionNames}
+                            quotedReply={quotedReply}
+                            highlighted={highlightedCommentId === reply.id}
+                            onNavigateToComment={navigateToComment}
+                          />
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </li>
@@ -389,18 +450,51 @@ function CommentList({
 /**
  * A mention is written as `@Name` at the head of a reply. It is rendered, not
  * linked: with replies as the only way to mention someone, the relationship
- * is already carried by `parent_comment_id`, so the text is a label rather
- * than something to resolve.
+ * is carried by `reply_to_comment_id`, so the text is a label rather than
+ * something to resolve.
  */
-function CommentBody({ body }: { body: string }) {
-  const parts = body.split(/^(@[^\n]+?)(?=\s)/);
-  if (parts.length < 3) {
+export function splitLeadingMention(
+  body: string,
+  knownNames: string[],
+): { mention: string; remainder: string } | null {
+  for (const name of [...knownNames].sort(
+    (left, right) => right.length - left.length,
+  )) {
+    const mention = `@${name}`;
+    const boundary = body.charAt(mention.length);
+    if (
+      body.startsWith(mention) &&
+      (body.length === mention.length || /\s/u.test(boundary))
+    ) {
+      return { mention, remainder: body.slice(mention.length) };
+    }
+  }
+
+  // Historical comments may reference a user who is no longer returned in
+  // the thread. Preserve the previous single-token treatment as a fallback.
+  const fallback = body.match(/^(@\S+)/u);
+  return fallback
+    ? { mention: fallback[1], remainder: body.slice(fallback[1].length) }
+    : null;
+}
+
+function CommentBody({
+  body,
+  mentionNames,
+}: {
+  body: string;
+  mentionNames: string[];
+}) {
+  const leadingMention = splitLeadingMention(body, mentionNames);
+  if (!leadingMention) {
     return <span className="whitespace-pre-wrap">{body}</span>;
   }
   return (
     <span className="whitespace-pre-wrap">
-      <span className="font-medium text-m3-primary underline">{parts[1]}</span>
-      {parts.slice(2).join("")}
+      <span className="font-medium text-m3-primary underline">
+        {leadingMention.mention}
+      </span>
+      {leadingMention.remainder}
     </span>
   );
 }
@@ -426,16 +520,65 @@ function TextAction({
   );
 }
 
+function commentBubbleClass(highlighted: boolean) {
+  return cn(
+    "rounded-2xl border bg-m3-surface-container px-3.5 py-2.5 transition-[border-color,box-shadow] duration-300",
+    highlighted
+      ? "border-m3-primary ring-2 ring-m3-primary/20"
+      : "border-transparent",
+  );
+}
+
+function QuotedReplyPreview({
+  reply,
+  onNavigate,
+}: {
+  reply: DiscussionComment | null;
+  onNavigate: (commentId: string) => void;
+}) {
+  const { t } = useTranslation();
+  if (!reply) return null;
+  const authorName =
+    reply.author?.display_name?.trim() || t("discussion.unknown_author");
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={() => onNavigate(reply.id)}
+      aria-label={t("discussion.reply_quote_label", { name: authorName })}
+      className="my-1.5 h-auto w-full justify-start rounded-lg border-l-2 border-m3-primary bg-m3-surface-container-high px-2.5 py-2 text-left hover:bg-m3-primary/10"
+    >
+      <span className="min-w-0">
+        <span className="block truncate text-xs font-semibold text-m3-primary">
+          {authorName}
+        </span>
+        <span className="line-clamp-2 whitespace-pre-wrap text-xs font-normal text-m3-on-surface-variant">
+          {reply.body}
+        </span>
+      </span>
+    </Button>
+  );
+}
+
 function CommentRow({
   comment,
   topicId,
   scope,
   onReply,
+  mentionNames,
+  quotedReply = null,
+  highlighted,
+  onNavigateToComment,
 }: {
   comment: DiscussionComment;
   topicId: string;
   scope: DiscussionScope;
   onReply: (comment: DiscussionComment) => void;
+  mentionNames: string[];
+  quotedReply?: DiscussionComment | null;
+  highlighted: boolean;
+  onNavigateToComment: (commentId: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -463,7 +606,10 @@ function CommentRow({
   }
 
   return (
-    <div className="flex items-start gap-2.5">
+    <div
+      id={`discussion-comment-${comment.id}`}
+      className="flex scroll-m-4 items-start gap-2.5"
+    >
       <Avatar size="sm" className={avatarColor(comment.author_id)}>
         {comment.author?.avatar_url && (
           <AvatarImage src={comment.author.avatar_url} alt={name} />
@@ -515,10 +661,14 @@ function CommentRow({
             </div>
           </form>
         ) : (
-          <div className="rounded-2xl bg-m3-surface-container px-3.5 py-2.5">
+          <div className={commentBubbleClass(highlighted)}>
             <p className="text-xs font-semibold text-m3-on-surface">{name}</p>
+            <QuotedReplyPreview
+              reply={quotedReply}
+              onNavigate={onNavigateToComment}
+            />
             <p className="mt-0.5 text-sm text-m3-on-surface">
-              <CommentBody body={comment.body} />
+              <CommentBody body={comment.body} mentionNames={mentionNames} />
             </p>
           </div>
         )}
