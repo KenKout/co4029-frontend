@@ -235,6 +235,8 @@ export interface QuizScheduleWindow {
   integrity_weight_focus_lost?: number | null;
   integrity_weight_fullscreen_exit?: number | null;
   integrity_score_threshold?: number | null;
+  /** Required local camera track for the duration of the attempt. */
+  require_camera?: boolean | null;
 }
 
 export type Quiz = Schemas["QuizPublic"] & QuizScheduleWindow;

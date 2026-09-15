@@ -61,6 +61,10 @@ vi.mock("@/lib/api/hooks/quizzes", () => ({
   useStartQuizAttempt: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useSubmitQuizAnswer: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useSubmitQuizAttempt: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useClaimQuizAttemptSession: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useQuizAttemptHeartbeat: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useReleaseQuizAttemptSession: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useTakeoverQuizAttemptSession: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock("@/lib/quiz/quiz-attempt-session/use-attempt-session-state", () => ({

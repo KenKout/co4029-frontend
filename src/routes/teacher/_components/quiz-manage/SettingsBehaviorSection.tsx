@@ -4,7 +4,7 @@ import { SettingsSection, ToggleRow } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
 
 /**
- * Behavior section: the four short presentation switches. Extracted from
+ * Behavior section: the five short presentation/access switches. Extracted from
  * SettingsTab verbatim.
  */
 export function SettingsBehaviorSection({
@@ -54,6 +54,15 @@ export function SettingsBehaviorSection({
           )}
           value={draft.show_hints}
           onChange={(v) => update("show_hints", v)}
+          disabled={locked}
+        />
+        <ToggleRow
+          label={t("teacher_quiz_manage.settings.behavior.require_camera_label")}
+          description={t(
+            "teacher_quiz_manage.settings.behavior.require_camera_desc",
+          )}
+          value={draft.require_camera}
+          onChange={(v) => update("require_camera", v)}
           disabled={locked}
         />
         <ToggleRow

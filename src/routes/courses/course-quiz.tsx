@@ -12,6 +12,7 @@ import {
 import { QuizTakingStage } from "@/routes/courses/_components/course-quiz/QuizTakingStage";
 import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
 import { QuizFullscreenGateScreen } from "@/routes/courses/_components/course-quiz/QuizFullscreenGateScreen";
+import { getQuizBlockingStage } from "@/routes/courses/_components/course-quiz/QuizGuardScreens";
 
 /**
  * Student quiz-taking route. All attempt state + lifecycle lives in
@@ -38,7 +39,13 @@ export default function CourseQuizPage() {
   // the taking screen: start a fresh attempt as soon as the intro is ready.
   // Guarded so re-renders / StrictMode can't fire a second attempt.
   useEffect(() => {
-    if (search.start && !taking && !submittedSummary && !autoStarted.current) {
+    if (
+      search.start &&
+      !quiz?.require_camera &&
+      !taking &&
+      !submittedSummary &&
+      !autoStarted.current
+    ) {
       autoStarted.current = true;
       void session.handleStartAttempt();
     }
@@ -56,6 +63,9 @@ export default function CourseQuizPage() {
   if (!course || !quiz) {
     return <QuizNotFoundPanel slug={slug} />;
   }
+
+  const blockingStage = getQuizBlockingStage({ session, slug });
+  if (blockingStage) return blockingStage;
 
   if (submittedSummary) {
     return (
@@ -82,6 +92,7 @@ export default function CourseQuizPage() {
   if (displayQuestions.length === 0) {
     return <QuizNoQuestionsPanel slug={slug} />;
   }
+
 
   // Fullscreen is MANDATORY for every attempt (same rule as the interview).
   // The gate REPLACES the take rather than overlaying it: a dialog over the

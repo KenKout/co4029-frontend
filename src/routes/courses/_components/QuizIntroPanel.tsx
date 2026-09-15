@@ -1,4 +1,6 @@
 import { GlassCard } from "@/components/ui/glass-card";
+import { Camera } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { QuizAttemptRead, QuizPublic } from "@/lib/api/types";
 import { deriveIntroState } from "@/routes/courses/_components/quiz-intro-panel/helpers";
 import { IntroAttemptHistory } from "@/routes/courses/_components/quiz-intro-panel/IntroAttemptHistory";
@@ -39,6 +41,7 @@ export function QuizIntroPanel({
   slug: string;
   courseTitle?: string | null;
 }) {
+  const { t } = useTranslation();
   const intro = deriveIntroState(quiz, attempts);
 
   return (
@@ -54,6 +57,22 @@ export function QuizIntroPanel({
           <IntroStatTiles quiz={quiz} intro={intro} />
 
           <IntroScheduleList intro={intro} />
+
+          <div className="mb-6 flex items-start gap-3 rounded-xl bg-m3-surface-container p-4 text-left">
+            <Camera className="mt-0.5 h-5 w-5 shrink-0 text-m3-primary" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold text-m3-on-surface">
+                {t(
+                  quiz.require_camera
+                    ? "course_quiz.camera.required_label"
+                    : "course_quiz.camera.optional_label",
+                )}
+              </p>
+              <p className="mt-1 text-xs text-m3-on-surface-variant">
+                {t("course_quiz.camera.privacy")}
+              </p>
+            </div>
+          </div>
 
           <IntroStartCta
             quiz={quiz}
