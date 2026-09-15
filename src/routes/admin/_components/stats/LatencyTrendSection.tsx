@@ -152,7 +152,9 @@ export function LatencyTrendSection({ range }: { range: TrendRange }) {
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart
             data={chartData}
-            margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
+            // Keep enough room for formatted values such as "999ms" and
+            // prevent the left plot edge from covering the first tick label.
+            margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
           >
             <defs>
               <linearGradient id="latencyTrendFill" x1="0" y1="0" x2="0" y2="1">
@@ -185,7 +187,8 @@ export function LatencyTrendSection({ range }: { range: TrendRange }) {
               tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
               stroke="var(--color-border)"
               tickFormatter={(value: number) => formatMs(value)}
-              width={44}
+              width={56}
+              tickMargin={4}
             />
             <Tooltip
               content={<LatencyTrendTooltip />}
