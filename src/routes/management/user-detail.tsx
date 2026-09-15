@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
+import { getUserDisplayName } from "@/lib/user-identity";
 
 import { UserOverviewBody } from "./_components/user-detail/UserOverviewBody";
 import { useManagerUserDetail } from "./_components/user-detail/use-manager-user-detail";
@@ -17,10 +18,10 @@ import { useManagerUserDetail } from "./_components/user-detail/use-manager-user
 export default function ManagementUserDetailPage() {
   const { t } = useTranslation();
   const c = useManagerUserDetail();
-  const displayName =
-    c.data?.user.profile?.display_name?.trim() ||
-    c.data?.user.primary_email ||
-    t("management_users.detail.unknown", { defaultValue: "User" });
+  const displayName = getUserDisplayName(
+    c.data?.user,
+    t("management_users.detail.unknown", { defaultValue: "User" }),
+  );
 
   if (c.permissionsLoading) {
     return (

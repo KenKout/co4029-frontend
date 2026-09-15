@@ -11,6 +11,7 @@ import { apiPost } from "@/lib/api/client";
 import { useDeptCourses } from "@/lib/api/hooks/dept";
 import { useManagedLearningPrograms } from "@/lib/api/hooks/learning-programs";
 import type { RoleAssignmentRead } from "@/lib/api/types";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
 export interface UnitPerson {
   membershipId: string;
@@ -84,12 +85,9 @@ export function useUnitAssignment(
           return {
             membershipId: membership.id,
             userId: membership.user_id,
-            displayName:
-              user?.profile?.display_name ??
-              user?.primary_email ??
-              membership.user_id,
+            displayName: getUserDisplayName(user, membership.user_id),
             email: user?.primary_email ?? "",
-            avatarUrl: user?.profile?.avatar_url ?? null,
+            avatarUrl: getUserAvatarUrl(user),
             facultyIds: facultyIdsByUser.get(membership.user_id) ?? [],
             roleCodesByFaculty:
               facultyRoleCodesByUser.get(membership.user_id) ?? {},

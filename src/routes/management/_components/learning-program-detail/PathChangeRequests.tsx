@@ -19,7 +19,9 @@ import type {
   PathChangeRequest,
   PathChangeRequestStatus,
   PathRequestKind,
+  User,
 } from "@/lib/api/types";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 import {
   RejectButton,
   RejectPathChangeDialog,
@@ -79,27 +81,21 @@ const KIND_CHIP: Record<PathRequestKind, { labelKey: string; className: string }
   },
 };
 
-type RequestStudent = {
-  id: string;
-  display_name?: string | null;
-  primary_email?: string;
-  avatar_url?: string | null;
-};
-
 /** Requester identity cell: avatar + name + email, linking to their detail page. */
 function RequesterCell({
   studentId,
   user,
 }: {
   studentId: string | undefined;
-  user: RequestStudent | undefined;
+  user: User | undefined;
 }) {
   const { t } = useTranslation();
   if (!studentId) return <div className="flex min-w-0 items-center gap-3" />;
-  const displayName =
-    user?.display_name?.trim() ||
-    user?.primary_email ||
-    t("management_learning_program_detail.requests.unknown_student");
+  const displayName = getUserDisplayName(
+    user,
+    t("management_learning_program_detail.requests.unknown_student"),
+  );
+  const avatarUrl = getUserAvatarUrl(user);
   const email = user?.primary_email ?? "";
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -109,8 +105,8 @@ function RequesterCell({
         className="flex min-w-0 items-center gap-3 rounded-lg"
       >
         <Avatar size="sm" className={avatarColor(studentId)}>
-          {user?.avatar_url ? (
-            <AvatarImage src={user.avatar_url} alt={displayName} />
+          {avatarUrl ? (
+            <AvatarImage src={avatarUrl} alt={displayName} />
           ) : null}
           <AvatarFallback>
             {avatarInitials(displayName, { uppercase: true })}
@@ -140,7 +136,7 @@ function RequestRow({
 }: {
   request: PathChangeRequest;
   studentId: string | undefined;
-  user: RequestStudent | undefined;
+  user: User | undefined;
   marking: boolean;
   onApprove: () => void;
   onMarkInProgress: () => void;
@@ -261,7 +257,7 @@ export function PathChangeRequestsSection({
   );
   const users = useUsersByIds(studentIds);
   const usersById = useMemo(() => {
-    const map = new Map<string, RequestStudent>();
+    const map = new Map<string, User>();
     for (const u of users.data ?? []) map.set(u.id, u);
     return map;
   }, [users.data]);
@@ -308,9 +304,10 @@ export function PathChangeRequestsSection({
             if (!next) setRejectTarget(null);
           }}
           studentName={
-            rejectStudent?.display_name?.trim() ||
-            rejectStudent?.primary_email ||
-            t("management_learning_program_detail.requests.unknown_student")
+            getUserDisplayName(
+              rejectStudent,
+              t("management_learning_program_detail.requests.unknown_student"),
+            )
           }
           isPending={Boolean(isRejecting)}
           onReject={(reasonCode, reason, note) => {

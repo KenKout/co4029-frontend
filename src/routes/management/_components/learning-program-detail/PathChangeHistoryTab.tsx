@@ -24,21 +24,16 @@ import type {
   PathChangeRejectionReasonCode,
   PathChangeRequest,
   PathChangeRequestStatus,
+  User,
 } from "@/lib/api/types";
 import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
 type TerminalStatus = Extract<
   PathChangeRequestStatus,
   "approved" | "rejected" | "cancelled" | "invalidated"
 >;
-
-type HistoryUser = {
-  id: string;
-  display_name?: string | null;
-  primary_email?: string;
-  avatar_url?: string | null;
-};
 
 interface HistoryRow {
   request: PathChangeRequest;
@@ -132,7 +127,7 @@ function pathName(
 function buildRows(
   requests: PathChangeRequest[],
   roster: LearningProgramEnrollment[],
-  usersById: Map<string, HistoryUser>,
+  usersById: Map<string, User>,
   labels: { unknownStudent: string; unavailablePath: string; dropped: string },
 ): HistoryRow[] {
   const enrollmentById = new Map(roster.map((item) => [item.id, item]));
@@ -149,12 +144,9 @@ function buildRows(
       {
         request,
         studentId: enrollment.student_id,
-        displayName:
-          user?.display_name?.trim() ||
-          user?.primary_email ||
-          labels.unknownStudent,
+        displayName: getUserDisplayName(user, labels.unknownStudent),
         email: user?.primary_email ?? "",
-        avatarUrl: user?.avatar_url ?? null,
+        avatarUrl: getUserAvatarUrl(user),
         fromPath: pathName(
           enrollment,
           fromAttempt?.career_path_id,
@@ -211,7 +203,7 @@ export function PathChangeHistoryTab({
   );
   const users = useUsersByIds(studentIds);
   const usersById = useMemo(() => {
-    const map = new Map<string, HistoryUser>();
+    const map = new Map<string, User>();
     for (const user of users.data ?? []) map.set(user.id, user);
     return map;
   }, [users.data]);

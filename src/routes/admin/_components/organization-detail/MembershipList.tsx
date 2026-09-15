@@ -11,6 +11,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import type { MembershipRead } from "@/lib/api/types/admin-organizations";
 import type { User } from "@/lib/api/types";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
 import { MembershipRowActions } from "./MembershipRowActions";
 import { StatusBadge } from "./StatusBadge";
@@ -20,7 +21,7 @@ import type { MembershipsTabController } from "./use-memberships-tab";
 
 /** Display name for a membership row, falling back to the raw user id. */
 function memberDisplayName(m: MembershipRead, u: User | undefined): string {
-  return u?.profile?.display_name?.trim() || m.user_id;
+  return getUserDisplayName(u, m.user_id);
 }
 
 /** Actions cell: inline status edit + delete, reusing the row controller. */
@@ -58,11 +59,12 @@ export function MembershipList({ c }: { c: MembershipsTabController }) {
       cell: (m) => {
         const u = userById.get(m.user_id);
         const displayName = memberDisplayName(m, u);
+        const avatarUrl = getUserAvatarUrl(u);
         return (
           <div className="flex items-center gap-3 min-w-0">
             <Avatar size="sm" className={avatarColor(m.user_id)}>
-              {u?.profile?.avatar_url && (
-                <AvatarImage src={u.profile.avatar_url} alt={displayName} />
+              {avatarUrl && (
+                <AvatarImage src={avatarUrl} alt={displayName} />
               )}
               <AvatarFallback>
                 {avatarInitials(displayName, { uppercase: true })}

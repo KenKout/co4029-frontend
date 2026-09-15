@@ -14,7 +14,8 @@ import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { CourseEnrollmentStatusBadge } from "@/components/ui/status-badges";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
-import type { LearningProgramEnrollment } from "@/lib/api/types";
+import type { LearningProgramEnrollment, User } from "@/lib/api/types";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
 /**
  * Program roster: who is enrolled, which path they picked, how far they are.
@@ -38,12 +39,6 @@ export interface RosterRow {
   courseCount: number;
 }
 
-type RosterUser = {
-  display_name?: string | null;
-  primary_email?: string;
-  avatar_url?: string | null;
-};
-
 interface RosterTabProps {
   roster: LearningProgramEnrollment[];
   canEnroll: boolean;
@@ -53,7 +48,7 @@ interface RosterTabProps {
 
 function toRosterRow(
   item: LearningProgramEnrollment,
-  user: RosterUser | undefined,
+  user: User | undefined,
 ): RosterRow {
   const selectedPathIds = new Set(
     item.attempts
@@ -70,10 +65,9 @@ function toRosterRow(
   return {
     enrollmentId: item.id,
     studentId: item.student_id,
-    displayName:
-      user?.display_name?.trim() || user?.primary_email || item.student_id,
+    displayName: getUserDisplayName(user, item.student_id),
     email: user?.primary_email ?? "",
-    avatarUrl: user?.avatar_url ?? null,
+    avatarUrl: getUserAvatarUrl(user),
     status: item.status,
     pathName: pathNames.length > 0 ? pathNames.join(", ") : null,
     progressPercent: item.current_progress_percent,
@@ -94,7 +88,7 @@ export function RosterTab({
   const studentIds = useMemo(() => roster.map((r) => r.student_id), [roster]);
   const users = useUsersByIds(studentIds);
   const usersById = useMemo(() => {
-    const map = new Map<string, RosterUser>();
+    const map = new Map<string, User>();
     for (const u of users.data ?? []) map.set(u.id, u);
     return map;
   }, [users.data]);

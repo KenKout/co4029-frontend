@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/avatar";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
 export type AuditUser = NonNullable<
   ReturnType<typeof useUsersByIds>["data"]
@@ -37,7 +38,8 @@ export function UserIdentityCell({
   }
 
   const user = users?.find((u) => u.id === userId);
-  const displayName = user?.profile?.display_name?.trim() || userId;
+  const displayName = getUserDisplayName(user, userId);
+  const avatarUrl = getUserAvatarUrl(user);
 
   const copyId = () => {
     void navigator.clipboard.writeText(userId).then(
@@ -52,8 +54,8 @@ export function UserIdentityCell({
   return (
     <div className="flex items-center gap-3 min-w-0">
       <Avatar size="sm" className={avatarColor(userId)}>
-        {user?.profile?.avatar_url && (
-          <AvatarImage src={user.profile.avatar_url} alt={displayName} />
+        {avatarUrl && (
+          <AvatarImage src={avatarUrl} alt={displayName} />
         )}
         <AvatarFallback>
           {avatarInitials(displayName, { uppercase: true })}

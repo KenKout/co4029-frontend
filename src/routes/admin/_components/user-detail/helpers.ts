@@ -1,5 +1,6 @@
 import type { RoleRead } from "@/lib/api/types";
 import { formatDateTime, resolveLocale } from "@/lib/format/date";
+import { getUserDisplayName } from "@/lib/user-identity";
 
 import type { EnrichedAssignment, AdminUserRecord } from "./types";
 
@@ -12,7 +13,7 @@ export function activeLanguage(
 }
 
 export function userDisplayName(user: AdminUserRecord | undefined): string {
-  return user?.profile?.display_name?.trim() || user?.primary_email || "—";
+  return getUserDisplayName(user);
 }
 
 /** Both statuses block sign-in, so the UI offers "enable" for either. */

@@ -1,3 +1,5 @@
+import { getUserDisplayName } from "./user-identity";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
@@ -537,11 +539,7 @@ export async function logout() {
 }
 
 export function getAuthDisplayName(user: AuthUser | null | undefined) {
-  if (!user) {
-    return "Guest";
-  }
-
-  return user.profile?.display_name || user.primary_email;
+  return getUserDisplayName(user, "Guest");
 }
 
 export function getAuthUserInitials(user: AuthUser | null | undefined) {

@@ -11,6 +11,7 @@ import { ConfirmDisableDialog } from "@/routes/admin/_components/user-detail/Con
 import { ManagedUsersToolbar } from "./ManagedUsersToolbar";
 import type { ManagedUsersController } from "./use-managed-users";
 import type { UserWithRoles } from "@/routes/admin/_components/users/types";
+import { getUserDisplayName } from "@/lib/user-identity";
 
 /** Roles a manager may never disable / re-enable (backend enforces 403). */
 const PEER_ROLE_CODES = new Set(["manager", "hod", "admin"]);
@@ -24,7 +25,7 @@ type RoleAction =
 
 /** Display name for a row, mirroring users-columns.tsx. */
 function rowDisplayName(u: UserWithRoles): string {
-  return u.profile?.display_name?.trim() || u.primary_email;
+  return getUserDisplayName(u);
 }
 
 /** Which actions are available for a row (mirrors backend 403s). */

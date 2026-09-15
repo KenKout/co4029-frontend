@@ -8,7 +8,13 @@ import {
   Map as MapIcon,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback, avatarColor, avatarInitials } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { GradientProgress } from "@/components/ui/gradient-progress";
@@ -19,6 +25,7 @@ import {
   UserStatusBadge as StatusBadge,
 } from "@/components/ui/status-badges";
 import { useFormatDate } from "@/lib/format/date";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 import type {
   UserCareerPathProgressRead,
   UserCourseProgressRead,
@@ -85,13 +92,15 @@ function IdentityCard({ data }: { data: UserOverview }) {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
   const u = data.user;
-  const displayName = u.profile?.display_name?.trim() || u.primary_email;
+  const displayName = getUserDisplayName(u);
+  const avatarUrl = getUserAvatarUrl(u);
   const roles = u.roles ?? [];
 
   return (
     <div className="bg-surface-elev border border-border rounded-xl p-6">
       <div className="flex items-start gap-4">
         <Avatar size="lg" className={avatarColor(u.id)}>
+          {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
           <AvatarFallback>{avatarInitials(displayName, { uppercase: true })}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">

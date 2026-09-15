@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/avatar";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { UserStatusBadge as StatusBadge } from "@/components/ui/status-badges";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 
 import { RoleBadges } from "./RoleBadges";
 import type { TFn, UserWithRoles } from "./types";
@@ -25,12 +26,13 @@ export function buildUserColumns(
       header: t("admin.users.cols.user", { defaultValue: "User" }),
       sortable: true,
       cell: (u) => {
-        const displayName = u.profile?.display_name?.trim() || u.primary_email;
+        const displayName = getUserDisplayName(u);
+        const avatarUrl = getUserAvatarUrl(u);
         return (
           <div className="flex items-center gap-3 min-w-0">
             <Avatar size="sm" className={avatarColor(u.id)}>
-              {u.profile?.avatar_url && (
-                <AvatarImage src={u.profile.avatar_url} alt={displayName} />
+              {avatarUrl && (
+                <AvatarImage src={avatarUrl} alt={displayName} />
               )}
               <AvatarFallback>
                 {avatarInitials(displayName, { uppercase: true })}
