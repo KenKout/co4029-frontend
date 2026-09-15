@@ -30,6 +30,7 @@ import type {
   InterviewSessionSummary,
   InterviewSessionTeacherRead,
   InterviewTranscriptRead,
+  InterviewRecordingRead,
   RealtimeAgentDispatchResponse,
   RealtimeTokenResponse,
 } from "../types";
@@ -849,6 +850,27 @@ export function useInterviewTranscript(sessionId: string | null | undefined) {
         `/teacher/interview-sessions/${sessionId}/transcript`,
       ),
     enabled: !!sessionId,
+  });
+}
+
+export function useTeacherInterviewRecording(sessionId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.interviews.recording(sessionId ?? ""),
+    queryFn: () =>
+      apiFetch<InterviewRecordingRead>(
+        `/teacher/interview-sessions/${sessionId}/recording`,
+      ),
+    enabled: !!sessionId,
+    // Processing is the only polling state. Once available, refresh shortly
+    // before the signed URL expires so an <audio> element never receives a
+    // stale URL. Other terminal states do not poll.
+    refetchInterval: (query) => {
+      const recording = query.state.data;
+      if (!recording || recording.state === "processing") return 3000;
+      if (recording.state !== "available" || !recording.expires_at) return false;
+      const untilExpiry = new Date(recording.expires_at).getTime() - Date.now();
+      return Math.max(1000, untilExpiry - 30_000);
+    },
   });
 }
 

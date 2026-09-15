@@ -165,12 +165,18 @@ export function StartInterviewDialog({
   onConfirm,
   isPending,
   isResume = false,
+  recordingConsentRequired = false,
+  recordingConsentAccepted = false,
+  onRecordingConsentChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   isPending: boolean;
   isResume?: boolean;
+  recordingConsentRequired?: boolean;
+  recordingConsentAccepted?: boolean;
+  onRecordingConsentChange?: (accepted: boolean) => void;
 }) {
   const { t, i18n } = useTranslation();
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
@@ -227,6 +233,38 @@ export function StartInterviewDialog({
               defaultValue: fallback.cancel,
             })
       }
+      extraContent={
+        recordingConsentRequired ? (
+          <div className="space-y-2 rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container-low p-3">
+            <label className="flex items-start gap-3 text-sm text-m3-on-surface">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 accent-m3-primary"
+                checked={recordingConsentAccepted}
+                onChange={(event) =>
+                  onRecordingConsentChange?.(event.target.checked)
+                }
+                aria-describedby="interview-recording-consent-description"
+              />
+              <span className="font-medium">
+                {t("course_interview.recording_consent.label")}
+              </span>
+            </label>
+            <p
+              id="interview-recording-consent-description"
+              className="pl-7 text-xs text-m3-on-surface-variant"
+            >
+              {t("course_interview.recording_consent.description")}
+            </p>
+            {!recordingConsentAccepted && (
+              <p className="pl-7 text-xs text-m3-on-surface-variant" role="status">
+                {t("course_interview.recording_consent.required")}
+              </p>
+            )}
+          </div>
+        ) : null
+      }
+      confirmDisabled={recordingConsentRequired && !recordingConsentAccepted}
       onConfirm={onConfirm}
       isPending={isPending}
       confirmVariant="default"

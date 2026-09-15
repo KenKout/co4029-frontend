@@ -58,6 +58,11 @@ export function LobbyStartDialog({ iv }: { iv: CourseInterviewController }) {
       onConfirm={() => void iv.handleStart()}
       isPending={startSession.isPending}
       isResume={Boolean(resumableSession)}
+      recordingConsentRequired={
+        Boolean(iv.takingPayload?.recording_consent_required)
+      }
+      recordingConsentAccepted={iv.recordingConsentAccepted}
+      onRecordingConsentChange={iv.setRecordingConsentAccepted}
     />
   );
 }

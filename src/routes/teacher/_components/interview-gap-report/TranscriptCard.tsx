@@ -1,10 +1,22 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { MediaPlayer, MediaProvider } from "@vidstack/react";
+import {
+  DefaultAudioLayout,
+  defaultLayoutIcons,
+} from "@vidstack/react/player/layouts/default";
+import "@vidstack/react/player/styles/base.css";
+import "@vidstack/react/player/styles/default/theme.css";
+import "@vidstack/react/player/styles/default/layouts/audio.css";
 
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { useInterviewTranscript } from "@/lib/api/hooks/interviews";
+import {
+  useInterviewTranscript,
+  useTeacherInterviewRecording,
+} from "@/lib/api/hooks/interviews";
+import type { InterviewRecordingRead } from "@/lib/api/types";
 import { TRANSCRIPT_PAGE_SIZE } from "./constants";
 import { formatRelativeTime } from "./helpers";
 
@@ -17,6 +29,7 @@ export function TranscriptCard({
 }) {
   const { t } = useTranslation();
   const { data, isLoading } = useInterviewTranscript(sessionId);
+  const recording = useTeacherInterviewRecording(sessionId);
   const turns = data?.turns ?? [];
   const [page, setPage] = useState(0);
 
@@ -47,6 +60,11 @@ export function TranscriptCard({
           </span>
         )}
       </div>
+      <RecordingCard
+        recording={recording.data}
+        loading={recording.isLoading}
+        failed={recording.isError}
+      />
       {isLoading && (
         <p className="text-sm text-m3-on-surface-variant">
           {t("common.loading")}
@@ -145,5 +163,76 @@ export function TranscriptCard({
         </>
       )}
     </GlassCard>
+  );
+}
+
+function RecordingCard({
+  recording,
+  loading,
+  failed,
+}: {
+  recording: InterviewRecordingRead | undefined;
+  loading: boolean;
+  failed: boolean;
+}) {
+  const { t } = useTranslation();
+  const state = failed ? "failed" : recording?.state;
+  const duration = recording?.duration_seconds;
+  const formattedDuration =
+    duration == null
+      ? null
+      : `${Math.floor(duration / 60)}:${String(Math.floor(duration % 60)).padStart(2, "0")}`;
+
+  return (
+    <section
+      aria-labelledby="interview-recording-title"
+      className="rounded-xl border border-m3-outline-variant/30 bg-m3-surface-container-low p-4 space-y-3"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4
+          id="interview-recording-title"
+          className="font-headline font-bold text-m3-primary"
+        >
+          {t("teacher_interview_gap_report.recording.title")}
+        </h4>
+        {formattedDuration && (
+          <span className="text-xs tabular-nums text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.recording.duration", {
+              duration: formattedDuration,
+            })}
+          </span>
+        )}
+      </div>
+
+      {loading && !recording && (
+        <p className="text-sm text-m3-on-surface-variant" role="status">
+          {t("common.loading")}
+        </p>
+      )}
+      {!loading && state && state !== "available" && (
+        <p
+          className="text-sm text-m3-on-surface-variant"
+          role={state === "processing" ? "status" : undefined}
+        >
+          {t(`teacher_interview_gap_report.recording.${state}`)}
+        </p>
+      )}
+      {state === "available" && recording?.stream_url && (
+        <>
+          <MediaPlayer
+            src={recording.stream_url}
+            load="play"
+            className="w-full rounded-lg bg-m3-surface-container-high"
+            aria-label={t("teacher_interview_gap_report.recording.audio_label")}
+          >
+            <MediaProvider />
+            <DefaultAudioLayout icons={defaultLayoutIcons} download={false} />
+          </MediaPlayer>
+          <p className="text-xs text-m3-on-surface-variant">
+            {t("teacher_interview_gap_report.recording.access_notice")}
+          </p>
+        </>
+      )}
+    </section>
   );
 }

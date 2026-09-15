@@ -2795,6 +2795,16 @@
         "system": "Hệ thống"
       }
     },
+    "recording": {
+      "title": "Bản ghi âm phiên",
+      "processing": "Bản ghi đang được xử lý. Thẻ này sẽ tự động cập nhật.",
+      "not_recorded": "Không có bản ghi âm phiên. Tính năng có thể đã tắt hoặc bị từ chối.",
+      "failed": "Không thể chuẩn bị bản ghi âm phiên.",
+      "expired": "Bản ghi đã hết hạn sau thời gian lưu trữ.",
+      "audio_label": "Phát bản ghi âm buổi phỏng vấn",
+      "access_notice": "Mọi lần phát đều được ghi nhận đối với nhân sự được cấp quyền.",
+      "duration": "Thời lượng: {{duration}}"
+    },
     "empty_states": {
       "no_report": "Chưa có báo cáo lỗ hổng",
       "not_graded": "Phiên này không được chấm",
@@ -3180,6 +3190,11 @@
     "agent_failed": {
       "title": "Không kết nối được giọng nói",
       "body": "Giọng nói AI không khởi động được, buổi phỏng vấn tiếp tục bằng chữ. Câu trả lời của bạn vẫn được chấm như bình thường."
+    },
+    "recording_consent": {
+      "label": "Tôi đồng ý ghi âm chỉ âm thanh cho buổi phỏng vấn này.",
+      "description": "Bản ghi chỉ dành cho giáo viên được cấp quyền, được lưu trong 30 ngày và mọi lần truy cập đều được ghi nhận.",
+      "required": "Hãy đồng ý ghi âm hoặc bỏ chọn để tiếp tục mà không ghi âm."
     },
     "enable_audio": "Bật tiếng người phỏng vấn",
     "enable_audio_body": "Người phỏng vấn đang trực tiếp nói chuyện. Trình duyệt chặn âm thanh cho đến khi bạn bấm một lần — hãy bật để nghe câu hỏi.",

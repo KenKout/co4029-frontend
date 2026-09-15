@@ -480,6 +480,9 @@ export type InterviewConfigUpdate = Schemas["InterviewConfigUpdate"] & {
 };
 export type InterviewForTakingPublic = Schemas["InterviewForTakingPublic"] & {
   config: InterviewConfigPublic;
+  // Additive until the committed OpenAPI snapshot is regenerated.
+  recording_consent_required?: boolean;
+  recording_policy_version?: string | null;
 };
 export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
   // Proactive retake context (#7) — manually typed until the OpenAPI snapshot
@@ -489,8 +492,13 @@ export type InterviewSessionPublic = Schemas["InterviewSessionPublic"] & {
   retake_available_at?: string | null;
   can_retake?: boolean;
 };
-export type InterviewSessionStartRequest =
-  Schemas["InterviewSessionStartRequest"];
+export type InterviewSessionStartRequest = Omit<
+  Schemas["InterviewSessionStartRequest"],
+  "recording_consent_accepted" | "recording_consent_policy_version"
+> & {
+  recording_consent_accepted?: boolean;
+  recording_consent_policy_version?: string | null;
+};
 export type InterviewLanguage = NonNullable<
   Schemas["InterviewOnboardingRespondRequest"]["language"]
 >;
@@ -732,6 +740,16 @@ export interface InterviewTranscriptTurn {
   content_text: string | null;
   has_audio: boolean;
   created_at: string;
+}
+
+export interface InterviewRecordingRead {
+  session_id: string;
+  state: "not_recorded" | "processing" | "available" | "failed" | "expired";
+  media_kind: "audio" | null;
+  stream_url: string | null;
+  expires_at: string | null;
+  duration_seconds: number | null;
+  recorded_at: string | null;
 }
 
 export interface InterviewTranscriptRead {

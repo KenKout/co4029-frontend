@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
@@ -19,11 +19,9 @@ export function useInterviewRouteData() {
   const { t, i18n } = useTranslation();
   // Route: /courses/$slug/interview/$moduleId
   // $moduleId carries the interview_config_id (set by course-learn link)
-  const { slug, moduleId } = useParams({ strict: false }) as {
-    slug: string;
-    moduleId: string;
-  };
+  const { slug, moduleId } = useParams({ strict: false });
   const configId = moduleId;
+  const [recordingConsentAccepted, setRecordingConsentAccepted] = useState(false);
 
   const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
   const { data: takingPayload, isLoading: configLoading } =
@@ -90,5 +88,7 @@ export function useInterviewRouteData() {
     resumableSession,
     pastAttempts,
     lastAttempt,
+    recordingConsentAccepted,
+    setRecordingConsentAccepted,
   };
 }

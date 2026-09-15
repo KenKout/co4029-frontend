@@ -360,6 +360,8 @@ export const queryKeys = {
       ["interviews", "config-sessions", configId] as const,
     transcript: (sessionId: string) =>
       ["interviews", "transcript", sessionId] as const,
+    recording: (sessionId: string) =>
+      ["interviews", "recording", sessionId] as const,
     integrityEvents: (sessionId: string) =>
       ["interviews", "integrity-events", sessionId] as const,
     courseSessions: (courseId: string) =>

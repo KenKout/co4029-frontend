@@ -130,8 +130,12 @@ export function handleStartSuccess(
  * The only place a start body is constructed. No mode field any more: the
  * backend ignores it and every session runs the unified room.
  */
-function buildStartBody(): InterviewSessionStartRequest {
-  return {};
+function buildStartBody(ctx: InterviewActionsContext): InterviewSessionStartRequest {
+  return {
+    recording_consent_accepted: ctx.recordingConsentAccepted,
+    recording_consent_policy_version:
+      ctx.takingPayload?.recording_policy_version ?? null,
+  };
 }
 
 function reportStartError(ctx: InterviewActionsContext, err: unknown) {
@@ -176,7 +180,7 @@ export async function beginSessionAfterFullscreen(
 export async function handleStart(ctx: InterviewActionsContext) {
   await beginSessionAfterFullscreen(ctx, async () => {
     try {
-      const payload = await ctx.startSession.mutateAsync(buildStartBody());
+      const payload = await ctx.startSession.mutateAsync(buildStartBody(ctx));
       handleStartSuccess(ctx, payload);
     } catch (err) {
       reportStartError(ctx, err);
@@ -210,7 +214,7 @@ export async function handleRetry(ctx: InterviewActionsContext) {
     ctx.setSessionDeadlineAt(null);
     ctx.timeoutTriggeredRef.current = false;
     try {
-      const payload = await ctx.startSession.mutateAsync(buildStartBody());
+      const payload = await ctx.startSession.mutateAsync(buildStartBody(ctx));
       handleStartSuccess(ctx, payload);
     } catch (err) {
       reportStartError(ctx, err);

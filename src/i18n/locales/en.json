@@ -2886,6 +2886,16 @@
         "system": "System"
       }
     },
+    "recording": {
+      "title": "Session recording",
+      "processing": "Recording is still processing. This card will refresh automatically.",
+      "not_recorded": "No session recording is available. Recording may have been disabled or declined.",
+      "failed": "The session recording could not be prepared.",
+      "expired": "This recording has expired after the retention period.",
+      "audio_label": "Play interview session recording",
+      "access_notice": "Playback is logged for authorized staff.",
+      "duration": "Duration: {{duration}}"
+    },
     "empty_states": {
       "no_report": "No gap report yet",
       "not_graded": "This session wasn't graded",
@@ -3351,6 +3361,11 @@
     "agent_failed": {
       "title": "Voice interviewer unavailable",
       "body": "The AI voice could not start, so the interview continues in text. Your answers are still graded exactly the same way."
+    },
+    "recording_consent": {
+      "label": "I consent to an audio-only recording of this interview.",
+      "description": "The recording is available only to authorized teachers, kept for 30 days, and access is logged.",
+      "required": "Please give consent or leave this unchecked to continue without a recording."
     },
     "enable_audio": "Enable interviewer audio",
     "enable_audio_body": "The interviewer is live and speaking. Your browser blocks audio until you click once — enable it to hear the questions.",
