@@ -1090,7 +1090,6 @@ export interface StartCourseResult {
 
 export type CareerPathProgressRead = Schemas["CareerPathProgressRead"] & {
   stages?: StageProgressRead[];
-  formula_version?: number;
   max_concurrent?: number | null;
   active_in_path?: number;
   over_concurrency_cap?: boolean;

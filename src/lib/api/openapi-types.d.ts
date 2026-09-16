@@ -5025,9 +5025,6 @@ export interface paths {
         /**
          * Get My Readiness History
          * @description Most-recent-first readiness snapshots for the calling student (FR-6.8).
-         *
-         *     Each point carries ``formula_version``; the chart must segment or annotate
-         *     where it changes rather than drawing one continuous line across formulas.
          */
         get: operations["get_my_readiness_history_api_v1_me_career_enrollments__career_path_id__readiness_history_get"];
         put?: never;
@@ -7415,11 +7412,6 @@ export interface components {
              * Format: date-time
              */
             captured_at: string;
-            /**
-             * Formula Version
-             * @default 1
-             */
-            formula_version: number;
         };
         /** CategorySpendOut */
         CategorySpendOut: {
@@ -16198,11 +16190,6 @@ export interface components {
              * @default []
              */
             stages: components["schemas"]["StageProgressRead"][];
-            /**
-             * Formula Version
-             * @default 1
-             */
-            formula_version: number;
             /** Max Concurrent */
             max_concurrent?: number | null;
             /**
