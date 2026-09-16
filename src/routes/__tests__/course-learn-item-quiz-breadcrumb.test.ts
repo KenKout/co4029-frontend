@@ -74,4 +74,14 @@ describe("quiz taking hides the breadcrumb", () => {
       expect(inner.slice(at, at + 460)).toMatch(/^\s*\{breadcrumb\}/m);
     }
   });
+
+  it("does not double-pad quiz state content on mobile", () => {
+    const inner = SRC.slice(
+      SRC.indexOf("function QuizProxyInner"),
+      SRC.indexOf("function InterviewProxy"),
+    );
+    expect(inner).not.toContain(
+      'max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8',
+    );
+  });
 });

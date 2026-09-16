@@ -556,7 +556,7 @@ function QuizProxyInner({
     return (
       <>
         {breadcrumb}
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1800px] mx-auto">
           <QuizResultScreen
             quiz={quiz}
             summary={submittedSummary}
@@ -595,7 +595,7 @@ function QuizProxyInner({
     return (
       <>
         {breadcrumb}
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1800px] mx-auto">
           <QuizIntroStage
             session={session}
             quiz={quiz}
@@ -610,7 +610,7 @@ function QuizProxyInner({
   return (
     <>
       {breadcrumb}
-      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1800px] mx-auto">
         <QuizNoQuestionsPanel slug={slug} />
       </div>
     </>
@@ -636,14 +636,6 @@ function InterviewProxyInner({
 }) {
   const iv = useCourseInterviewWithRef(slug, interviewRef);
   const { course, config, finishResult, sessionId } = iv;
-  // Same five-provider-prop policy as course-interview.tsx: the mandatory
-  // fullscreen gate first (no fullscreen → every capability false), End/timer
-  // moves the phase to `closing` synchronously, and that terminal state
-  // disconnects the room / unmounts RoomAudioRenderer so agent audio cannot
-  // bleed into the closing/result screen. A `natural` closing is the
-  // exception — the agent is reading the goodbye over LiveKit and the room
-  // stays live until the farewell presents and the phase advances to results
-  // (see interviewRoomProps in agent-voice-presentation).
   const roomProps = interviewRoomProps({
     sessionId,
     phase: iv.phase,
@@ -655,10 +647,6 @@ function InterviewProxyInner({
     fullscreenGranted: iv.fullscreenGate.isFullscreen,
   });
 
-  // The SAME screen order as the direct route (resolveInterviewScreen there):
-  // loading → missing config → results (before the gate) → lobby → gate →
-  // workspace. One rule for both URLs; the gate cannot be bypassed by entering
-  // through the curriculum instead.
   const screen = (() => {
     if (iv.courseLoading || iv.configLoading) return <InterviewLoadingScreen />;
     if (!course || !config)
