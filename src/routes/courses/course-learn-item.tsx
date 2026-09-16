@@ -601,6 +601,7 @@ function QuizProxyInner({
             quiz={quiz}
             slug={slug}
             courseTitle={course?.title}
+            hasBreadcrumb
           />
         </div>
       </>

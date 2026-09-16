@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
 import { QuizIntroPanel } from "@/routes/courses/_components/QuizIntroPanel";
+import { cn } from "@/lib/utils";
 import { QuizStartDialog } from "./QuizStartDialog";
 import { QuizCameraErrorNotice } from "./QuizGuardScreens";
 import type { QuizStageProps } from "./types";
@@ -85,7 +86,11 @@ export function QuizIntroStage({
   quiz,
   slug,
   courseTitle,
-}: QuizStageProps & { courseTitle?: string | null }) {
+  hasBreadcrumb = false,
+}: QuizStageProps & {
+  courseTitle?: string | null;
+  hasBreadcrumb?: boolean;
+}) {
   const {
     attempts,
     inProgressAttempt,
@@ -102,7 +107,12 @@ export function QuizIntroStage({
   const [confirming, setConfirming] = useState<"start" | "resume" | null>(null);
 
   return (
-    <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-10">
+    <div
+      className={cn(
+        "w-full mx-auto px-4 sm:px-6 lg:px-8 pb-10",
+        hasBreadcrumb ? "pt-0" : "pt-6",
+      )}
+    >
       <QuizIntroPanel
         quiz={quiz}
         attempts={attempts}
