@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { formatDateTimeMedium } from "@/lib/format/date";
+import { verdictState } from "@/lib/interview/verdict-state";
 import { useUsersByIdMap } from "@/lib/api/hooks/user-identities";
 import type {
   InterviewSessionTeacherRead,
@@ -214,7 +215,11 @@ function InterviewVerdictBadge({
 }: {
   session: InterviewSessionTeacherRead;
 }) {
-  if (session.status === "in_progress") {
+  // Shared with the student history badge: `failed` is NOT terminal while the
+  // recovery sweep can re-drive the row — only `evaluation_state ===
+  // "exhausted"` earns the error badge (legacy no-field fallback inside).
+  const state = verdictState(session);
+  if (state === "in_progress") {
     return (
       <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
         <Loader2 className="h-3 w-3" />
@@ -222,7 +227,7 @@ function InterviewVerdictBadge({
       </Badge>
     );
   }
-  if (session.status === "failed") {
+  if (state === "evaluation_failed") {
     return (
       <Badge className="text-[10px] border-0 bg-red-100 text-red-700 gap-1">
         <XCircle className="h-3 w-3" />
@@ -230,7 +235,7 @@ function InterviewVerdictBadge({
       </Badge>
     );
   }
-  if (session.status === "abandoned") {
+  if (state === "not_graded") {
     return (
       <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
         <MinusCircle className="h-3 w-3" />
@@ -238,7 +243,7 @@ function InterviewVerdictBadge({
       </Badge>
     );
   }
-  if (session.pass_verdict === true) {
+  if (state === "passed") {
     return (
       <Badge className="text-[10px] border-0 bg-emerald-100 text-emerald-700 gap-1">
         <CheckCircle2 className="h-3 w-3" />
@@ -246,7 +251,7 @@ function InterviewVerdictBadge({
       </Badge>
     );
   }
-  if (session.pass_verdict === false) {
+  if (state === "not_passed") {
     return (
       <Badge className="text-[10px] border-0 bg-red-100 text-red-700 gap-1">
         <XCircle className="h-3 w-3" />

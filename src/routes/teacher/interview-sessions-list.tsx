@@ -10,25 +10,10 @@ import {
 
 import { useInterviewSessionsForConfig } from "@/lib/api/hooks/interviews";
 import { formatDate } from "@/lib/format/date";
-import type { InterviewSessionSummary } from "@/lib/api/types";
-
-type VerdictState =
-  | "passed"
-  | "not_passed"
-  | "evaluating"
-  | "in_progress"
-  | "evaluation_failed"
-  | "not_graded";
-
-function verdictState(s: InterviewSessionSummary): VerdictState {
-  if (s.status === "in_progress") return "in_progress";
-  if (s.status === "failed") return "evaluation_failed";
-  if (s.status === "abandoned") return "not_graded";
-  if (s.pass_verdict === true) return "passed";
-  if (s.pass_verdict === false) return "not_passed";
-  return "evaluating";
-}
-
+import {
+  verdictState,
+  type VerdictState,
+} from "@/lib/interview/verdict-state";
 const BADGE_CLASS: Record<VerdictState, string> = {
   passed: "bg-emerald-100 text-emerald-700",
   not_passed: "bg-red-100 text-red-700",

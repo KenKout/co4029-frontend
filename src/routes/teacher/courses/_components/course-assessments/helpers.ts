@@ -2,6 +2,7 @@ import type {
   InterviewSessionTeacherRead,
   QuizAttemptTeacherRead,
 } from "@/lib/api/types";
+import { verdictState } from "@/lib/interview/verdict-state";
 
 import { RESULT_LABELS, TIME_LABELS } from "./constants";
 import type {
@@ -34,19 +35,18 @@ export function quizResultOf(a: QuizAttemptTeacherRead): string {
         : "grading";
 }
 
-/** The session's bucket in the "Result" filter, unchanged from the inline form. */
+/** The session's bucket in the "Result" filter, keyed off the SHARED
+ * server-derived verdict state (see lib/interview/verdict-state): `failed +
+ * pending` stays `evaluating` because the recovery sweep re-drives those rows;
+ * only `exhausted` lands in the `failed` bucket. */
 export function interviewResultOf(s: InterviewSessionTeacherRead): string {
-  return s.status === "in_progress"
-    ? "in_progress"
-    : s.status === "failed"
-      ? "failed"
-      : s.status === "abandoned"
-        ? "not_graded"
-        : s.pass_verdict === true
-          ? "passed"
-          : s.pass_verdict === false
-            ? "not_passed"
-            : "evaluating";
+  if (s.status === "in_progress") return "in_progress";
+  const state = verdictState(s);
+  if (state === "passed") return "passed";
+  if (state === "not_passed") return "not_passed";
+  if (state === "not_graded") return "not_graded";
+  if (state === "evaluation_failed") return "failed";
+  return "evaluating";
 }
 
 /** Free-text test over the student name and the quiz / interview title. */
