@@ -305,8 +305,10 @@ export const queryKeys = {
     ) => ["quizzes", "bank", courseId, filters ?? {}] as const,
     curatedBank: (courseId: string, filters?: object) =>
       ["quizzes", "curated-bank", courseId, filters ?? {}] as const,
-    courseAttempts: (courseId: string) =>
-      ["quizzes", "course-attempts", courseId] as const,
+    courseAttempts: (courseId: string, filters?: object) =>
+      ["quizzes", "course-attempts", courseId, filters ?? {}] as const,
+    courseAssessmentSummary: (courseId: string) =>
+      ["quizzes", "course-assessment-summary", courseId] as const,
     studentAttempts: (courseId: string, studentId: string) =>
       ["quizzes", "student-attempts", courseId, studentId] as const,
     attemptDetail: (courseId: string, attemptId: string) =>
@@ -364,8 +366,8 @@ export const queryKeys = {
       ["interviews", "recording", sessionId] as const,
     integrityEvents: (sessionId: string) =>
       ["interviews", "integrity-events", sessionId] as const,
-    courseSessions: (courseId: string) =>
-      ["interviews", "course-sessions", courseId] as const,
+    courseSessions: (courseId: string, filters?: object) =>
+      ["interviews", "course-sessions", courseId, filters ?? {}] as const,
     studentSessions: (courseId: string, studentId: string) =>
       ["interviews", "student-sessions", courseId, studentId] as const,
   },

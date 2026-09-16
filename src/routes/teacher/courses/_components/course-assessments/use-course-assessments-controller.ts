@@ -1,32 +1,23 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { useCourseInterviewSessions } from "@/lib/api/hooks/interviews";
-import { useCourseQuizAttempts } from "@/lib/api/hooks/quizzes";
+import {
+  useCourseAssessmentSummary,
+  useCourseQuizAttempts,
+} from "@/lib/api/hooks/quizzes";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 import type {
   InterviewSessionTeacherRead,
   QuizAttemptTeacherRead,
 } from "@/lib/api/types";
 
-import {
-  buildActiveChips,
-  collectInterviewTitles,
-  collectQuizTitles,
-  computeQuizPassRate,
-  countDistinctStudents,
-  filterInterviewSessions,
-  filterQuizAttempts,
-} from "./helpers";
+import { buildActiveChips } from "./helpers";
 import type { ActiveChip, Tab } from "./types";
 
-/**
- * Every piece of state and every derived value of the course-wide Assessments
- * tab, extracted from the former 458-line course-assessments.tsx. The hook
- * sequence is unchanged — navigate, params, the three queries, the five
- * `useState` calls, then the eight `useMemo` calls in their original order with
- * their original dependency arrays.
- */
+const PAGE_SIZE = 25;
+
 export interface CourseAssessmentsController {
   navigate: ReturnType<typeof useNavigate>;
   courseId: string;
@@ -51,69 +42,80 @@ export interface CourseAssessmentsController {
   distinctStudents: number;
   activeChips: ActiveChip[];
   quizPassRate: number | null;
+  quizAttemptCount: number;
+  interviewSessionCount: number;
+  summaryLoading: boolean;
+  searchPending: boolean;
+  canGoNext: boolean;
+  canGoPrev: boolean;
+  goNextPage: () => void;
+  goPrevPage: () => void;
+  pageIndex: number;
 }
 
 export function useCourseAssessmentsController(): CourseAssessmentsController {
   const navigate = useNavigate();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
   useTeacherCourseById(courseId);
-  const { data: quizAttempts, isLoading: quizzesLoading } =
-    useCourseQuizAttempts(courseId);
-  const { data: interviewSessions, isLoading: interviewsLoading } =
-    useCourseInterviewSessions(courseId);
 
   const [tab, setTab] = useState<Tab>("quizzes");
   const [search, setSearch] = useState("");
-  // Dropdown filters (mirrored across both tabs): a title filter (which quiz /
-  // which interview), a result filter (pass/fail/…), and a time window.
   const [titleFilter, setTitleFilter] = useState("all");
   const [resultFilter, setResultFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
 
+  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
+
+  const debouncedSearch = useDebouncedValue(search, 350);
+  const searchPending = debouncedSearch !== search;
+
   // Earliest timestamp allowed by the selected time window (null = no bound).
-  const timeCutoff = useMemo(() => {
-    if (timeFilter === "all") return null;
+  const sinceIso = useMemo(() => {
+    if (timeFilter === "all") return undefined;
     const days = timeFilter === "today" ? 1 : Number(timeFilter);
-    if (!Number.isFinite(days)) return null;
-    return Date.now() - days * 24 * 60 * 60 * 1000;
+    if (!Number.isFinite(days)) return undefined;
+    return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   }, [timeFilter]);
 
-  // Distinct quiz / interview titles for the title dropdown, sorted A→Z.
-  const quizTitles = useMemo(
-    () => collectQuizTitles(quizAttempts),
-    [quizAttempts],
-  );
-  const interviewTitles = useMemo(
-    () => collectInterviewTitles(interviewSessions),
-    [interviewSessions],
+  useEffect(() => {
+    setCursors([undefined]);
+  }, [debouncedSearch, titleFilter, resultFilter, timeFilter, tab]);
+
+  const query = useMemo(
+    () => ({
+      search: debouncedSearch.trim() || undefined,
+      title: titleFilter === "all" ? undefined : titleFilter,
+      result: resultFilter === "all" ? undefined : resultFilter,
+      since: sinceIso,
+      limit: PAGE_SIZE,
+      cursor: cursors[cursors.length - 1],
+    }),
+    [debouncedSearch, titleFilter, resultFilter, sinceIso, cursors],
   );
 
-  const filteredQuizAttempts = useMemo(
-    () =>
-      filterQuizAttempts(quizAttempts, {
-        search,
-        titleFilter,
-        resultFilter,
-        timeCutoff,
-      }),
-    [quizAttempts, search, titleFilter, resultFilter, timeCutoff],
+  const { data: quizPage, isLoading: quizzesLoading } = useCourseQuizAttempts(
+    courseId,
+    query,
+    { enabled: tab === "quizzes" },
   );
+  const { data: interviewPage, isLoading: interviewsLoading } =
+    useCourseInterviewSessions(courseId, query, {
+      enabled: tab === "interviews",
+    });
+  const { data: summary, isLoading: summaryLoading } =
+    useCourseAssessmentSummary(courseId);
 
-  const filteredInterviewSessions = useMemo(
-    () =>
-      filterInterviewSessions(interviewSessions, {
-        search,
-        titleFilter,
-        resultFilter,
-        timeCutoff,
-      }),
-    [interviewSessions, search, titleFilter, resultFilter, timeCutoff],
-  );
+  const nextCursor =
+    tab === "quizzes" ? quizPage?.next_cursor : interviewPage?.next_cursor;
 
-  const distinctStudents = useMemo(
-    () => countDistinctStudents(quizAttempts, interviewSessions),
-    [quizAttempts, interviewSessions],
-  );
+  const goNextPage = useCallback(() => {
+    if (!nextCursor) return;
+    setCursors((stack) => [...stack, nextCursor]);
+  }, [nextCursor]);
+
+  const goPrevPage = useCallback(() => {
+    setCursors((stack) => (stack.length > 1 ? stack.slice(0, -1) : stack));
+  }, []);
 
   // Active-filter chips — one removable chip per non-default filter, so the
   // teacher sees exactly what's narrowing the list and can clear each singly.
@@ -130,10 +132,8 @@ export function useCourseAssessmentsController(): CourseAssessmentsController {
     [search, titleFilter, resultFilter, timeFilter, tab],
   );
 
-  const quizPassRate = useMemo(
-    () => computeQuizPassRate(quizAttempts),
-    [quizAttempts],
-  );
+  const quizAttempts = quizPage?.items;
+  const interviewSessions = interviewPage?.items;
 
   return {
     navigate,
@@ -152,12 +152,21 @@ export function useCourseAssessmentsController(): CourseAssessmentsController {
     setResultFilter,
     timeFilter,
     setTimeFilter,
-    quizTitles,
-    interviewTitles,
-    filteredQuizAttempts,
-    filteredInterviewSessions,
-    distinctStudents,
+    quizTitles: summary?.quiz_titles ?? [],
+    interviewTitles: summary?.interview_titles ?? [],
+    filteredQuizAttempts: quizAttempts ?? [],
+    filteredInterviewSessions: interviewSessions ?? [],
+    distinctStudents: summary?.students_assessed ?? 0,
     activeChips,
-    quizPassRate,
+    quizPassRate: summary?.quiz_pass_rate ?? null,
+    quizAttemptCount: summary?.quiz_attempt_count ?? 0,
+    interviewSessionCount: summary?.interview_session_count ?? 0,
+    summaryLoading,
+    searchPending,
+    canGoNext: Boolean(nextCursor),
+    canGoPrev: cursors.length > 1,
+    goNextPage,
+    goPrevPage,
+    pageIndex: cursors.length - 1,
   };
 }

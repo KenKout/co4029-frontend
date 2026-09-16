@@ -44,16 +44,23 @@ export default function CourseAssessmentsPage() {
         )}
 
         <p className="text-xs text-m3-on-surface-variant">
-          {t("teacher_assessments.showing", {
-            shown:
-              controller.tab === "quizzes"
-                ? controller.filteredQuizAttempts.length
-                : controller.filteredInterviewSessions.length,
-            total:
-              controller.tab === "quizzes"
-                ? (controller.quizAttempts?.length ?? 0)
-                : (controller.interviewSessions?.length ?? 0),
-          })}
+          {controller.activeChips.length === 0
+            ? t("teacher_assessments.showing", {
+                shown:
+                  controller.tab === "quizzes"
+                    ? controller.filteredQuizAttempts.length
+                    : controller.filteredInterviewSessions.length,
+                total:
+                  controller.tab === "quizzes"
+                    ? controller.quizAttemptCount
+                    : controller.interviewSessionCount,
+              })
+            : t("teacher_assessments.showing_matching", {
+                shown:
+                  controller.tab === "quizzes"
+                    ? controller.filteredQuizAttempts.length
+                    : controller.filteredInterviewSessions.length,
+              })}
         </p>
 
         <AssessmentResultsPanel controller={controller} />

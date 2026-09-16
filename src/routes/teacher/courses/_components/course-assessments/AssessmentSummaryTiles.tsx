@@ -13,12 +13,7 @@ import type { CourseAssessmentsController } from "./use-course-assessments-contr
 
 /**
  * The four summary tiles above the Assessments tabs — students assessed, quiz
- * attempts, quiz pass rate and interview sessions. Extracted verbatim from the
- * former 458-line course-assessments.tsx.
- *
- * `className` lets the page restack the strip when it lives in a sidebar
- * (e.g. `lg:grid-cols-1` to stack the tiles); tailwind-merge resolves the
- * conflict with the default `sm:grid-cols-4`.
+ * attempts, quiz pass rate and interview sessions.
  */
 export function AssessmentSummaryTiles({
   controller,
@@ -30,25 +25,24 @@ export function AssessmentSummaryTiles({
   const { t } = useTranslation();
   const {
     distinctStudents,
-    quizAttempts,
-    quizzesLoading,
+    quizAttemptCount,
     quizPassRate,
-    interviewSessions,
-    interviewsLoading,
+    interviewSessionCount,
+    summaryLoading,
   } = controller;
   return (
     <div className={cn("grid grid-cols-2 sm:grid-cols-4 gap-3", className)}>
       <StatCard
         icon={Users}
         label={t("teacher_assessments.metrics.students")}
-        value={quizzesLoading || interviewsLoading ? "—" : distinctStudents}
+        value={summaryLoading ? "—" : distinctStudents}
         interactive={false}
         className="p-4"
       />
       <StatCard
         icon={ClipboardList}
         label={t("teacher_assessments.metrics.quiz_attempts")}
-        value={quizzesLoading ? "—" : (quizAttempts?.length ?? 0)}
+        value={summaryLoading ? "—" : quizAttemptCount}
         interactive={false}
         className="p-4"
       />
@@ -56,7 +50,7 @@ export function AssessmentSummaryTiles({
         icon={CheckCircle2}
         label={t("teacher_assessments.metrics.pass_rate")}
         value={
-          quizzesLoading
+          summaryLoading
             ? "—"
             : quizPassRate != null
               ? `${quizPassRate.toFixed(0)}%`
@@ -68,7 +62,7 @@ export function AssessmentSummaryTiles({
       <StatCard
         icon={MessageSquare}
         label={t("teacher_assessments.metrics.interviews")}
-        value={interviewsLoading ? "—" : (interviewSessions?.length ?? 0)}
+        value={summaryLoading ? "—" : interviewSessionCount}
         interactive={false}
         className="p-4"
       />

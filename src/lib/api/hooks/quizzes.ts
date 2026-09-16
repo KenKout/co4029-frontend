@@ -37,10 +37,15 @@ export {
 } from "./quizzes/attempts";
 
 export type {
+  CourseAssessmentQuery,
+  CourseAssessmentSummary,
   QuizAttemptIntegrityEvent,
+  QuizAttemptTeacherPage,
   QuizAttemptTeacherReview,
 } from "./quizzes/teacher-attempts";
 export {
+  assessmentSearchParams,
+  useCourseAssessmentSummary,
   useCourseQuizAttemptDetail,
   useCourseQuizAttempts,
   useStudentQuizAttempts,

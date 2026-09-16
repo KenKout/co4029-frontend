@@ -2,6 +2,7 @@ import {
   InterviewSessionsTable,
   QuizAttemptsTable,
 } from "@/routes/teacher/_components/assessment-tables";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
@@ -21,13 +22,18 @@ export function AssessmentResultsPanel({
     tab,
     navigate,
     courseId,
-    quizAttempts,
     quizzesLoading,
     filteredQuizAttempts,
-    interviewSessions,
     interviewsLoading,
     filteredInterviewSessions,
+    activeChips,
+    canGoNext,
+    canGoPrev,
+    goNextPage,
+    goPrevPage,
+    pageIndex,
   } = controller;
+  const isFiltered = activeChips.length > 0;
   return (
     <section className="bg-m3-surface-container-lowest rounded-xl ghost-border shadow-editorial p-4">
       {tab === "quizzes" ? (
@@ -36,7 +42,7 @@ export function AssessmentResultsPanel({
           loading={quizzesLoading}
           showStudentColumn
           emptyState={
-            (quizAttempts?.length ?? 0) === 0
+            !isFiltered
               ? t("teacher_assessments.empty.quiz")
               : t("teacher_assessments.empty.filtered")
           }
@@ -53,7 +59,7 @@ export function AssessmentResultsPanel({
           loading={interviewsLoading}
           showStudentColumn
           emptyState={
-            (interviewSessions?.length ?? 0) === 0
+            !isFiltered
               ? t("teacher_assessments.empty.interview")
               : t("teacher_assessments.empty.filtered")
           }
@@ -64,6 +70,35 @@ export function AssessmentResultsPanel({
             })
           }
         />
+      )}
+
+      {(canGoPrev || canGoNext) && (
+        <nav
+          className="flex items-center justify-end gap-2 pt-3"
+          aria-label={t("teacher_assessments.pagination.label")}
+        >
+          <span className="text-xs text-m3-on-surface-variant mr-auto">
+            {t("teacher_assessments.pagination.page", { page: pageIndex + 1 })}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={goPrevPage}
+            disabled={!canGoPrev}
+          >
+            {t("teacher_assessments.pagination.previous")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={goNextPage}
+            disabled={!canGoNext}
+          >
+            {t("teacher_assessments.pagination.next")}
+          </Button>
+        </nav>
       )}
     </section>
   );

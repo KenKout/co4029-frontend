@@ -541,6 +541,7 @@
     "type_label": "Assessment type",
     "search_placeholder": "Filter by student or title…",
     "showing": "Showing {{shown}} of {{total}}",
+    "showing_matching": "Showing {{shown}} matching",
     "empty": {
       "quiz": "No quiz attempts yet.",
       "interview": "No interview attempts yet.",
@@ -555,6 +556,12 @@
       "quiz_attempts": "Quiz attempts",
       "pass_rate": "Quiz pass rate",
       "interviews": "Interview sessions"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "page": "Page {{page}}",
+      "previous": "Previous",
+      "next": "Next"
     }
   },
   "teacher_courses_list": {

@@ -489,6 +489,7 @@
     "type_label": "Loại đánh giá",
     "search_placeholder": "Lọc theo học viên hoặc tiêu đề…",
     "showing": "Hiển thị {{shown}} trên {{total}}",
+    "showing_matching": "Hiển thị {{shown}} kết quả phù hợp",
     "empty": {
       "quiz": "Chưa có lượt làm bài kiểm tra.",
       "interview": "Chưa có lượt phỏng vấn.",
@@ -503,6 +504,12 @@
       "quiz_attempts": "Lượt làm bài",
       "pass_rate": "Tỷ lệ đạt",
       "interviews": "Phiên phỏng vấn"
+    },
+    "pagination": {
+      "label": "Phân trang",
+      "page": "Trang {{page}}",
+      "previous": "Trước",
+      "next": "Sau"
     }
   },
   "teacher_courses_list": {

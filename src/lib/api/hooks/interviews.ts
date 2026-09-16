@@ -35,6 +35,10 @@ import type {
   RealtimeTokenResponse,
 } from "../types";
 import type { InterviewEvaluationState } from "../types/interview-evaluation";
+import {
+  assessmentSearchParams,
+  type CourseAssessmentQuery,
+} from "./quizzes/teacher-attempts";
 
 export function useInterviewForTaking(configId: string | null | undefined) {
   return useQuery({
@@ -788,18 +792,30 @@ export function useInterviewSessionsForConfig(
  * GET /teacher/courses/{course_id}/interview-sessions — every interview
  * session (any student, any config) in a course. Course-wide Assessments tab.
  */
+export interface InterviewSessionTeacherPage {
+  items: InterviewSessionTeacherRead[];
+  next_cursor: string | null;
+}
+
 export function useCourseInterviewSessions(
   courseId: string | null | undefined,
+  query: CourseAssessmentQuery = {},
+  options: { enabled?: boolean } = {},
 ) {
+  const params = assessmentSearchParams(query);
   return useQuery({
-    queryKey: queryKeys.interviews.courseSessions(courseId ?? ""),
-    queryFn: () =>
-      apiFetch<InterviewSessionTeacherRead[]>(
-        `/teacher/courses/${courseId}/interview-sessions`,
-      ),
-    enabled: !!courseId,
+    queryKey: queryKeys.interviews.courseSessions(courseId ?? "", params),
+    queryFn: () => {
+      const qs = new URLSearchParams(params).toString();
+      return apiFetch<InterviewSessionTeacherPage>(
+        `/teacher/courses/${courseId}/interview-sessions${qs ? `?${qs}` : ""}`,
+      );
+    },
+    enabled: !!courseId && (options.enabled ?? true),
+    staleTime: 2000,
+    placeholderData: (previous) => previous,
     refetchInterval: (query) =>
-      hasPendingInterviewEvaluation(query.state.data) ? 3000 : false,
+      hasPendingInterviewEvaluation(query.state.data?.items) ? 3000 : false,
   });
 }
 
