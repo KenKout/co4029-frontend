@@ -50,6 +50,7 @@ import {
   QuizNoQuestionsPanel,
   QuizNotFoundPanel,
 } from "@/routes/courses/_components/course-quiz/QuizStatusScreens";
+import { getQuizBlockingStage } from "@/routes/courses/_components/course-quiz/QuizGuardScreens";
 import { InterviewRoomProvider } from "@/components/interview/interview-room-provider";
 import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
 import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
@@ -548,10 +549,8 @@ function QuizProxyInner({
   if (!course || !quiz) {
     return <QuizNotFoundPanel slug={slug} />;
   }
-  // PRECEDENCE: submittedSummary must win over `taking` — taking is never
-  // cleared on submit, so a branch on taking placed first would trap the
-  // student on the take screen after submitting (same order as the
-  // /quiz/$quizId route). Result screen keeps the breadcrumb.
+  const blockingStage = getQuizBlockingStage({ session, slug });
+  if (blockingStage) return blockingStage;
   if (submittedSummary) {
     return (
       <>
