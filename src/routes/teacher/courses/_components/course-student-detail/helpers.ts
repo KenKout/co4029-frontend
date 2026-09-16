@@ -8,6 +8,7 @@ import {
 
 import type { InterviewSessionTeacherRead } from "@/lib/api/types";
 import type { RosterStudent } from "@/lib/api/types/teacher";
+import { verdictState } from "@/lib/interview/verdict-state";
 
 /**
  * Pure helpers of the per-student detail page, moved verbatim out of the former
@@ -44,19 +45,18 @@ export function fmtDate(iso: string | null) {
   });
 }
 
-/** The session's bucket in the "Result" filter, unchanged from the inline form. */
+/** The session's bucket in the "Result" filter, keyed off the SHARED
+ * server-derived verdict state (see lib/interview/verdict-state): `failed +
+ * pending` stays `evaluating` because the recovery sweep re-drives those rows;
+ * only `exhausted` lands in the `failed` bucket. */
 export function interviewResultOf(s: InterviewSessionTeacherRead): string {
-  return s.status === "in_progress"
-    ? "in_progress"
-    : s.status === "failed"
-      ? "failed"
-      : s.status === "abandoned"
-        ? "not_graded"
-        : s.pass_verdict === true
-          ? "passed"
-          : s.pass_verdict === false
-            ? "not_passed"
-            : "evaluating";
+  if (s.status === "in_progress") return "in_progress";
+  const state = verdictState(s);
+  if (state === "passed") return "passed";
+  if (state === "not_passed") return "not_passed";
+  if (state === "not_graded") return "not_graded";
+  if (state === "evaluation_failed") return "failed";
+  return "evaluating";
 }
 
 export interface TimelineEntry {

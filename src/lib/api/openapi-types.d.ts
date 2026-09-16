@@ -10461,6 +10461,16 @@ export interface components {
             /** Pass Verdict */
             pass_verdict?: boolean | null;
             /**
+             * Evaluation State
+             * @description Server-derived "is a verdict still coming?" — hand-patched
+             *     (the committed openapi-snapshot.json lags the live spec). Optional
+             *     here so a response from a backend predating the field still
+             *     type-checks; readers fall back to `status` in that case.
+             * @default not_required
+             * @enum {string}
+             */
+            evaluation_state?: "not_required" | "pending" | "succeeded" | "exhausted";
+            /**
              * Started At
              * Format: date-time
              */
@@ -10513,6 +10523,14 @@ export interface components {
             input_mode: "voice" | "text" | "hybrid";
             /** Pass Verdict */
             pass_verdict?: boolean | null;
+            /**
+             * Evaluation State
+             * @description Same derived label as InterviewSessionSummary — hand-patched
+             *     (the committed openapi-snapshot.json lags the live spec).
+             * @default not_required
+             * @enum {string}
+             */
+            evaluation_state?: "not_required" | "pending" | "succeeded" | "exhausted";
             /**
              * Started At
              * Format: date-time

@@ -39,6 +39,10 @@ import {
   assessmentSearchParams,
   type CourseAssessmentQuery,
 } from "./quizzes/teacher-attempts";
+import {
+  shouldRequestGapReport,
+  type GapReportSessionInput,
+} from "@/lib/interview/gap-report-availability";
 
 export function useInterviewForTaking(configId: string | null | undefined) {
   return useQuery({
@@ -723,24 +727,45 @@ export function useInterviewGenerationRun(
 /**
  * GET /teacher/interview-sessions/{session_id}/gap-report — teacher-facing
  * projection (re-introduces raw_evaluation_json, teacher_summary, source links).
+ *
+ * `session` (optional) gates the query on availability: an `abandoned` /
+ * `not_required` or `exhausted` session can never have a report, so the hook
+ * stays DISABLED and the page shows its empty state immediately — no request,
+ * no 404, no retry storm behind a spinner. Pending sessions fetch immediately
+ * and poll the 404 only while the server still says a verdict is coming; the
+ * caller should re-invoke with the refreshed session so a transition to
+ * `succeeded`/`exhausted` stops the poll.
  */
-export function useTeacherGapReport(sessionId: string | null | undefined) {
+export function useTeacherGapReport(
+  sessionId: string | null | undefined,
+  options: {
+    session?: GapReportSessionInput | null;
+  } = {},
+) {
+  const { session } = options;
+  const enabled =
+    !!sessionId && (session === undefined ? true : shouldRequestGapReport(session));
   return useQuery({
     queryKey: queryKeys.interviews.teacherGapReport(sessionId ?? ""),
     queryFn: () =>
       apiFetch<GapReportAuthoringRead>(
         `/teacher/interview-sessions/${sessionId}/gap-report`,
       ),
-    enabled: !!sessionId,
+    enabled,
     // Evaluation runs asynchronously after submission. A 404 means the
-    // report is not ready yet, not that it does not exist.
+    // report is not ready yet, not that it does not exist — retry only a
+    // short bounded window (covers the race between the session snapshot we
+    // gated on and the GAP row landing), then let the poll take over.
     retry: (failureCount, error) =>
-      error instanceof ApiError && error.status === 404 && failureCount < 60,
+      error instanceof ApiError && error.status === 404 && failureCount < 3,
     retryDelay: 3000,
     // Keep waiting only while the server still says "not ready" (404) and no
     // data arrived — a hard error (5xx, network) must not poll forever.
+    // A session that resolved to a dead-end state stops the poll too (the
+    // caller gates `enabled` off and this query unmounts its fetching).
     refetchInterval: (query) => {
       if (query.state.data !== undefined) return false;
+      if (session && !shouldRequestGapReport(session)) return false;
       const error = query.state.error;
       return error instanceof ApiError && error.status === 404 ? 3000 : false;
     },
