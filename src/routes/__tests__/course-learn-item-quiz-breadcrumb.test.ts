@@ -83,5 +83,7 @@ describe("quiz taking hides the breadcrumb", () => {
     expect(inner).not.toContain(
       'max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8',
     );
+    const introAt = inner.indexOf("if (!taking)");
+    expect(inner.slice(introAt, introAt + 500)).toContain("hasBreadcrumb");
   });
 });
