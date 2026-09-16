@@ -105,6 +105,10 @@ describe("policy content", () => {
     resolve(__dirname, "../support/_components/help/PolicyLinks.tsx"),
     "utf8",
   );
+  const READER_POLICIES_SRC = readFileSync(
+    resolve(__dirname, "../support/_components/use-reader-policies.ts"),
+    "utf8",
+  );
 
   it("titles every slug in the footer manifest", () => {
     // POLICY_TITLES is the fallback label set used before the index lands, so
@@ -134,10 +138,42 @@ describe("policy content", () => {
   it("states each document's provenance", () => {
     // The old page carried a blanket draft banner. Now every document reports
     // which version it is and when it took effect, so a reader can name the
-    // exact text they agreed to.
-    expect(POLICY_PAGE).toMatch(/Version \{doc\.version_no\}/);
-    expect(POLICY_PAGE).toMatch(/Effective/);
+    // exact text they agreed to. Rendered through i18n, so assert on the keys
+    // rather than on English that no longer appears in the source.
+    expect(POLICY_PAGE).toContain("policies_page.version_n");
+    expect(POLICY_PAGE).toContain("policy_page.effective");
     expect(POLICY_PAGE).toContain("published_by_name");
+  });
+
+  it("serves the document in the reader's own language", () => {
+    // The page used to take usePolicy's "en" default, so a reader using the
+    // app in Vietnamese was handed English terms whatever the server had
+    // published. Both the document AND the index it links into must be
+    // scoped, or the titles lead somewhere in another language.
+    expect(POLICY_PAGE).toContain("useContentLanguage");
+    expect(POLICY_PAGE).toMatch(/usePolicy\(slug, language\)/);
+    expect(READER_POLICIES_SRC).toContain("useContentLanguage");
+    expect(READER_POLICIES_SRC).toMatch(/usePolicies\(roles\.data \?\? \[\], language\)/);
+  });
+
+  it("renders the body in the format the server declared", () => {
+    // RichContent falls back to `plain` for a format it cannot render, which
+    // is the safe direction. Hardcoding "markdown" threw that away and would
+    // parse an html-format body as markup.
+    expect(POLICY_PAGE).toContain("format={doc.format}");
+    expect(POLICY_PAGE).not.toContain('format="markdown"');
+  });
+
+  it("leaves no untranslated chrome on the page", () => {
+    // Every other public support route is translated; this one was missed.
+    for (const english of [
+      "Policy not found",
+      "Other policies",
+      "Help &amp; FAQ",
+      "Published by ",
+    ]) {
+      expect(POLICY_PAGE).not.toContain(english);
+    }
   });
 
   it("scopes the policy list to the reader's roles", () => {

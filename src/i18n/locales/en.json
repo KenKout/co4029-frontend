@@ -3085,6 +3085,14 @@
     "empty_filtered_title": "No policies match",
     "empty_filtered_body": "Try a different search or category."
   },
+  "policy_page": {
+    "back_to_help": "Help & FAQ",
+    "not_found_title": "Policy not found",
+    "not_found_body": "No published policy matches “{{slug}}”. It may not be published yet, or it may not apply to your role.",
+    "effective": "Effective {{date}}",
+    "published_by": "Published by {{name}}",
+    "other_policies": "Other policies"
+  },
   "discussion": {
     "course_section_title": "Course discussion",
     "open_topic": "Open discussion: {{title}}",

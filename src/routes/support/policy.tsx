@@ -1,4 +1,5 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, FileText } from "lucide-react";
 
 import { RichContent } from "@/components/ui/rich-content";
@@ -6,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import TopNavBar from "@/components/layout/TopNavBar";
 import Footer from "@/components/layout/Footer";
 import { usePolicy } from "@/lib/api/hooks/policies";
+import { useContentLanguage } from "@/i18n";
+import { useAppLocale } from "@/lib/format/date";
 import { POLICY_ORDER, POLICY_TITLES, type PolicySlug } from "@/lib/help-content";
 import { cn } from "@/lib/utils";
 import { useReaderPolicies } from "./_components/use-reader-policies";
@@ -48,11 +51,18 @@ const POLICY_BODY_PROSE =
   "[&_strong]:font-semibold " +
   "[&_a]:font-medium [&_a]:text-m3-primary [&_a]:underline-offset-2";
 
-/** Long-form date, e.g. "22 August 2026" — matches how policies cite dates. */
-function formatPublished(iso: string): string {
+/**
+ * Long-form date, e.g. "22 August 2026" — matches how policies cite dates.
+ *
+ * Takes the locale rather than pinning en-GB: this is the effective date of
+ * a document the reader is being asked to be bound by, so it has to be
+ * legible in the language they are reading it in. Not one of the
+ * `lib/format/date` presets — none of them produces this shape.
+ */
+function formatPublished(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-GB", {
+  return d.toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -106,8 +116,14 @@ function SiblingPolicies({ current }: { current?: string }) {
 }
 
 export default function PolicyPage() {
+  const { t } = useTranslation();
   const { slug } = useParams({ strict: false }) as { slug?: string };
-  const { data: doc, isPending, isError } = usePolicy(slug);
+  // The reader's language, not a hardcoded default: a policy is published
+  // per language, and serving the English text to someone reading the app
+  // in Vietnamese hands them terms in a language they did not choose.
+  const language = useContentLanguage();
+  const locale = useAppLocale();
+  const { data: doc, isPending, isError } = usePolicy(slug, language);
 
   if (isPending) {
     return (
@@ -130,11 +146,10 @@ export default function PolicyPage() {
     return (
       <PolicyShell>
         <h1 className="font-headline text-2xl font-bold text-m3-on-surface">
-          Policy not found
+          {t("policy_page.not_found_title")}
         </h1>
         <p className="mt-2 text-sm text-m3-on-surface-variant">
-          No published policy matches “{slug}”. It may not be published yet, or
-          it may not apply to your role.
+          {t("policy_page.not_found_body", { slug })}
         </p>
         <div className="mt-6">
           <SiblingPolicies />
@@ -152,7 +167,7 @@ export default function PolicyPage() {
         className="mb-6 inline-flex items-center gap-1.5 text-xs font-semibold text-m3-on-surface-variant hover:text-m3-primary"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Help &amp; FAQ
+        {t("policy_page.back_to_help")}
       </Link>
 
       <header className="mb-8">
@@ -166,23 +181,40 @@ export default function PolicyPage() {
             effect, and who released it. A reader disputing a term needs to be
             able to name the exact text they agreed to. */}
         <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant">
-          <span>Version {doc.version_no}</span>
+          {/* `version_n` is shared with the policy catalog: the same
+              document, labelled the same way in both places. */}
+          <span>{t("policies_page.version_n", { version: doc.version_no })}</span>
           <span aria-hidden="true">·</span>
-          <span>Effective {formatPublished(doc.published_at)}</span>
+          <span>
+            {t("policy_page.effective", {
+              date: formatPublished(doc.published_at, locale),
+            })}
+          </span>
           {doc.published_by_name ? (
             <>
               <span aria-hidden="true">·</span>
-              <span>Published by {doc.published_by_name}</span>
+              <span>
+                {t("policy_page.published_by", { name: doc.published_by_name })}
+              </span>
             </>
           ) : null}
         </p>
       </header>
 
-      <RichContent value={doc.body} format="markdown" className={POLICY_BODY_PROSE} />
+      {/* `doc.format`, not a hardcoded "markdown": the API sends the
+          discriminator precisely so the client need not assume, and
+          RichContent falls back to `plain` for anything it cannot render
+          — which is the safe direction for text nobody has vetted as
+          markup. */}
+      <RichContent
+        value={doc.body}
+        format={doc.format}
+        className={POLICY_BODY_PROSE}
+      />
 
       <nav className="mt-12 border-t border-m3-outline-variant/20 pt-6">
         <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Other policies
+          {t("policy_page.other_policies")}
         </h2>
         <SiblingPolicies current={doc.slug} />
       </nav>

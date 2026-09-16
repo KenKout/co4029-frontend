@@ -6,7 +6,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n";
+import {
+  SUPPORTED_LOCALES,
+  resolveSupportedLocale,
+  type SupportedLocale,
+} from "@/i18n";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useUpdateProfile } from "@/lib/api/hooks/auth";
 
@@ -14,9 +18,9 @@ export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const updateProfile = useUpdateProfile();
-  const current = (i18n.resolvedLanguage ?? i18n.language ?? "en")
-    .split("-")[0]
-    .toLowerCase() as SupportedLocale;
+  const current = resolveSupportedLocale(
+    i18n.resolvedLanguage ?? i18n.language,
+  );
 
   const handleChange = (lng: SupportedLocale) => {
     void i18n.changeLanguage(lng);

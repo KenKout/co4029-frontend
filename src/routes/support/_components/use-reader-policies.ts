@@ -1,6 +1,7 @@
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useMyRoles } from "@/lib/api/hooks/admin";
 import { usePolicies } from "@/lib/api/hooks/policies";
+import { useContentLanguage } from "@/i18n";
 
 /**
  * The policy index as this reader should see it.
@@ -17,12 +18,17 @@ import { usePolicies } from "@/lib/api/hooks/policies";
  *
  * Lives in the route layer rather than `lib/api/hooks` because it reaches into
  * the auth context, and `lib/` does not depend on `components/`.
+ *
+ * Scoped to the reader's LANGUAGE as well as their roles: titles shown here
+ * link straight through to the document, and an index in one language
+ * leading to a body in another reads as a broken page.
  */
 export function useReaderPolicies() {
   const { isAuthenticated } = useAuth();
   const roles = useMyRoles({ enabled: isAuthenticated });
+  const language = useContentLanguage();
 
   // While the roles are still in flight we ask for the public set, then widen
   // once they land — a visibly growing list beats an empty one behind a spinner.
-  return usePolicies(roles.data ?? []);
+  return usePolicies(roles.data ?? [], language);
 }

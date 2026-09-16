@@ -5966,6 +5966,14 @@
     "empty_filtered_title": "Không có chính sách phù hợp",
     "empty_filtered_body": "Thử từ khoá hoặc nhóm khác."
   },
+  "policy_page": {
+    "back_to_help": "Trợ giúp & Câu hỏi thường gặp",
+    "not_found_title": "Không tìm thấy chính sách",
+    "not_found_body": "Không có chính sách đã xuất bản nào khớp với “{{slug}}”. Có thể chính sách chưa được xuất bản, hoặc không áp dụng cho vai trò của bạn.",
+    "effective": "Hiệu lực từ {{date}}",
+    "published_by": "Xuất bản bởi {{name}}",
+    "other_policies": "Chính sách khác"
+  },
   "discussion": {
     "course_section_title": "Thảo luận khóa học",
     "open_topic": "Mở thảo luận: {{title}}",
