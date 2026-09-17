@@ -677,7 +677,7 @@ export function useStartCourse(careerPathId: string) {
       apiPost<StartCourseResult>(
         `/me/career-enrollments/${careerPathId}/courses/${courseId}/start`,
       ),
-    onSuccess: () => {
+    onSuccess: (_result, courseId) => {
       qc.invalidateQueries({
         queryKey: queryKeys.careerPaths.progress(careerPathId),
       });
@@ -687,6 +687,14 @@ export function useStartCourse(careerPathId: string) {
       // The learner's course lists gain a new enrollment.
       qc.invalidateQueries({ queryKey: ["courses"] });
       qc.invalidateQueries({ queryKey: ["enrollments"] });
+      // Without invalidating it, the path row can become "Continue" while the
+      // landing page still renders the cached 404 as "Enrollment required".
+      qc.invalidateQueries({
+        queryKey: queryKeys.me.enrollment(courseId),
+      });
+      qc.invalidateQueries({
+        queryKey: queryKeys.me.enrollments(),
+      });
     },
   });
 }
