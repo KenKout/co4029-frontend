@@ -14,11 +14,17 @@ import type { LearningProgramEnrollment } from "@/lib/api/types";
 /**
  * Path commitment controls on the public path detail page.
  *
- * Three mutually exclusive situations, driven by the student's program
+ * Four mutually exclusive situations, driven by the student's program
  * enrolment(s) that offer THIS path:
  *
- * 1. A program still has a selection slot: show "Choose/Add this path".
- *    Selecting commits immediately and does not require Dean approval.
+ * 0. A program has a free slot but the student is at the ORGANIZATION's
+ *    ceiling for concurrent paths (`max_concurrent_paths_per_student`):
+ *    explain that, and offer nothing. Switching is not the answer here —
+ *    the program slot is free, so a switch would spend switch budget to
+ *    solve a problem that isn't a program-limit problem.
+ * 1. A program still has a selection slot AND the student is under that
+ *    ceiling: show "Choose/Add this path". Selecting commits immediately
+ *    and does not require Dean approval.
  * 2. Enrolled in this path right now (an `active` attempt on it): NO
  *    button — you are already here; leaving happens via another path's
  *    switch flow, not from your own page.
@@ -105,12 +111,39 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
     eligiblePrograms.find(
       (item) => item.selected_path_count < item.max_career_paths,
     ) ?? eligiblePrograms[0];
-  const canAdd = Boolean(
+  /**
+   * Two independent ceilings, and BOTH have to have room.
+   *
+   * A program capped at 2 that holds 1 path has a free slot, but the student
+   * may already be at the organization's limit for concurrent paths across
+   * all their programs — the backend refuses with `student_path_limit_reached`
+   * and the button would have promised something it cannot deliver.
+   */
+  const hasProgramSlot = Boolean(
     eligible && eligible.selected_path_count < eligible.max_career_paths,
   );
+  const atStudentPathLimit = Boolean(
+    eligible &&
+      eligible.student_active_path_count >=
+        eligible.max_concurrent_paths_per_student,
+  );
+  const canAdd = hasProgramSlot && !atStudentPathLimit;
   const switchable =
-    eligible && !canAdd && eligible.status === "active" ? eligible : undefined;
+    eligible && !hasProgramSlot && eligible.status === "active"
+      ? eligible
+      : undefined;
   if (activeHere || !eligible) return null;
+  // The program still has a slot, so switching is not the right offer — the
+  // student has to free a path elsewhere first. Say that rather than showing
+  // a switch flow that would consume their switch budget for no reason.
+  if (atStudentPathLimit && hasProgramSlot) {
+    return (
+      <AtPathLimitBanner
+        used={eligible.student_active_path_count}
+        limit={eligible.max_concurrent_paths_per_student}
+      />
+    );
+  }
 
   async function choose() {
     if (!eligible || !canAdd) return;
@@ -184,6 +217,31 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
       isPending={requestChange.isPending}
       onSubmit={() => void submitSwitchRequest()}
     />
+  );
+}
+
+function AtPathLimitBanner({
+  used,
+  limit,
+}: {
+  used: number;
+  limit: number;
+}) {
+  return (
+    <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+        <GraduationCap className="h-5 w-5 text-amber-700" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-text-strong">
+          You are already taking {used} career path{used === 1 ? "" : "s"}
+        </p>
+        <p className="mt-0.5 text-xs text-text-muted">
+          Your organization allows {limit} at a time. Finish or drop one of
+          your current paths to take this one.
+        </p>
+      </div>
+    </section>
   );
 }
 

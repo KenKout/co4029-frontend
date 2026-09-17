@@ -84,6 +84,8 @@ export interface LearningProgramEnrollment {
   approved_switch_count: number;
   max_career_paths: number;
   selected_path_count: number;
+  max_concurrent_paths_per_student: number;
+  student_active_path_count: number;
   current_progress_percent: number;
   current_completed_courses: number;
   current_total_courses: number;

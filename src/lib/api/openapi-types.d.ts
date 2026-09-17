@@ -16207,6 +16207,16 @@ export interface components {
              */
             selected_path_count: number;
             /**
+             * Max Concurrent Paths Per Student
+             * @default 10
+             */
+            max_concurrent_paths_per_student: number;
+            /**
+             * Student Active Path Count
+             * @default 0
+             */
+            student_active_path_count: number;
+            /**
              * Current Progress Percent
              * @default 0
              */

@@ -57,6 +57,8 @@ function enrollment(
     approved_switch_count: 0,
     max_career_paths: 2,
     selected_path_count: 2,
+    max_concurrent_paths_per_student: 10,
+    student_active_path_count: 2,
     current_progress_percent: 0,
     current_completed_courses: 0,
     current_total_courses: 8,
