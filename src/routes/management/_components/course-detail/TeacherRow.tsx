@@ -9,13 +9,6 @@ import type { TeacherAssignmentRead } from "@/lib/api/types";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { cn } from "@/lib/utils";
 
-/**
- * Title pill(s) beside a teacher's name.
- *
- * Titles are now independent flags (user decision 2026-08-30): a teacher may
- * be Course Instructor, Teacher Assistant, or BOTH — which renders as both
- * pills side by side instead of one string that could not say it.
- */
 export function TeacherTitleBadges({
   assignment,
 }: {
@@ -92,17 +85,6 @@ export function TeacherIdentityCell({
   );
 }
 
-/**
- * Per-row actions: toggle the two title flags + remove.
- *
- * User decision 2026-08-30: titles are independent flags, so "promote /
- * demote" became two toggles. The backend owns the two invariants (both
- * flags never both false; a staffed course keeps >= 1 instructor), but the
- * toggles pre-disable the exact transitions that would 409 so the manager
- * learns the rule from the UI, not from an error toast:
- * - turning the LAST instructor's flag off is disabled;
- * - turning a title off when it is the teacher's only title is disabled.
- */
 export function TeacherRowActions({
   assignment,
   courseId,

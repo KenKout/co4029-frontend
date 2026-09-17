@@ -8,24 +8,6 @@ import { useAssignableTeachers, useAssignTeacher } from "@/lib/api/hooks/dept";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
-/**
- * Pick a teacher to staff onto this course.
- *
- * This used to be a free-text box you pasted a user UUID into, which meant a
- * manager needed the id from somewhere else entirely. The options come from
- * `GET /dept/courses/{id}/assignable-teachers`, which resolves the
- * organization from the COURSE — the client sends no org parameter, so the
- * "same organization" rule cannot be bypassed by a crafted request. The POST
- * re-checks membership server-side for the same reason.
- *
- * Teachers already on the course are shown as such and cannot be re-picked,
- * since assigning them again is a no-op.
- *
- * Two title flags let the manager pick Course Instructor and/or Teacher
- * Assistant for the new teacher (user decision 2026-08-30 — both may be
- * checked; the first teacher on a course is always the Course Instructor
- * server-side regardless of what is sent).
- */
 export function AssignTeacherForm({
   courseId,
   currentCount,

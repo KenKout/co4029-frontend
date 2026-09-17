@@ -68,19 +68,6 @@ export function useMyQuizProgress(
   }, [data]);
 }
 
-/**
- * Per-interview completion state for the calling student, keyed by interview
- * CONFIG id (which is what `ModuleItemPublic.target.id` carries on interview
- * items, so the map is directly consumable by `itemStateFor`).
- *
- * Completion rule differs from quizzes deliberately (user decision
- * 2026-08-06): an interview is completed only when at least one attempt
- * PASSED. Failing every attempt keeps it pending — the tag means
- * "passed", not "finished".
- *
- * Must be called AFTER `useMyQuizProgress` — this file's hook call order is
- * load-bearing (see the module docstring).
- */
 export function useMyInterviewProgress(
   courseId: string,
 ): Map<string, InterviewProgressRead> {

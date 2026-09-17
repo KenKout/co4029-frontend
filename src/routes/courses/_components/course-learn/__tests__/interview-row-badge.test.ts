@@ -4,16 +4,6 @@ import type { InterviewProgressRead } from "@/lib/api/types";
 
 import { interviewRowBadge } from "../interview-row-badge";
 
-/**
- * The pending-interview badge.
- *
- * Under the interview completion rule (user decision 2026-08-06) only a PASS
- * completes an item, so a student who sat the interview three times and missed
- * stays `pending` — exactly like a student who never opened it. These tests pin
- * the badge that tells those two apart, plus the third real state the async
- * evaluator creates: submitted but not yet marked.
- */
-
 function progress(
   over: Partial<InterviewProgressRead> = {},
 ): InterviewProgressRead {

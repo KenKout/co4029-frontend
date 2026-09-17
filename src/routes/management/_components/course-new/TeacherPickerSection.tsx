@@ -17,28 +17,6 @@ import type { TeacherTitles } from "./use-course-form";
 const DEFAULT_MIN_TEACHERS = 2;
 const DEFAULT_MAX_TEACHERS = 10;
 
-/**
- * Pick the instructors while creating the course, not on a later screen.
- *
- * Multi-select rather than the single `<Select>` used on the dept course page:
- * staffing a brand-new course often means adding a lead plus co-teachers, and
- * making that three round-trips through a separate screen is the friction this
- * whole wizard removes.
- *
- * The list is org-scoped SERVER-SIDE from the caller's token — the same
- * organization the new course will be created in — so nothing here can offer a
- * teacher whose assignment would then be rejected. There is no course yet, so
- * `already_assigned` is uniformly false and is not rendered.
- *
- * Each selected teacher also gets course-scoped TITLE FLAGS (Course
- * Instructor and/or Teacher Assistant — user decision 2026-08-30) written
- * into `form.teacherTitles`. The first teacher picked is made the Course
- * Instructor by default (and is forced to it server-side anyway); later
- * teachers default to Teacher Assistant, and any of them may be ticked as
- * both. The assignment itself still happens after the course row exists
- * (`use-course-wizard.ts` forwards the flags); if one assignment call
- * fails, the course is NOT re-created on retry.
- */
 export function TeacherPickerSection({
   controller,
   t,
