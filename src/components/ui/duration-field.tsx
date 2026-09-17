@@ -21,13 +21,34 @@ const UNIT_LABEL_KEYS: readonly { value: DurationUnit; labelKey: string }[] = [
   { value: "days", labelKey: "duration.unit_days" },
 ];
 
+const MAX_DISPLAY_DECIMALS = 4;
+
+function roundedDisplayValue(minutes: number, unit: DurationUnit): number {
+  return Number(
+    (minutes / MINUTES_PER_UNIT[unit]).toFixed(MAX_DISPLAY_DECIMALS),
+  );
+}
+
+function preferredUnit(value: string): DurationUnit {
+  const minutes = Number(value);
+  if (!Number.isFinite(minutes) || minutes < 60) return "minutes";
+
+  const days = roundedDisplayValue(minutes, "days");
+  if (days >= 1 && Math.round(days * MINUTES_PER_UNIT.days) === minutes) {
+    return "days";
+  }
+  return "hours";
+}
+
 /**
  * Number + unit pair for a duration, stored as minutes.
  *
  * Accepts the persisted value in minutes (string, so empty stays distinct
  * from a deliberate 0) and reports changes back in minutes. The unit select
- * defaults to hours; switching unit recomputes the displayed number from the
- * stored minutes, so the underlying value is never lost on a unit change.
+ * picks a compact initial unit; switching unit recomputes the displayed number
+ * from the stored minutes, so the underlying value is never lost on a unit
+ * change. Converted values are capped at four decimal places to avoid exposing
+ * floating-point repetitions such as 0.1666666667 hours.
  */
 export function DurationField({
   value,
@@ -35,6 +56,7 @@ export function DurationField({
   className,
   placeholder,
   inputClassName,
+  initialUnit,
 }: {
   /** Stored duration in minutes ("" = unset). */
   value: string;
@@ -42,16 +64,19 @@ export function DurationField({
   className?: string;
   placeholder?: string;
   inputClassName?: string;
+  initialUnit?: DurationUnit;
 }) {
   const { t } = useTranslation();
-  const [unit, setUnit] = useState<DurationUnit>("hours");
+  const [unit, setUnit] = useState<DurationUnit>(
+    () => initialUnit ?? preferredUnit(value),
+  );
 
   const minutes = Number(value);
   const factor = MINUTES_PER_UNIT[unit];
   const displayValue =
     value === "" || !Number.isFinite(minutes)
       ? ""
-      : String(minutes / factor);
+      : String(roundedDisplayValue(minutes, unit));
 
   function handleInput(raw: string) {
     if (raw.trim() === "") return onChange("");

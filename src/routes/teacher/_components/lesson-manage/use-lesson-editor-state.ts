@@ -2,7 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useUnsavedChangesGuard } from "@/lib/hooks/useUnsavedChangesGuard";
 import type { LessonRead } from "@/lib/api/types/teacher";
 import type { CourseContentItem } from "@/lib/api/types/common";
-import { lessonFieldsDiffer, lessonServerSnapshot } from "./helpers";
+import {
+  DEFAULT_LESSON_ESTIMATED_MINUTES,
+  lessonFieldsDiffer,
+  lessonServerSnapshot,
+} from "./helpers";
 
 /**
  * All editor-local state for the lesson page: the editable fields, the
@@ -24,7 +28,9 @@ export function useLessonEditorState({
   const [lessonType, setLessonType] = useState("video");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [difficulty, setDifficulty] = useState("intermediate");
-  const [estimatedMinutes, setEstimatedMinutes] = useState("");
+  const [estimatedMinutes, setEstimatedMinutes] = useState(
+    String(DEFAULT_LESSON_ESTIMATED_MINUTES),
+  );
   const [notes, setNotes] = useState("");
 
   const notesRef = useRef<HTMLTextAreaElement>(null);
@@ -38,9 +44,6 @@ export function useLessonEditorState({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [attachingResource, setAttachingResource] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
-  // Whether a newly-uploaded resource is also sent to the AI Hub (quizzes,
-  // search, KG). Smart-defaulted per file type on drop (see aiDefaultForFile);
-  // teacher can override before the next upload.
   const [aiEnabled, setAiEnabled] = useState(true);
 
   /* ── Sync server data once ── */
@@ -52,7 +55,9 @@ export function useLessonEditorState({
       setLessonType(lesson.lesson_type ?? "video");
       setStatus(lesson.status === "published" ? "published" : "draft");
       setDifficulty(lesson.difficulty ?? "intermediate");
-      setEstimatedMinutes(lesson.estimated_minutes?.toString() ?? "");
+      setEstimatedMinutes(
+        String(lesson.estimated_minutes ?? DEFAULT_LESSON_ESTIMATED_MINUTES),
+      );
       setNotes(lesson.notes_markdown ?? "");
     }
   }, [lesson]);

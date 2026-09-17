@@ -5816,8 +5816,12 @@
     "settings": {
       "title": "Lesson Settings",
       "subtitle": "Duration and difficulty shown to students.",
-      "duration_label": "Required Duration (minutes)",
-      "duration_placeholder": "e.g. 24",
+      "duration_label": "Estimated duration",
+      "duration_placeholder": "e.g. 10",
+      "duration_help": "Defaults to 10 minutes when no duration has been set.",
+      "completion_title": "Completion rules",
+      "completion_auto": "A lesson completes automatically at 80% based on the greater of active time versus this estimated duration and the highest reading position. Completed lessons display 100%.",
+      "completion_manual": "Students can mark a lesson complete or undo completion. After an undo, new engagement can automatically complete it again.",
       "difficulty_label": "Difficulty Level",
       "difficulty_beginner": "Beginner",
       "difficulty_intermediate": "Intermediate",
@@ -5826,7 +5830,11 @@
     "prerequisites": {
       "title": "Prerequisites",
       "subtitle": "Lessons students should complete first.",
-      "empty": "No prerequisites added."
+      "empty": "No prerequisites added.",
+      "add_label": "Add a prerequisite lesson",
+      "add_prompt": "Add a prerequisite lesson…",
+      "no_other_lessons": "No other lessons in this course",
+      "all_added": "All lessons added"
     },
     "toasts": {
       "download_failed": "Download failed",

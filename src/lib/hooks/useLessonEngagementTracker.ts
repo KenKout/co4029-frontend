@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 import { useReportEngagement } from "@/lib/api/hooks/progress";
 
 /**
@@ -27,9 +28,9 @@ export function useLessonEngagementTracker(opts: {
   materialVersionId: string | null | undefined;
   lessonId: string | null | undefined;
   courseId: string | null | undefined;
-  scrollPositionPercent?: number | null;
+  contentRef?: RefObject<HTMLElement | null>;
 }) {
-  const { materialVersionId, lessonId, courseId, scrollPositionPercent } = opts;
+  const { materialVersionId, lessonId, courseId, contentRef } = opts;
   const mutation = useReportEngagement({
     lessonId: lessonId ?? undefined,
     courseId: courseId ?? undefined,
@@ -37,22 +38,39 @@ export function useLessonEngagementTracker(opts: {
 
   const startedAtRef = useRef<Date | null>(null);
   const lastEmitRef = useRef<Date | null>(null);
-  const scrollRef = useRef<number | null>(scrollPositionPercent ?? null);
+  const scrollRef = useRef<number | null>(null);
   const mutateRef = useRef(mutation.mutate);
 
   // keep refs hot without retriggering effect
   mutateRef.current = mutation.mutate;
-  scrollRef.current =
-    typeof scrollPositionPercent === "number"
-      ? Math.min(100, Math.max(0, scrollPositionPercent))
-      : null;
-
   useEffect(() => {
     if (!materialVersionId) return;
 
-    const start = new Date();
-    startedAtRef.current = start;
-    lastEmitRef.current = start;
+    function isActive() {
+      return document.visibilityState === "visible" && document.hasFocus();
+    }
+
+    function beginActivePeriod() {
+      const now = new Date();
+      startedAtRef.current ??= now;
+      lastEmitRef.current = now;
+    }
+
+    function updateScrollProgress() {
+      const element = contentRef?.current;
+      if (!element) return;
+      const rect = element.getBoundingClientRect();
+      if (rect.height <= 0) return;
+      const viewed = Math.min(
+        rect.height,
+        Math.max(0, window.innerHeight - rect.top),
+      );
+      const percent = Math.min(100, Math.max(0, (viewed / rect.height) * 100));
+      scrollRef.current = Math.max(scrollRef.current ?? 0, percent);
+    }
+
+    if (isActive()) beginActivePeriod();
+    updateScrollProgress();
 
     function emit(now: Date) {
       const start = startedAtRef.current;
@@ -74,16 +92,28 @@ export function useLessonEngagementTracker(opts: {
     }
 
     const interval = window.setInterval(() => {
-      if (document.visibilityState !== "visible") return;
+      if (!isActive()) return;
       emit(new Date());
     }, HEARTBEAT_MS);
 
+    function pauseTracking() {
+      emit(new Date());
+      lastEmitRef.current = null;
+    }
+
+    function resumeTracking() {
+      if (isActive()) beginActivePeriod();
+    }
+
     function handleVisibility() {
-      // Flush whenever the tab leaves visibility — capture session before
-      // the user closes/switches to avoid losing the tail.
-      if (document.visibilityState === "hidden") emit(new Date());
+      if (document.visibilityState === "hidden") pauseTracking();
+      else resumeTracking();
     }
     document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("blur", pauseTracking);
+    window.addEventListener("focus", resumeTracking);
+    window.addEventListener("scroll", updateScrollProgress, { passive: true });
+    window.addEventListener("resize", updateScrollProgress);
 
     function handleBeforeUnload() {
       emit(new Date());
@@ -93,11 +123,15 @@ export function useLessonEngagementTracker(opts: {
     return () => {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("blur", pauseTracking);
+      window.removeEventListener("focus", resumeTracking);
+      window.removeEventListener("scroll", updateScrollProgress);
+      window.removeEventListener("resize", updateScrollProgress);
       window.removeEventListener("beforeunload", handleBeforeUnload);
       // Final flush when (materialVersionId, lessonId) changes or component unmounts.
       emit(new Date());
       startedAtRef.current = null;
       lastEmitRef.current = null;
     };
-  }, [materialVersionId, lessonId]);
+  }, [contentRef, materialVersionId, lessonId]);
 }

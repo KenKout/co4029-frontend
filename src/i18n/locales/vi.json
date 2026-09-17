@@ -5635,8 +5635,12 @@
     "settings": {
       "title": "Cài đặt bài học",
       "subtitle": "Thời lượng và độ khó hiển thị cho học viên.",
-      "duration_label": "Thời lượng yêu cầu (phút)",
-      "duration_placeholder": "vd: 24",
+      "duration_label": "Thời lượng dự kiến",
+      "duration_placeholder": "vd: 10",
+      "duration_help": "Mặc định 10 phút khi bài học chưa có thời lượng.",
+      "completion_title": "Quy tắc hoàn thành",
+      "completion_auto": "Bài học tự hoàn thành khi đạt 80%, tính theo giá trị lớn hơn giữa thời gian tương tác so với thời lượng dự kiến này và vị trí đọc cao nhất. Bài đã hoàn thành hiển thị 100%.",
+      "completion_manual": "Học viên có thể đánh dấu hoàn thành hoặc bỏ đánh dấu. Sau khi bỏ, một tương tác mới vẫn có thể tự động hoàn thành lại bài học.",
       "difficulty_label": "Mức độ khó",
       "difficulty_beginner": "Cơ bản",
       "difficulty_intermediate": "Trung cấp",
@@ -5645,7 +5649,11 @@
     "prerequisites": {
       "title": "Điều kiện tiên quyết",
       "subtitle": "Các bài học học viên nên hoàn thành trước.",
-      "empty": "Chưa thêm điều kiện tiên quyết nào."
+      "empty": "Chưa thêm điều kiện tiên quyết nào.",
+      "add_label": "Thêm bài học tiên quyết",
+      "add_prompt": "Thêm một bài học tiên quyết…",
+      "no_other_lessons": "Khóa học không còn bài học nào khác",
+      "all_added": "Đã thêm tất cả bài học"
     },
     "toasts": {
       "download_failed": "Tải xuống thất bại",
