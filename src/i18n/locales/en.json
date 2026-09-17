@@ -6163,7 +6163,10 @@
       "retrieval": "Retrieval",
       "spaced_repetition": "Spaced repetition",
       "notifications": "Notifications",
-      "careerpath": "Learning programs"
+      "careerpath": "Learning programs",
+      "courses": "Courses",
+      "progress": "Student progress",
+      "audit": "Audit & retention"
     },
     "item": {
       "learning_program__max_concurrent_enrollments": {
@@ -6273,6 +6276,38 @@
       "spaced_repetition__daily_review_cap": {
         "label": "Daily review cap (cards/day)",
         "description": "Maximum spaced-repetition cards a student is served for review in one day, so a large backlog stays a finishable daily goal instead of an unbounded wall. Cards already reviewed today count toward the cap. This bounds the REVIEW QUEUE only — it never changes lesson unlock eligibility or retention scoring, so progression is unaffected. Set to 0 for no cap (serve the whole backlog)."
+      },
+      "learning_program__max_concurrent_paths_per_student": {
+        "label": "Concurrent career paths per student",
+        "description": "Maximum career paths one student may have running at once across all their learning programs. The per-program ceiling below applies to a single enrolment, so without this a student in two programs could hold the sum of both limits. Existing paths are kept when this is lowered."
+      },
+      "progress__at_risk_inactivity_days": {
+        "label": "At risk — inactivity threshold (days)",
+        "description": "Days without any material engagement before a student is flagged at risk. Teachers see which threshold fired."
+      },
+      "progress__at_risk_low_completion_percent": {
+        "label": "At risk — low completion threshold (%)",
+        "description": "Average lesson completion below this percentage flags a student at risk, regardless of how recently they were active."
+      },
+      "progress__at_risk_grace_period_days": {
+        "label": "At risk — new-enrolment grace period (days)",
+        "description": "Students who enrolled more recently than this are never flagged, so a new joiner is not reported as inactive before they have had a fair chance to start. Set to 0 to disable the grace period."
+      },
+      "audit__http_log_retention_days": {
+        "label": "HTTP audit log retention (days)",
+        "description": "How long request audit rows are kept before the nightly sweep deletes them. One row is written per non-skipped request, making this the fastest-growing table in the database. Set to 0 to keep rows forever."
+      },
+      "audit__integrity_event_retention_days": {
+        "label": "Assessment integrity event retention (days)",
+        "description": "How long quiz and interview proctoring signals (tab switches, focus loss, disconnects) are kept. They back a post-session integrity review, so keep them longer than any appeal period. 0 disables pruning."
+      },
+      "audit__quiz_event_retention_days": {
+        "label": "Quiz audit event retention (days)",
+        "description": "How long the teacher-facing quiz action trail is kept — attempt started, submitted, regraded, manually graded, override created. 0 disables pruning."
+      },
+      "audit__auth_event_retention_days": {
+        "label": "Auth event retention (days)",
+        "description": "How long authentication events are kept — logins, MFA verifications, role and account-status changes. Keep them at least as long as any incident-investigation window. 0 disables pruning."
       }
     },
     "pending": {

@@ -6139,7 +6139,10 @@
       "retrieval": "Truy xuất",
       "spaced_repetition": "Lặp lại ngắt quãng",
       "notifications": "Thông báo",
-      "careerpath": "Chương trình học"
+      "careerpath": "Chương trình học",
+      "courses": "Khóa học",
+      "progress": "Tiến độ học viên",
+      "audit": "Nhật ký & lưu trữ"
     },
     "item": {
       "learning_program__max_concurrent_enrollments": {
@@ -6249,6 +6252,38 @@
       "spaced_repetition__daily_review_cap": {
         "label": "Giới hạn ôn tập mỗi ngày (thẻ/ngày)",
         "description": "Số thẻ ôn tập lặp lại ngắt quãng tối đa mà một học viên được đưa ra để ôn trong một ngày, để lượng thẻ tồn đọng lớn vẫn là một mục tiêu hằng ngày có thể hoàn thành thay vì một bức tường vô tận. Các thẻ đã ôn trong ngày được tính vào giới hạn. Điều này chỉ giới hạn HÀNG ĐỢI ÔN TẬP — không bao giờ thay đổi điều kiện mở khóa bài học hay điểm ghi nhớ, nên tiến độ không bị ảnh hưởng. Đặt 0 để không giới hạn (đưa ra toàn bộ thẻ tồn đọng)."
+      },
+      "learning_program__max_concurrent_paths_per_student": {
+        "label": "Số lộ trình đồng thời mỗi sinh viên",
+        "description": "Số lộ trình nghề nghiệp tối đa mà một sinh viên được học cùng lúc trên tất cả các chương trình học. Trần mỗi chương trình bên dưới chỉ áp dụng cho một lượt ghi danh, nên nếu không có giới hạn này, sinh viên tham gia hai chương trình có thể giữ tổng của cả hai giới hạn. Lộ trình hiện có vẫn được giữ khi hạ giá trị này."
+      },
+      "progress__at_risk_inactivity_days": {
+        "label": "Nguy cơ — ngưỡng không hoạt động (ngày)",
+        "description": "Số ngày không tương tác với học liệu trước khi sinh viên bị đánh dấu có nguy cơ. Giáo viên thấy được ngưỡng nào đã kích hoạt."
+      },
+      "progress__at_risk_low_completion_percent": {
+        "label": "Nguy cơ — ngưỡng hoàn thành thấp (%)",
+        "description": "Tỷ lệ hoàn thành bài học trung bình thấp hơn mức này sẽ đánh dấu sinh viên có nguy cơ, bất kể họ hoạt động gần đây hay không."
+      },
+      "progress__at_risk_grace_period_days": {
+        "label": "Nguy cơ — thời gian ân hạn cho người mới (ngày)",
+        "description": "Sinh viên ghi danh trong khoảng thời gian này sẽ không bị đánh dấu, để người mới không bị báo là không hoạt động khi chưa có đủ thời gian bắt đầu. Đặt 0 để tắt thời gian ân hạn."
+      },
+      "audit__http_log_retention_days": {
+        "label": "Thời gian lưu nhật ký HTTP (ngày)",
+        "description": "Thời gian giữ bản ghi kiểm toán request trước khi tác vụ dọn dẹp hằng đêm xóa đi. Mỗi request không bị bỏ qua ghi một dòng, nên đây là bảng tăng nhanh nhất trong cơ sở dữ liệu. Đặt 0 để giữ lại vĩnh viễn."
+      },
+      "audit__integrity_event_retention_days": {
+        "label": "Thời gian lưu sự kiện liêm chính bài đánh giá (ngày)",
+        "description": "Thời gian giữ tín hiệu giám sát bài kiểm tra và phỏng vấn (chuyển tab, mất tiêu điểm, mất kết nối). Chúng phục vụ việc rà soát liêm chính sau buổi làm bài, nên hãy giữ lâu hơn thời hạn khiếu nại. Đặt 0 để tắt dọn dẹp."
+      },
+      "audit__quiz_event_retention_days": {
+        "label": "Thời gian lưu sự kiện kiểm tra (ngày)",
+        "description": "Thời gian giữ nhật ký thao tác bài kiểm tra dành cho giáo viên — bắt đầu lượt làm, nộp bài, chấm lại, chấm thủ công, tạo điều chỉnh điểm. Đặt 0 để tắt dọn dẹp."
+      },
+      "audit__auth_event_retention_days": {
+        "label": "Thời gian lưu sự kiện xác thực (ngày)",
+        "description": "Thời gian giữ các sự kiện xác thực — đăng nhập, xác minh MFA, thay đổi vai trò và trạng thái tài khoản. Hãy giữ ít nhất bằng thời gian điều tra sự cố. Đặt 0 để tắt dọn dẹp."
       }
     },
     "pending": {
