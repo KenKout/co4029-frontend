@@ -7,9 +7,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
-import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
+import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import { Tabs, type TabDef } from "@/components/ui/tabs";
 import { useManagedLearningPrograms } from "@/lib/api/hooks/learning-programs";
+import type { LearningProgram } from "@/lib/api/types";
 import { usePermissions } from "@/lib/auth/use-permissions";
 
 import { ProgramCard } from "./_components/learning-programs/ProgramCard";
@@ -18,6 +19,26 @@ import {
   useProgramView,
   type ProgramView,
 } from "./_components/learning-programs/use-program-view";
+
+export function filterManagedLearningPrograms(
+  programs: LearningProgram[],
+  search: string,
+  statusFilter?: LearningProgram["status"],
+): LearningProgram[] {
+  const q = search.trim().toLowerCase();
+  return programs.filter((program) => {
+    if (statusFilter
+      ? program.status !== statusFilter
+      : program.status === "archived") {
+      return false;
+    }
+    return (
+      !q ||
+      program.name.toLowerCase().includes(q) ||
+      program.slug.toLowerCase().includes(q)
+    );
+  });
+}
 
 /**
  * Learning programs, browsable two ways.
@@ -38,6 +59,9 @@ export default function ManagementLearningProgramsPage() {
   const programs = useManagedLearningPrograms();
   const [view, setView] = useProgramView();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    LearningProgram["status"] | undefined
+  >();
 
   const canRead = permissions.hasAny(
     "learning_program.read",
@@ -49,19 +73,26 @@ export default function ManagementLearningProgramsPage() {
   // sensitive — the REVIEW SURFACE is.
   const isDean = permissions.has("learning_program.switch.review");
 
-  const active = useMemo(
-    () => (programs.data ?? []).filter((p) => p.status !== "archived"),
-    [programs.data],
+  const filtered = useMemo(
+    () =>
+      filterManagedLearningPrograms(programs.data ?? [], search, statusFilter),
+    [programs.data, search, statusFilter],
   );
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return active;
-    return active.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q),
-    );
-  }, [active, search]);
+  const statusFilters: FilterDef[] = [
+    {
+      id: "status",
+      label: "Status",
+      allLabel: "All statuses",
+      options: [
+        { value: "draft", label: "Draft" },
+        { value: "published", label: "Published" },
+        { value: "archived", label: "Archived" },
+      ],
+    },
+  ];
+
+  const hasFilter = Boolean(search.trim() || statusFilter);
 
   if (permissions.isLoading || programs.isLoading) return <PageSkeleton rows={4} />;
   if (!canRead) return <PermissionDenied />;
@@ -99,7 +130,7 @@ export default function ManagementLearningProgramsPage() {
         }
       />
 
-      {active.length === 0 ? (
+      {(programs.data ?? []).length === 0 && !statusFilter ? (
         <EmptyState
           icon={GraduationCap}
           title="No Learning Programs"
@@ -115,6 +146,18 @@ export default function ManagementLearningProgramsPage() {
             search={search}
             onSearchChange={setSearch}
             searchPlaceholder="Search programs…"
+            filters={statusFilters}
+            filterValues={{ status: statusFilter }}
+            onFilterChange={(filterId, value) => {
+              if (filterId === "status") {
+                setStatusFilter(value as LearningProgram["status"] | undefined);
+              }
+            }}
+            onResetAllFilters={() => {
+              setSearch("");
+              setStatusFilter(undefined);
+            }}
+            clearLabel="Clear filters"
           />
 
           {view === "table" ? (
@@ -136,12 +179,14 @@ export default function ManagementLearningProgramsPage() {
             </div>
           )}
 
-          {/* A search that matches nothing is not an empty program list —
+          {/* A filtered result with no matches is not an empty program list —
               the table's own empty state would say "No Learning Programs",
               which reads as data loss rather than as a narrow filter. */}
           {filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-m3-on-surface-variant">
-              No programs match “{search}”.
+              {hasFilter
+                ? "No programs match the selected filters."
+                : "No programs match the current view."}
             </p>
           ) : null}
         </div>
