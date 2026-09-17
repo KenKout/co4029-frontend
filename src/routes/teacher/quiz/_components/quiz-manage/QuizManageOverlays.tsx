@@ -1,5 +1,6 @@
 import { ImportExportPanel } from "@/routes/teacher/_components/quiz-manage/ImportExportPanel";
 import { draftFromQuiz } from "@/routes/teacher/_components/quiz-manage/helpers";
+import { navigateToQuizSetting } from "@/routes/teacher/_components/quiz-manage/SettingsSummary";
 import { QuestionBankModal } from "@/routes/teacher/_components/question-bank-modal";
 
 import { ConfirmDeleteQuizDialog } from "./ConfirmDeleteQuizDialog";
@@ -66,11 +67,21 @@ export function QuizManageOverlays({
       {state.confirmPublish && (
         <ConfirmPublishQuizDialog
           draft={draftFromQuiz(quiz)}
-          disabled={state.hasUnsavedWork || data.patchQuiz.isPending || data.pendingDeletes.comboCount > 0 || approvedCount === 0}
+          disabled={
+            state.hasUnsavedWork ||
+            data.patchQuiz.isPending ||
+            data.pendingDeletes.comboCount > 0 ||
+            approvedCount === 0
+          }
           tab={state.tab}
           approvedCount={approvedCount}
           pending={data.publishQuiz.isPending}
           onCancel={() => state.setConfirmPublish(false)}
+          onNavigateSetting={(target, focus) => {
+            state.setConfirmPublish(false);
+            state.setTab("settings");
+            window.setTimeout(() => navigateToQuizSetting(target, focus), 50);
+          }}
           onPreview={() => {
             state.setConfirmPublish(false);
             state.setTab("preview");

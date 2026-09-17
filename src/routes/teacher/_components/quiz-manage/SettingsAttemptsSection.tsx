@@ -25,9 +25,13 @@ export function SettingsAttemptsSection({
   const { t } = useTranslation();
 
   return (
-    <SettingsSection title={t("teacher_quiz_manage.settings.attempts.title")}>
+    <SettingsSection
+      id="quiz-settings-attempts"
+      title={t("teacher_quiz_manage.settings.attempts.title")}
+    >
       <LockableSection locked={locked}>
         <ToggleRow
+          id="quiz-setting-allow-retakes"
           label={t("teacher_quiz_manage.settings.attempts.allow_label")}
           description={t("teacher_quiz_manage.settings.attempts.allow_desc")}
           value={draft.allow_retakes}
@@ -40,6 +44,7 @@ export function SettingsAttemptsSection({
               hint={t("teacher_quiz_manage.settings.attempts.max_hint")}
             >
               <Input
+                id="quiz-setting-max-attempts"
                 type="number"
                 min={1}
                 value={draft.max_attempts}
@@ -57,7 +62,9 @@ export function SettingsAttemptsSection({
                 type="number"
                 min={0}
                 value={draft.cooldown_hours}
-                endAdornment={t("teacher_quiz_manage.settings.assist.hour_unit")}
+                endAdornment={t(
+                  "teacher_quiz_manage.settings.assist.hour_unit",
+                )}
                 onChange={(e) => update("cooldown_hours", e.target.value)}
                 placeholder={t(
                   "teacher_quiz_manage.settings.attempts.cooldown_placeholder",

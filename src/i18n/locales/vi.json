@@ -4708,6 +4708,8 @@
         "shuffle_o_desc": "Hoán đổi thứ tự đáp án trong mỗi câu hỏi.",
         "show_hints_label": "Hiển thị gợi ý",
         "show_hints_desc": "Cho phép học viên xem gợi ý trong khi làm.",
+        "require_camera_label": "Yêu cầu bật camera",
+        "require_camera_desc": "Yêu cầu học viên bật camera trong khi làm bài quiz.",
         "reminders_label": "Nhắc ôn tập",
         "reminders_desc": "Gửi nhắc nhở khi đến lúc ôn lại bài."
       },
@@ -4769,6 +4771,11 @@
         "hour_unit": "giờ",
         "unlimited": "Không giới hạn",
         "not_set": "Chưa đặt",
+        "enabled": "Đã bật",
+        "disabled": "Đã tắt",
+        "mastery_mode": "Chế độ thành thạo",
+        "custom": "Tùy chỉnh",
+        "password_set": "Đã đặt mật khẩu",
         "integrity_formula": "Điểm vi phạm = số lần chuyển tab × {{tab}} + mất tiêu điểm × {{focus}} + thoát toàn màn hình × {{exit}}. Ngưỡng cảnh báo: {{threshold}} điểm.",
         "feedback_confirm": "Thay các khoảng điểm và nội dung feedback đã lưu bằng dữ liệu đang hiển thị? Các cấu hình khác của bài kiểm tra sẽ không được lưu cùng.",
         "load_failed": "Không tải được dữ liệu phần này. Vui lòng thử lại trước khi chỉnh sửa.",
@@ -4960,9 +4967,11 @@
       "confirm": "Xoá {{count}} câu hỏi"
     },
     "save_bar": {
+      "pending_one": "{{count}} câu hỏi có thay đổi chưa lưu",
       "pending_other": "{{count}} câu hỏi có thay đổi chưa lưu",
       "discard": "Hủy thay đổi",
       "save_all": "Lưu tất cả thay đổi",
+      "saved_one": "Đã lưu {{count}} câu hỏi",
       "saved_other": "Đã lưu {{count}} câu hỏi",
       "save_failed": "Đã dừng sau khi lưu {{count}} câu. Kiểm tra câu hỏi được đánh dấu rồi thử lại."
     }

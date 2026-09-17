@@ -12,12 +12,14 @@ import { Button } from "@/components/ui/button";
  */
 
 export function SettingsSection({
+  id,
   title,
   description,
   children,
   defaultOpen = true,
   collapsible = true,
 }: {
+  id?: string;
   title: string;
   description?: string;
   children: React.ReactNode;
@@ -28,7 +30,7 @@ export function SettingsSection({
 
   if (!collapsible) {
     return (
-      <section className="space-y-4">
+      <section id={id} data-settings-section className="space-y-4">
         <div className="space-y-1">
           <h3 className="font-headline text-base font-extrabold text-m3-on-surface">
             {title}
@@ -44,12 +46,15 @@ export function SettingsSection({
 
   return (
     <Collapsible.Root
+      id={id}
+      data-settings-section
       open={open}
       onOpenChange={setOpen}
       render={<section />}
       className="block"
     >
       <Collapsible.Trigger
+        data-settings-trigger
         aria-label={title}
         className="flex w-full cursor-pointer list-none items-center gap-3 text-left"
       >
@@ -122,12 +127,14 @@ export function Field({
  */
 
 export function ToggleRow({
+  id,
   label,
   description,
   value,
   onChange,
   disabled = false,
 }: {
+  id?: string;
   label: string;
   description: string;
   value: boolean;
@@ -137,7 +144,9 @@ export function ToggleRow({
   disabled?: boolean;
 }) {
   return (
-    <Button variant="ghost"
+    <Button
+      variant="ghost"
+      id={id}
       type="button"
       role="switch"
       aria-checked={value}
