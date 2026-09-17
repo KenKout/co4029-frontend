@@ -145,6 +145,8 @@
     "ai_mock_title": "Bao gồm phỏng vấn AI",
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
+    "starting_learning": "Đang bắt đầu học…",
+    "checking_enrollment": "Đang kiểm tra quyền học…",
     "continue_learning": "Tiếp tục học",
     "progress_label": "Tiến độ",
     "module_complete": "Hoàn thành module",
