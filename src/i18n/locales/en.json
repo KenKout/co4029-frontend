@@ -5827,7 +5827,7 @@
       "duration_placeholder": "e.g. 10",
       "duration_help": "Defaults to 10 minutes when no duration has been set.",
       "completion_title": "Completion rules",
-      "completion_auto": "A lesson completes automatically at 80% based on the greater of active time versus this estimated duration and the highest reading position. Completed lessons display 100%.",
+      "completion_auto": "A lesson completes automatically once the student reaches this estimated duration in active time, or reaches the end of the material — whichever comes first. Completed lessons display 100%.",
       "completion_manual": "Students can mark a lesson complete or undo completion. After an undo, new engagement can automatically complete it again.",
       "difficulty_label": "Difficulty Level",
       "difficulty_beginner": "Beginner",

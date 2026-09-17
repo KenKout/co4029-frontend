@@ -5648,7 +5648,7 @@
       "duration_placeholder": "vd: 10",
       "duration_help": "Mặc định 10 phút khi bài học chưa có thời lượng.",
       "completion_title": "Quy tắc hoàn thành",
-      "completion_auto": "Bài học tự hoàn thành khi đạt 80%, tính theo giá trị lớn hơn giữa thời gian tương tác so với thời lượng dự kiến này và vị trí đọc cao nhất. Bài đã hoàn thành hiển thị 100%.",
+      "completion_auto": "Bài học tự hoàn thành khi học viên đạt đủ thời lượng dự kiến này bằng thời gian tương tác, hoặc đọc đến cuối tài liệu — tùy điều kiện nào đến trước. Bài đã hoàn thành hiển thị 100%.",
       "completion_manual": "Học viên có thể đánh dấu hoàn thành hoặc bỏ đánh dấu. Sau khi bỏ, một tương tác mới vẫn có thể tự động hoàn thành lại bài học.",
       "difficulty_label": "Mức độ khó",
       "difficulty_beginner": "Cơ bản",
