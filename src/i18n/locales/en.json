@@ -145,6 +145,8 @@
     "ai_mock_title": "AI mock interviews included",
     "ai_mock_body": "Complete each module to unlock an AI-powered mock interview. Get real-time feedback, adaptive follow-up questions, and a detailed assessment of your technical explanations.",
     "start_learning": "Start learning",
+    "starting_learning": "Starting learning…",
+    "checking_enrollment": "Checking course access…",
     "continue_learning": "Continue learning",
     "progress_label": "Progress",
     "module_complete": "Module complete",

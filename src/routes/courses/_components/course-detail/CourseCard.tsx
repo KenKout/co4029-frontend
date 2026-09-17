@@ -109,11 +109,19 @@ function CourseCtaButton({
   started,
   enrolled,
   enrollmentLoading,
+  lazyStartLoading,
+  lazyStartAvailable,
+  lazyStartPending,
+  onLazyStart,
 }: {
   slug: string;
   started: boolean;
   enrolled: boolean;
   enrollmentLoading?: boolean;
+  lazyStartLoading?: boolean;
+  lazyStartAvailable?: boolean;
+  lazyStartPending?: boolean;
+  onLazyStart?: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -127,6 +135,33 @@ function CourseCtaButton({
           <ArrowRight className="h-5 w-5" />
         </Button>
       </Link>
+    );
+  }
+
+  if (lazyStartLoading) {
+    return (
+      <Button
+        disabled
+        className="w-full rounded-xl py-5 h-auto text-base opacity-70 cursor-wait bg-m3-surface-container-high text-m3-on-surface-variant"
+      >
+        {t("course_detail.checking_enrollment")}
+      </Button>
+    );
+  }
+
+  if (lazyStartAvailable) {
+    return (
+      <Button
+        type="button"
+        onClick={onLazyStart}
+        disabled={lazyStartPending}
+        className="w-full gradient-primary text-white font-bold rounded-xl py-5 h-auto text-base gap-2 shadow-ai-glow hover:opacity-90 transition-opacity"
+      >
+        {lazyStartPending
+          ? t("course_detail.starting_learning")
+          : t("course_detail.start_learning")}
+        <ArrowRight className="h-5 w-5" />
+      </Button>
     );
   }
 
@@ -327,6 +362,10 @@ export function CourseCard({
   progressLoading,
   enrolled,
   enrollmentLoading,
+  lazyStartLoading,
+  lazyStartAvailable,
+  lazyStartPending,
+  onLazyStart,
 }: {
   course: CoursePublic;
   gradientClass: string;
@@ -335,6 +374,10 @@ export function CourseCard({
   progressLoading?: boolean;
   enrolled: boolean;
   enrollmentLoading?: boolean;
+  lazyStartLoading?: boolean;
+  lazyStartAvailable?: boolean;
+  lazyStartPending?: boolean;
+  onLazyStart?: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -379,6 +422,10 @@ export function CourseCard({
             started={started}
             enrolled={enrolled}
             enrollmentLoading={enrollmentLoading}
+            lazyStartLoading={lazyStartLoading}
+            lazyStartAvailable={lazyStartAvailable}
+            lazyStartPending={lazyStartPending}
+            onLazyStart={onLazyStart}
           />
 
           {course.has_syllabus ? (

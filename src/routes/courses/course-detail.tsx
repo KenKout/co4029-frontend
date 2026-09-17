@@ -1,5 +1,6 @@
-import { useParams } from "@tanstack/react-router";
+import { useParams, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
 import {
   useCourseBySlug,
@@ -7,6 +8,7 @@ import {
   useCourseOutcomes,
 } from "@/lib/api/hooks/courses";
 import { useMyCourseProgress } from "@/lib/api/hooks/progress";
+import { useStartCourse } from "@/lib/api/hooks/career-paths";
 import { useMyEnrollment } from "@/lib/api/hooks/me";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
@@ -19,6 +21,7 @@ import {
 } from "@/routes/courses/_components/course-detail/CourseDetailAtoms";
 import { CourseDiscussionSection } from "@/routes/courses/_components/CourseDiscussionSection";
 import { CourseCard } from "@/routes/courses/_components/course-detail/CourseCard";
+import { useCourseStartEligibility } from "@/routes/courses/_components/course-detail/use-course-start-eligibility";
 import { InstructorCard } from "@/routes/courses/_components/course-detail/InstructorCard";
 import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
 
@@ -41,6 +44,7 @@ import { slugGradient } from "@/routes/courses/_components/course-detail/helpers
  */
 export default function CourseDetailPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { slug } = useParams({ strict: false }) as { slug: string };
 
   const courseQuery = useCourseBySlug(slug);
@@ -52,6 +56,24 @@ export default function CourseDetailPage() {
   const { data: enrollment, isLoading: enrollmentLoading } =
     useMyEnrollment(courseId);
   const enrolled = Boolean(enrollment);
+  const lazyEligibility = useCourseStartEligibility(courseId, enrolled);
+  const startCourse = useStartCourse(lazyEligibility.eligiblePathId ?? "");
+
+  function handleLazyStart() {
+    if (!courseId || !lazyEligibility.eligiblePathId) return;
+    startCourse.mutate(courseId, {
+      onSuccess: () => {
+        void navigate({ to: "/courses/$slug/learn", params: { slug } });
+      },
+      onError: (error) => {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Could not start this course",
+        );
+      },
+    });
+  }
 
   const { data: outcomes, isLoading: outcomesLoading } =
     useCourseOutcomes(courseId);
@@ -101,6 +123,10 @@ export default function CourseDetailPage() {
           progressLoading={progressLoading}
           enrolled={enrolled}
           enrollmentLoading={enrollmentLoading}
+          lazyStartLoading={lazyEligibility.isLoading}
+          lazyStartAvailable={Boolean(lazyEligibility.eligiblePathId)}
+          lazyStartPending={startCourse.isPending}
+          onLazyStart={handleLazyStart}
         />
 
         {/* 60% / 40% split: What you'll learn + curriculum | About. */}
