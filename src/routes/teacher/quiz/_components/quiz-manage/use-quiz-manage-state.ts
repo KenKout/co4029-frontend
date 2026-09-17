@@ -96,11 +96,18 @@ export function useQuizManageState({
   const [feedbackDirty, setFeedbackDirty] = useState(false);
   const [overrideDirty, setOverrideDirty] = useState(false);
   const [settingsBusy, setSettingsBusy] = useState(false);
+  const baseline = useRef<SettingsDraft | null>(null);
+  const loadedQuizId = useRef<string | null>(null);
   const settingsDirty =
     draft != null &&
-    quiz != null &&
-    JSON.stringify(draft) !== JSON.stringify(draftFromQuiz(quiz));
-  const hasUnsavedWork = settingsBusy || settingsDirty || feedbackDirty || overrideDirty || dirtyQuestionCount > 0;
+    baseline.current != null &&
+    JSON.stringify(draft) !== JSON.stringify(baseline.current);
+  const hasUnsavedWork =
+    settingsBusy ||
+    settingsDirty ||
+    feedbackDirty ||
+    overrideDirty ||
+    dirtyQuestionCount > 0;
   const leaveGuard = useUnsavedChangesGuard(hasUnsavedWork);
 
   // Jump from the Preview tab to a specific question in the Questions editor:
@@ -125,15 +132,19 @@ export function useQuizManageState({
     });
   }, []);
 
-  const baseline = useRef<SettingsDraft | null>(null);
-  const loadedQuizId = useRef<string | null>(null);
   useEffect(() => {
     if (!quiz) return;
     const next = draftFromQuiz(quiz);
     const previous = baseline.current;
     const changedQuiz = loadedQuizId.current !== quiz.id;
     // Background refetches must not overwrite a teacher's local edits.
-    setDraft((current) => changedQuiz || current === null || JSON.stringify(current) === JSON.stringify(previous) ? next : current);
+    setDraft((current) =>
+      changedQuiz ||
+      current === null ||
+      JSON.stringify(current) === JSON.stringify(previous)
+        ? next
+        : current,
+    );
     if (changedQuiz) {
       setFeedbackDirty(false);
       setOverrideDirty(false);

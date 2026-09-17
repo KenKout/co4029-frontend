@@ -24,16 +24,6 @@ export function courseOrderChanged(
   return order.some((row, i) => row.course_id !== baseRows[i]?.course_id);
 }
 
-/**
- * Map the org course catalogue to the dialog shape and filter client-side by
- * title/slug. `status` rides along so the picker rows can show a badge.
- *
- * The candidates endpoint returns ONLY published courses (user decision
- * 2026-08-30), so there is no draft row to disable here: a course that cannot
- * be attached is never offered in the first place. Draft courses are reached
- * through "New course" / the course catalogue instead, and attached once they
- * publish.
- */
 export function toCourseCandidates(
   items: CareerPathCourseCandidate[] | undefined,
   query: string,

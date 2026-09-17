@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SettingsSection, ToggleRow } from "./form-primitives";
@@ -7,7 +8,7 @@ import type { SettingsDraft, SettingsUpdate } from "./types";
  * Behavior section: the five short presentation/access switches. Extracted from
  * SettingsTab verbatim.
  */
-export function SettingsBehaviorSection({
+function SettingsBehaviorSectionComponent({
   draft,
   update,
   locked,
@@ -19,7 +20,10 @@ export function SettingsBehaviorSection({
   const { t } = useTranslation();
 
   return (
-    <SettingsSection title={t("teacher_quiz_manage.settings.behavior.title")}>
+    <SettingsSection
+      id="quiz-settings-behavior"
+      title={t("teacher_quiz_manage.settings.behavior.title")}
+    >
       {/* One row of four on wide screens — these are short, independent
           switches, so a single column wasted most of the width.
 
@@ -30,6 +34,7 @@ export function SettingsBehaviorSection({
           item), so the lock is applied per card via `disabled`. */}
       <div className="grid items-stretch gap-3 sm:grid-cols-2">
         <ToggleRow
+          id="quiz-setting-shuffle-questions"
           label={t("teacher_quiz_manage.settings.behavior.shuffle_q_label")}
           description={t(
             "teacher_quiz_manage.settings.behavior.shuffle_q_desc",
@@ -39,6 +44,7 @@ export function SettingsBehaviorSection({
           disabled={locked}
         />
         <ToggleRow
+          id="quiz-setting-shuffle-options"
           label={t("teacher_quiz_manage.settings.behavior.shuffle_o_label")}
           description={t(
             "teacher_quiz_manage.settings.behavior.shuffle_o_desc",
@@ -48,6 +54,7 @@ export function SettingsBehaviorSection({
           disabled={locked}
         />
         <ToggleRow
+          id="quiz-setting-show-hints"
           label={t("teacher_quiz_manage.settings.behavior.show_hints_label")}
           description={t(
             "teacher_quiz_manage.settings.behavior.show_hints_desc",
@@ -57,7 +64,10 @@ export function SettingsBehaviorSection({
           disabled={locked}
         />
         <ToggleRow
-          label={t("teacher_quiz_manage.settings.behavior.require_camera_label")}
+          id="quiz-setting-require-camera"
+          label={t(
+            "teacher_quiz_manage.settings.behavior.require_camera_label",
+          )}
           description={t(
             "teacher_quiz_manage.settings.behavior.require_camera_desc",
           )}
@@ -66,6 +76,7 @@ export function SettingsBehaviorSection({
           disabled={locked}
         />
         <ToggleRow
+          id="quiz-setting-reminders"
           label={t("teacher_quiz_manage.settings.behavior.reminders_label")}
           description={t(
             "teacher_quiz_manage.settings.behavior.reminders_desc",
@@ -77,3 +88,15 @@ export function SettingsBehaviorSection({
     </SettingsSection>
   );
 }
+
+export const SettingsBehaviorSection = memo(
+  SettingsBehaviorSectionComponent,
+  (previous, next) =>
+    previous.update === next.update &&
+    previous.locked === next.locked &&
+    previous.draft.shuffle_questions === next.draft.shuffle_questions &&
+    previous.draft.shuffle_options === next.draft.shuffle_options &&
+    previous.draft.show_hints === next.draft.show_hints &&
+    previous.draft.require_camera === next.draft.require_camera &&
+    previous.draft.reminders_enabled === next.draft.reminders_enabled,
+);

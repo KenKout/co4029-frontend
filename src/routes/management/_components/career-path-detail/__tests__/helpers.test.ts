@@ -2,11 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { toCourseCandidates } from "../helpers";
 
-/**
- * The candidates endpoint returns only PUBLISHED org courses (user decision
- * 2026-08-30), so these rows are what the picker actually receives. The mapper
- * must not re-introduce a status filter of its own or invent a disabled state.
- */
 const catalogue = [
   { id: "c1", title: "Data Structures", slug: "data-structures", status: "published" },
   { id: "c2", title: "Data Mining", slug: "data-mining", status: "published" },

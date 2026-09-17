@@ -4708,6 +4708,8 @@
         "shuffle_o_desc": "Hoán đổi thứ tự đáp án trong mỗi câu hỏi.",
         "show_hints_label": "Hiển thị gợi ý",
         "show_hints_desc": "Cho phép học viên xem gợi ý trong khi làm.",
+        "require_camera_label": "Yêu cầu bật camera",
+        "require_camera_desc": "Yêu cầu học viên bật camera trong khi làm bài quiz.",
         "reminders_label": "Nhắc ôn tập",
         "reminders_desc": "Gửi nhắc nhở khi đến lúc ôn lại bài."
       },
@@ -4769,6 +4771,11 @@
         "hour_unit": "giờ",
         "unlimited": "Không giới hạn",
         "not_set": "Chưa đặt",
+        "enabled": "Đã bật",
+        "disabled": "Đã tắt",
+        "mastery_mode": "Chế độ thành thạo",
+        "custom": "Tùy chỉnh",
+        "password_set": "Đã đặt mật khẩu",
         "integrity_formula": "Điểm vi phạm = số lần chuyển tab × {{tab}} + mất tiêu điểm × {{focus}} + thoát toàn màn hình × {{exit}}. Ngưỡng cảnh báo: {{threshold}} điểm.",
         "feedback_confirm": "Thay các khoảng điểm và nội dung feedback đã lưu bằng dữ liệu đang hiển thị? Các cấu hình khác của bài kiểm tra sẽ không được lưu cùng.",
         "load_failed": "Không tải được dữ liệu phần này. Vui lòng thử lại trước khi chỉnh sửa.",
@@ -4960,9 +4967,11 @@
       "confirm": "Xoá {{count}} câu hỏi"
     },
     "save_bar": {
+      "pending_one": "{{count}} câu hỏi có thay đổi chưa lưu",
       "pending_other": "{{count}} câu hỏi có thay đổi chưa lưu",
       "discard": "Hủy thay đổi",
       "save_all": "Lưu tất cả thay đổi",
+      "saved_one": "Đã lưu {{count}} câu hỏi",
       "saved_other": "Đã lưu {{count}} câu hỏi",
       "save_failed": "Đã dừng sau khi lưu {{count}} câu. Kiểm tra câu hỏi được đánh dấu rồi thử lại."
     }
@@ -5635,8 +5644,12 @@
     "settings": {
       "title": "Cài đặt bài học",
       "subtitle": "Thời lượng và độ khó hiển thị cho học viên.",
-      "duration_label": "Thời lượng yêu cầu (phút)",
-      "duration_placeholder": "vd: 24",
+      "duration_label": "Thời lượng dự kiến",
+      "duration_placeholder": "vd: 10",
+      "duration_help": "Mặc định 10 phút khi bài học chưa có thời lượng.",
+      "completion_title": "Quy tắc hoàn thành",
+      "completion_auto": "Bài học tự hoàn thành khi học viên đạt đủ thời lượng dự kiến này bằng thời gian tương tác, hoặc đọc đến cuối tài liệu — tùy điều kiện nào đến trước. Bài đã hoàn thành hiển thị 100%.",
+      "completion_manual": "Học viên có thể đánh dấu hoàn thành hoặc bỏ đánh dấu. Sau khi bỏ, một tương tác mới vẫn có thể tự động hoàn thành lại bài học.",
       "difficulty_label": "Mức độ khó",
       "difficulty_beginner": "Cơ bản",
       "difficulty_intermediate": "Trung cấp",
@@ -5645,7 +5658,11 @@
     "prerequisites": {
       "title": "Điều kiện tiên quyết",
       "subtitle": "Các bài học học viên nên hoàn thành trước.",
-      "empty": "Chưa thêm điều kiện tiên quyết nào."
+      "empty": "Chưa thêm điều kiện tiên quyết nào.",
+      "add_label": "Thêm bài học tiên quyết",
+      "add_prompt": "Thêm một bài học tiên quyết…",
+      "no_other_lessons": "Khóa học không còn bài học nào khác",
+      "all_added": "Đã thêm tất cả bài học"
     },
     "toasts": {
       "download_failed": "Tải xuống thất bại",

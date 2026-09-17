@@ -1,13 +1,36 @@
 import { useTranslation } from "react-i18next";
-import { X, BookOpen } from "lucide-react";
+import { X, BookOpen, Info } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { DurationField } from "@/components/ui/duration-field";
 import { LESSON_TYPE_OPTIONS } from "./constants";
 
 interface LessonOption {
   id: string;
   title: string;
   lesson_type: string;
+}
+
+function CompletionRules() {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-xl border border-m3-primary/15 bg-m3-primary-fixed/40 p-4">
+      <div className="flex items-start gap-3">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-m3-primary" />
+        <div className="space-y-2">
+          <h4 className="text-sm font-bold text-m3-primary">
+            {t("teacher_lesson_manage.settings.completion_title")}
+          </h4>
+          <p className="text-xs leading-relaxed text-m3-on-surface-variant">
+            {t("teacher_lesson_manage.settings.completion_auto")}
+          </p>
+          <p className="text-xs leading-relaxed text-m3-on-surface-variant">
+            {t("teacher_lesson_manage.settings.completion_manual")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -38,7 +61,6 @@ export function LessonSettingsSidebar({
 
   return (
     <aside className="col-span-12 lg:col-span-4 space-y-6 lg:sticky lg:top-32 self-start">
-      {/* ── Lesson Settings ── */}
       <div className="bg-m3-surface-container-low rounded-xl p-6 space-y-6 shadow-sm">
         <div>
           <h3 className="font-headline font-bold text-xl text-m3-primary">
@@ -49,26 +71,25 @@ export function LessonSettingsSidebar({
           </p>
         </div>
 
-        {/* Visibility (published/draft) moved to the sticky action bar as
-            the Publish/Unpublish toggle. Lesson Type selector removed —
-            type is fixed at lesson creation (reading/video). */}
-
         {/* Estimated duration */}
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             {t("teacher_lesson_manage.settings.duration_label")}
           </label>
-          <input
-            type="number"
-            min={0}
+          <DurationField
             value={estimatedMinutes}
-            onChange={(e) => onEstimatedMinutesChange(e.target.value)}
-            className="w-full bg-surface-elev border border-m3-outline-variant/20 rounded-xl px-4 py-3 text-sm font-medium text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/20 transition-all"
+            onChange={onEstimatedMinutesChange}
+            initialUnit="minutes"
             placeholder={t(
               "teacher_lesson_manage.settings.duration_placeholder",
             )}
           />
+          <p className="text-[11px] text-m3-on-surface-variant">
+            {t("teacher_lesson_manage.settings.duration_help")}
+          </p>
         </div>
+
+        <CompletionRules />
 
         {/* Difficulty */}
         <div className="space-y-2">
@@ -132,7 +153,8 @@ export function LessonSettingsSidebar({
                 <TypeIcon className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{l.title}</span>
               </div>
-              <Button variant="ghost"
+              <Button
+                variant="ghost"
                 type="button"
                 onClick={() => onTogglePrerequisite(id)}
                 className="shrink-0 p-0.5 rounded-md hover:bg-m3-primary/10 transition-colors cursor-pointer h-auto whitespace-normal"
@@ -143,15 +165,8 @@ export function LessonSettingsSidebar({
           );
         })}
 
-        {/* Lesson selector — pick a lesson to add as a prerequisite.
-            Already-selected lessons are filtered out of the options so the
-            dropdown only offers additions. Resets to the placeholder after
-            each pick (it's an "add" action, not a bound value). */}
         <Select
-          aria-label="Add a prerequisite lesson"
-          // Action picker, not a value holder: it always shows the prompt, and
-          // choosing an entry performs the add then resets. value="" preserves
-          // that behaviour.
+          aria-label={t("teacher_lesson_manage.prerequisites.add_label")}
           value=""
           disabled={available.length === 0}
           onValueChange={(next) => {
@@ -162,20 +177,16 @@ export function LessonSettingsSidebar({
               value: "",
               label:
                 allLessons.length === 0
-                  ? "No other lessons in this course"
+                  ? t("teacher_lesson_manage.prerequisites.no_other_lessons")
                   : available.length === 0
-                    ? "All lessons added"
-                    : "Add a prerequisite lesson…",
+                    ? t("teacher_lesson_manage.prerequisites.all_added")
+                    : t("teacher_lesson_manage.prerequisites.add_prompt"),
             },
             ...available.map((l) => ({ value: l.id, label: l.title })),
           ]}
           className="bg-surface-elev font-medium"
         />
       </div>
-
-      {/* AI Material Hub teaser + danger zone removed: material management
-          now lives inline as "Material history" in the main column, and
-          Archive/Delete moved to the sticky action bar at the top. */}
     </aside>
   );
 }

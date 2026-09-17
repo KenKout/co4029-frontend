@@ -115,6 +115,27 @@ async function apiRequest(path: string, init: RequestInit = {}) {
   return fetch(apiUrl(path), withDefaultHeaders(init));
 }
 
+/**
+ * Call an endpoint that is deliberately open, with no session required.
+ *
+ * `authenticatedFetch` throws "Not authenticated" BEFORE it reaches the
+ * network when there is no stored session. That is right for everything
+ * behind auth and wrong for the handful of endpoints that exist precisely
+ * for people who are not signed in: the policy reader endpoints are
+ * unauthenticated so the terms can be read before an account exists, and
+ * routing them through the authenticated client meant those requests never
+ * left the browser at all. The route was public, the API was public, and the
+ * transport in between refused.
+ *
+ * No Authorization header is attached even when a session does exist. These
+ * endpoints ignore it, so sending one buys nothing and costs the one case
+ * where it matters: a stale token turning a public document into a 401 for a
+ * signed-in reader.
+ */
+export async function publicFetch(path: string, init: RequestInit = {}) {
+  return apiRequest(path, init);
+}
+
 async function getErrorMessage(response: Response) {
   try {
     const payload: unknown = await response.json();

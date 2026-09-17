@@ -22,6 +22,7 @@ export interface AttemptActionsContext {
   passwordGate: PasswordGate;
   focusTime: QuestionFocusTime;
   refs: AttemptSessionRefs;
+  onSessionConflict: (reason: string, attemptId?: string) => void;
 }
 
 /** Commit a freshly started (or restarted) attempt to local session state. */
@@ -78,7 +79,17 @@ function reportCooldown(t: TFunction, err: unknown) {
 export function reportStartFailure(ctx: AttemptActionsContext, err: unknown) {
   const { t, passwordGate } = ctx;
   const reason = extractDetailString(err, "reason");
-  if (reason === "quiz_password_required") {
+  const errorCode = extractDetailString(err, "error");
+  if (
+    err instanceof ApiError &&
+    err.status === 409 &&
+    errorCode === "quiz_attempt_already_in_progress"
+  ) {
+    ctx.onSessionConflict(
+      errorCode,
+      extractDetailString(err, "attempt_id") ?? undefined,
+    );
+  } else if (reason === "quiz_password_required") {
     // Quiz is password-protected — prompt for it (first attempt to start).
     passwordGate.setPasswordError(null);
     passwordGate.setPasswordDialogOpen(true);

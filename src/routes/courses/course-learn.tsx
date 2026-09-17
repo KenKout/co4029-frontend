@@ -1,25 +1,31 @@
-import { useMemo, useState, useEffect } from "react";
-import { Link, useParams } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { ArrowRight, Lock } from "lucide-react";
-import "@vidstack/react/player/styles/base.css";
-import "@vidstack/react/player/styles/default/theme.css";
-import "@vidstack/react/player/styles/default/layouts/video.css";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ApiError } from "@/lib/api/client";
 import { useCourseBySlug, useCourseContent } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
-import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
-import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
 import type {
   InstructorRead,
   LessonPublic,
   ModulePublic,
 } from "@/lib/api/types";
-import { CourseHome } from "./_components/course-learn/CourseHome";
+import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
+import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
+import { Link, useParams } from "@tanstack/react-router";
+import "@vidstack/react/player/styles/base.css";
+import "@vidstack/react/player/styles/default/layouts/video.css";
+import "@vidstack/react/player/styles/default/theme.css";
+import { ArrowRight, Lock } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { CourseHomeProps } from "./_components/course-learn/CourseHome";
+import { CourseHome } from "./_components/course-learn/CourseHome";
 import { CurriculumSidebar } from "./_components/course-learn/CurriculumSidebar";
+import {
+  activeTitleFor,
+  deriveShowHome,
+  earliestPendingItemId,
+  itemStateFor,
+} from "./_components/course-learn/helpers";
 import { InstructorBlock } from "./_components/course-learn/InstructorBlock";
 import { LearnBreadcrumb } from "./_components/course-learn/LearnBreadcrumb";
 import { LessonHeadingBlock } from "./_components/course-learn/LessonHeadingBlock";
@@ -30,13 +36,6 @@ import {
 import { LessonTabsSection } from "./_components/course-learn/LessonTabsSection";
 import { NoLessonsNotice } from "./_components/course-learn/NoLessonsNotice";
 import { ReadingLessonBody } from "./_components/course-learn/ReadingLessonBody";
-import { useTabDeepLink } from "./_components/course-learn/use-tab-deep-link";
-import {
-  activeTitleFor,
-  deriveShowHome,
-  earliestPendingItemId,
-  itemStateFor,
-} from "./_components/course-learn/helpers";
 import type {
   CurriculumProps,
   FlatItem,
@@ -49,15 +48,16 @@ import {
   useMyInterviewProgress,
   useMyQuizProgress,
 } from "./_components/course-learn/use-curriculum";
-import {
-  useActiveLessonContent,
-  useLessonStatusMap,
-} from "./_components/course-learn/use-lesson-content";
+import type { LearnUrlState } from "./_components/course-learn/use-learn-url-state";
 import {
   useApplyDeepLink,
   useLearnUrlState,
 } from "./_components/course-learn/use-learn-url-state";
-import type { LearnUrlState } from "./_components/course-learn/use-learn-url-state";
+import {
+  useActiveLessonContent,
+  useLessonStatusMap,
+} from "./_components/course-learn/use-lesson-content";
+import { useTabDeepLink } from "./_components/course-learn/use-tab-deep-link";
 
 export default function CourseLearnPage() {
   const { slug } = useParams({ strict: false }) as { slug: string };
@@ -105,12 +105,6 @@ export default function CourseLearnPage() {
   );
 }
 
-/**
- * The teaching team shown on the learner page — Course Instructor first, then
- * Teacher Assistants. Newer payloads carry the full `instructors` list; fall
- * back to the single `course.instructor` (treated as the Course Instructor)
- * so nothing breaks on older responses.
- */
 function resolveInstructors(
   course: NonNullable<ReturnType<typeof useCourseBySlug>["data"]>,
 ): InstructorRead[] {
@@ -220,69 +214,11 @@ function CourseLearnLoaded({
     t,
   );
   const inProgressByConfigId = useInProgressInterviewSessions(course.id);
-  // Quiz completion (passed OR failed-with-attempts-exhausted) lets quiz
-  // items participate in auto-collapse + next-item highlighting.
   const quizProgressMap = useMyQuizProgress(course.id);
-  // Interview completion (a PASS on any attempt) lets interview
-  // items show the same completed tag as quizzes and stop blocking a module's
-  // auto-collapse. Called after the quiz hook — this file's hook order is
-  // load-bearing, see use-curriculum.ts.
   const interviewProgressMap = useMyInterviewProgress(course.id);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
-
-  // ── DEV: lock-bypass (commented out) ──
-  // const [devBypassLocks, setDevBypassLocks] = useState(
-  //   () => localStorage.getItem("dev_bypass_locks") === "1"
-  // );
-  // const { data: srOverview } = useCourseSrOverview(course.id);
-  // const lockedLessonIds = useMemo(() => {
-  //   if (devBypassLocks) return new Set<string>();
-  //   const set = new Set<string>();
-  //   for (const row of srOverview ?? []) {
-  //     if (row.eligible === false) set.add(row.lesson_id);
-  //   }
-  //   return set;
-  // }, [srOverview, devBypassLocks]);
-  // const activeLesson = devBypassLocks && !lessonQuery.data && activeEntry?.item.target
-  //   ? (activeEntry.item.target as LessonPublic)
-  //   : (lessonQuery.data ?? null);
-  // const lessonLocked =
-  //   !devBypassLocks &&
-  //   lessonQuery.isError &&
-  //   lessonQuery.error instanceof ApiError &&
-  //   lessonQuery.error.status === 403 &&
-  //   (lessonQuery.error.parsedBody as { detail?: { error?: string } } | null)?.detail?.error ===
-  //     "lesson_locked";
-  // const unlockDetail = (() => {
-  //   if (!lessonLocked) return null;
-  //   const err = lessonQuery.error as ApiError;
-  //   const body = err.parsedBody as {
-  //     detail?: {
-  //       error?: string;
-  //       prerequisites_met?: boolean;
-  //       current_ratio?: number;
-  //       required_ratio?: number;
-  //       total_cards?: number;
-  //       passing_cards?: number;
-  //       interview_pass_required?: boolean;
-  //       interview_passed?: boolean;
-  //       next_unlock_estimate?: string | null;
-  //     };
-  //   } | null;
-  //   const d = body?.detail;
-  //   if (!d) return null;
-  //   const prereqsMet = d.prerequisites_met ?? null;
-  //   const efRatio = d.current_ratio != null && d.required_ratio != null ? { current: d.current_ratio, required: d.required_ratio } : null;
-  //   const totalCards = d.total_cards ?? 0;
-  //   const passingCards = d.passing_cards ?? 0;
-  //   const interviewReq = d.interview_pass_required ?? false;
-  //   const interviewPassed = d.interview_passed ?? false;
-  //   const estimate = d.next_unlock_estimate ?? null;
-  //   return { prereqsMet, efRatio, totalCards, passingCards, interviewReq, interviewPassed, estimate };
-  // })();
-  // ───────────────────────────────────────
 
   const activeEntry = lessonItems[activeIdx] ?? null;
   const { activeLessonId, activeLesson, lessonUnavailable, resources } =
@@ -301,27 +237,6 @@ function CourseLearnLoaded({
     completedCount,
   } = urlState;
 
-  // Course-home landing: when the student arrives WITHOUT a content deep-link
-  // (?t= seek / ?p= page / #anchor), show a course-home overview (progress +
-  // continue button + full curriculum) instead of dropping straight into
-  // lesson 1. Selecting a lesson — or arriving via a deep-link — switches to
-  // the focused player view. This gives students an orientation/"what's next"
-  // surface the cramped sidebar can't, and makes the full curriculum visible
-  // on arrival (the reason the tiny sidebar felt like the only navigation).
-  // DERIVED from the URL rather than held in state.
-  //
-  // This used to be `useState`, kept in sync by hand from openLesson/goHome and
-  // from the ?item restore effect. That produced two bugs:
-  //   1. Clicking the "Learn" crumb appeared to do nothing — router navigation
-  //      is async, and because `lessonItems` isn't referentially stable (it
-  //      derives from `t`), the restore effect re-ran with the still-present
-  //      stale ?item and immediately flipped showHome back to false.
-  //   2. Browser Back only changes the search param (the component stays
-  //      mounted), and nothing flipped showHome back to true — so Back from a
-  //      lesson left the lesson on screen.
-  // Deriving it makes the URL the single source of truth: ?item present = a
-  // lesson is open, absent = course-home. Back/Forward then work for free.
-  // `?tab=` deep-link (discussion notifications land on the Discussion panel).
   useTabDeepLink(search.tab, setActiveTab);
 
   const showHome = deriveShowHome(urlState);
@@ -388,26 +303,6 @@ function CourseLearnLoaded({
           activeTitle={activeTitle}
         />
 
-        {/* ── DEV: lock-bypass toggle (commented out) ──
-        <div className="flex items-center justify-end mb-2">
-          <button
-            onClick={() => {
-              const next = !devBypassLocks;
-              setDevBypassLocks(next);
-              localStorage.setItem("dev_bypass_locks", next ? "1" : "0");
-            }}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition-all",
-              devBypassLocks
-                ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 hover:opacity-90"
-                : "bg-m3-surface-container border-m3-outline text-m3-on-surface-variant hover:bg-primary/10 hover:border-primary/30 hover:text-primary hover:opacity-90"
-            )}
-          >
-            {devBypassLocks ? "🔒 DEV: Locking" : "🔓 DEV: Unlock All"}
-          </button>
-        </div>
-        ─────────────────────────────────────────────── */}
-
         <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-4 sm:gap-6">
             <LessonMainPane
@@ -457,9 +352,6 @@ function CourseLearnLoaded({
             )}
           </div>
 
-          {/* Sidebar curriculum: only in lesson mode. In home mode the
-              main-column CourseHome renders the full curriculum, so showing
-              the sidebar too would duplicate it. */}
           {!showHome && <CurriculumSidebar {...curriculum} />}
         </div>
       </div>
@@ -467,12 +359,6 @@ function CourseLearnLoaded({
   );
 }
 
-/**
- * Lesson selection + history behaviour. Kept in this module (rather than the
- * course-learn component folder) because the navigation regression tests read
- * this file's source to assert that openLesson pushes instead of replacing and
- * that the ?item restore effect only moves activeIdx.
- */
 function useLearnNavigation({
   slug,
   lessonItems,
@@ -490,16 +376,6 @@ function useLearnNavigation({
 }) {
   function openLesson(idx: number) {
     setActiveIdx(idx);
-    // Persist the opened lesson in the URL (?item=<lesson-slug|id>) so that
-    // returning from a quiz/interview sub-route — or refreshing — restores
-    // this content view at the right lesson instead of bouncing back to the
-    // course-home summary (Moodle-authentic resume behavior). Prefers the
-    // breadcrumb slug; falls back to id, then index, when a target predates
-    // slugs or was slimmed out of the tree.
-    //
-    // PUSHES a history entry (no `replace`). With replace:true the plain
-    // /learn entry was overwritten, so Back from a lesson skipped the Learn
-    // page entirely and landed on the course page.
     const opened = lessonItems[idx]?.item.target;
     const openedRef = opened?.slug || opened?.id || String(idx);
     void navigate({
@@ -509,11 +385,6 @@ function useLearnNavigation({
     });
   }
 
-  // Return to the course-home summary: clear ?item= and flip back to the home
-  // view. Backs the clickable "Learn" breadcrumb crumb.
-  //
-  // Clearing ?item is all that's needed now that showHome is derived from the
-  // URL — no local flag to keep in sync, so the async navigation can't race it.
   function goHome() {
     void navigate({
       to: "/courses/$slug/learn",
@@ -522,11 +393,6 @@ function useLearnNavigation({
     });
   }
 
-  // Restore / follow the ?item= param: when it changes (initial mount, browser
-  // back from a quiz, or a deep-link) move activeIdx to the matching lesson and
-  // leave the home view. Matches by slug first (breadcrumb URLs), then by
-  // lesson id, then by numeric index fallback. No-op when the param is absent
-  // so the home landing is preserved.
   useEffect(() => {
     if (!search.item || lessonItems.length === 0) return;
     let idx = lessonItems.findIndex(
@@ -578,72 +444,6 @@ function LessonMainPane({
 }) {
   const { t } = useTranslation();
 
-  // ── DEV: lock overlay (commented out) ──
-  // {lessonLocked ? (
-  //   <GlassCard className="p-8">
-  //     <div className="flex items-start gap-4">
-  //       <Lock className="h-8 w-8 text-m3-outline shrink-0 mt-0.5" />
-  //       <div className="flex-1 min-w-0">
-  //         <p className="font-headline font-bold text-xl text-m3-on-surface mb-4">
-  //           {t("course_learn.lesson_locked_title")}
-  //         </p>
-  //         <div className="flex flex-col gap-2 text-sm text-m3-on-surface-variant text-left">
-  //           {unlockDetail?.prereqsMet === false && (
-  //             <div className="flex items-start gap-2">
-  //               <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-  //               <span>{t("course_learn.gate_prerequisites")}</span>
-  //             </div>
-  //           )}
-  //           {unlockDetail && unlockDetail.efRatio && unlockDetail.totalCards > 0 && (
-  //             <div className="flex items-start gap-2">
-  //               {unlockDetail.efRatio.current >= unlockDetail.efRatio.required ? (
-  //                 <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-  //               ) : (
-  //                 <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-  //               )}
-  //               <div>
-  //                 <span>
-  //                   {t("course_learn.gate_sr_ratio", {
-  //                     passing: unlockDetail.passingCards,
-  //                     total: unlockDetail.totalCards,
-  //                     required: Math.round(unlockDetail.efRatio.required * 100),
-  //                   })}
-  //                 </span>
-  //                 <div className="mt-1.5 w-full max-w-xs h-1.5 bg-m3-surface-variant rounded-full overflow-hidden">
-  //                   <div
-  //                     className="h-full rounded-full transition-all"
-  //                     style={{
-  //                       width: `${Math.min(100, (unlockDetail.efRatio.current / unlockDetail.efRatio.required) * 100)}%`,
-  //                       backgroundColor: unlockDetail.efRatio.current >= unlockDetail.efRatio.required
-  //                         ? "#4caf50"
-  //                         : "#f97316",
-  //                     }}
-  //                   />
-  //                 </div>
-  //               </div>
-  //             </div>
-  //           )}
-  //           {unlockDetail?.interviewReq && (
-  //             <div className="flex items-start gap-2">
-  //               {unlockDetail.interviewPassed ? (
-  //                 <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-  //               ) : (
-  //                 <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-  //               )}
-  //               <span>{t("course_learn.gate_interview")}</span>
-  //             </div>
-  //           )}
-  //           {unlockDetail?.estimate && (
-  //             <p className="mt-3 pt-3 border-t border-m3-outline-variant text-m3-on-surface font-medium">
-  //               {unlockDetail.estimate}
-  //             </p>
-  //           )}
-  //         </div>
-  //       </div>
-  //     </div>
-  //   </GlassCard>
-  // ) : ...}
-  // ───────────────────────────────────────
   return showHome ? (
     <CourseHome {...homeProps} />
   ) : lessonUnavailable ? (
@@ -680,35 +480,31 @@ function ReadingLessonPane({
   const streamQuery = useStreamUrl(materialId);
   const streamUrl = streamQuery.data?.url ?? null;
   const materialVersionId = streamQuery.data?.material_version_id ?? null;
+  const readingContentRef = useRef<HTMLDivElement>(null);
 
   useLessonEngagementTracker({
     materialVersionId,
     lessonId: lesson.id,
     courseId,
+    contentRef: readingContentRef,
   });
 
   return (
-    // space-y-6 here rather than relying on the parent: the pane now emits two
-    // sibling sections (Reading + Knowledge map) and owns the gap between them.
     <div className="space-y-6">
-      <GlassCard
-        className="p-6 sm:p-8 space-y-6"
-        data-testid="course-learn-reading"
-      >
-        <ReadingLessonBody
-          lesson={lesson}
-          materialId={materialId}
-          streamUrl={streamUrl}
-          isLoading={streamQuery.isLoading}
-          t={t}
-        />
-      </GlassCard>
-
-      {/* Teacher-published knowledge map — its own section, sibling to the
-          Reading card rather than nested inside it: it describes the lesson's
-          concepts, not the reading material, and burying it under the document
-          made it read as part of that content. Renders nothing when no graph
-          has been published for this lesson. */}
+      <div ref={readingContentRef}>
+        <GlassCard
+          className="p-6 sm:p-8 space-y-6"
+          data-testid="course-learn-reading"
+        >
+          <ReadingLessonBody
+            lesson={lesson}
+            materialId={materialId}
+            streamUrl={streamUrl}
+            isLoading={streamQuery.isLoading}
+            t={t}
+          />
+        </GlassCard>
+      </div>
       <LessonKnowledgeMap lessonId={lesson.id} />
     </div>
   );

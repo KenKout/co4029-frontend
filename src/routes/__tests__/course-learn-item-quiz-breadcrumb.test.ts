@@ -35,6 +35,17 @@ describe("quiz taking hides the breadcrumb", () => {
     expect(branch).not.toMatch(/^\s*\{breadcrumb\}/m);
   });
 
+  it("the unified route applies the quiz session blocker", () => {
+    const inner = SRC.slice(
+      SRC.indexOf("function QuizProxyInner"),
+      SRC.indexOf("function InterviewProxy"),
+    );
+    const guardAt = inner.indexOf("getQuizBlockingStage({ session, slug })");
+    const resultAt = inner.indexOf("if (submittedSummary)");
+    expect(guardAt).toBeGreaterThan(-1);
+    expect(guardAt).toBeLessThan(resultAt);
+  });
+
   it("the in-progress branch renders QuizTakingStage without the breadcrumb", () => {
     const inner = SRC.slice(
       SRC.indexOf("function QuizProxyInner"),

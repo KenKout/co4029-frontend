@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { apiFetch, apiPatch, apiPost, apiPut } from "../client";
+import { apiFetch, apiFetchPublic, apiPatch, apiPost, apiPut } from "../client";
 import { queryKeys } from "../query-keys";
 
 /**
@@ -9,7 +9,12 @@ import { queryKeys } from "../query-keys";
  * These replaced five hardcoded `PolicyDocument` constants in
  * `lib/help-content.ts`. The reader-facing endpoints are deliberately
  * unauthenticated — the terms must be readable before an account exists — so
- * the hooks below never require a session.
+ * the two reader hooks go through `apiFetchPublic`. They used to call
+ * `apiFetch`, which requires a stored session and throws before reaching the
+ * network without one: signed out, the request never left the browser even
+ * though both the route and the endpoint were public.
+ *
+ * The admin hooks below stay on `apiFetch` — those endpoints are gated.
  */
 
 export type PolicyCategory = "legal" | "academic";
@@ -65,6 +70,24 @@ export interface PolicyDetail {
 
 const DEFAULT_LANGUAGE = "en";
 
+/**
+ * Reader-side cache policy, deliberately far longer than the 60s global
+ * default in `lib/queryClient.ts`.
+ *
+ * A published policy changes when an admin publishes a new version, which is
+ * a handful of times a year — and when it does, `usePublishPolicyVersion`
+ * invalidates the whole `["policies"]` prefix, so the person who made the
+ * change sees it immediately rather than waiting this out.
+ *
+ * `gcTime` is the half that actually matters. These are PUBLIC endpoints: no
+ * session, no rate limit, and `/policies/{slug}` costs three queries a call
+ * (the policy, its published version, and the publisher's name). The default
+ * 5-minute collection means a reader bouncing between the index and a
+ * document re-fetches all of it; an hour covers a realistic visit.
+ */
+const READER_STALE_MS = 1000 * 60 * 30;
+const READER_GC_MS = 1000 * 60 * 60;
+
 // ---------------------------------------------------------------------------
 // Reader
 // ---------------------------------------------------------------------------
@@ -83,8 +106,10 @@ export function usePolicies(roles: string[], language = DEFAULT_LANGUAGE) {
       const params = new URLSearchParams();
       for (const role of roles) params.append("role", role);
       params.set("language", language);
-      return apiFetch<PolicySummary[]>(`/policies?${params.toString()}`);
+      return apiFetchPublic<PolicySummary[]>(`/policies?${params.toString()}`);
     },
+    staleTime: READER_STALE_MS,
+    gcTime: READER_GC_MS,
   });
 }
 
@@ -92,10 +117,12 @@ export function usePolicy(slug: string | undefined, language = DEFAULT_LANGUAGE)
   return useQuery({
     queryKey: queryKeys.policies.bySlug(slug ?? "", language),
     queryFn: () =>
-      apiFetch<PolicyDocument>(
+      apiFetchPublic<PolicyDocument>(
         `/policies/${encodeURIComponent(slug!)}?language=${encodeURIComponent(language)}`,
       ),
     enabled: !!slug,
+    staleTime: READER_STALE_MS,
+    gcTime: READER_GC_MS,
   });
 }
 

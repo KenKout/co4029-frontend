@@ -1,5 +1,7 @@
 import type { LearningMaterial, LessonRead } from "@/lib/api/types/teacher";
 
+export const DEFAULT_LESSON_ESTIMATED_MINUTES = 10;
+
 /* ── Downloadable-resource type, keyed off the uploaded file's extension ── */
 
 export type LessonResourceType =
@@ -74,7 +76,9 @@ export function lessonServerSnapshot(lesson: LessonRead): LessonFieldSnapshot {
     lessonType: lesson.lesson_type ?? "video",
     status: lesson.status === "published" ? "published" : "draft",
     difficulty: lesson.difficulty ?? "intermediate",
-    estimatedMinutes: lesson.estimated_minutes?.toString() ?? "",
+    estimatedMinutes: String(
+      lesson.estimated_minutes ?? DEFAULT_LESSON_ESTIMATED_MINUTES,
+    ),
     notes: lesson.notes_markdown ?? "",
   };
 }

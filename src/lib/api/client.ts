@@ -1,4 +1,10 @@
-import { authenticatedFetch, setMfaRequired } from "../auth";
+import { authenticatedFetch, publicFetch, setMfaRequired } from "../auth";
+
+/**
+ * The transport an `apiJson` call rides on. Every helper here defaults to
+ * the authenticated one; only the deliberately-open endpoints opt out.
+ */
+type Fetcher = (path: string, init?: RequestInit) => Promise<Response>;
 
 export class ApiError extends Error {
   status: number;
@@ -53,8 +59,12 @@ async function readError(res: Response) {
   return err;
 }
 
-async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await authenticatedFetch(path, init);
+async function apiJson<T>(
+  path: string,
+  init?: RequestInit,
+  fetcher: Fetcher = authenticatedFetch,
+): Promise<T> {
+  const res = await fetcher(path, init);
 
   if (!res.ok) {
     throw await readError(res);
@@ -79,6 +89,22 @@ async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function apiFetch<T>(path: string): Promise<T> {
   return apiJson<T>(path);
+}
+
+/**
+ * GET an endpoint that does not require a session.
+ *
+ * Same error handling as {@link apiFetch} — only the transport differs, so a
+ * public endpoint still raises {@link ApiError} with a parsed code rather
+ * than a bare network rejection.
+ *
+ * Reserved for endpoints the backend serves unauthenticated ON PURPOSE. It is
+ * not a way around a 401: pointed at a protected endpoint it simply fails
+ * without the Authorization header, and it loses the refresh-and-retry that
+ * {@link apiFetch} does for an expired token.
+ */
+export function apiFetchPublic<T>(path: string): Promise<T> {
+  return apiJson<T>(path, undefined, publicFetch);
 }
 
 export function apiPost<T>(

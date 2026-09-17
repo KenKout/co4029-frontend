@@ -2,57 +2,10 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 import { scrollToLandingAnchor } from "./landing-scroll";
 import { useLandingCopy } from "./use-landing-copy";
-
-function LanguageChoice({
-  mobile = false,
-  onSelect,
-}: {
-  mobile?: boolean;
-  onSelect?: () => void;
-}) {
-  const { c, language, i18n } = useLandingCopy();
-  return (
-    <div
-      className={cn(
-        "items-center gap-2",
-        mobile
-          ? "mt-2 flex border-t border-border px-3 pt-3"
-          : "hidden rounded-lg border border-border bg-muted/60 p-0.5 sm:flex",
-      )}
-      role="group"
-      aria-label={c.nav.language}
-    >
-      {(["vi", "en"] as const).map((locale) => (
-        <Button
-          key={locale}
-          type="button"
-          variant={mobile && language === locale ? "secondary" : "ghost"}
-          aria-pressed={language === locale}
-          onClick={() => {
-            void i18n.changeLanguage(locale);
-            onSelect?.();
-          }}
-          className={cn(
-            mobile ? "h-9 px-3" : "h-8 min-w-9 px-2",
-            "text-xs font-bold",
-            !mobile &&
-              language === locale &&
-              "bg-background text-primary shadow-sm",
-          )}
-        >
-          {mobile
-            ? locale === "vi"
-              ? "Tiếng Việt"
-              : "English"
-            : locale.toUpperCase()}
-        </Button>
-      ))}
-    </div>
-  );
-}
 
 export default function LandingNav() {
   const [open, setOpen] = useState(false);
@@ -101,7 +54,9 @@ export default function LandingNav() {
           ))}
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
-          <LanguageChoice />
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           <Link
             to="/login"
             search={{ next: undefined }}
@@ -166,7 +121,9 @@ export default function LandingNav() {
         >
           {c.nav.workflow}
         </a>
-        <LanguageChoice mobile onSelect={() => setOpen(false)} />
+        <div className="mt-2 border-t border-border px-1 pt-3">
+          <LanguageSwitcher onLanguageChange={() => setOpen(false)} />
+        </div>
       </nav>
     </header>
   );

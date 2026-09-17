@@ -63,8 +63,11 @@ export function useQuizAttemptSession(quizId: string) {
   // intro/history and (b) fell through to POSTing a fresh attempt on the loser
   // of the race — which is how a quiz accumulated empty in_progress duplicates.
   const [resumeRequested, setResumeRequested] = useState(false);
+  const [sessionConflict, setSessionConflict] = useState<string | null>(null);
+  const [conflictAttemptId, setConflictAttemptId] = useState<string | null>(null);
+  const resumableAttemptId = inProgressAttempt?.id ?? conflictAttemptId;
   const attemptProgress = useQuizAttemptProgress(
-    resumeRequested ? (inProgressAttempt?.id ?? null) : null,
+    resumeRequested ? resumableAttemptId : null,
   );
 
   const state = useAttemptSessionState();
@@ -75,11 +78,17 @@ export function useQuizAttemptSession(quizId: string) {
   );
   const guardedAttemptId = submittedSummary
     ? null
-    : activeAttemptId ?? inProgressAttempt?.id ?? null;
+    : activeAttemptId ?? inProgressAttempt?.id ?? conflictAttemptId;
   const tabGuard = useQuizAttemptTabGuard(quizId, guardedAttemptId);
-  const claimSession = useClaimQuizAttemptSession(inProgressAttempt?.id);
-  const takeoverSession = useTakeoverQuizAttemptSession(inProgressAttempt?.id);
-  const [sessionConflict, setSessionConflict] = useState<string | null>(null);
+  const claimSession = useClaimQuizAttemptSession(resumableAttemptId);
+  const takeoverSession = useTakeoverQuizAttemptSession(resumableAttemptId);
+  const handleSessionConflict = useCallback(
+    (reason: string, attemptId?: string) => {
+      setSessionConflict(reason);
+      setConflictAttemptId(attemptId ?? null);
+    },
+    [],
+  );
 
   // --- Per-question attention timing ---------------------------------------
   // Replaces the old "elapsed since first seen" measure, which only held when
@@ -177,10 +186,11 @@ export function useQuizAttemptSession(quizId: string) {
     ensureCamera: camera.ensureActive,
     stopCamera: camera.stop,
     requireCamera: Boolean(quiz?.require_camera),
+    onSessionConflict: handleSessionConflict,
   });
 
   const requestResume = useCallback(async () => {
-    if (!inProgressAttempt) return;
+    if (!resumableAttemptId) return;
     if (camera.required && !(await camera.ensureActive())) return;
     void fullscreen.enter();
     try {
@@ -196,10 +206,10 @@ export function useQuizAttemptSession(quizId: string) {
         );
       }
     }
-  }, [camera, claimSession, fullscreen, inProgressAttempt]);
+  }, [camera, claimSession, fullscreen, resumableAttemptId]);
 
   const takeoverAndResume = useCallback(async () => {
-    if (!inProgressAttempt) return;
+    if (!resumableAttemptId) return;
     if (camera.required && !(await camera.ensureActive())) return;
     void fullscreen.enter();
     try {
@@ -211,7 +221,7 @@ export function useQuizAttemptSession(quizId: string) {
         setSessionConflict("quiz_session_guard_unavailable");
       }
     }
-  }, [camera, fullscreen, inProgressAttempt, takeoverSession]);
+  }, [camera, fullscreen, resumableAttemptId, takeoverSession]);
 
   const handleExit = useCallback(async () => {
     await actions.handleSaveOnly();
@@ -227,13 +237,15 @@ export function useQuizAttemptSession(quizId: string) {
     state.setStatuses([]);
     state.setSubmittedSummary(null);
     setResumeRequested(false);
+    setSessionConflict(null);
+    setConflictAttemptId(null);
   }, [actions.handleSaveOnly, camera, fullscreen, state, tabGuard]);
 
   // Once the user clicks Resume, hold on the skeleton while the resume payload
   // loads instead of flashing the intro panel before hydrating.
   const resuming =
     resumeRequested &&
-    !!inProgressAttempt &&
+    !!resumableAttemptId &&
     attemptProgress.isLoading &&
     !taking;
 

@@ -72,25 +72,6 @@ function itemIsCompleted(
   }
 }
 
-/**
- * Curriculum row state for a flattened item. Extracted from the page shell so
- * the shell only has to close over the two values the decision depends on.
- *
- * Completion WINS over the "currently open" affordance: a completed lesson
- * must read as done (green check), not as the in-progress blue bar — the
- * user's eye should land on what's left, and a done row that stays
- * highlighted reads as "still to do" (bug report 2026-08-04: completed
- * Introduction stayed blue for 30+ min). Quiz items are "completed" when
- * the per-quiz progress map says so — passed the teacher's milestone OR
- * failed with every allowed attempt consumed (``QuizProgressRead.completed``).
- *
- * Interview items are "completed" when the per-interview progress map says so,
- * which — unlike quizzes — means PASSED and nothing else (user decision
- * 2026-08-06; see ``InterviewProgressRead``). A student who has attempted an
- * interview and not passed it stays ``pending``, because the tag is meant to
- * read as "đạt". Both progress maps are optional so a caller that has not
- * loaded them yet degrades to the previous behaviour rather than throwing.
- */
 export function itemStateFor(
   fi: FlatItem,
   activeLessonId: string | undefined,

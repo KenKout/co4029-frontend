@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { hasMultipleAttempts } from "./settings-insights";
  * Scoring section: passing score, time limit, headline-grade policy. Frozen
  * once the quiz is published. Extracted from SettingsTab verbatim.
  */
-export function SettingsScoringSection({
+function SettingsScoringSectionComponent({
   draft,
   update,
   locked,
@@ -22,7 +23,10 @@ export function SettingsScoringSection({
   const { t } = useTranslation();
 
   return (
-    <SettingsSection title={t("teacher_quiz_manage.settings.scoring.title")}>
+    <SettingsSection
+      id="quiz-settings-scoring"
+      title={t("teacher_quiz_manage.settings.scoring.title")}
+    >
       <LockableSection locked={locked}>
         <Field
           label={
@@ -31,7 +35,9 @@ export function SettingsScoringSection({
                 {t("teacher_quiz_manage.settings.scoring.pass_score")}
               </span>
               <span className="text-m3-primary font-extrabold text-sm">
-                {Number.isFinite(draft.passing_score_percent) ? `${draft.passing_score_percent}%` : "—"}
+                {Number.isFinite(draft.passing_score_percent)
+                  ? `${draft.passing_score_percent}%`
+                  : "—"}
               </span>
             </span>
           }
@@ -42,57 +48,92 @@ export function SettingsScoringSection({
             min={0}
             max={100}
             step={5}
-            value={Number.isFinite(draft.passing_score_percent) ? draft.passing_score_percent : 0}
+            value={
+              Number.isFinite(draft.passing_score_percent)
+                ? draft.passing_score_percent
+                : 0
+            }
             onChange={(e) =>
               update("passing_score_percent", Number(e.target.value))
             }
             className="w-full h-2 rounded-full cursor-pointer accent-[var(--m3-primary)]"
           />
           <Input
+            id="quiz-setting-passing-score"
             aria-label={t("teacher_quiz_manage.settings.assist.precise_score")}
-            type="number" min={0} max={100} step={0.01} required
-            value={Number.isFinite(draft.passing_score_percent) ? draft.passing_score_percent : ""}
-            onChange={(e) => update("passing_score_percent", e.target.valueAsNumber)}
+            type="number"
+            min={0}
+            max={100}
+            step={0.01}
+            required
+            value={
+              Number.isFinite(draft.passing_score_percent)
+                ? draft.passing_score_percent
+                : ""
+            }
+            onChange={(e) =>
+              update("passing_score_percent", e.target.valueAsNumber)
+            }
             endAdornment="%"
           />
         </Field>
-        {hasMultipleAttempts(draft) ? <Field
-          label={t("teacher_quiz_manage.settings.scoring.grading_method_label")}
-          hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
-        >
-          <Select<SettingsDraft["grading_method"]>
-            value={draft.grading_method}
-            onValueChange={(next) => update("grading_method", next)}
-            options={[
-              {
-                value: "highest",
-                label: t(
-                  "teacher_quiz_manage.settings.scoring.grading_method_highest",
-                ),
-              },
-              {
-                value: "average",
-                label: t(
-                  "teacher_quiz_manage.settings.scoring.grading_method_average",
-                ),
-              },
-              {
-                value: "first",
-                label: t(
-                  "teacher_quiz_manage.settings.scoring.grading_method_first",
-                ),
-              },
-              {
-                value: "last",
-                label: t(
-                  "teacher_quiz_manage.settings.scoring.grading_method_last",
-                ),
-              },
-            ]}
-            className="w-full"
-          />
-        </Field> : <p className="text-xs text-m3-on-surface-variant">{t("teacher_quiz_manage.settings.assist.single_attempt_grading")}</p>}
+        {hasMultipleAttempts(draft) ? (
+          <Field
+            label={t(
+              "teacher_quiz_manage.settings.scoring.grading_method_label",
+            )}
+            hint={t("teacher_quiz_manage.settings.scoring.grading_method_hint")}
+          >
+            <Select<SettingsDraft["grading_method"]>
+              id="quiz-setting-grading-method"
+              value={draft.grading_method}
+              onValueChange={(next) => update("grading_method", next)}
+              options={[
+                {
+                  value: "highest",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_highest",
+                  ),
+                },
+                {
+                  value: "average",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_average",
+                  ),
+                },
+                {
+                  value: "first",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_first",
+                  ),
+                },
+                {
+                  value: "last",
+                  label: t(
+                    "teacher_quiz_manage.settings.scoring.grading_method_last",
+                  ),
+                },
+              ]}
+              className="w-full"
+            />
+          </Field>
+        ) : (
+          <p className="text-xs text-m3-on-surface-variant">
+            {t("teacher_quiz_manage.settings.assist.single_attempt_grading")}
+          </p>
+        )}
       </LockableSection>
     </SettingsSection>
   );
 }
+
+export const SettingsScoringSection = memo(
+  SettingsScoringSectionComponent,
+  (previous, next) =>
+    previous.update === next.update &&
+    previous.locked === next.locked &&
+    previous.draft.passing_score_percent === next.draft.passing_score_percent &&
+    previous.draft.allow_retakes === next.draft.allow_retakes &&
+    previous.draft.max_attempts === next.draft.max_attempts &&
+    previous.draft.grading_method === next.draft.grading_method,
+);

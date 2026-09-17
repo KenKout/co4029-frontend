@@ -302,12 +302,6 @@ function CourseProgress({
  * "enrollment required" state instead of a link into the learn page.
  */
 
-/**
- * Derived course level from career-path placement (user decision 2026-08-18):
- * the level is no longer user-set — it's the course's stage on its path,
- * shown as "Stage N — <title>". Uses the FIRST placement; "+ n more" when the
- * course also sits on other paths. Null when the course is on no path.
- */
 function courseStageLabel(
   careerPaths: CourseCareerPlacementPublic[] | undefined,
   t: TFunction,

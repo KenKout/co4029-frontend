@@ -3,5 +3,15 @@ Allow: /
 Disallow: /admin
 Disallow: /teacher
 Disallow: /api/
+Disallow: /auth/
+Disallow: /catalog/
+Disallow: /dashboard
+Disallow: /courses
+Disallow: /help
+Disallow: /login
+Disallow: /management
+Disallow: /me/
+Disallow: /notifications
+Disallow: /settings
 
 Sitemap: https://abridgeai.tech/sitemap.xml

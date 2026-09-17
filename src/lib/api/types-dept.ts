@@ -8,23 +8,8 @@
  * file a type lives in.
  */
 
-/**
- * Course-scoped teacher title (user decision 2026-08-18, "no catalog logic
- * for titles"): exactly one Course Instructor, everyone else a Teacher
- * Assistant.
- */
 export type CourseTeacherRole = "course_instructor" | "teacher_assistant";
 
-/**
- * A teacher assigned to a course, with their course-scoped title flags.
- *
- * Hand-authored (same layering as `CourseContactFields` in `types.ts`): the
- * committed openapi snapshot predates the teacher-titles change. Kept in
- * sync with the backend `TeacherAssignmentRead` schema until a coordinated
- * snapshot refresh. Both flags true = one teacher holding both titles
- * (user decision 2026-08-30); the backend guarantees at least one is true
- * for every course-scoped teacher row.
- */
 export interface TeacherAssignmentRead {
   user_id: string;
   display_name: string;

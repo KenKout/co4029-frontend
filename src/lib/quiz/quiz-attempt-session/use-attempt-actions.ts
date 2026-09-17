@@ -135,6 +135,7 @@ export function useAttemptActions(args: {
   ensureCamera: () => Promise<boolean>;
   stopCamera: () => void;
   requireCamera: boolean;
+  onSessionConflict: (reason: string, attemptId?: string) => void;
   /**
    * Request the mandatory fullscreen gate. Must be called from the start
    * click itself — browsers grant `requestFullscreen()` only under a user
@@ -158,6 +159,7 @@ export function useAttemptActions(args: {
     ensureCamera,
     stopCamera,
     requireCamera,
+    onSessionConflict,
   } = args;
   const { activeIdx, activeAttemptId, statuses } = state;
   const { passwordInput } = passwordGate;
@@ -171,6 +173,7 @@ export function useAttemptActions(args: {
     passwordGate,
     focusTime,
     refs,
+    onSessionConflict,
   };
 
   const handleStartAttempt = useCallback(
@@ -201,6 +204,7 @@ export function useAttemptActions(args: {
       ensureCamera,
       stopCamera,
       requireCamera,
+      onSessionConflict,
       t,
     ],
   );

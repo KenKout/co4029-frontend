@@ -23,9 +23,6 @@ export interface CourseFormValues {
   estimated_minutes: string;
   /** Chosen in the teacher picker; assigned after the course row exists. */
   teacherIds: string[];
-  /** Course-scoped title flags per selected teacher id (both may be true —
-   *  user decision 2026-08-30). Persisted in the draft so a resumed
-   *  submission re-assigns with the same titles. */
   teacherTitles?: Record<string, TeacherTitles>;
 }
 

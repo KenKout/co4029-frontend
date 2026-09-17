@@ -14,7 +14,13 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useUpdateProfile } from "@/lib/api/hooks/auth";
 
-export default function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  onLanguageChange?: () => void;
+}
+
+export default function LanguageSwitcher({
+  onLanguageChange,
+}: LanguageSwitcherProps = {}) {
   const { i18n, t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const updateProfile = useUpdateProfile();
@@ -24,12 +30,8 @@ export default function LanguageSwitcher() {
 
   const handleChange = (lng: SupportedLocale) => {
     void i18n.changeLanguage(lng);
-    // Persist server-side for signed-in users so the choice follows them
-    // across devices AND so backend notification dispatch can render
-    // title/body in this language. Fire-and-forget: i18next already
-    // switched the UI; a failed PATCH just means the server keeps the
-    // old preference (best-effort, no toast to avoid noise on a passive
-    // toggle). Skip entirely when unauthenticated — no profile to write.
+    onLanguageChange?.();
+    // Persist signed-in users' choice for future sessions and notifications.
     if (isAuthenticated && lng !== current) {
       updateProfile.mutate({ locale: lng });
     }

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import type { SettingsDraft, SettingsUpdate } from "./types";
  * Attempts section: the retake switch plus the max-attempts / cooldown pair it
  * reveals. Frozen once published. Extracted from SettingsTab verbatim.
  */
-export function SettingsAttemptsSection({
+function SettingsAttemptsSectionComponent({
   draft,
   update,
   locked,
@@ -25,9 +26,13 @@ export function SettingsAttemptsSection({
   const { t } = useTranslation();
 
   return (
-    <SettingsSection title={t("teacher_quiz_manage.settings.attempts.title")}>
+    <SettingsSection
+      id="quiz-settings-attempts"
+      title={t("teacher_quiz_manage.settings.attempts.title")}
+    >
       <LockableSection locked={locked}>
         <ToggleRow
+          id="quiz-setting-allow-retakes"
           label={t("teacher_quiz_manage.settings.attempts.allow_label")}
           description={t("teacher_quiz_manage.settings.attempts.allow_desc")}
           value={draft.allow_retakes}
@@ -40,6 +45,7 @@ export function SettingsAttemptsSection({
               hint={t("teacher_quiz_manage.settings.attempts.max_hint")}
             >
               <Input
+                id="quiz-setting-max-attempts"
                 type="number"
                 min={1}
                 value={draft.max_attempts}
@@ -57,7 +63,9 @@ export function SettingsAttemptsSection({
                 type="number"
                 min={0}
                 value={draft.cooldown_hours}
-                endAdornment={t("teacher_quiz_manage.settings.assist.hour_unit")}
+                endAdornment={t(
+                  "teacher_quiz_manage.settings.assist.hour_unit",
+                )}
                 onChange={(e) => update("cooldown_hours", e.target.value)}
                 placeholder={t(
                   "teacher_quiz_manage.settings.attempts.cooldown_placeholder",
@@ -70,3 +78,13 @@ export function SettingsAttemptsSection({
     </SettingsSection>
   );
 }
+
+export const SettingsAttemptsSection = memo(
+  SettingsAttemptsSectionComponent,
+  (previous, next) =>
+    previous.update === next.update &&
+    previous.locked === next.locked &&
+    previous.draft.allow_retakes === next.draft.allow_retakes &&
+    previous.draft.max_attempts === next.draft.max_attempts &&
+    previous.draft.cooldown_hours === next.draft.cooldown_hours,
+);

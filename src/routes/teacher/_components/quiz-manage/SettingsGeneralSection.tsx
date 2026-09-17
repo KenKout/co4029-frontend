@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import type { SettingsDraft, SettingsUpdate } from "./types";
  * General section of the settings form: title + description. Stays editable on
  * a published quiz. Extracted from SettingsTab verbatim.
  */
-export function SettingsGeneralSection({
+function SettingsGeneralSectionComponent({
   draft,
   update,
 }: {
@@ -43,9 +44,16 @@ export function SettingsGeneralSection({
           placeholder={t(
             "teacher_quiz_manage.settings.general.desc_placeholder",
           )}
-          
         />
       </Field>
     </SettingsSection>
   );
 }
+
+export const SettingsGeneralSection = memo(
+  SettingsGeneralSectionComponent,
+  (previous, next) =>
+    previous.update === next.update &&
+    previous.draft.title === next.draft.title &&
+    previous.draft.description === next.draft.description,
+);

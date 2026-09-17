@@ -9872,7 +9872,7 @@ export interface components {
          *     (``interview_sessions.pass_verdict``), but the verdict never reached the
          *     curriculum, so an interview item stayed pending forever.
          *
-         *     Completion rule (user decision, 2026-08-06): completed ⟺ at least one
+         *     Completion rule: completed ⟺ at least one
          *     attempt has ``pass_verdict = TRUE``. This is intentionally
          *     STRICTER than the quiz rule, which also completes on "failed with every
          *     attempt consumed": here the tag is meant to read as *passed*, so a student

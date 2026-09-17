@@ -4887,6 +4887,8 @@
         "shuffle_o_desc": "Randomize option order within each question.",
         "show_hints_label": "Show hints",
         "show_hints_desc": "Let students view hints while attempting.",
+        "require_camera_label": "Require camera",
+        "require_camera_desc": "Require students to enable their camera while taking the quiz.",
         "reminders_label": "Review reminders",
         "reminders_desc": "Send a reminder when review is due."
       },
@@ -4948,6 +4950,11 @@
         "hour_unit": "hours",
         "unlimited": "Unlimited",
         "not_set": "Not set",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "mastery_mode": "Mastery mode",
+        "custom": "Custom",
+        "password_set": "Password configured",
         "integrity_formula": "Integrity score = tab switches × {{tab}} + focus losses × {{focus}} + fullscreen exits × {{exit}}. Warning threshold: {{threshold}} points.",
         "feedback_confirm": "Replace the saved feedback bands with the ranges and messages currently shown? Other quiz settings will not be saved.",
         "load_failed": "Could not load this section. Retry before editing.",
@@ -5816,8 +5823,12 @@
     "settings": {
       "title": "Lesson Settings",
       "subtitle": "Duration and difficulty shown to students.",
-      "duration_label": "Required Duration (minutes)",
-      "duration_placeholder": "e.g. 24",
+      "duration_label": "Estimated duration",
+      "duration_placeholder": "e.g. 10",
+      "duration_help": "Defaults to 10 minutes when no duration has been set.",
+      "completion_title": "Completion rules",
+      "completion_auto": "A lesson completes automatically once the student reaches this estimated duration in active time, or reaches the end of the material — whichever comes first. Completed lessons display 100%.",
+      "completion_manual": "Students can mark a lesson complete or undo completion. After an undo, new engagement can automatically complete it again.",
       "difficulty_label": "Difficulty Level",
       "difficulty_beginner": "Beginner",
       "difficulty_intermediate": "Intermediate",
@@ -5826,7 +5837,11 @@
     "prerequisites": {
       "title": "Prerequisites",
       "subtitle": "Lessons students should complete first.",
-      "empty": "No prerequisites added."
+      "empty": "No prerequisites added.",
+      "add_label": "Add a prerequisite lesson",
+      "add_prompt": "Add a prerequisite lesson…",
+      "no_other_lessons": "No other lessons in this course",
+      "all_added": "All lessons added"
     },
     "toasts": {
       "download_failed": "Download failed",

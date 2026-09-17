@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import type { SettingsDraft, SettingsUpdate } from "./types";
  * published quiz — extending a deadline or shifting the open/close window
  * doesn't disrupt a live attempt. Extracted from SettingsTab verbatim.
  */
-export function SettingsScheduleSection({
+function SettingsScheduleSectionComponent({
   draft,
   update,
   locked = false,
@@ -24,10 +25,15 @@ export function SettingsScheduleSection({
 
   return (
     <SettingsSection
+      id="quiz-settings-schedule"
       title={t("teacher_quiz_manage.settings.schedule.title")}
       description={t("teacher_quiz_manage.settings.schedule.description")}
     >
-      <p className="text-xs text-m3-on-surface-variant">{t("teacher_quiz_manage.settings.assist.timezone", { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</p>
+      <p className="text-xs text-m3-on-surface-variant">
+        {t("teacher_quiz_manage.settings.assist.timezone", {
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        })}
+      </p>
       {/* All three date pickers share one 2-col grid so they line up on a
           common left edge and column width. The inputs are w-full so each
           fills its cell uniformly (previously "due" was a fixed sm:w-72,
@@ -38,6 +44,7 @@ export function SettingsScheduleSection({
           hint={t("teacher_quiz_manage.settings.schedule.open_hint")}
         >
           <Input
+            id="quiz-setting-available-from"
             type="datetime-local"
             value={draft.available_from}
             max={draft.available_until || undefined}
@@ -50,6 +57,7 @@ export function SettingsScheduleSection({
           hint={t("teacher_quiz_manage.settings.schedule.close_hint")}
         >
           <Input
+            id="quiz-setting-available-until"
             type="datetime-local"
             value={draft.available_until}
             aria-invalid={settingsErrors(draft).includes("close_before_open")}
@@ -70,15 +78,33 @@ export function SettingsScheduleSection({
           />
         </Field>
       </div>
-      {settingsErrors(draft).includes("close_before_open") && <p role="alert" className="text-sm text-m3-error">{t("teacher_quiz_manage.settings.assist.close_before_open")}</p>}
+      {settingsErrors(draft).includes("close_before_open") && (
+        <p role="alert" className="text-sm text-m3-error">
+          {t("teacher_quiz_manage.settings.assist.close_before_open")}
+        </p>
+      )}
       <LockableSection locked={locked}>
         <div className="space-y-4">
-          <Field label={t("teacher_quiz_manage.settings.scoring.time_label")} hint={t("teacher_quiz_manage.settings.scoring.time_hint")}>
-            <Input type="number" min={1 / 60} max={180} step="any" value={draft.time_limit_minutes}
+          <Field
+            label={t("teacher_quiz_manage.settings.scoring.time_label")}
+            hint={t("teacher_quiz_manage.settings.scoring.time_hint")}
+          >
+            <Input
+              type="number"
+              min={1 / 60}
+              max={180}
+              step="any"
+              value={draft.time_limit_minutes}
+              id="quiz-setting-time-limit"
               aria-label={t("teacher_quiz_manage.settings.scoring.time_label")}
               onChange={(e) => update("time_limit_minutes", e.target.value)}
-              placeholder={t("teacher_quiz_manage.settings.scoring.time_placeholder")}
-              endAdornment={t("teacher_quiz_manage.settings.assist.minute_unit")} />
+              placeholder={t(
+                "teacher_quiz_manage.settings.scoring.time_placeholder",
+              )}
+              endAdornment={t(
+                "teacher_quiz_manage.settings.assist.minute_unit",
+              )}
+            />
           </Field>
           <SettingsTimingSection draft={draft} update={update} />
         </div>
@@ -86,3 +112,16 @@ export function SettingsScheduleSection({
     </SettingsSection>
   );
 }
+
+export const SettingsScheduleSection = memo(
+  SettingsScheduleSectionComponent,
+  (previous, next) =>
+    previous.update === next.update &&
+    previous.locked === next.locked &&
+    previous.draft.available_from === next.draft.available_from &&
+    previous.draft.available_until === next.draft.available_until &&
+    previous.draft.due_at === next.draft.due_at &&
+    previous.draft.time_limit_minutes === next.draft.time_limit_minutes &&
+    previous.draft.overdue_handling === next.draft.overdue_handling &&
+    previous.draft.grace_period_seconds === next.draft.grace_period_seconds,
+);

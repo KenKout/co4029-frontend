@@ -1,25 +1,46 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   useNavigate,
   useParams,
   useSearch,
 } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
+import { InterviewRoomProvider } from "@/components/interview/interview-room-provider";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ApiError } from "@/lib/api/client";
 import { useCourseBySlug, useCourseContent } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
+import type { CoursePublic, LessonPublic, ModulePublic } from "@/lib/api/types";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
-import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
+import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
+import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
+import { InterviewFullscreenGateScreen } from "@/routes/courses/_components/course-interview/InterviewFullscreenGateScreen";
+import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
+import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
+import {
+  InterviewLoadingScreen,
+  InterviewMissingConfigScreen,
+} from "@/routes/courses/_components/course-interview/InterviewStatusScreens";
+import { InterviewWorkspaceScreen } from "@/routes/courses/_components/course-interview/InterviewWorkspaceScreen";
+import { useCourseInterviewWithRef } from "@/routes/courses/_components/course-interview/use-course-interview-with-ref";
 import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/CurriculumSidebar";
-import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
-import { LessonTabsSection } from "@/routes/courses/_components/course-learn/LessonTabsSection";
+import {
+  earliestPendingItemId,
+  itemStateFor,
+} from "@/routes/courses/_components/course-learn/helpers";
 import { LessonVideoPlayer } from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
+import { LessonTabsSection } from "@/routes/courses/_components/course-learn/LessonTabsSection";
+import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
+import type {
+  CurriculumProps,
+  FlatItem,
+  Tab,
+} from "@/routes/courses/_components/course-learn/types";
 import {
   useCurriculumItems,
   useInProgressInterviewSessions,
@@ -31,37 +52,17 @@ import {
   useActiveLessonContent,
   useLessonStatusMap,
 } from "@/routes/courses/_components/course-learn/use-lesson-content";
-import {
-  earliestPendingItemId,
-  itemStateFor,
-} from "@/routes/courses/_components/course-learn/helpers";
-import type {
-  CurriculumProps,
-  FlatItem,
-  Tab,
-} from "@/routes/courses/_components/course-learn/types";
-import type { CoursePublic, LessonPublic, ModulePublic } from "@/lib/api/types";
-import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
+import { QuizFullscreenGateScreen } from "@/routes/courses/_components/course-quiz/QuizFullscreenGateScreen";
+import { getQuizBlockingStage } from "@/routes/courses/_components/course-quiz/QuizGuardScreens";
 import { QuizIntroStage } from "@/routes/courses/_components/course-quiz/QuizIntroStage";
-import { QuizTakingStage } from "@/routes/courses/_components/course-quiz/QuizTakingStage";
-import { QuizResultScreen } from "@/routes/courses/_components/QuizResultScreen";
 import {
   QuizLoadingSkeleton,
   QuizNoQuestionsPanel,
   QuizNotFoundPanel,
 } from "@/routes/courses/_components/course-quiz/QuizStatusScreens";
-import { InterviewRoomProvider } from "@/components/interview/interview-room-provider";
-import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
-import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
-import { InterviewFullscreenGateScreen } from "@/routes/courses/_components/course-interview/InterviewFullscreenGateScreen";
-import { QuizFullscreenGateScreen } from "@/routes/courses/_components/course-quiz/QuizFullscreenGateScreen";
-import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
-import {
-  InterviewLoadingScreen,
-  InterviewMissingConfigScreen,
-} from "@/routes/courses/_components/course-interview/InterviewStatusScreens";
-import { InterviewWorkspaceScreen } from "@/routes/courses/_components/course-interview/InterviewWorkspaceScreen";
-import { useCourseInterviewWithRef } from "@/routes/courses/_components/course-interview/use-course-interview-with-ref";
+import { QuizTakingStage } from "@/routes/courses/_components/course-quiz/QuizTakingStage";
+import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
+import { QuizResultScreen } from "@/routes/courses/_components/QuizResultScreen";
 
 /**
  * Unified student item route: /courses/$slug/learn/$itemSlug
@@ -251,10 +252,6 @@ function MatchedItemView({
   }
 
   if (matched.item.item_type === "quiz") {
-    // Resolve the taking payload by the item's ID (the course tree is the
-    // authority once the URL matched here): slugs are only unique per
-    // module, so a bare slug could be ambiguous across courses — and the
-    // learner API 404s an ambiguous slug even though this link is valid.
     const quizRef = matched.item.target?.id || itemSlug;
     return (
       <QuizProxy
@@ -457,26 +454,31 @@ function LessonContentPane({
   const streamQuery = useStreamUrl(materialId);
   const streamUrl = streamQuery.data?.url ?? null;
   const materialVersionId = streamQuery.data?.material_version_id ?? null;
+  const readingContentRef = useRef<HTMLDivElement>(null);
   useLessonEngagementTracker({
-    materialVersionId,
+    materialVersionId:
+      activeLesson.lesson_type === "reading" ? materialVersionId : null,
     lessonId: activeLesson.id,
     courseId,
+    contentRef: readingContentRef,
   });
 
   if (activeLesson.lesson_type === "reading") {
     return (
-      <GlassCard
-        className="p-6 sm:p-8 space-y-6 mt-2"
-        data-testid="course-learn-reading"
-      >
-        <ReadingLessonBody
-          lesson={activeLesson}
-          materialId={materialId}
-          streamUrl={streamUrl}
-          isLoading={streamQuery.isLoading}
-          t={t}
-        />
-      </GlassCard>
+      <div ref={readingContentRef}>
+        <GlassCard
+          className="p-6 sm:p-8 space-y-6 mt-2"
+          data-testid="course-learn-reading"
+        >
+          <ReadingLessonBody
+            lesson={activeLesson}
+            materialId={materialId}
+            streamUrl={streamUrl}
+            isLoading={streamQuery.isLoading}
+            t={t}
+          />
+        </GlassCard>
+      </div>
     );
   }
   return (
@@ -548,10 +550,8 @@ function QuizProxyInner({
   if (!course || !quiz) {
     return <QuizNotFoundPanel slug={slug} />;
   }
-  // PRECEDENCE: submittedSummary must win over `taking` — taking is never
-  // cleared on submit, so a branch on taking placed first would trap the
-  // student on the take screen after submitting (same order as the
-  // /quiz/$quizId route). Result screen keeps the breadcrumb.
+  const blockingStage = getQuizBlockingStage({ session, slug });
+  if (blockingStage) return blockingStage;
   if (submittedSummary) {
     return (
       <>
@@ -567,12 +567,7 @@ function QuizProxyInner({
       </>
     );
   }
-  // In progress (a live attempt) the take screen owns the layout — its sticky
-  // bars already carry a back affordance — so no breadcrumb above it.
-  //
-  // Fullscreen is MANDATORY for every attempt (same rule as the interview),
-  // and the gate REPLACES the take rather than overlaying it: a dialog over
-  // the questions still leaves them in the DOM.
+
   if (taking && displayQuestions.length > 0) {
     if (session.fullscreen.requiredOpen) {
       return (
@@ -656,10 +651,6 @@ function InterviewProxyInner({
     fullscreenGranted: iv.fullscreenGate.isFullscreen,
   });
 
-  // The SAME screen order as the direct route (resolveInterviewScreen there):
-  // loading → missing config → results (before the gate) → lobby → gate →
-  // workspace. One rule for both URLs; the gate cannot be bypassed by entering
-  // through the curriculum instead.
   const screen = (() => {
     if (iv.courseLoading || iv.configLoading) return <InterviewLoadingScreen />;
     if (!course || !config)

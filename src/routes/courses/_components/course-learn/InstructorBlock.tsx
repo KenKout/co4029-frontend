@@ -7,18 +7,6 @@ import {
 } from "@/components/ui/avatar";
 import type { InstructorRead } from "@/lib/api/types";
 
-/**
- * The course's teaching team on the learner page: Course Instructors up
- * front, Teacher Assistants behind. Ordered CI-first by the backend
- * (`CoursePublic.instructors`); each entry carries `is_instructor` /
- * `is_assistant` flags so the student can tell the leads from the
- * assistants — including one teacher holding BOTH titles (user decision
- * 2026-08-30), which renders as "Instructor · Assistant".
- *
- * Falls back to a single `course.instructor` (treated as the Course
- * Instructor) when the new `instructors` list is absent so nothing breaks on
- * older payloads.
- */
 export function InstructorBlock({
   instructors,
 }: {

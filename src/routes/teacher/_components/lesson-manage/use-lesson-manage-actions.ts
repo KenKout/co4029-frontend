@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import type { TFunction } from "i18next";
 import type { LessonEditorState, LessonManageData } from "./types";
+import { DEFAULT_LESSON_ESTIMATED_MINUTES } from "./helpers";
 
 /**
  * Lesson-editor commands that write to the server or navigate: save, archive,
@@ -38,6 +39,9 @@ export function useLessonManageActions({
   async function handleSave() {
     editor.setSaving(true);
     try {
+      const estimatedMinutes = editor.estimatedMinutes
+        ? Number(editor.estimatedMinutes)
+        : DEFAULT_LESSON_ESTIMATED_MINUTES;
       const saves: Promise<unknown>[] = [
         updateLesson.mutateAsync({
           title: editor.title.trim() || undefined,
@@ -45,12 +49,11 @@ export function useLessonManageActions({
           lesson_type: editor.lessonType as "video" | "reading",
           status: editor.status,
           difficulty: editor.difficulty || undefined,
-          estimated_minutes: editor.estimatedMinutes
-            ? Number(editor.estimatedMinutes)
-            : undefined,
+          estimated_minutes: estimatedMinutes,
           notes_markdown: editor.notes || undefined,
         }),
       ];
+      editor.setEstimatedMinutes(String(estimatedMinutes));
       if (moduleItem) {
         saves.push(
           updateModuleItem.mutateAsync({
