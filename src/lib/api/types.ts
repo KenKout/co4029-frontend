@@ -19,7 +19,7 @@ export interface CourseContactFields {
   contact_social_url?: string | null;
 }
 
-// Course-scoped teacher TITLE FLAGS (user decision 2026-08-30): a course may
+// Course-scoped teacher TITLE FLAGS: a course may
 // have several Course Instructors and several Teacher Assistants, and one
 // teacher may hold BOTH (defined in types-dept.ts and re-exported at the
 // bottom of this file). The learner-facing `instructors` list carries them so
@@ -264,7 +264,7 @@ export interface QuizProgressRead {
 // interview-progress endpoint landed in backend 2f21c9e and isn't in the
 // committed openapi snapshot yet.
 //
-// Completion rule differs from quizzes ON PURPOSE (user decision 2026-08-06):
+// Completion rule differs from quizzes ON PURPOSE:
 // `completed` is true only when at least one attempt PASSED. A
 // quiz also completes on failed-with-attempts-exhausted; an interview does
 // not, so the tag reads as "passed" and a student who failed every attempt

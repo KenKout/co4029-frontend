@@ -46,7 +46,7 @@ export interface LearningProgram {
   paths: LearningProgramPath[];
   created_at: string;
   updated_at: string;
-  // Management-list card statistics (user decision 2026-08-31): filled by the
+  // Management-list card statistics: filled by the
   // list endpoint only; detail responses leave the defaults.
   student_count?: number;
   /** Counts OPEN requests (`pending` + `in_progress`) — the dean's review inbox. */
