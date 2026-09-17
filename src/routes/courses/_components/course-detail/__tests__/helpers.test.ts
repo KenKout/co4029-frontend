@@ -17,7 +17,7 @@ function lessonItem(id: string): ModuleItemPublic {
     module_id: "mod",
     item_type: "lesson",
     position: 1,
-    target: { id, title: id },
+    target: { id, title: id, slug: id },
   };
 }
 

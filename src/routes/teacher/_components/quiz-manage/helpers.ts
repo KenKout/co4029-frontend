@@ -104,6 +104,8 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     integrity_score_threshold: toDraftString(
       quiz.integrity_score_threshold ?? 3,
     ),
+    integrity_response_policy:
+      quiz.integrity_response_policy ?? "warn_and_continue",
     overdue_handling: quiz.overdue_handling ?? "autosubmit",
     grace_period_seconds: toDraftString(quiz.grace_period_seconds),
   };

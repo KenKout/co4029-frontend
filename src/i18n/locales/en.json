@@ -5025,7 +5025,12 @@
         "score_threshold": "Flag at score",
         "weight_hint": "1 (lenient) to 5 (strict)",
         "threshold_hint": "1 to 20. Attempts reaching this score are flagged.",
-        "frozen_note": "Changes apply to attempts started from now on. Attempts already taken keep the settings they were scored under."
+        "frozen_note": "Changes apply to attempts started from now on. Attempts already taken keep the settings they were scored under.",
+        "response_policy_label": "When the threshold is reached",
+        "response_policy_hint": "Whether the student is told. The score, the recorded events and the flag for you are the same either way.",
+        "response_policy_warn": "Warn the student",
+        "response_policy_silent": "Record silently",
+        "response_policy_silent_note": "The student sees nothing. You still see the flagged attempt and every recorded signal."
       },
       "timing": {
         "title": "Time enforcement",

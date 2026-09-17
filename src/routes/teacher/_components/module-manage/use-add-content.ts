@@ -109,6 +109,10 @@ export function useAddContent(options: {
         integrity_weight_fullscreen_exit: 2,
         integrity_score_threshold: 3,
         security_incident_summary_enabled: true,
+        // Mirror the server defaults explicitly: the generated request type
+        // marks any field carrying an OpenAPI `default` as required.
+        max_follow_ups_per_question: 2,
+        max_hints_per_question: 3,
       });
       setInterviewModalOpen(false);
       toast.success(t("teacher_interview_config_new.success.created"));

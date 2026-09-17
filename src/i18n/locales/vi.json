@@ -4846,7 +4846,12 @@
         "score_threshold": "Gắn cờ tại mức điểm",
         "weight_hint": "1 (dễ) đến 5 (nghiêm)",
         "threshold_hint": "1 đến 20. Bài làm đạt mức này sẽ bị gắn cờ.",
-        "frozen_note": "Thay đổi chỉ áp dụng cho các bài làm bắt đầu từ bây giờ. Các bài đã làm giữ nguyên thiết lập đã dùng để chấm."
+        "frozen_note": "Thay đổi chỉ áp dụng cho các bài làm bắt đầu từ bây giờ. Các bài đã làm giữ nguyên thiết lập đã dùng để chấm.",
+        "response_policy_label": "Khi đạt ngưỡng",
+        "response_policy_hint": "Sinh viên có được báo hay không. Điểm, sự kiện đã ghi và cờ báo cho bạn vẫn giống nhau.",
+        "response_policy_warn": "Cảnh báo sinh viên",
+        "response_policy_silent": "Ghi nhận âm thầm",
+        "response_policy_silent_note": "Sinh viên không thấy gì. Bạn vẫn thấy lượt làm bài bị gắn cờ và mọi tín hiệu đã ghi."
       },
       "timing": {
         "title": "Kiểm soát thời gian",

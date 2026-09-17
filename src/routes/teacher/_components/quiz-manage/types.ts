@@ -42,6 +42,7 @@ export interface SettingsDraft {
   integrity_weight_focus_lost: string;
   integrity_weight_fullscreen_exit: string;
   integrity_score_threshold: string;
+  integrity_response_policy: "continue_and_log" | "warn_and_continue";
   // Timing enforcement (Phase 6).
   overdue_handling: "autosubmit" | "graceperiod" | "autoabandon";
   grace_period_seconds: string;

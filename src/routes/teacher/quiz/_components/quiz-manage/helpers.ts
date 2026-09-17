@@ -146,6 +146,7 @@ export function settingsPatchFromDraft(
       draft.integrity_weight_fullscreen_exit,
     ),
     integrity_score_threshold: integerOrNull(draft.integrity_score_threshold),
+    integrity_response_policy: draft.integrity_response_policy,
     overdue_handling: draft.overdue_handling,
     grace_period_seconds: integerOrNull(draft.grace_period_seconds),
   };

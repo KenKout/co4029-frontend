@@ -106,6 +106,7 @@ export function useCoursesTab(id: string, t: TFunction, versionId?: string) {
           stage_id: targetStageId,
           course_id: entity.id,
           is_required: true,
+          satisfied_by: "completion",
         });
         ok += 1;
       } catch (err) {

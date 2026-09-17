@@ -78,12 +78,21 @@ export interface paths {
         put?: never;
         /**
          * Logout
-         * @description Revoke the bearer-token session. Idempotent.
+         * @description Revoke the caller's session. Idempotent — never a client-visible failure.
          *
-         *     Uses ``get_current_user_pre_mfa`` so a user who is mid-MFA (fresh
-         *     post-login session, ``mfa_verified_at IS NULL``) can still log out
-         *     without first completing MFA — abandoning the login flow is the
-         *     whole point.
+         *     Two resolution paths, tried in order:
+         *
+         *     1. Bearer token (when it still validates — includes users mid-MFA, so
+         *        abandoning the login flow works: that is the whole point of
+         *        ``get_optional_current_user_pre_mfa``).
+         *     2. The body's ``refresh_token``: the client sends the token it holds, so
+         *        sign-out still revokes the session when the ACCESS token has expired
+         *        (the exact case where the old route 401'd and the frontend's
+         *        refresh-then-logout dance could hang the UI on a dead socket).
+         *
+         *     Both fail (unknown token, already revoked) → still 204: the client's goal
+         *     — "this session must die" — is already true or unachievable, and either
+         *     way the sign-out UX must not error.
          */
         post: operations["logout_api_v1_auth_logout_post"];
         delete?: never;
@@ -158,6 +167,61 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List My Links
+         * @description List the caller's external profile links (FR-2.8).
+         *
+         *     The same links also ride along on ``GET /users/me`` under
+         *     ``profile.links``; this endpoint exists so the profile editor can refetch
+         *     just the list after a write without re-reading the whole user.
+         */
+        get: operations["list_my_links_api_v1_users_me_links_get"];
+        put?: never;
+        /**
+         * Create My Link
+         * @description Add an external link (website / GitHub / LinkedIn / portfolio / other).
+         */
+        post: operations["create_my_link_api_v1_users_me_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/links/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete My Link
+         * @description Remove one of the caller's own links (soft-delete).
+         */
+        delete: operations["delete_my_link_api_v1_users_me_links__link_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update My Link
+         * @description Update one of the caller's own links.
+         *
+         *     404 (not 403) when the link belongs to somebody else: the service scopes
+         *     the lookup by owner, so a foreign id is never confirmed to exist.
+         */
+        patch: operations["update_my_link_api_v1_users_me_links__link_id__patch"];
         trace?: never;
     };
     "/api/v1/users/me/permissions": {
@@ -397,12 +461,20 @@ export interface paths {
         put?: never;
         /**
          * Create User
-         * @description Admin invite — create a user + profile + org membership + role.
+         * @description Admin or manager invite — create a user + profile + org + role.
          *
-         *     Only a platform admin (``system.administer``) may provision accounts
-         *     manually: this bypasses the invite-only pre-registration gate by
-         *     design, so the audience is deliberately narrow. The created account
-         *     is ``active`` and can sign in via Google OAuth immediately.
+         *     Platform admins (``system.administer``) may provision into ANY
+         *     organization (``organization_id`` is required for them).
+         *
+         *     A manager (``user.bulk_import``) may provision too, with two guards:
+         *     the account is ALWAYS attached to the caller's own primary
+         *     organization — the payload's ``organization_id`` is ignored and
+         *     replaced, the same forcing precedent ``GET /users/search`` uses — and
+         *     peer roles (``hod`` / ``manager``) are forbidden: like disable/enable,
+         *     managers administer teachers and students, not their peers.
+         *
+         *     Either way the created account is ``active`` and can sign in via
+         *     Google OAuth immediately.
          */
         post: operations["create_user_api_v1_users_post"];
         delete?: never;
@@ -424,7 +496,8 @@ export interface paths {
          *     display name), optional ``status`` / ``role`` / ``organization`` filters,
          *     and whitelisted sort (``email`` / ``status`` / ``created_at``). ``role``
          *     filters to users holding that role code at any scope; ``organization``
-         *     filters to members of that org.
+         *     filters to members of that org; ``org_unit`` narrows to one Faculty
+         *     **and every unit beneath it**, backing the org-tree scope picker.
          *
          *     Org scope: callers holding ``system.administer`` may search globally and
          *     pick any ``organization``. Everyone else (e.g. a manager with
@@ -743,6 +816,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/organizations/{org_id}/units/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Unit Tree Endpoint
+         * @description The organization's units as a nested tree (roots first).
+         *
+         *     Registered BEFORE ``/units`` is irrelevant here (different suffix), but
+         *     it must stay above ``/admin/org-units/{unit_id}`` in file order for the
+         *     same reason the courses router orders its literal paths first.
+         *
+         *     Same permission gate as the flat list — ``org_unit.manage`` — so the
+         *     manager surface reaches it without ``system.administer``.
+         */
+        get: operations["list_unit_tree_endpoint_api_v1_admin_organizations__org_id__units_tree_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/org-units/{unit_id}": {
         parameters: {
             query?: never;
@@ -760,6 +860,57 @@ export interface paths {
         head?: never;
         /** Patch Unit Endpoint */
         patch: operations["patch_unit_endpoint_api_v1_admin_org_units__unit_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/organizations/{org_id}/faculty-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Faculty Assignments Endpoint */
+        get: operations["list_faculty_assignments_endpoint_api_v1_admin_organizations__org_id__faculty_assignments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/faculties/{faculty_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Faculty Members Endpoint */
+        post: operations["add_faculty_members_endpoint_api_v1_admin_faculties__faculty_id__members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/faculties/{faculty_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Faculty Member Endpoint */
+        delete: operations["remove_faculty_member_endpoint_api_v1_admin_faculties__faculty_id__members__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/organization-memberships/{membership_id}": {
@@ -1010,6 +1161,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses/{course_id}/syllabus/download-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Course Syllabus Download Url
+         * @description The original syllabus PDF a course was imported from.
+         *
+         *     Org-scoped like every other learner read, but NOT enrolment-gated: the
+         *     syllabus is the document a student reads to decide whether to enrol, and
+         *     the published course itself is already in their catalog. The publish gate
+         *     lives in the query, so an unimported or unpublished course 404s
+         *     identically — existence is never leaked.
+         */
+        get: operations["get_course_syllabus_download_url_api_v1_courses__course_id__syllabus_download_url_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/courses": {
         parameters: {
             query?: never;
@@ -1049,12 +1226,112 @@ export interface paths {
         /**
          * Create Course
          * @description Create a new course owned by the requesting principal.
-         *
-         *     Global permission -- a teacher anywhere on the platform can create a
-         *     course; ownership / scope is enforced on subsequent edits via
-         *     :func:`require_course_permission`.
          */
         post: operations["create_course_api_v1_teacher_courses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/import-syllabus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Course From Syllabus
+         * @description Upload a course-syllabus PDF: attach it, overwrite a draft, or create a course.
+         *
+         *     The raw PDF bytes are the request body with ``application/pdf`` in
+         *     ``Content-Type`` (no multipart wrapper — the same shape as the course
+         *     thumbnail and avatar uploads, and the reason this repo needs no
+         *     ``python-multipart`` dependency). ``filename`` is a query parameter
+         *     because a raw body carries none, and it is only used for display and
+         *     for the failure notification.
+         *
+         *     ``mode`` (user request 2026-08-31) picks what the upload does; ``attach``
+         *     and ``override`` require ``course_id``:
+         *
+         *     * ``attach`` — store the document against an existing course and change
+         *       nothing else. Allowed on a LIVE course: it only replaces what students
+         *       download, so a published course finally getting its syllabus (or a
+         *       corrected edition) does not have to be unpublished first.
+         *     * ``override`` — parse it and replace that course's title, description,
+         *       hours and learning outcomes. DRAFT ONLY → 409, mirroring the freeze the
+         *       hand-edit path enforces (outcomes are the graded scale).
+         *     * ``create`` — a brand-new draft course, the original behaviour.
+         *
+         *     ``language`` picks which half of the bilingual syllabus is imported —
+         *     title, description and every learning outcome come from that side. It is
+         *     still required for ``attach`` (which does not parse) because the attempt
+         *     row records it; the document is bilingual either way.
+         *
+         *     Manager-owned, and gated on BOTH ``course.create`` and
+         *     ``learning_outcome.manage``: the import writes learning outcomes, which
+         *     a course-owning teacher is never allowed to author (see
+         *     ``_REQUIRE_OUTCOME_CREATE``). Requiring only ``course.create`` here
+         *     would have been a side door into LO authoring. The target course is
+         *     additionally org-checked in the service — the two global permissions here
+         *     say "may author courses", not "may author THIS course".
+         *
+         *     The service commits (success and failure alike, since a failed attempt
+         *     is still recorded and notified), so this endpoint does not.
+         */
+        post: operations["import_course_from_syllabus_api_v1_teacher_courses_import_syllabus_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/syllabus-imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Syllabus Imports
+         * @description Recent syllabus-import attempts in the caller's organization.
+         *
+         *     Includes FAILURES, which is the point: a failed import has no course to
+         *     find it by, so this list is the only place the reason survives once the
+         *     notification is read.
+         */
+        get: operations["list_syllabus_imports_api_v1_teacher_courses_syllabus_imports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/syllabus/download-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Course Syllabus Download Url
+         * @description Short-TTL presigned URL for the course's archived syllabus PDF.
+         *
+         *     Gated on ``course.update`` so any teacher on the course can fetch it,
+         *     not just the manager who imported it. Students get the same document
+         *     through the learner router instead, which additionally requires the
+         *     course to be published.
+         */
+        get: operations["get_course_syllabus_download_url_api_v1_teacher_courses__course_id__syllabus_download_url_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1111,6 +1388,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/dashboard/priority": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Priority Tasks
+         * @description The teacher's next actions, ranked across every kind of work.
+         *
+         *     Blocking work first, then students at risk, then overdue reviews, then
+         *     age. Content backlogs come back as one grouped task each — a row per
+         *     pending question would bury the students under identical work.
+         *
+         *     Same lax permission as the courses list — scope is enforced in the
+         *     service via owner/assignment match.
+         */
+        get: operations["list_priority_tasks_api_v1_teacher_dashboard_priority_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/dashboard/course-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Course Health
+         * @description The caller's courses as comparable health rows, worst first.
+         *
+         *     Backs the dashboard's Course Health table, which replaces the course
+         *     gallery: the gallery gave every course equal weight and hid the
+         *     signals in badges, so it could not answer "which of my courses needs
+         *     me today".
+         *
+         *     Same lax permission as the courses list — scope is enforced in the
+         *     service via owner/assignment match.
+         */
+        get: operations["list_course_health_api_v1_teacher_dashboard_course_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/dashboard/students-needing-attention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Students Needing Attention
+         * @description Students at risk across the caller's authorable courses, worst first.
+         *
+         *     The row-level companion to ``students_needing_attention`` on
+         *     ``/dashboard/stats``: the tile counts distinct people, this lists one
+         *     row per (student, course) because a teacher follows up inside a course.
+         *     The two are expected to differ and neither is derivable from the other.
+         *
+         *     Same lax permission as the courses list — scope is enforced in the
+         *     service via owner/assignment match, not by permission gating.
+         */
+        get: operations["list_students_needing_attention_api_v1_teacher_dashboard_students_needing_attention_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/dashboard/review-queue/{kind}": {
         parameters: {
             query?: never;
@@ -1145,11 +1505,6 @@ export interface paths {
         /**
          * Delete Course
          * @description Soft-delete a course the caller can delete (reversible tombstone).
-         *
-         *     Cascades to the course's modules/lessons/items via
-         *     ``soft_delete_cascade``. Requires ``course.delete`` on the course.
-         *     Returns 204 on success; 404 when the course is missing or already
-         *     soft-deleted.
          */
         delete: operations["delete_course_api_v1_teacher_courses__course_id__delete"];
         options?: never;
@@ -1216,12 +1571,6 @@ export interface paths {
         /**
          * Upload Course Thumbnail
          * @description Upload a course thumbnail image (JPEG/PNG/WebP/GIF, ≤ 5 MiB).
-         *
-         *     The raw image bytes are sent as the request body with the image's MIME
-         *     type in the ``Content-Type`` header (no multipart wrapper — matches the
-         *     avatar upload pattern). Stores the image in object storage and points the
-         *     course at it. Manager-owned: requires ``course.delete`` on the course,
-         *     the same gate as ``thumbnail_object_id`` in the PATCH allow-list.
          */
         put: operations["upload_course_thumbnail_api_v1_teacher_courses__course_id__thumbnail_put"];
         post?: never;
@@ -1685,6 +2034,11 @@ export interface paths {
          *     HOD (``scope_kind=org_unit``) -> dept courses; Manager
          *     (``scope_kind=organization``) -> org courses; Admin
          *     (``scope_kind=global``) -> all courses.
+         *
+         *     ``faculty_id`` optionally narrows the resolved set server-side: a UUID
+         *     keeps only that faculty's courses, the literal ``"none"`` keeps only
+         *     courses with no faculty at all. Narrowing happens INSIDE the resolved
+         *     scope — it can never widen what the caller is allowed to see.
          */
         get: operations["list_dept_courses_api_v1_dept_courses_get"];
         put?: never;
@@ -1802,14 +2156,46 @@ export interface paths {
          * Get Course Readiness
          * @description Is this course actually deliverable? Asked before publish, not after.
          *
-         *     Four checks: an assigned teacher, at least one gradeable unit, placement on
-         *     a career path, and the course's own status. `can_publish` mirrors the
-         *     publish gate's condition exactly, so the checklist cannot promise a publish
-         *     the gate then refuses with a 409.
+         *     Three checks: an assigned teacher, at least one gradeable unit, and the
+         *     course's own status — plus learning outcomes, which are also a publish
+         *     gate. Career-path placements ride along as informational data (the
+         *     course detail's Career Paths tab). `can_publish` mirrors the publish
+         *     gate's condition exactly, so the checklist cannot promise a publish the
+         *     gate then refuses with a 409.
          */
         get: operations["get_course_readiness_api_v1_dept_courses__course_id__readiness_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dept/courses/{course_id}/teachers/bulk-remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Remove Teachers
+         * @description Soft-revoke several teacher assignments at once.
+         *
+         *     POST rather than DELETE because the ids travel in a body, and DELETE
+         *     with a body is poorly supported by proxies and clients alike.
+         *
+         *     All-or-nothing, and the sole-instructor guard is evaluated against the
+         *     state the course is LEFT in — so removing a course's whole roster is
+         *     allowed (it empties the course), while removing everyone EXCEPT a
+         *     lone assistant is refused. The single-teacher DELETE below now routes
+         *     through the same service function, so there is one implementation of
+         *     that rule rather than two that can drift.
+         */
+        post: operations["bulk_remove_teachers_api_v1_dept_courses__course_id__teachers_bulk_remove_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1831,6 +2217,31 @@ export interface paths {
          * @description Soft-revoke -- sets ``active_until = NOW()``, preserves audit trail.
          */
         delete: operations["remove_teacher_api_v1_dept_courses__course_id__teachers__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dept/courses/{course_id}/teachers/{user_id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Teacher Titles
+         * @description Set a teacher's course-scoped title flags (Course Instructor / TA).
+         *
+         *     Both flags may be true — one teacher holding both titles is legal (user
+         *     decision 2026-08-30). Rejected (409): clearing both flags, and turning
+         *     off the LAST Course Instructor while the course still has teachers.
+         *     Available to the manager staffing surface only.
+         */
+        put: operations["set_teacher_titles_api_v1_dept_courses__course_id__teachers__user_id__role_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1889,7 +2300,43 @@ export interface paths {
         patch: operations["update_dept_course_api_v1_dept_courses__course_id__patch"];
         trace?: never;
     };
-    "/api/v1/dept/org-units/{org_unit_id}/courses": {
+    "/api/v1/dept/courses/{course_id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clone Dept Course
+         * @description Manager-only course clone with selectable depth (user request).
+         *
+         *     Cloning creates a new course from an existing one — a lifecycle/identity
+         *     operation, so it is gated on ``course.delete`` (the same manager-only
+         *     gate as delete/archive) with the ownership short-circuit disabled: a
+         *     teacher who owns the course cannot clone it through the dept surface.
+         *
+         *     Depth (REQUIRED, no default):
+         *
+         *     * ``shell``     — course + learning outcomes only.
+         *     * ``structure`` — + module skeleton (modules + module prerequisites).
+         *     * ``full``      — complete deep clone: modules + items + lessons +
+         *       quizzes + interviews + resources, every cross-reference re-wired to
+         *       the copy. All content lands as drafts; runtime data is never copied.
+         *
+         *     The clone gets a fresh org-unique slug (``{slug}-copy``), a
+         *     ``" (Copy)"`` title suffix, and is owned by the requesting manager.
+         */
+        post: operations["clone_dept_course_api_v1_dept_courses__course_id__clone_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dept/faculties/{faculty_id}/courses": {
         parameters: {
             query?: never;
             header?: never;
@@ -1897,15 +2344,15 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Org Unit Courses
-         * @description All courses in ``org_unit_id``.
+         * List Faculty Courses
+         * @description All courses owned by ``faculty_id``.
          *
          *     HOD can only pass their own org_unit (the org-unit-scoped permission
          *     factory walks the unit's ancestor chain and rejects cross-dept
          *     requests with 403). Manager (``scope_kind=organization``) and Admin
          *     (``scope_kind=global``) pass for any org_unit.
          */
-        get: operations["list_org_unit_courses_api_v1_dept_org_units__org_unit_id__courses_get"];
+        get: operations["list_faculty_courses_api_v1_dept_faculties__faculty_id__courses_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2094,6 +2541,31 @@ export interface paths {
          *       ``execution_options(include_deleted=True)``.
          */
         get: operations["get_course_stats_api_v1_admin_courses__stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Management Dashboard
+         * @description The caller's decision queue, scoped to their faculty or organization.
+         *
+         *     Scope comes from the caller's ROLE ASSIGNMENTS, not from what they author:
+         *     a dean scoped to org units sees their faculties' courses, a manager scoped
+         *     to an organization sees the organization's. The resolved scope is echoed in
+         *     the response so the page can name what it is showing.
+         */
+        get: operations["get_management_dashboard_api_v1_management_dashboard_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2808,6 +3280,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses/{course_id}/discussion/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Course Topics
+         * @description Course-wide topics (enrolled students + course managers).
+         *
+         *     The course board holds topics attached to the COURSE only. Rolling every
+         *     lesson's topics in here as well would bury the course-wide ones this board
+         *     exists for, and each lesson already shows its own.
+         */
+        get: operations["list_course_topics_api_v1_courses__course_id__discussion_topics_get"];
+        put?: never;
+        /**
+         * Create Course Topic
+         * @description Open a course-wide topic (course managers only).
+         */
+        post: operations["create_course_topic_api_v1_courses__course_id__discussion_topics_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/discussion/topics/{topic_id}": {
         parameters: {
             query?: never;
@@ -2851,6 +3351,14 @@ export interface paths {
          *
          *     Rejects with 404 when the topic is closed for viewers who cannot
          *     manage the course — a closed topic accepts no new student comments.
+         *
+         *     ``parent_comment_id`` makes it a reply. Replying is also how one names
+         *     someone: the client prefixes the body with the parent author's handle, and
+         *     that author is notified as a thread participant.
+         *
+         *     Notifies thread participants (and course teachers when the author is a
+         *     student) — see :mod:`abridgeai.features.discussions.notify`. The
+         *     notification rows join this transaction; failures are swallowed.
          */
         post: operations["create_comment_api_v1_discussion_topics__topic_id__comments_post"];
         delete?: never;
@@ -2883,6 +3391,155 @@ export interface paths {
         patch: operations["update_comment_api_v1_discussion_comments__comment_id__patch"];
         trace?: never;
     };
+    "/api/v1/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Policies Endpoint
+         * @description Policies this reader is a party to, plus every public one.
+         *
+         *     ``role`` is supplied by the client from the signed-in user's own roles.
+         *     That is safe precisely BECAUSE the documents are public: the parameter
+         *     widens a courtesy filter, it does not unlock anything. Nothing here is
+         *     gated on it, so a forged value reveals no more than reading the slugs.
+         */
+        get: operations["list_policies_endpoint_api_v1_policies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/policies/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Policy Endpoint */
+        get: operations["get_policy_endpoint_api_v1_policies__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Policies Endpoint */
+        get: operations["list_policies_endpoint_api_v1_admin_policies_get"];
+        put?: never;
+        /** Create Policy Endpoint */
+        post: operations["create_policy_endpoint_api_v1_admin_policies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/policies/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Policy Endpoint */
+        get: operations["get_policy_endpoint_api_v1_admin_policies__policy_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/policies/{policy_id}/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Version Endpoint */
+        get: operations["get_version_endpoint_api_v1_admin_policies__policy_id__versions__version_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Draft Endpoint */
+        patch: operations["update_draft_endpoint_api_v1_admin_policies__policy_id__versions__version_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/policies/{policy_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open Draft Endpoint */
+        post: operations["open_draft_endpoint_api_v1_admin_policies__policy_id__versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/policies/{policy_id}/versions/{version_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Endpoint */
+        post: operations["publish_endpoint_api_v1_admin_policies__policy_id__versions__version_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/policies/{policy_id}/audience": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Audience Endpoint
+         * @description Replace the audience. An empty list makes the policy public.
+         */
+        put: operations["set_audience_endpoint_api_v1_admin_policies__policy_id__audience_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/quizzes/{quiz_id}": {
         parameters: {
             query?: never;
@@ -2894,6 +3551,7 @@ export interface paths {
          * Get Published Quiz
          * @description Public projection of one published quiz (no ``is_correct`` leak).
          *
+         *     ``quiz_id`` accepts a UUID id or an item slug (breadcrumb URLs).
          *     Tenant-gated: the caller must be able to see the quiz's owning course
          *     (org membership or course-management rights) or the quiz resolves to
          *     404 — a published quiz from another organization must not be readable
@@ -2983,13 +3641,20 @@ export interface paths {
         put?: never;
         /**
          * Record Quiz Integrity Events
-         * @description Best-effort ingest of browser integrity signals for a live attempt.
+         * @description Record and SCORE browser integrity signals for a live attempt.
          *
          *     Ownership is enforced (attempt must belong to the caller). Events are
-         *     recorded only while the attempt is ``in_progress`` — late events for a
+         *     recorded only while the attempt is ``in_progress`` - late events for a
          *     submitted/graded/abandoned attempt are silently dropped so this never
-         *     blocks the take. Append-only; post-attempt / teacher review only, never
-         *     surfaced to the student.
+         *     blocks the take. Append-only; the timeline is teacher-review only.
+         *
+         *     Scoring (migration 0115) is deliberately the interview's, imported rather
+         *     than reimplemented: the server weighs each signal against the attempt's
+         *     FROZEN policy snapshot and flags the attempt the first time the weighted
+         *     score reaches the threshold. Client-supplied severities and metadata never
+         *     influence the score, and ``warning_issued`` / ``reconnect`` / ``disconnect``
+         *     never score at all - a network blip is not an integrity signal, and a
+         *     client cannot post its way to a warning.
          */
         post: operations["record_quiz_integrity_events_api_v1_attempts__attempt_id__integrity_events_post"];
         delete?: never;
@@ -3012,6 +3677,86 @@ export interface paths {
          * @description Grade and finalize an attempt.
          */
         post: operations["submit_attempt_api_v1_attempts__attempt_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{attempt_id}/session/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim Attempt Session
+         * @description Claim/renew the ephemeral owner for a resumable attempt.
+         */
+        post: operations["claim_attempt_session_api_v1_attempts__attempt_id__session_claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{attempt_id}/session/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Heartbeat Attempt Session
+         * @description Renew the owner while the quiz workspace remains open.
+         */
+        post: operations["heartbeat_attempt_session_api_v1_attempts__attempt_id__session_heartbeat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{attempt_id}/session/takeover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Takeover Attempt Session
+         * @description Explicitly move ownership to this authentication session.
+         */
+        post: operations["takeover_attempt_session_api_v1_attempts__attempt_id__session_takeover_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{attempt_id}/session/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Release Attempt Session
+         * @description Release ownership without closing the resumable attempt.
+         */
+        post: operations["release_attempt_session_api_v1_attempts__attempt_id__session_release_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3141,6 +3886,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/courses/{course_id}/quiz-question-bank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Curated Quiz Question Bank */
+        get: operations["list_curated_quiz_question_bank_api_v1_teacher_courses__course_id__quiz_question_bank_get"];
+        put?: never;
+        /** Create Curated Quiz Question Bank Item */
+        post: operations["create_curated_quiz_question_bank_item_api_v1_teacher_courses__course_id__quiz_question_bank_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/quiz-question-bank/from-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Copy Quiz Questions To Curated Bank */
+        post: operations["copy_quiz_questions_to_curated_bank_api_v1_teacher_courses__course_id__quiz_question_bank_from_questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/quiz-question-bank/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Curated Quiz Question Bank Item */
+        delete: operations["delete_curated_quiz_question_bank_item_api_v1_teacher_courses__course_id__quiz_question_bank__item_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Curated Quiz Question Bank Item */
+        patch: operations["update_curated_quiz_question_bank_item_api_v1_teacher_courses__course_id__quiz_question_bank__item_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/quiz-question-bank/{item_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Curated Quiz Question Bank Item Status */
+        post: operations["set_curated_quiz_question_bank_item_status_api_v1_teacher_courses__course_id__quiz_question_bank__item_id__status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/quizzes/{quiz_id}/questions/import-bank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Curated Quiz Question Bank Items */
+        post: operations["import_curated_quiz_question_bank_items_api_v1_teacher_quizzes__quiz_id__questions_import_bank_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/courses/{course_id}/quizzes": {
         parameters: {
             query?: never;
@@ -3153,11 +3985,6 @@ export interface paths {
         /**
          * Create Quiz Under Course
          * @description Create a draft quiz on a module under ``course_id``.
-         *
-         *     The legacy route was ``POST /modules/{module_id}/quizzes``; the
-         *     authoring perimeter uses ``course_id`` as the path-anchor (the
-         *     permission walks course-scoped). The body MUST carry ``module_id``
-         *     so the service can resolve the parent module under this course.
          */
         post: operations["create_quiz_under_course_api_v1_teacher_courses__course_id__quizzes_post"];
         delete?: never;
@@ -3200,11 +4027,33 @@ export interface paths {
         };
         /**
          * List Course Quiz Attempts
-         * @description Every quiz attempt (any student, any quiz) in this course.
-         *
-         *     Powers the teacher's course-wide "Assessments" tab.
+         * @description One page of quiz attempts (any student, any quiz) in this course.
          */
         get: operations["list_course_quiz_attempts_api_v1_teacher_courses__course_id__quiz_attempts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/assessment-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Course Assessment Summary
+         * @description Whole-course assessment aggregates for the Assessments tab's tiles.
+         *
+         *     Deliberately independent of the two paginated lists and of whichever tab
+         *     is open: the tiles describe the course, not the page, and the title
+         *     dropdowns must offer every title rather than only those on screen.
+         */
+        get: operations["course_assessment_summary_api_v1_teacher_courses__course_id__assessment_summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3375,12 +4224,6 @@ export interface paths {
         /**
          * Get Latest Quiz Generation Run
          * @description Return the most recent ``GenerationRun`` for this quiz, if any.
-         *
-         *     Lets the SPA reattach to an in-flight (or terminal) run on mount
-         *     without persisting handles in the browser — survives cross-device
-         *     sessions, tab closes, and lets a second teacher viewing the same
-         *     quiz see the in-flight run too. Returns ``null`` (HTTP 200) when
-         *     the quiz has never been generated.
          */
         get: operations["get_latest_quiz_generation_run_api_v1_teacher_quizzes__quiz_id__generation_runs_latest_get"];
         put?: never;
@@ -3508,12 +4351,6 @@ export interface paths {
         /**
          * List Question Bank
          * @description Browse authored questions across the course for cross-quiz reuse.
-         *
-         *     Defaults to ``review_status='approved'`` so only vetted questions
-         *     surface; pass ``review_status=`` (empty) to widen. ``exclude_quiz_id``
-         *     is convenient for the modal launched from a target quiz so its own
-         *     questions don't appear in the bank list. ``cursor`` is opaque and
-         *     round-trips through subsequent calls.
          */
         get: operations["list_question_bank_api_v1_teacher_courses__course_id__question_bank_get"];
         put?: never;
@@ -4009,6 +4846,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/interview-sessions/{session_id}/recording-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Recording Consent
+         * @description Record the candidate's explicit recording-consent decision.
+         *
+         *     Called BEFORE the candidate joins the voice room. ``accepted=True`` with
+         *     the CURRENT policy version stores the affirmative consent the recording
+         *     start requires; anything else (declined, stale version, absent body)
+         *     records a refusal and the session proceeds UNRECORDED — the interview
+         *     itself is never gated on consent.
+         */
+        post: operations["submit_recording_consent_api_v1_interview_sessions__session_id__recording_consent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/interview-sessions/{session_id}/realtime-agent": {
         parameters: {
             query?: never;
@@ -4077,12 +4940,19 @@ export interface paths {
         put?: never;
         /**
          * Record Integrity Events
-         * @description Best-effort ingest of browser integrity signals for a live session.
+         * @description Score + record browser integrity signals for a live session.
          *
-         *     Owner/existence enforced by the dep. Events are recorded only while the
-         *     session is ``in_progress`` (late events for finished sessions are silently
-         *     dropped — this never blocks the interview). Post-session / teacher review
-         *     only; never surfaced to the student.
+         *     Best-effort by contract: this endpoint never blocks the interview. Events
+         *     are recorded only while the session is ``in_progress`` (late events for
+         *     finished sessions are silently dropped). Each scored signal
+         *     (``tab_switch`` / ``focus_lost`` / ``fullscreen_exit``) adds the weight
+         *     snapshotted onto the session at start; when the running score first
+         *     reaches the snapshotted threshold the server flags the session
+         *     (``integrity_warning_issued``), appends its own ``warning_issued`` event
+         *     with the score evidence, and reports ``warning_issued=true`` in THAT
+         *     response only. The interview continues either way — browser signals are
+         *     review/deterrence evidence, never a termination trigger, and never
+         *     tamper-proof proof of misconduct.
          */
         post: operations["record_integrity_events_api_v1_interview_sessions__session_id__integrity_events_post"];
         delete?: never;
@@ -4166,6 +5036,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/courses/{course_id}/interview-question-bank/logical-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Interview Question Bank Logical Group */
+        post: operations["create_interview_question_bank_logical_group_api_v1_teacher_courses__course_id__interview_question_bank_logical_groups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/interview-question-bank/{item_id}/siblings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Interview Question Bank Sibling */
+        post: operations["add_interview_question_bank_sibling_api_v1_teacher_courses__course_id__interview_question_bank__item_id__siblings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/courses/{course_id}/interview-question-bank/{item_id}": {
         parameters: {
             query?: never;
@@ -4188,6 +5092,26 @@ export interface paths {
          * @description Edit a bank item (management page). Only supplied fields change.
          */
         patch: operations["update_interview_question_bank_item_api_v1_teacher_courses__course_id__interview_question_bank__item_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/teacher/courses/{course_id}/interview-question-bank/{item_id}/group": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Interview Question Bank Group
+         * @description Soft-delete every angle of one logical question in the course bank.
+         */
+        delete: operations["delete_interview_question_bank_group_api_v1_teacher_courses__course_id__interview_question_bank__item_id__group_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/teacher/courses/{course_id}/interview-configs": {
@@ -4216,9 +5140,11 @@ export interface paths {
         };
         /**
          * List Course Interview Sessions
-         * @description Every interview session (any student, any config) in this course.
+         * @description One page of interview sessions (any student, any config) in this course.
          *
-         *     Powers the teacher's course-wide "Assessments" tab.
+         *     Powers the teacher's course-wide "Assessments" tab. Filtering happens in
+         *     SQL before the page is cut, which also bounds the per-row security-summary
+         *     lookup below to the rows actually returned.
          */
         get: operations["list_course_interview_sessions_api_v1_teacher_courses__course_id__interview_sessions_get"];
         put?: never;
@@ -4396,6 +5322,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/interview-configs/{config_id}/questions/import-bank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Interview Question Bank Items */
+        post: operations["import_interview_question_bank_items_api_v1_teacher_interview_configs__config_id__questions_import_bank_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/interview-configs/{config_id}/questions": {
         parameters: {
             query?: never;
@@ -4455,6 +5398,40 @@ export interface paths {
         patch: operations["update_question_api_v1_teacher_interview_configs__config_id__questions__question_id__patch"];
         trace?: never;
     };
+    "/api/v1/teacher/interview-configs/{config_id}/questions/{question_id}/approve-variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Question Variants */
+        post: operations["approve_question_variants_api_v1_teacher_interview_configs__config_id__questions__question_id__approve_variants_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-configs/{config_id}/questions/{question_id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Question Variants */
+        delete: operations["delete_question_variants_api_v1_teacher_interview_configs__config_id__questions__question_id__variants_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/interview-configs/{config_id}/questions/{question_id}/regenerate": {
         parameters: {
             query?: never;
@@ -4464,7 +5441,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Regenerate Question */
+        /**
+         * Regenerate Question
+         * @description Temporarily unavailable until true per-question regeneration exists.
+         */
         post: operations["regenerate_question_api_v1_teacher_interview_configs__config_id__questions__question_id__regenerate_post"];
         delete?: never;
         options?: never;
@@ -4635,6 +5615,53 @@ export interface paths {
          *     client re-renders with the saved value.
          */
         patch: operations["update_session_gap_report_notes_api_v1_teacher_interview_sessions__session_id__gap_report_notes_patch"];
+        trace?: never;
+    };
+    "/api/v1/teacher/interview-sessions/{session_id}/recording": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session Recording
+         * @description Signed, short-lived playback URL for the session's audio recording.
+         *
+         *     Teacher-only (course-scoped ``require_session_authoring_access`` — the
+         *     same perimeter as the transcript/gap-report endpoints). The response is
+         *     availability-state only: bucket/key, storage object id, Egress id and
+         *     provider errors never leave the server. Every successful URL mint is
+         *     audited via the structured log (the HTTP middleware already persists the
+         *     request row; the ``interview.recording.url_mint`` event carries the ids).
+         */
+        get: operations["get_session_recording_api_v1_teacher_interview_sessions__session_id__recording_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/livekit/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Livekit Webhook
+         * @description Receive one LiveKit webhook delivery (Egress lifecycle events).
+         */
+        post: operations["livekit_webhook_internal_livekit_webhook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/me/enrollments": {
@@ -4949,6 +5976,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/career-paths/{slug}/detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Published Path Detail
+         * @description Published path plus its stage roadmap.
+         */
+        get: operations["get_published_path_detail_api_v1_career_paths__slug__detail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/career-paths/{slug}": {
         parameters: {
             query?: never;
@@ -4993,18 +6040,6 @@ export interface paths {
         /**
          * Get My Career Path Progress
          * @description Stage-aware progress for the calling student.
-         *
-         *     This GET has TWO write side-effects and must commit unconditionally:
-         *
-         *     * ``get_my_path_progress`` writes the append-only stage latch for any
-         *       stage that has just become complete;
-         *     * ``sync_enrollment_completion`` flips the enrollment to ``completed``
-         *       at 100%.
-         *
-         *     Committing only when the enrollment flipped (the original behaviour)
-         *     silently rolled the latch back on every other request, so a stage could
-         *     read complete in the response and still be unlatched in the database —
-         *     which then let a manager delete a stage students had actually finished.
          */
         get: operations["get_my_career_path_progress_api_v1_me_career_enrollments__career_path_id__progress_get"];
         put?: never;
@@ -5118,6 +6153,26 @@ export interface paths {
         head?: never;
         /** Update Career Path */
         patch: operations["update_career_path_api_v1_management_career_paths__career_path_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/management/career-paths/{career_path_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Upload Career Path Thumbnail
+         * @description Upload a JPEG/PNG/WebP/GIF thumbnail up to 5 MiB.
+         */
+        put: operations["upload_career_path_thumbnail_api_v1_management_career_paths__career_path_id__thumbnail_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/management/career-paths/{career_path_id}/impact": {
@@ -5454,6 +6509,368 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/learning-program-enrollments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Programs */
+        get: operations["list_my_programs_api_v1_me_learning_program_enrollments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/learning-program-enrollments/{enrollment_id}/select-path": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select Path */
+        post: operations["select_path_api_v1_me_learning_program_enrollments__enrollment_id__select_path_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/learning-program-enrollments/{enrollment_id}/path-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Path Change */
+        post: operations["request_path_change_api_v1_me_learning_program_enrollments__enrollment_id__path_change_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/learning-program-enrollments/{enrollment_id}/path-drop-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Path Drop
+         * @description Ask a Faculty Dean to end one Career Path without taking another.
+         *
+         *     Shares the review queue, the one-open-request slot and the switch budget
+         *     with a path change, so the dean's approve/reject/in-progress endpoints
+         *     serve both kinds. A student must keep at least one active path, so the
+         *     last one cannot be dropped — that is a withdrawal.
+         */
+        post: operations["request_path_drop_api_v1_me_learning_program_enrollments__enrollment_id__path_drop_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/learning-program-enrollments/path-change-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel Change Request */
+        delete: operations["cancel_change_request_api_v1_me_learning_program_enrollments_path_change_requests__request_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Authoring Options */
+        get: operations["get_authoring_options_api_v1_management_learning_programs_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Programs */
+        get: operations["list_programs_api_v1_management_learning_programs_get"];
+        put?: never;
+        /** Create Program */
+        post: operations["create_program_api_v1_management_learning_programs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Program */
+        get: operations["get_program_api_v1_management_learning_programs__program_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Program */
+        patch: operations["update_program_api_v1_management_learning_programs__program_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Program Versions */
+        get: operations["list_program_versions_api_v1_management_learning_programs__program_id__versions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Program Version */
+        get: operations["get_program_version_api_v1_management_learning_programs__program_id__versions__version_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Program */
+        post: operations["publish_program_api_v1_management_learning_programs__program_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Program */
+        post: operations["archive_program_api_v1_management_learning_programs__program_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Roster */
+        get: operations["list_roster_api_v1_management_learning_programs__program_id__students_get"];
+        put?: never;
+        /** Enroll Students */
+        post: operations["enroll_students_api_v1_management_learning_programs__program_id__students_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/students/import-csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Students Csv
+         * @description Enrol a roster file into the program, creating accounts as needed.
+         *
+         *     Accepts ``csv_text`` or ``csv_base64`` and returns a PER-ROW result:
+         *     unlike ``POST /{program_id}/students``, one bad line does not abort the
+         *     batch. A roster file with a typo in it is the normal case.
+         *
+         *     Returns 200 rather than 201 because a run can legitimately create
+         *     nothing — re-uploading last week's file reports everyone under
+         *     ``already_enrolled`` and writes no new rows.
+         */
+        post: operations["import_students_csv_api_v1_management_learning_programs__program_id__students_import_csv_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/students/{student_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw Student */
+        delete: operations["withdraw_student_api_v1_management_learning_programs__program_id__students__student_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/{program_id}/path-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Change Requests */
+        get: operations["list_change_requests_api_v1_management_learning_programs__program_id__path_change_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/path-change-requests/{request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Change Request */
+        post: operations["approve_change_request_api_v1_management_learning_programs_path_change_requests__request_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/path-change-requests/{request_id}/in-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Change Request In Progress
+         * @description Acknowledge a request without deciding it.
+         *
+         *     Same permission as approve/reject (``learning_program.switch.review``) and
+         *     the same owning-dean check in the service: signalling "I am looking at your
+         *     record" is a review action, and letting anyone with read access emit it
+         *     would make the signal meaningless.
+         *
+         *     No body: there is nothing to say yet. That is the point.
+         */
+        post: operations["mark_change_request_in_progress_api_v1_management_learning_programs_path_change_requests__request_id__in_progress_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/management/learning-programs/path-change-requests/{request_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject Change Request
+         * @description Reject a request with a structured reason.
+         *
+         *     ``reason_code`` is mandatory (unlike approval, which needs no
+         *     justification): the student is told why, the rejection is filterable in
+         *     reporting, and ``other`` forces the dean to type the specifics.
+         */
+        post: operations["reject_change_request_api_v1_management_learning_programs_path_change_requests__request_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/notifications": {
         parameters: {
             query?: never;
@@ -5616,13 +7033,40 @@ export interface paths {
         };
         /**
          * Get Active Users Trend
-         * @description Daily active users over the lookback window (distinct logins/day).
+         * @description Daily active users over the page window (distinct logins/day).
          *
-         *     Drives the trend chart on the Active Users tab, mirroring the AI-cost
-         *     trend. ``days`` defaults to 30; every day in the window is returned
-         *     (zero-activity days included) so the chart is continuous.
+         *     Accepts the same ``from``/``to`` pair as the dashboard rollup, so the chart
+         *     follows the page's date-range filter instead of keeping a private window.
+         *     ``days`` remains the fallback for callers with no explicit range. Every day
+         *     in the window is returned (zero-activity days included) so the chart is
+         *     continuous.
          */
         get: operations["get_active_users_trend_api_v1_admin_stats_active_users_trend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats/latency/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Api Latency Trend
+         * @description Daily p50/p95 API latency over the page window.
+         *
+         *     Drives the latency chart on the stats overview, mirroring the
+         *     active-users trend. GLOBAL scope — ``http_audit_log`` does not carry
+         *     organization (see ``api_reliability.sql``). Every day in the window is
+         *     returned (zero-traffic days included) so the chart is continuous.
+         */
+        get: operations["get_api_latency_trend_api_v1_admin_stats_latency_trend_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5655,7 +7099,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Dashboard */
+        /**
+         * Get Dashboard
+         * @description Operator rollup for the admin dashboard.
+         *
+         *     Scope resolution (PRD ADM-005): a Manager / HOD is always pinned to their
+         *     own organization and the ``organization_id`` parameter is ignored for them
+         *     -- accepting it would be a cross-tenant read. An IT Admin defaults to the
+         *     global view and may narrow to one tenant with it.
+         */
         get: operations["get_dashboard_api_v1_admin_stats_dashboard_get"];
         put?: never;
         post?: never;
@@ -5691,7 +7143,7 @@ export interface paths {
         };
         /**
          * List Data Changes
-         * @description Every row in ``table`` changed since ``since``, newest first.
+         * @description Every row in ``table`` changed within ``[since, until)``, newest first.
          *
          *     The sibling of the single-entity ``GET /data-changes`` lookup — lets the
          *     audit screen show a recent-changes table per entity kind, then drill
@@ -5737,7 +7189,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Search Http Audit */
+        /**
+         * Search Http Audit
+         * @description Request log search. IPs are masked by default (ADM-024).
+         *
+         *     Scanning this log is a pattern-finding exercise and a /16 answers it. Full
+         *     addresses need a specific target and a reason, so they are behind
+         *     ``reveal`` and the platform-administrator permission — a caller holding
+         *     only ``audit.read`` never receives one.
+         */
         get: operations["search_http_audit_api_v1_admin_audit_http_get"];
         put?: never;
         post?: never;
@@ -5848,6 +7308,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/processing/jobs/{job_id}/investigation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Job Investigation
+         * @description One job with its owner, timings, stage breakdown and AI calls.
+         *
+         *     Additive to ``GET /jobs/{job_id}``: the plain detail stays the cheap read
+         *     for the jobs list, while this one pays for the joins only when somebody is
+         *     actually investigating.
+         */
+        get: operations["get_job_investigation_api_v1_admin_processing_jobs__job_id__investigation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/processing/jobs/{job_id}/retry": {
         parameters: {
             query?: never;
@@ -5927,6 +7411,23 @@ export interface paths {
         put?: never;
         /** Enable User */
         post: operations["enable_user_api_v1_admin_users__user_id__enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user_id}/sessions/{session_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke User Session */
+        post: operations["revoke_user_session_api_v1_admin_users__user_id__sessions__session_id__revoke_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6249,6 +7750,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/ai/costs/by-organization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get By Organization
+         * @description AI spend attributed to organizations (PRD ADM-040).
+         */
+        get: operations["get_by_organization_api_v1_admin_ai_costs_by_organization_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/ai/costs/by-pipeline": {
         parameters: {
             query?: never;
@@ -6370,6 +7891,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/settings/{setting_key}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Global Setting
+         * @description Dry-run a deployment-wide change: validate it and report its reach.
+         *
+         *     POST rather than GET because the pending value is a body, not an identity,
+         *     and because a validation failure here is the point of the call. Nothing is
+         *     written and the transaction is not committed.
+         */
+        post: operations["preview_global_setting_api_v1_admin_settings__setting_key__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/settings/{setting_key}": {
         parameters: {
             query?: never;
@@ -6378,11 +7923,69 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Set Global Setting */
-        put: operations["set_global_setting_api_v1_admin_settings__setting_key__put"];
+        /**
+         * Apply Global Setting
+         * @description Apply a deployment-wide change and record it.
+         *
+         *     This is the ONLY path that writes a global setting. The value and its audit
+         *     row commit together, so there is no ordering in which a change reaches the
+         *     deployment without a record of who made it and why (ADM-030/033).
+         */
+        put: operations["apply_global_setting_api_v1_admin_settings__setting_key__put"];
         post?: never;
-        /** Clear Global Setting */
+        /**
+         * Clear Global Setting
+         * @description Remove the deployment default so environment/code defaults apply again.
+         *
+         *     The reason rides in the query string because DELETE bodies are dropped by
+         *     enough intermediaries that requiring one would make the audit trail
+         *     unreliable in exactly the deployments that need it most.
+         */
         delete: operations["clear_global_setting_api_v1_admin_settings__setting_key__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Global Setting Changes
+         * @description Deployment-wide change history, newest first.
+         */
+        get: operations["list_global_setting_changes_api_v1_admin_settings_changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/changes/{change_id}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rollback Global Setting Change
+         * @description Restore the value a previous global change replaced (ADM-031).
+         *
+         *     Appends a new change rather than editing history: the rollback is itself
+         *     an event worth recording, and the original entry is what an investigation
+         *     later needs to see.
+         */
+        post: operations["rollback_global_setting_change_api_v1_admin_settings_changes__change_id__rollback_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6413,14 +8016,116 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Set Org Setting */
-        put: operations["set_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__put"];
+        /** Apply Org Setting */
+        put: operations["apply_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__put"];
         post?: never;
         /**
          * Clear Org Setting
          * @description Drop this organization's override so the global default applies again.
          */
         delete: operations["clear_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organizations/{org_id}/settings/{setting_key}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Org Setting
+         * @description Dry-run one tenant's override. Writes nothing.
+         */
+        post: operations["preview_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organizations/{org_id}/settings/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Org Setting Changes
+         * @description One tenant's change history. Global changes are not included: they are
+         *     not this organization's to review or roll back.
+         */
+        get: operations["list_org_setting_changes_api_v1_admin_organizations__org_id__settings_changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organizations/{org_id}/settings/changes/{change_id}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rollback Org Setting Change
+         * @description Roll back one of this tenant's changes.
+         *
+         *     ``organization_id`` is passed down so the service refuses a change id
+         *     belonging to another tenant or to the global scope — a 404, not a 403, so
+         *     an org-scoped admin cannot probe for the existence of changes elsewhere.
+         */
+        post: operations["rollback_org_setting_change_api_v1_admin_organizations__org_id__settings_changes__change_id__rollback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/security/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Security Summary */
+        get: operations["get_security_summary_api_v1_admin_security_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organizations/{org_id}/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tenant Operations
+         * @description People, inventory, storage, background work, spend and config for a tenant.
+         */
+        get: operations["get_tenant_operations_api_v1_admin_organizations__org_id__operations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6562,61 +8267,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/users/me/links": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List My Links
-         * @description List the caller's external profile links (FR-2.8).
-         *
-         *     The same links also ride along on ``GET /users/me`` under
-         *     ``profile.links``; this endpoint exists so the profile editor can refetch
-         *     just the list after a write without re-reading the whole user.
-         */
-        get: operations["list_my_links_api_v1_users_me_links_get"];
-        put?: never;
-        /**
-         * Create My Link
-         * @description Add an external link (website / GitHub / LinkedIn / portfolio / other).
-         */
-        post: operations["create_my_link_api_v1_users_me_links_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/users/me/links/{link_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete My Link
-         * @description Remove one of the caller's own links (soft-delete).
-         */
-        delete: operations["delete_my_link_api_v1_users_me_links__link_id__delete"];
-        options?: never;
-        head?: never;
-        /**
-         * Update My Link
-         * @description Update one of the caller's own links.
-         *
-         *     404 (not 403) when the link belongs to somebody else: the service scopes
-         *     the lookup by owner, so a foreign id is never confirmed to exist.
-         */
-        patch: operations["update_my_link_api_v1_users_me_links__link_id__patch"];
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6694,6 +8344,18 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /**
+         * ApplyResult
+         * @description The new state plus the audit row it was recorded as.
+         */
+        ApplyResult: {
+            setting: components["schemas"]["SettingOut"];
+            /**
+             * Change Id
+             * Format: uuid
+             */
+            change_id: string;
+        };
         /** AssignTeacherRequest */
         AssignTeacherRequest: {
             /**
@@ -6701,6 +8363,16 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+            /**
+             * Is Instructor
+             * @default false
+             */
+            is_instructor: boolean;
+            /**
+             * Is Assistant
+             * @default false
+             */
+            is_assistant: boolean;
         };
         /**
          * AssignableTeacher
@@ -6774,10 +8446,27 @@ export interface components {
             reasons: components["schemas"]["AtRiskReason"][];
         };
         /** AtRiskStudentRead */
+        AtRiskStudentRead: {
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Name */
+            name: string;
+            /** Low Compliance */
+            low_compliance: boolean;
+            /** Frozen Kr */
+            frozen_kr: boolean;
+            /** High Theory Practice Gap */
+            high_theory_practice_gap: boolean;
+            /** Last Active At */
+            last_active_at?: string | null;
+        };
         /**
          * AuthEventRow
          * @description One semantic auth event (FR-1.6). ``detail`` is redacted by the
-         *     recorder -- codes and tokens never reach the store.
+         *     recorder — codes and tokens never reach the store.
          */
         AuthEventRow: {
             /**
@@ -6805,22 +8494,77 @@ export interface components {
              */
             occurred_at: string;
         };
-        AtRiskStudentRead: {
+        /**
+         * BlockedCourseRow
+         * @description One course that cannot currently be published, worst first.
+         *
+         *     A queue, not a report: only courses whose ``can_publish`` is False appear,
+         *     because listing finished work buries the work that is not finished.
+         *
+         *     ``blocks_required_stage`` is the highest severity signal on the page. A
+         *     REQUIRED course with no gradeable unit does not merely fail to complete —
+         *     it locks its stage and every stage behind it, for every student on that
+         *     path. It is ranked above draft-vs-published for that reason.
+         *
+         *     The raw counts travel with the verdict so the UI can show the ratio behind
+         *     it ("1 of 2 teachers") instead of only a colour. ``reason`` is the same
+         *     verdict as a human-readable sentence: a severity that exists only as a
+         *     colour or a flag is unreadable to a screen reader and unactionable to a
+         *     manager who cannot guess which of four gates failed.
+         */
+        BlockedCourseRow: {
             /**
-             * Student Id
+             * Course Id
              * Format: uuid
              */
-            student_id: string;
-            /** Name */
-            name: string;
-            /** Low Compliance */
-            low_compliance: boolean;
-            /** Frozen Kr */
-            frozen_kr: boolean;
-            /** High Theory Practice Gap */
-            high_theory_practice_gap: boolean;
-            /** Last Active At */
-            last_active_at?: string | null;
+            course_id: string;
+            /** Title */
+            title: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published" | "archived";
+            /** Faculty Id */
+            faculty_id?: string | null;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /** Staffing Ok */
+            staffing_ok: boolean;
+            /**
+             * Teacher Count
+             * @default 0
+             */
+            teacher_count: number;
+            /**
+             * Min Teachers
+             * @default 0
+             */
+            min_teachers: number;
+            /**
+             * Gradeable Unit Count
+             * @default 0
+             */
+            gradeable_unit_count: number;
+            /**
+             * Learning Outcome Count
+             * @default 0
+             */
+            learning_outcome_count: number;
+            /**
+             * Blocks Required Stage
+             * @default false
+             */
+            blocks_required_stage: boolean;
+            /** Reason Codes */
+            reason_codes?: ("no_gradeable_content" | "no_learning_outcomes" | "understaffed" | "archived")[];
+            /** Reason */
+            reason: string;
         };
         /** BulkApproveRequest */
         BulkApproveRequest: {
@@ -6974,14 +8718,16 @@ export interface components {
              * Format: uuid
              */
             organization_id: string;
-            /** Org Unit Id */
-            org_unit_id?: string | null;
             /** Slug */
             slug: string;
             /** Name */
             name: string;
             /** Description */
             description?: string | null;
+            /** Thumbnail Object Id */
+            thumbnail_object_id?: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /** Status */
             status: string;
             /** Max Concurrent */
@@ -6996,6 +8742,21 @@ export interface components {
              * @default 0
              */
             course_count: number;
+            /**
+             * Student Count
+             * @default 0
+             */
+            student_count: number;
+            /**
+             * Has Draft Version
+             * @default false
+             */
+            has_draft_version: boolean;
+            /**
+             * Draft Version No
+             * @default 0
+             */
+            draft_version_no: number;
             /**
              * Created At
              * Format: date-time
@@ -7039,7 +8800,7 @@ export interface components {
              * @default completion
              * @constant
              */
-            satisfied_by?: "completion" | null;
+            satisfied_by: "completion";
         };
         /** CareerPathCourseAuthoring */
         CareerPathCourseAuthoring: {
@@ -7132,10 +8893,7 @@ export interface components {
             is_required: boolean;
             /** Stage Id */
             stage_id?: string | null;
-            /**
-             * Thumbnail Url
-             * @description Short-lived presigned URL, same image the catalogue shows.
-             */
+            /** Thumbnail Url */
             thumbnail_url?: string | null;
         };
         /** CareerPathCourseReorder */
@@ -7145,14 +8903,65 @@ export interface components {
         };
         /** CareerPathCreate */
         CareerPathCreate: {
-            /** Org Unit Id */
-            org_unit_id?: string | null;
             /** Slug */
             slug: string;
             /** Name */
             name: string;
             /** Description */
             description?: string | null;
+        };
+        /**
+         * CareerPathDetailPublic
+         * @description Published path + its stage breakdown.
+         *
+         *     A separate schema from :class:`CareerPathPublic` so the CATALOG list
+         *     endpoint keeps its slim payload — a browse page returning every stage of
+         *     every path would balloon for no benefit.
+         */
+        CareerPathDetailPublic: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+            /**
+             * Status
+             * @constant
+             */
+            status: "published";
+            /**
+             * Courses
+             * @default []
+             */
+            courses: components["schemas"]["CareerPathCoursePublic"][];
+            /**
+             * Stages
+             * @default []
+             */
+            stages: components["schemas"]["CareerPathStagePublic"][];
+            /**
+             * Course Count
+             * @default 0
+             */
+            course_count: number;
+            /**
+             * Required Course Count
+             * @default 0
+             */
+            required_course_count: number;
+            /**
+             * Stage Count
+             * @default 0
+             */
+            stage_count: number;
         };
         /**
          * CareerPathImpactRead
@@ -7224,6 +9033,36 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /**
+         * CareerPathOptionRead
+         * @description Career-path entry in the authoring-options picker payload.
+         *
+         *     ``selectable`` is False for paths that exist but cannot be attached to a
+         *     program version yet (draft/archived, or no published version to pin).
+         *     The backend PATCH/POST gate stays authoritative — this flag only keeps
+         *     the UI picker from offering a choice that would be rejected with
+         *     ``all_paths_must_be_published_and_not_archived``.
+         */
+        CareerPathOptionRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug?: string | null;
+            /** Description */
+            description?: string | null;
+            /**
+             * Selectable
+             * @default true
+             */
+            selectable: boolean;
+            /** Not Selectable Reason */
+            not_selectable_reason?: string | null;
+        };
         /** CareerPathPublic */
         CareerPathPublic: {
             /**
@@ -7237,6 +9076,8 @@ export interface components {
             name: string;
             /** Description */
             description?: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /**
              * Status
              * @constant
@@ -7314,6 +9155,42 @@ export interface components {
              */
             enforcement: "hard" | "soft" | "advisory";
         };
+        /**
+         * CareerPathStagePublic
+         * @description One stage of a published path, as a PROSPECTIVE student sees it.
+         *
+         *     Structure only — no ``unlocked`` / ``complete`` / ``latched``. Those live
+         *     on :class:`StageProgressRead`, which needs an enrollment to evaluate.
+         *     A student browsing a path inside a learning program has not chosen it
+         *     yet, so there is no progress to report; they still need to see the shape
+         *     of the journey before committing to it, which is what this carries.
+         */
+        CareerPathStagePublic: {
+            /**
+             * Stage Id
+             * Format: uuid
+             */
+            stage_id: string;
+            /** Position */
+            position: number;
+            /** Title */
+            title?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Unlock Policy */
+            unlock_policy: string;
+            /** Min Optional To Complete */
+            min_optional_to_complete: number;
+            /** Required Count */
+            required_count: number;
+            /** Optional Count */
+            optional_count: number;
+            /**
+             * Courses
+             * @default []
+             */
+            courses: components["schemas"]["CareerPathCoursePublic"][];
+        };
         /** CareerPathStageReorder */
         CareerPathStageReorder: {
             /** Stage Ids */
@@ -7354,15 +9231,14 @@ export interface components {
          * CareerPathUpdate
          * @description Editable metadata for an existing path.
          *
-         *     ``org_unit_id`` is deliberately ABSENT: a path's organization is fixed at
-         *     creation (server-derived from the actor's primary org), the column is not
-         *     consumed by any backend read path, and a stray unit write on a locked-org
-         *     path would silently re-scope metadata nothing reads. The create schema
-         *     keeps the field for completeness; updates never touch it.
+         *     A path is organization-wide.  Faculty ownership belongs to Learning
+         *     Programs and Courses, never to Career Paths.
          */
         CareerPathUpdate: {
             /** Name */
             name?: string | null;
+            /** Slug */
+            slug?: string | null;
             /** Description */
             description?: string | null;
             /** Max Concurrent */
@@ -7399,6 +9275,10 @@ export interface components {
             created_at: string;
             /** Created By */
             created_by?: string | null;
+            /** Published By */
+            published_by?: string | null;
+            /** Published By Name */
+            published_by_name?: string | null;
         };
         /**
          * CareerReadinessSnapshotRead
@@ -7429,6 +9309,82 @@ export interface components {
             cached_tokens: number;
             /** Total Usd */
             total_usd: number;
+        };
+        /**
+         * ChangeImpactOut
+         * @description What applying a pending change would do. Nothing is written.
+         */
+        ChangeImpactOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Description */
+            description: string;
+            /** Scope */
+            scope: string;
+            /** Organization Id */
+            organization_id: string | null;
+            /** Current Value */
+            current_value: boolean | number | null;
+            /** Current Source */
+            current_source: string;
+            /** New Value */
+            new_value: boolean | number | null;
+            /** Unchanged */
+            unchanged: boolean;
+            /** Affected Organizations */
+            affected_organizations: number;
+            /** Total Organizations */
+            total_organizations: number;
+            /** Requires Reprocess */
+            requires_reprocess: boolean;
+        };
+        /** ChangePathRequestCreate */
+        ChangePathRequestCreate: {
+            /**
+             * Target Career Path Id
+             * Format: uuid
+             */
+            target_career_path_id: string;
+            /** From Attempt Id */
+            from_attempt_id?: string | null;
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * ChangeRequestDecision
+         * @description Approval payload with an optional dean note.
+         *
+         *     ``reason`` remains accepted for backward compatibility with older clients.
+         *     New clients use ``note``, which is stored in ``decision_note`` so approval
+         *     guidance is not confused with a rejection reason.
+         */
+        ChangeRequestDecision: {
+            /** Reason */
+            reason?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * ChangeRequestRejection
+         * @description Rejection payload with category, custom reason, and note kept distinct.
+         *
+         *     ``reason_code='other'`` REQUIRES ``reason``: the whole point of ``other``
+         *     is that the dean types what actually happened, and a bare "other" in the
+         *     student's notification and history would be worse than the canned codes it
+         *     escapes. ``note`` is optional for every category.
+         */
+        ChangeRequestRejection: {
+            /**
+             * Reason Code
+             * @enum {string}
+             */
+            reason_code: "insufficient_justification" | "progress_loss_too_high" | "target_path_not_suitable" | "preserve_remaining_switch" | "advising_required" | "documentation_missing" | "other";
+            /** Reason */
+            reason?: string | null;
+            /** Note */
+            note?: string | null;
         };
         /**
          * CheckStatus
@@ -7480,7 +9436,12 @@ export interface components {
             /** Median Kr */
             median_kr: number;
         };
-        /** ContentOut */
+        /**
+         * ContentOut
+         * @description Content inventory. Processing-job status is deliberately absent: jobs
+         *     live in the Operations surface only (PRD ADM-004 / section 2 IA rule), so
+         *     there is exactly one place that answers "how are jobs doing".
+         */
         ContentOut: {
             /** Courses By Status */
             courses_by_status: {
@@ -7526,6 +9487,39 @@ export interface components {
             call_count: number;
         };
         /**
+         * CourseAssessmentSummaryRead
+         * @description Whole-course aggregates for the teacher's Assessments tab.
+         */
+        CourseAssessmentSummaryRead: {
+            /**
+             * Students Assessed
+             * @default 0
+             */
+            students_assessed: number;
+            /**
+             * Quiz Attempt Count
+             * @default 0
+             */
+            quiz_attempt_count: number;
+            /** Quiz Pass Rate */
+            quiz_pass_rate?: number | null;
+            /**
+             * Interview Session Count
+             * @default 0
+             */
+            interview_session_count: number;
+            /**
+             * Quiz Titles
+             * @default []
+             */
+            quiz_titles: string[];
+            /**
+             * Interview Titles
+             * @default []
+             */
+            interview_titles: string[];
+        };
+        /**
          * CourseAuthoring
          * @description Authoring projection of :class:`Course`.
          *
@@ -7554,12 +9548,20 @@ export interface components {
             organization_id: string;
             instructor?: components["schemas"]["InstructorAuthoring"] | null;
             /**
+             * Instructors
+             * @default []
+             */
+            instructors: components["schemas"]["InstructorRead"][];
+            /**
+             * Career Paths
+             * @default []
+             */
+            career_paths: components["schemas"]["CourseCareerPlacementPublic"][];
+            /**
              * Status
              * @enum {string}
              */
             status: "draft" | "published" | "archived";
-            /** Level */
-            level?: string | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
             /** Thumbnail Url */
@@ -7582,8 +9584,15 @@ export interface components {
              * @default []
              */
             outcomes: components["schemas"]["CourseLearningOutcomeAuthoring"][];
-            /** Org Unit Id */
-            org_unit_id?: string | null;
+            /**
+             * Has Syllabus
+             * @default false
+             */
+            has_syllabus: boolean;
+            /** Faculty Id */
+            faculty_id?: string | null;
+            /** Faculty Name */
+            faculty_name?: string | null;
             /**
              * Owner User Id
              * Format: uuid
@@ -7591,10 +9600,6 @@ export interface components {
             owner_user_id: string;
             /** Thumbnail Object Id */
             thumbnail_object_id?: string | null;
-            /** Expected Completion Days */
-            expected_completion_days?: number | null;
-            /** Enrollment Cap */
-            enrollment_cap?: number | null;
             /**
              * Student Count
              * @default 0
@@ -7623,6 +9628,52 @@ export interface components {
             deleted_at?: string | null;
             /** Deleted By */
             deleted_by?: string | null;
+        };
+        /**
+         * CourseCareerPlacementPublic
+         * @description One place where this course sits on a career path.
+         *
+         *     The student-facing LEVEL is derived from these placements rather than a
+         *     user-defined property: a course's "level" is shown as "Stage {position} —
+         *     {stage_title}" (career path: {path_name}). A course may sit on several
+         *     paths; the FE shows the first and flags the rest.
+         */
+        CourseCareerPlacementPublic: {
+            /**
+             * Career Path Id
+             * Format: uuid
+             */
+            career_path_id: string;
+            /** Career Path Name */
+            career_path_name: string;
+            /**
+             * Stage Id
+             * Format: uuid
+             */
+            stage_id: string;
+            /** Stage Title */
+            stage_title?: string | null;
+            /** Stage Position */
+            stage_position: number;
+        };
+        /**
+         * CourseCloneRequest
+         * @description Clone-depth selection for the manager-only course clone (user request).
+         *
+         *     Depth is REQUIRED — there is no default, because a hidden default would
+         *     silently decide how much content the manager meant to copy:
+         *
+         *     * ``shell``     — course + learning outcomes only (no modules).
+         *     * ``structure`` — shell + module skeleton (modules + module prerequisites).
+         *     * ``full``      — complete deep clone (modules + items + lessons +
+         *       quizzes + interviews + resources + all prerequisite graphs).
+         */
+        CourseCloneRequest: {
+            /**
+             * Depth
+             * @enum {string}
+             */
+            depth: "shell" | "structure" | "full";
         };
         /**
          * CourseContentAuthoring
@@ -7657,24 +9708,18 @@ export interface components {
         };
         /** CourseCreate */
         CourseCreate: {
-            /** Org Unit Id */
-            org_unit_id?: string | null;
+            /** Faculty Id */
+            faculty_id?: string | null;
             /** Slug */
             slug: string;
             /** Title */
             title: string;
             /** Description */
             description?: string | null;
-            /** Level */
-            level?: ("beginner" | "intermediate" | "advanced") | null;
             /** Thumbnail Object Id */
             thumbnail_object_id?: string | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
-            /** Expected Completion Days */
-            expected_completion_days?: number | null;
-            /** Enrollment Cap */
-            enrollment_cap?: number | null;
             /** Contact Email */
             contact_email?: string | null;
             /** Contact Phone */
@@ -7699,6 +9744,67 @@ export interface components {
             restored: number;
             /** Confirmed */
             confirmed: number;
+        };
+        /**
+         * CourseHealthRow
+         * @description One course in the dashboard's Course Health table.
+         *
+         *     Replaces the course gallery, which gave every course equal visual
+         *     weight and buried the signals in badges. Comparison is the point: the
+         *     columns exist so a teacher can rank their teaching load and see which
+         *     course to open, which a grid of thumbnails cannot answer.
+         *
+         *     Nullable numbers are deliberate and mean "no data", never zero:
+         *     ``avg_progress_percent`` is ``None`` when nobody is enrolled, and
+         *     ``pass_rate_percent`` when nobody has completed a published quiz. Zero
+         *     means they tried and did not get there -- rendering the two alike would
+         *     accuse an unassessed course of total failure.
+         */
+        CourseHealthRow: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Title */
+            title: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /**
+             * Students
+             * @default 0
+             */
+            students: number;
+            /** Avg Progress Percent */
+            avg_progress_percent?: number | null;
+            /**
+             * At Risk Students
+             * @default 0
+             */
+            at_risk_students: number;
+            /** Pass Rate Percent */
+            pass_rate_percent?: number | null;
+            /**
+             * Pass Sample
+             * @default 0
+             */
+            pass_sample: number;
+            /**
+             * Pending Review
+             * @default 0
+             */
+            pending_review: number;
+            /** Last Activity At */
+            last_activity_at?: string | null;
+            /**
+             * Severity
+             * @default none
+             */
+            severity: string;
+            /** Severity Reason */
+            severity_reason?: string | null;
         };
         /**
          * CourseLearningOutcomeAuthoring
@@ -8002,12 +10108,20 @@ export interface components {
             organization_id: string;
             instructor?: components["schemas"]["InstructorRead"] | null;
             /**
+             * Instructors
+             * @default []
+             */
+            instructors: components["schemas"]["InstructorRead"][];
+            /**
+             * Career Paths
+             * @default []
+             */
+            career_paths: components["schemas"]["CourseCareerPlacementPublic"][];
+            /**
              * Status
              * @constant
              */
             status: "published";
-            /** Level */
-            level?: string | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
             /** Thumbnail Url */
@@ -8030,6 +10144,11 @@ export interface components {
              * @default []
              */
             outcomes: components["schemas"]["CourseLearningOutcomePublic"][];
+            /**
+             * Has Syllabus
+             * @default false
+             */
+            has_syllabus: boolean;
         };
         /**
          * CourseReadiness
@@ -8049,6 +10168,26 @@ export interface components {
             status: string;
             /** Teacher Count */
             teacher_count: number;
+            /**
+             * Course Instructor Count
+             * @default 0
+             */
+            course_instructor_count: number;
+            /**
+             * Min Teachers Per Course
+             * @default 0
+             */
+            min_teachers_per_course: number;
+            /**
+             * Max Teachers Per Course
+             * @default 0
+             */
+            max_teachers_per_course: number;
+            /**
+             * Staffing Ok
+             * @default true
+             */
+            staffing_ok: boolean;
             /** Gradeable Unit Count */
             gradeable_unit_count: number;
             /**
@@ -8104,12 +10243,39 @@ export interface components {
             count: number;
         };
         /**
+         * CourseTeacherBulkRemoveRequest
+         * @description Remove several teachers from a course in one call.
+         *
+         *     All-or-nothing: the caller selected these people, so a partial result is
+         *     a surprise, and a half-applied removal can leave the course in a
+         *     staffing state nobody asked for. The instructor guard is checked against
+         *     the state the course is LEFT in — see
+         *     ``courses.services.assignment.remove_teachers_from_course``.
+         */
+        CourseTeacherBulkRemoveRequest: {
+            /** User Ids */
+            user_ids: string[];
+        };
+        /**
+         * CourseTeacherBulkRemoveResult
+         * @description How many assignments were revoked.
+         */
+        CourseTeacherBulkRemoveResult: {
+            /** Removed */
+            removed: number;
+        };
+        /** CourseTeacherRoleRequest */
+        CourseTeacherRoleRequest: {
+            /** Is Instructor */
+            is_instructor: boolean;
+            /** Is Assistant */
+            is_assistant: boolean;
+        };
+        /**
          * CourseUpdate
          * @description Partial update for a course. State transitions checked in service.
          */
         CourseUpdate: {
-            /** Org Unit Id */
-            org_unit_id?: string | null;
             /** Slug */
             slug?: string | null;
             /** Title */
@@ -8118,16 +10284,10 @@ export interface components {
             description?: string | null;
             /** Status */
             status?: ("draft" | "published" | "archived") | null;
-            /** Level */
-            level?: ("beginner" | "intermediate" | "advanced") | null;
             /** Thumbnail Object Id */
             thumbnail_object_id?: string | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
-            /** Expected Completion Days */
-            expected_completion_days?: number | null;
-            /** Enrollment Cap */
-            enrollment_cap?: number | null;
             /** Contact Email */
             contact_email?: string | null;
             /** Contact Phone */
@@ -8345,11 +10505,18 @@ export interface components {
         };
         /**
          * DashboardOut
-         * @description Operator dashboard rollup.
+         * @description Operator dashboard rollup, ordered the way the dashboard reads it.
          *
-         *     ``processing_jobs`` and ``ai_model_calls`` carry no organization edge in
-         *     the schema, so the job / cost / latency fields are always global even for
-         *     an org-scoped caller (documented in ``sql/stats/dashboard.sql``).
+         *     Two rules run through the whole payload:
+         *
+         *     * **Every rate is nullable.** ``None`` means the denominator was empty and
+         *       the client must render "No data". A fabricated 0% makes a quiet platform
+         *       indistinguishable from a healthy one (PRD section 5).
+         *     * **Every family declares its scope.** ``processing_jobs``,
+         *       ``ai_model_calls`` and ``http_audit_log`` carry no organization edge, so
+         *       an org-scoped caller gets global numbers there. The ``*_scope`` fields
+         *       say so outright instead of letting the figure imply a tenant filter it
+         *       never had (PRD ADM-004).
          */
         DashboardOut: {
             /**
@@ -8359,6 +10526,10 @@ export interface components {
             as_of: string;
             /** Window Days */
             window_days: number;
+            /** Window From */
+            window_from?: string | null;
+            /** Window To */
+            window_to?: string | null;
             /** Organization Id */
             organization_id?: string | null;
             /** Usage Scope */
@@ -8539,7 +10710,14 @@ export interface components {
         };
         /**
          * DiscussionCommentAuthor
-         * @description Minimal author identity shown beside a comment.
+         * @description Minimal author identity shown beside a topic or a comment.
+         *
+         *     Declared above the topic shapes because ``DiscussionTopicRead`` embeds it;
+         *     the name keeps its original ``Comment`` spelling so existing importers and
+         *     the generated client types do not churn.
+         *
+         *     ``avatar_url`` is a short-lived presigned GET URL minted per request by
+         *     :mod:`abridgeai.features.discussions.authors` — never a raw bucket/key.
          */
         DiscussionCommentAuthor: {
             /**
@@ -8555,10 +10733,17 @@ export interface components {
         /**
          * DiscussionCommentCreate
          * @description Student/teacher payload to post a comment on a topic.
+         *
+         *     ``parent_comment_id`` makes the comment a REPLY, and a reply is the only
+         *     way to name someone: the client prefixes the body with the parent author's
+         *     handle, and the notification goes to that author. There is deliberately no
+         *     free-form mention field — see migration 0111's docstring.
          */
         DiscussionCommentCreate: {
             /** Body */
             body: string;
+            /** Parent Comment Id */
+            parent_comment_id?: string | null;
         };
         /**
          * DiscussionCommentRead
@@ -8588,6 +10773,8 @@ export interface components {
             body: string;
             /** Parent Comment Id */
             parent_comment_id?: string | null;
+            /** Reply To Comment Id */
+            reply_to_comment_id?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -8620,7 +10807,11 @@ export interface components {
         };
         /**
          * DiscussionTopicCreate
-         * @description Teacher payload to open a new topic on a lesson.
+         * @description Teacher payload to open a new topic.
+         *
+         *     Scope is not in the body — it comes from the route the payload is posted
+         *     to (``/lessons/{id}/...`` or ``/courses/{id}/...``), so a client cannot
+         *     claim one scope in the URL and another in the JSON.
          */
         DiscussionTopicCreate: {
             /** Title */
@@ -8630,7 +10821,7 @@ export interface components {
         };
         /**
          * DiscussionTopicList
-         * @description Envelope for the lesson topic list.
+         * @description Envelope for a topic list (lesson-scoped or course-scoped).
          *
          *     ``can_manage`` rides at the top level so the client knows whether to
          *     show the teacher's "post a topic" affordance even when ``topics`` is
@@ -8652,6 +10843,10 @@ export interface components {
          *     ``comment_count`` is filled by the query layer (batched), not stored.
          *     ``can_manage`` is set per-request by the router so the client knows
          *     whether to show edit/close/delete controls — never persisted.
+         *
+         *     ``author`` is the resolved identity behind ``created_by`` (display name +
+         *     presigned avatar), so the client can attribute a topic without a second
+         *     round-trip per row. ``None`` when ``created_by`` is NULL.
          */
         DiscussionTopicRead: {
             /**
@@ -8659,11 +10854,10 @@ export interface components {
              * Format: uuid
              */
             id: string;
-            /**
-             * Lesson Id
-             * Format: uuid
-             */
-            lesson_id: string;
+            /** Lesson Id */
+            lesson_id?: string | null;
+            /** Course Id */
+            course_id?: string | null;
             /** Title */
             title: string;
             /** Body Markdown */
@@ -8688,10 +10882,16 @@ export interface components {
              */
             comment_count: number;
             /**
+             * Mention Count
+             * @default 0
+             */
+            mention_count: number;
+            /**
              * Can Manage
              * @default false
              */
             can_manage: boolean;
+            author?: components["schemas"]["DiscussionCommentAuthor"] | null;
         };
         /**
          * DiscussionTopicUpdate
@@ -8704,6 +10904,24 @@ export interface components {
             body_markdown?: string | null;
             /** Status */
             status?: string | null;
+        };
+        /**
+         * DropPathRequestCreate
+         * @description Ask to end one Career Path attempt without taking another.
+         *
+         *     ``from_attempt_id`` is required, where the change payload allows it to be
+         *     inferred. A drop is only permitted while two or more paths are active
+         *     (a student must always be sitting at least one), so there is never a
+         *     single obvious attempt to infer.
+         */
+        DropPathRequestCreate: {
+            /**
+             * From Attempt Id
+             * Format: uuid
+             */
+            from_attempt_id: string;
+            /** Reason */
+            reason: string;
         };
         /** EnableUserOut */
         EnableUserOut: {
@@ -8803,6 +11021,50 @@ export interface components {
             enrolled_at: string;
             /** Completed At */
             completed_at?: string | null;
+        };
+        /** FacultyAssignmentRead */
+        FacultyAssignmentRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /**
+             * Faculty Id
+             * Format: uuid
+             */
+            faculty_id: string;
+            /** Status */
+            status: string;
+            /**
+             * Active From
+             * Format: date-time
+             */
+            active_from: string;
+            /** Active Until */
+            active_until?: string | null;
+            /** Created By */
+            created_by?: string | null;
+            /** Role Codes */
+            role_codes?: string[];
+        };
+        /**
+         * FacultyMembersAddRequest
+         * @description Add staff affiliations without moving them out of other faculties.
+         */
+        FacultyMembersAddRequest: {
+            /** User Ids */
+            user_ids: string[];
         };
         /** FailedSpend */
         FailedSpend: {
@@ -9085,6 +11347,11 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
             /** User Id */
             user_id?: string | null;
             /** Session Id */
@@ -9095,6 +11362,8 @@ export interface components {
             path: string;
             /** Status Code */
             status_code: number;
+            /** Failure Reason */
+            failure_reason?: string | null;
             /** Latency Ms */
             latency_ms?: number | null;
             /** Ip Address */
@@ -9123,6 +11392,16 @@ export interface components {
             avatar_url?: string | null;
             /** Headline */
             headline?: string | null;
+            /**
+             * Is Instructor
+             * @default false
+             */
+            is_instructor: boolean;
+            /**
+             * Is Assistant
+             * @default false
+             */
+            is_assistant: boolean;
             /** Primary Email */
             primary_email: string;
         };
@@ -9146,24 +11425,47 @@ export interface components {
             avatar_url?: string | null;
             /** Headline */
             headline?: string | null;
+            /**
+             * Is Instructor
+             * @default false
+             */
+            is_instructor: boolean;
+            /**
+             * Is Assistant
+             * @default false
+             */
+            is_assistant: boolean;
         };
         /** IntegrityEventBatchRequest */
         IntegrityEventBatchRequest: {
             /** Events */
             events: components["schemas"]["IntegrityEventItem"][];
         };
+        /**
+         * IntegrityEventBatchResponse
+         * @description Server-authoritative ingest result.
+         *
+         *     ``warning_issued`` is True ONLY on the request whose events first crossed
+         *     the threshold — a duplicate/retried crossing batch re-reads the persisted
+         *     ``integrity_warning_issued`` flag and reports False. The client uses this
+         *     to surface exactly one visible warning; it cannot forge one, because the
+         *     flag lives on the server row.
+         */
         IntegrityEventBatchResponse: {
             /** Accepted */
             accepted: number;
-            /**
-             * Integrity Score
-             * @description Running weighted browser-signal score after this batch.
-             */
+            /** Integrity Score */
             integrity_score: number;
-            /** Integrity Score Threshold */
-            integrity_score_threshold?: number;
-            /** Warning Issued */
-            warning_issued?: boolean;
+            /**
+             * Integrity Score Threshold
+             * @default 0
+             */
+            integrity_score_threshold: number;
+            /**
+             * Warning Issued
+             * @default false
+             */
+            warning_issued: boolean;
         };
         /** IntegrityEventItem */
         IntegrityEventItem: {
@@ -9211,6 +11513,8 @@ export interface components {
             module_id: string;
             /** Title */
             title: string;
+            /** Slug */
+            slug?: string | null;
             /**
              * Status
              * @enum {string}
@@ -9230,13 +11534,32 @@ export interface components {
              * Max Follow Ups Per Question
              * @default 2
              */
-            max_follow_ups_per_question?: number;
+            max_follow_ups_per_question: number;
             /**
              * Max Hints Per Question
              * @default 3
              */
-            max_hints_per_question?: number;
-            /** Lock Quiz Ef Until Pass */
+            max_hints_per_question: number;
+            /**
+             * Integrity Weight Tab Switch
+             * @default 3
+             */
+            integrity_weight_tab_switch: number;
+            /**
+             * Integrity Weight Focus Lost
+             * @default 1
+             */
+            integrity_weight_focus_lost: number;
+            /**
+             * Integrity Weight Fullscreen Exit
+             * @default 2
+             */
+            integrity_weight_fullscreen_exit: number;
+            /**
+             * Integrity Score Threshold
+             * @default 3
+             */
+            integrity_score_threshold: number;
             /** Published At */
             published_at?: string | null;
             /** Supplementary Instructions */
@@ -9257,30 +11580,6 @@ export interface components {
             security_max_consecutive_attempts: number;
             /** Security Custom Refusal En */
             security_custom_refusal_en?: string | null;
-            /**
-             * Integrity Weight Tab Switch
-             * @description Browser-integrity weight for tab_switch signals (1-5).
-             * @default 3
-             */
-            integrity_weight_tab_switch: number;
-            /**
-             * Integrity Weight Focus Lost
-             * @description Browser-integrity weight for focus_lost signals (1-5).
-             * @default 1
-             */
-            integrity_weight_focus_lost: number;
-            /**
-             * Integrity Weight Fullscreen Exit
-             * @description Browser-integrity weight for fullscreen_exit signals (1-5).
-             * @default 2
-             */
-            integrity_weight_fullscreen_exit: number;
-            /**
-             * Integrity Score Threshold
-             * @description Weighted browser-signal score at which the session is flagged (1-20).
-             * @default 3
-             */
-            integrity_score_threshold: number;
             /**
              * Security Incident Summary Enabled
              * @default true
@@ -9341,16 +11640,12 @@ export interface components {
              * Max Follow Ups Per Question
              * @default 2
              */
-            max_follow_ups_per_question?: number;
+            max_follow_ups_per_question: number;
             /**
              * Max Hints Per Question
              * @default 3
              */
-            max_hints_per_question?: number;
-            /**
-             * Lock Quiz Ef Until Pass
-             * @default false
-             */
+            max_hints_per_question: number;
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
             /**
@@ -9367,34 +11662,30 @@ export interface components {
             /** Security Custom Refusal En */
             security_custom_refusal_en?: string | null;
             /**
+             * Security Incident Summary Enabled
+             * @default true
+             */
+            security_incident_summary_enabled: boolean;
+            /**
              * Integrity Weight Tab Switch
-             * @description Browser-integrity weight for tab_switch signals (1-5).
              * @default 3
              */
             integrity_weight_tab_switch: number;
             /**
              * Integrity Weight Focus Lost
-             * @description Browser-integrity weight for focus_lost signals (1-5).
              * @default 1
              */
             integrity_weight_focus_lost: number;
             /**
              * Integrity Weight Fullscreen Exit
-             * @description Browser-integrity weight for fullscreen_exit signals (1-5).
              * @default 2
              */
             integrity_weight_fullscreen_exit: number;
             /**
              * Integrity Score Threshold
-             * @description Weighted browser-signal score at which the session is flagged (1-20).
              * @default 3
              */
             integrity_score_threshold: number;
-            /**
-             * Security Incident Summary Enabled
-             * @default true
-             */
-            security_incident_summary_enabled: boolean;
         };
         /**
          * InterviewConfigPublic
@@ -9431,10 +11722,7 @@ export interface components {
             module_id: string;
             /** Title */
             title: string;
-            /**
-             * Slug
-             * @description URL slug (immutable once published) for breadcrumb-style student links.
-             */
+            /** Slug */
             slug?: string | null;
             /**
              * Status
@@ -9455,37 +11743,32 @@ export interface components {
              * Max Follow Ups Per Question
              * @default 2
              */
-            max_follow_ups_per_question?: number;
+            max_follow_ups_per_question: number;
             /**
              * Max Hints Per Question
              * @default 3
              */
-            max_hints_per_question?: number;
+            max_hints_per_question: number;
             /**
              * Integrity Weight Tab Switch
-             * @description Browser-integrity weight for tab_switch signals (1-5). Safe pre-start disclosure.
              * @default 3
              */
             integrity_weight_tab_switch: number;
             /**
              * Integrity Weight Focus Lost
-             * @description Browser-integrity weight for focus_lost signals (1-5). Safe pre-start disclosure.
              * @default 1
              */
             integrity_weight_focus_lost: number;
             /**
              * Integrity Weight Fullscreen Exit
-             * @description Browser-integrity weight for fullscreen_exit signals (1-5). Safe pre-start disclosure.
              * @default 2
              */
             integrity_weight_fullscreen_exit: number;
             /**
              * Integrity Score Threshold
-             * @description Weighted browser-signal score at which the session is flagged and the learner warned (1-20).
              * @default 3
              */
             integrity_score_threshold: number;
-            /** Lock Quiz Ef Until Pass */
             /** Published At */
             published_at?: string | null;
         };
@@ -9518,7 +11801,6 @@ export interface components {
             max_follow_ups_per_question?: number | null;
             /** Max Hints Per Question */
             max_hints_per_question?: number | null;
-            /** Lock Quiz Ef Until Pass */
             /** Supplementary Instructions */
             supplementary_instructions?: string | null;
             /** Security Response Policy */
@@ -9527,32 +11809,16 @@ export interface components {
             security_max_consecutive_attempts?: number | null;
             /** Security Custom Refusal En */
             security_custom_refusal_en?: string | null;
-            /**
-             * Integrity Weight Tab Switch
-             * @description Browser-integrity weight for tab_switch signals (1-5).
-             * @default 3
-             */
-            integrity_weight_tab_switch: number | null;
-            /**
-             * Integrity Weight Focus Lost
-             * @description Browser-integrity weight for focus_lost signals (1-5).
-             * @default 1
-             */
-            integrity_weight_focus_lost: number | null;
-            /**
-             * Integrity Weight Fullscreen Exit
-             * @description Browser-integrity weight for fullscreen_exit signals (1-5).
-             * @default 2
-             */
-            integrity_weight_fullscreen_exit: number | null;
-            /**
-             * Integrity Score Threshold
-             * @description Weighted browser-signal score at which the session is flagged (1-20).
-             * @default 3
-             */
-            integrity_score_threshold: number | null;
             /** Security Incident Summary Enabled */
             security_incident_summary_enabled?: boolean | null;
+            /** Integrity Weight Tab Switch */
+            integrity_weight_tab_switch?: number | null;
+            /** Integrity Weight Focus Lost */
+            integrity_weight_focus_lost?: number | null;
+            /** Integrity Weight Fullscreen Exit */
+            integrity_weight_fullscreen_exit?: number | null;
+            /** Integrity Score Threshold */
+            integrity_score_threshold?: number | null;
         };
         /**
          * InterviewForAuthoringPublic
@@ -9605,23 +11871,28 @@ export interface components {
              * @default 0
              */
             outcome_count: number;
+            /**
+             * Recording Consent Required
+             * @default false
+             */
+            recording_consent_required: boolean;
+            /** Recording Policy Version */
+            recording_policy_version?: string | null;
         };
         /**
          * InterviewGenerationRequest
          * @description Body for ``POST /teacher/interviews/{id}/generate``.
          *
-         *     The mode discriminator selects the generation strategy:
-         *
-         *     * ``topic`` — generate questions covering listed focus topics.
-         *     * ``outcome-based`` — generate one (or more) per rubric outcome.
-         *     * ``coverage`` — fill gaps in lesson coverage from ``source_lesson_ids``.
+         *     There is deliberately NO generation-mode discriminator. One pipeline
+         *     (retrieval → generation → validation → persistence) serves every run;
+         *     scoping is expressed by the fields themselves — ``source_module_ids`` /
+         *     ``source_lesson_ids`` narrow the material, ``target_outcome_ids`` narrows
+         *     the rubric criteria, ``focus_topics`` overrides the retrieval anchors. A
+         *     ``mode`` field existed until 2026-08-30 but no stage ever read it, so the
+         *     teacher's three-way choice ("topic" / "outcome-based" / "coverage") had
+         *     identical behaviour; it was removed rather than left as a decorative dial.
          */
         InterviewGenerationRequest: {
-            /**
-             * Mode
-             * @enum {string}
-             */
-            mode: "topic" | "outcome-based" | "coverage";
             /**
              * Course Id
              * Format: uuid
@@ -9666,6 +11937,8 @@ export interface components {
              * @default []
              */
             target_outcome_ids: string[];
+            /** Variant Strategy */
+            variant_strategy?: ("all_angles" | "role_only") | null;
         };
         /**
          * InterviewGenerationRunPublic
@@ -9865,31 +12138,20 @@ export interface components {
             importance_weight: number;
         };
         /**
-         * InterviewProgressRead
-         * @description Per-interview completion state for one student, for course-learn.
-         *
-         *     Interviews were graded per attempt long before this existed
-         *     (``interview_sessions.pass_verdict``), but the verdict never reached the
-         *     curriculum, so an interview item stayed pending forever.
-         *
-         *     Completion rule: completed ⟺ at least one
-         *     attempt has ``pass_verdict = TRUE``. This is intentionally
-         *     STRICTER than the quiz rule, which also completes on "failed with every
-         *     attempt consumed": here the tag is meant to read as *passed*, so a student
-         *     who failed every attempt keeps the item pending.
-         *
-         *     ``attempts_graded`` is exposed separately from ``attempts_used`` because a
-         *     finished attempt is not necessarily a graded one: evaluation is an ARQ job,
-         *     so a just-submitted attempt sits with ``pass_verdict IS NULL`` until the
-         *     worker lands. A UI can use the gap to say "being marked" rather than
-         *     implying a fail.
-         *
-         *     SECURITY: deliberately carries no score, rubric aggregate, outcome text or
-         *     ``min_outcomes_to_pass``. The learner contract for interviews withholds all
-         *     of those (see :class:`InterviewForTakingPublic`), and a progress payload is
-         *     not a licence to leak them — a pass/fail boolean is the whole signal the
-         *     curriculum needs.
+         * InterviewOutcomeUpdate
+         * @description Teacher-editable fields of an existing interview outcome.
          */
+        InterviewOutcomeUpdate: {
+            /** Outcome Text */
+            outcome_text?: string | null;
+            /** Outcome Type */
+            outcome_type?: ("knowledge" | "skill" | "attitude") | null;
+            /** Importance Weight */
+            importance_weight?: number | null;
+            /** Position */
+            position?: number | null;
+        };
+        /** InterviewProgressRead */
         InterviewProgressRead: {
             /**
              * Interview Config Id
@@ -9908,6 +12170,11 @@ export interface components {
              * @default 0
              */
             attempts_graded: number;
+            /**
+             * Attempts Awaiting Grade
+             * @default 0
+             */
+            attempts_awaiting_grade: number;
             /**
              * Passed
              * @default false
@@ -9943,6 +12210,8 @@ export interface components {
             interview_config_id: string;
             /** Linked Outcome Id */
             linked_outcome_id?: string | null;
+            /** Variant Group Id */
+            variant_group_id?: string | null;
             /** Position */
             position?: number | null;
             /** Difficulty */
@@ -9990,6 +12259,27 @@ export interface components {
             deleted_by?: string | null;
         };
         /**
+         * InterviewQuestionBankImportRequest
+         * @description Import bank entries; selecting one grouped child imports every sibling.
+         */
+        InterviewQuestionBankImportRequest: {
+            /** Item Ids */
+            item_ids: string[];
+        };
+        /**
+         * InterviewQuestionBankImportResult
+         * @description Questions copied into a target config by one atomic bank import.
+         */
+        InterviewQuestionBankImportResult: {
+            /** Created */
+            created: components["schemas"]["InterviewQuestionAuthoring"][];
+            /**
+             * Imported Group Count
+             * @default 0
+             */
+            imported_group_count: number;
+        };
+        /**
          * InterviewQuestionBankItemCreate
          * @description Body for ``POST /teacher/courses/{course_id}/interview-question-bank``.
          *
@@ -10009,8 +12299,6 @@ export interface components {
             difficulty?: ("junior" | "mid_level" | "senior") | null;
             /** Model Answer */
             model_answer?: string | null;
-            /** Tags */
-            tags?: string[];
             /** Source Config Id */
             source_config_id?: string | null;
         };
@@ -10040,8 +12328,8 @@ export interface components {
             difficulty?: ("junior" | "mid_level" | "senior") | null;
             /** Model Answer */
             model_answer?: string | null;
-            /** Tags */
-            tags?: string[];
+            /** Variant Group Id */
+            variant_group_id?: string | null;
             /** Source Config Id */
             source_config_id?: string | null;
             /**
@@ -10068,8 +12356,33 @@ export interface components {
             difficulty?: ("junior" | "mid_level" | "senior") | null;
             /** Model Answer */
             model_answer?: string | null;
-            /** Tags */
-            tags?: string[] | null;
+        };
+        /**
+         * InterviewQuestionBankLogicalGroupCreate
+         * @description Atomically add one complete, four-angle logical question to the bank.
+         */
+        InterviewQuestionBankLogicalGroupCreate: {
+            /** Items */
+            items: components["schemas"]["InterviewQuestionBankItemCreate"][];
+        };
+        /**
+         * InterviewQuestionBankSiblingCreate
+         * @description One missing angle to append to a bank singleton or partial group.
+         */
+        InterviewQuestionBankSiblingCreate: {
+            /** Prompt Text */
+            prompt_text: string;
+            /**
+             * Question Type
+             * @enum {string}
+             */
+            question_type: "technical" | "system_design" | "situational" | "behavioral";
+            /** Difficulty */
+            difficulty?: ("junior" | "mid_level" | "senior") | null;
+            /** Model Answer */
+            model_answer?: string | null;
+            /** Source Config Id */
+            source_config_id?: string | null;
         };
         /**
          * InterviewQuestionCreate
@@ -10164,6 +12477,64 @@ export interface components {
              * @enum {string}
              */
             question_type: "conceptual" | "behavioral" | "technical" | "situational" | "system_design";
+        };
+        /**
+         * InterviewQuestionUpdate
+         * @description Teacher-editable fields of an existing interview question.
+         *
+         *     Ownership, all-angle grouping, AI provenance, source attribution, audit,
+         *     soft-delete, and embedding fields are server-owned and intentionally absent.
+         */
+        InterviewQuestionUpdate: {
+            /** Prompt Text */
+            prompt_text?: string | null;
+            /** Question Type */
+            question_type?: ("conceptual" | "behavioral" | "technical" | "situational" | "system_design") | null;
+            /** Difficulty */
+            difficulty?: ("junior" | "mid_level" | "senior") | null;
+            /** Model Answer */
+            model_answer?: string | null;
+            /** Linked Outcome Id */
+            linked_outcome_id?: string | null;
+            /** Position */
+            position?: number | null;
+            /** Review Status */
+            review_status?: ("pending" | "approved" | "edited" | "rejected") | null;
+        };
+        /**
+         * InterviewRecordingConsentRequest
+         * @description Candidate's AFFIRMATIVE recording consent, given before joining.
+         *
+         *     The candidate must actively accept the current recording policy: the DTO
+         *     is only valid with ``accepted=True`` and the CURRENT policy version (a
+         *     stale version means the wording changed and consent must be re-given).
+         *     Absent body = no consent; the interview proceeds unrecorded either way.
+         */
+        InterviewRecordingConsentRequest: {
+            /**
+             * Accepted
+             * @default false
+             */
+            accepted: boolean;
+            /** Policy Version */
+            policy_version?: string | null;
+        };
+        /**
+         * InterviewRecordingConsentResponse
+         * @description Result of recording the consent decision for this session.
+         */
+        InterviewRecordingConsentResponse: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /** Recorded */
+            recorded: boolean;
+            /** Consented */
+            consented: boolean;
+            /** Policy Version */
+            policy_version: string;
         };
         /**
          * InterviewRubricScore
@@ -10356,14 +12727,10 @@ export interface components {
             pass_verdict?: boolean | null;
             /**
              * Evaluation State
-             * @description Server-derived "is a verdict still coming?" — hand-patched
-             *     (the committed openapi-snapshot.json lags the live spec). Optional
-             *     here so a response from a backend predating the field still
-             *     type-checks; readers fall back to `status` in that case.
              * @default not_required
              * @enum {string}
              */
-            evaluation_state?: "not_required" | "pending" | "succeeded" | "exhausted";
+            evaluation_state: "not_required" | "pending" | "succeeded" | "exhausted";
             /** Remaining Attempts */
             remaining_attempts?: number | null;
             /** Retake Available At */
@@ -10387,6 +12754,13 @@ export interface components {
             input_mode?: ("voice" | "text" | "hybrid") | null;
             /** Idempotency Key */
             idempotency_key?: string | null;
+            /**
+             * Recording Consent Accepted
+             * @default false
+             */
+            recording_consent_accepted: boolean;
+            /** Recording Consent Policy Version */
+            recording_consent_policy_version?: string | null;
         };
         /**
          * InterviewSessionStartResponse
@@ -10462,14 +12836,10 @@ export interface components {
             pass_verdict?: boolean | null;
             /**
              * Evaluation State
-             * @description Server-derived "is a verdict still coming?" — hand-patched
-             *     (the committed openapi-snapshot.json lags the live spec). Optional
-             *     here so a response from a backend predating the field still
-             *     type-checks; readers fall back to `status` in that case.
              * @default not_required
              * @enum {string}
              */
-            evaluation_state?: "not_required" | "pending" | "succeeded" | "exhausted";
+            evaluation_state: "not_required" | "pending" | "succeeded" | "exhausted";
             /**
              * Started At
              * Format: date-time
@@ -10478,6 +12848,16 @@ export interface components {
             /** Ended At */
             ended_at?: string | null;
             security_summary?: components["schemas"]["SecuritySessionSummary"] | null;
+        };
+        /**
+         * InterviewSessionTeacherPage
+         * @description One page of :class:`InterviewSessionTeacherRead`, newest session first.
+         */
+        InterviewSessionTeacherPage: {
+            /** Items */
+            items: components["schemas"]["InterviewSessionTeacherRead"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /**
          * InterviewSessionTeacherRead
@@ -10525,12 +12905,10 @@ export interface components {
             pass_verdict?: boolean | null;
             /**
              * Evaluation State
-             * @description Same derived label as InterviewSessionSummary — hand-patched
-             *     (the committed openapi-snapshot.json lags the live spec).
              * @default not_required
              * @enum {string}
              */
-            evaluation_state?: "not_required" | "pending" | "succeeded" | "exhausted";
+            evaluation_state: "not_required" | "pending" | "succeeded" | "exhausted";
             /**
              * Started At
              * Format: date-time
@@ -10624,6 +13002,9 @@ export interface components {
          *     code can address ``item.target.{id,title}`` polymorphically; lives
          *     in the courses schema package so the cross-feature import-linter
          *     contract stays intact.
+         *
+         *     ``slug`` carries the item's URL slug so the student curriculum tree
+         *     can build breadcrumb links without per-item fetches.
          */
         InterviewSummaryPublic: {
             /**
@@ -10633,11 +13014,8 @@ export interface components {
             id: string;
             /** Title */
             title: string;
-            /**
-             * Slug
-             * @description URL slug (immutable once published) for breadcrumb-style student links.
-             */
-            slug?: string | null;
+            /** Slug */
+            slug: string;
         };
         /**
          * InterviewTranscriptRead
@@ -10745,6 +13123,133 @@ export interface components {
             is_active?: boolean | null;
         };
         /**
+         * JobAiCallOut
+         * @description One AI call the job made.
+         *
+         *     Prompt and completion payloads are deliberately absent -- they hold course
+         *     and student content, and triage needs the error and the model, not the
+         *     material.
+         */
+        JobAiCallOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Stage Name */
+            stage_name?: string | null;
+            /** Role */
+            role?: string | null;
+            /** Model Name */
+            model_name: string;
+            /** Operation */
+            operation: string;
+            /** Status */
+            status: string;
+            /** Error Message */
+            error_message?: string | null;
+            /** Latency Ms */
+            latency_ms?: number | null;
+            /** Input Tokens */
+            input_tokens?: number | null;
+            /** Output Tokens */
+            output_tokens?: number | null;
+            /** Total Tokens */
+            total_tokens?: number | null;
+            /** Estimated Cost Usd */
+            estimated_cost_usd?: number | null;
+            /** Request Id */
+            request_id?: string | null;
+            /**
+             * Called At
+             * Format: date-time
+             */
+            called_at: string;
+        };
+        /**
+         * JobInvestigationOut
+         * @description Everything about one job, in one response (PRD ADM-013/014).
+         *
+         *     The point of assembling it server-side is that an operator stops copying
+         *     UUIDs between screens: the owner, the timings, the stage breakdown and the
+         *     failing call all arrive together, and ``correlation_id`` links onward to
+         *     the request that started it and to that request's audit entry.
+         */
+        JobInvestigationOut: {
+            job: components["schemas"]["ProcessingJobOut"];
+            owner: components["schemas"]["JobOwnerOut"];
+            timing: components["schemas"]["JobTimingOut"];
+            /** Stages */
+            stages: components["schemas"]["JobStageOut"][];
+            /** Ai Calls */
+            ai_calls: components["schemas"]["JobAiCallOut"][];
+            /** Correlation Id */
+            correlation_id?: string | null;
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+        };
+        /**
+         * JobOwnerOut
+         * @description Who a job belongs to, resolved at read time from its polymorphic parent.
+         *
+         *     Every field is nullable and that is not laziness: a generation run scoped
+         *     to a lesson has no course, a deleted course leaves a job orphaned, and the
+         *     correct answer in both cases is "unknown", not a fabricated owner.
+         */
+        JobOwnerOut: {
+            /** Course Id */
+            course_id?: string | null;
+            /** Course Title */
+            course_title?: string | null;
+            /** Course Slug */
+            course_slug?: string | null;
+            /** Organization Id */
+            organization_id?: string | null;
+            /** Organization Name */
+            organization_name?: string | null;
+        };
+        /**
+         * JobStageOut
+         * @description One pipeline stage's AI usage.
+         */
+        JobStageOut: {
+            /** Stage */
+            stage: string;
+            /** Call Count */
+            call_count: number;
+            /** Failed Count */
+            failed_count: number;
+            /** Spend Usd */
+            spend_usd: number;
+            /** Tokens */
+            tokens: number;
+            /** Max Latency Ms */
+            max_latency_ms?: number | null;
+        };
+        /**
+         * JobTimingOut
+         * @description Derived timings.
+         *
+         *     ``queue_wait_seconds`` is the number that distinguishes a slow job from a
+         *     job that merely waited behind other work -- duration alone cannot tell
+         *     those apart, which is why both are here. Both are ``None`` before the job
+         *     starts: "has not run" is not "ran for zero seconds".
+         */
+        JobTimingOut: {
+            /** Queue Wait Seconds */
+            queue_wait_seconds?: number | null;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            /**
+             * Is Running
+             * @default false
+             */
+            is_running: boolean;
+        };
+        /**
          * KGEdge
          * @description A directed relationship between two concept nodes in the preview.
          */
@@ -10786,6 +13291,25 @@ export interface components {
              */
             weight: number;
         };
+        /** LatencyTrendOut */
+        LatencyTrendOut: {
+            /** Points */
+            points: components["schemas"]["LatencyTrendPoint"][];
+        };
+        /** LatencyTrendPoint */
+        LatencyTrendPoint: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Requests Total */
+            requests_total: number;
+            /** P50 Latency Ms */
+            p50_latency_ms?: number | null;
+            /** P95 Latency Ms */
+            p95_latency_ms?: number | null;
+        };
         /**
          * LessonAuthoring
          * @description Authoring projection of :class:`Lesson`.
@@ -10805,6 +13329,8 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+            /** Slug */
+            slug: string;
             /**
              * Lesson Type
              * @default video
@@ -10825,8 +13351,6 @@ export interface components {
              * Format: uuid
              */
             module_id: string;
-            /** Slug */
-            slug: string;
             /**
              * Status
              * @enum {string}
@@ -10894,7 +13418,7 @@ export interface components {
              */
             module_id: string;
             /** Slug */
-            slug: string;
+            slug?: string | null;
             /** Title */
             title: string;
             /** Summary */
@@ -11105,10 +13629,7 @@ export interface components {
             id: string;
             /** Title */
             title: string;
-            /**
-             * Slug
-             * @description URL slug for breadcrumb-style student links.
-             */
+            /** Slug */
             slug?: string | null;
             /** Lesson Type */
             lesson_type: string;
@@ -11255,6 +13776,90 @@ export interface components {
             unlock_rule_json?: {
                 [key: string]: unknown;
             } | null;
+        };
+        /** LogoutRequest */
+        LogoutRequest: {
+            /** Refresh Token */
+            refresh_token?: string | null;
+        };
+        /**
+         * ManagementDashboard
+         * @description The whole manager / faculty-dean dashboard in one payload.
+         *
+         *     One response so the page is one round trip; see the router docstring for
+         *     why it is not split per section.
+         *
+         *     ``scope_kind`` / ``organization_id`` / ``org_unit_id`` are echoed back so
+         *     the SPA can label the page truthfully ("Faculty of X" vs the whole
+         *     organization) instead of guessing from the caller's role. A dashboard that
+         *     silently shows a narrower or wider set than its heading claims is the
+         *     failure this feature exists to fix.
+         */
+        ManagementDashboard: {
+            /**
+             * Scope Kind
+             * @enum {string}
+             */
+            scope_kind: "course" | "org_unit" | "organization" | "global";
+            /** Organization Id */
+            organization_id?: string | null;
+            /** Org Unit Id */
+            org_unit_id?: string | null;
+            /**
+             * Can Review Path Changes
+             * @default false
+             */
+            can_review_path_changes: boolean;
+            counts: components["schemas"]["ManagementDashboardCounts"];
+            /** Blocked Courses */
+            blocked_courses?: components["schemas"]["BlockedCourseRow"][];
+            /** Programs Needing Attention */
+            programs_needing_attention?: components["schemas"]["ProgramAttentionRow"][];
+        };
+        /**
+         * ManagementDashboardCounts
+         * @description Headline counts, derived entirely from the two sections above.
+         *
+         *     Adds no queries: every field is computed from the course and program data
+         *     already fetched for sections A and B. A tile that needed its own query
+         *     could drift from the table underneath it.
+         *
+         *     ``courses_blocked`` is the length of the blocked queue, so the tile and
+         *     the table can never disagree.
+         */
+        ManagementDashboardCounts: {
+            /**
+             * Courses Total
+             * @default 0
+             */
+            courses_total: number;
+            /**
+             * Courses Draft
+             * @default 0
+             */
+            courses_draft: number;
+            /**
+             * Courses Published
+             * @default 0
+             */
+            courses_published: number;
+            /**
+             * Courses Blocked
+             * @default 0
+             */
+            courses_blocked: number;
+            /**
+             * Programs Total
+             * @default 0
+             */
+            programs_total: number;
+            /**
+             * Programs With Draft
+             * @default 0
+             */
+            programs_with_draft: number;
+            /** Open Path Change Requests */
+            open_path_change_requests?: number | null;
         };
         /**
          * ManualGradeIn
@@ -11671,8 +14276,6 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
-            /** Org Unit Id */
-            org_unit_id?: string | null;
             /**
              * Status
              * @default active
@@ -11692,8 +14295,6 @@ export interface components {
          *     additionally stamp ``left_at``; the service layer applies that.
          */
         MembershipPatch: {
-            /** Org Unit Id */
-            org_unit_id?: string | null;
             /** Status */
             status?: ("active" | "inactive" | "suspended") | null;
             /** Student Code */
@@ -11718,8 +14319,6 @@ export interface components {
              * Format: uuid
              */
             organization_id: string;
-            /** Org Unit Id */
-            org_unit_id?: string | null;
             /** Status */
             status: string;
             /** Student Code */
@@ -12382,24 +14981,70 @@ export interface components {
          * @description Create payload for ``POST /admin/organizations/{org_id}/units``.
          */
         OrgUnitCreate: {
-            /** Parent Unit Id */
-            parent_unit_id?: string | null;
             /**
              * Unit Type
-             * @enum {string}
+             * @default faculty
+             * @constant
              */
-            unit_type: "faculty" | "department" | "office" | "program" | "campus" | "other";
+            unit_type: "faculty";
             /** Name */
             name: string;
             /** Code */
             code?: string | null;
         };
-        /** OrgUnitPatch */
-        OrgUnitPatch: {
+        /**
+         * OrgUnitNode
+         * @description One node of the nested org tree returned by ``GET .../units/tree``.
+         *
+         *     Same columns as :class:`OrgUnitRead` plus the two the tree UI needs and
+         *     a flat list cannot supply:
+         *
+         *     ``children``
+         *         Populated depth-first by the service; siblings sorted by name.
+         *     ``descendant_count``
+         *         Total units BELOW this one. Drives the "deleting this also deletes
+         *         N sub-units" confirmation — the delete cascades down the subtree,
+         *         so the count has to be visible before the click.
+         */
+        OrgUnitNode: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
             /** Parent Unit Id */
             parent_unit_id?: string | null;
             /** Unit Type */
-            unit_type?: ("faculty" | "department" | "office" | "program" | "campus" | "other") | null;
+            unit_type: string;
+            /** Name */
+            name: string;
+            /** Code */
+            code?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Children */
+            children?: components["schemas"]["OrgUnitNode"][];
+            /**
+             * Descendant Count
+             * @default 0
+             */
+            descendant_count: number;
+        };
+        /** OrgUnitPatch */
+        OrgUnitPatch: {
             /** Name */
             name?: string | null;
             /** Code */
@@ -12555,6 +15200,51 @@ export interface components {
             updated_at: string;
         };
         /**
+         * OrganizationSpendOut
+         * @description Spend for one tenant.
+         *
+         *     ``organization_id`` is NULL for the unattributed bucket -- calls with no
+         *     derivable tenant, which are real spend and are kept so the rows still sum
+         *     to the platform total.
+         */
+        OrganizationSpendOut: {
+            /** Organization Id */
+            organization_id?: string | null;
+            /**
+             * Organization Name
+             * @default
+             */
+            organization_name: string;
+            /** Call Count */
+            call_count: number;
+            /** Failed Count */
+            failed_count: number;
+            /** Tokens */
+            tokens: number;
+            /** Spend Usd */
+            spend_usd: number;
+        };
+        /**
+         * OrganizationSpendPage
+         * @description Per-tenant spend plus how much of the bill it explains.
+         *
+         *     ``coverage_pct`` travels with the rows on purpose: ``ai_model_calls`` has
+         *     no tenant column, so this view derives ownership through optional parents
+         *     and cannot reach every call. A breakdown that explains part of the bill
+         *     without saying which part invites chargeback decisions the data does not
+         *     support. ``None`` means the window had no spend at all -- not 0%.
+         */
+        OrganizationSpendPage: {
+            /** Items */
+            items: components["schemas"]["OrganizationSpendOut"][];
+            /** Total Spend Usd */
+            total_spend_usd: number;
+            /** Attributed Spend Usd */
+            attributed_spend_usd: number;
+            /** Coverage Pct */
+            coverage_pct?: number | null;
+        };
+        /**
          * OutlineSection
          * @description One section row in ``GET /lessons/{id}/outline``.
          *
@@ -12659,6 +15349,111 @@ export interface components {
             page_size: number;
             /** Total Pages */
             total_pages: number;
+        };
+        /** PathAttemptRead */
+        PathAttemptRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Career Path Id
+             * Format: uuid
+             */
+            career_path_id: string;
+            /**
+             * Career Path Version Id
+             * Format: uuid
+             */
+            career_path_version_id: string;
+            /** Previous Attempt Id */
+            previous_attempt_id: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Selection Source
+             * @default student
+             */
+            selection_source: string;
+            /**
+             * Selected At
+             * Format: date-time
+             */
+            selected_at: string;
+            /** Ended At */
+            ended_at: string | null;
+            /** Exit Snapshot */
+            exit_snapshot: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Progress Percent
+             * @default 0
+             */
+            progress_percent: number;
+            /**
+             * Completed Courses
+             * @default 0
+             */
+            completed_courses: number;
+            /**
+             * Total Courses
+             * @default 0
+             */
+            total_courses: number;
+        };
+        /** PathChangeRequestRead */
+        PathChangeRequestRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Program Enrollment Id
+             * Format: uuid
+             */
+            program_enrollment_id: string;
+            /**
+             * From Attempt Id
+             * Format: uuid
+             */
+            from_attempt_id: string;
+            /**
+             * Kind
+             * @default change
+             */
+            kind: string;
+            /** Target Career Path Id */
+            target_career_path_id?: string | null;
+            /** Target Career Path Version Id */
+            target_career_path_version_id?: string | null;
+            /** Reason */
+            reason: string;
+            /** Status */
+            status: string;
+            /** In Progress At */
+            in_progress_at?: string | null;
+            /** In Progress By */
+            in_progress_by?: string | null;
+            /** Reviewed By */
+            reviewed_by: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /** Decision Reason Code */
+            decision_reason_code?: string | null;
+            /** Decision Reason */
+            decision_reason: string | null;
+            /** Decision Note */
+            decision_note?: string | null;
+            /** New Attempt Id */
+            new_attempt_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * PathReadinessOverview
@@ -12780,6 +15575,236 @@ export interface components {
             /** Usd */
             usd: number;
         };
+        /**
+         * PolicyAudienceRoleRead
+         * @description A role the policy names as a party.
+         *
+         *     Carries the role's ``code`` AND its display ``name``, both read from the
+         *     roles catalogue — the point of the join table is that the label shown to
+         *     an admin is the product's own role name, never a second copy of it.
+         */
+        PolicyAudienceRoleRead: {
+            /**
+             * Role Id
+             * Format: uuid
+             */
+            role_id: string;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * PolicyAudienceUpdate
+         * @description Replace the audience set.
+         *
+         *     An empty list is meaningful and is NOT the same as "unchanged": it makes
+         *     the policy public. That is why this is a PUT of the whole set rather than
+         *     add/remove endpoints — the empty case has to be expressible.
+         */
+        PolicyAudienceUpdate: {
+            /** Role Codes */
+            role_codes?: string[];
+        };
+        /** PolicyCreate */
+        PolicyCreate: {
+            /** Slug */
+            slug: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "legal" | "academic";
+            /** Title */
+            title: string;
+            /**
+             * Language
+             * @default en
+             */
+            language: string;
+        };
+        /**
+         * PolicyDetail
+         * @description Identity, audience, and every version — the admin detail payload.
+         */
+        PolicyDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "legal" | "academic";
+            /** Audience */
+            audience?: components["schemas"]["PolicyAudienceRoleRead"][];
+            /** Versions */
+            versions?: components["schemas"]["PolicyVersionSummary"][];
+        };
+        /**
+         * PolicyDocument
+         * @description What a READER gets: one policy resolved to its current published text.
+         *
+         *     Deliberately flat and free of ids — this is the public payload that
+         *     replaces the hardcoded ``PolicyDocument`` constant the front end used to
+         *     import, so it carries exactly the fields a rendered page needs plus the
+         *     provenance the entity now makes real (version, publisher, date).
+         */
+        PolicyDocument: {
+            /** Slug */
+            slug: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "legal" | "academic";
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Format */
+            format: string;
+            /** Language */
+            language: string;
+            /** Version No */
+            version_no: number;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Published By Name */
+            published_by_name?: string | null;
+            /** Changelog */
+            changelog?: string | null;
+        };
+        /**
+         * PolicySummary
+         * @description An index entry — the list a reader browses.
+         */
+        PolicySummary: {
+            /** Slug */
+            slug: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "legal" | "academic";
+            /** Title */
+            title: string;
+            /** Language */
+            language: string;
+            /** Version No */
+            version_no: number;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+        };
+        /**
+         * PolicyVersionCreate
+         * @description Open a new draft. Body defaults to a copy of the latest version.
+         */
+        PolicyVersionCreate: {
+            /**
+             * Language
+             * @default en
+             */
+            language: string;
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body?: string | null;
+            /** Changelog */
+            changelog?: string | null;
+        };
+        /**
+         * PolicyVersionPatch
+         * @description Edit a DRAFT. Every field optional; only what is sent is written.
+         */
+        PolicyVersionPatch: {
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body?: string | null;
+            /** Changelog */
+            changelog?: string | null;
+        };
+        /**
+         * PolicyVersionRead
+         * @description A version with its body.
+         */
+        PolicyVersionRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version No */
+            version_no: number;
+            /** Language */
+            language: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published" | "archived";
+            /** Title */
+            title: string;
+            /** Changelog */
+            changelog?: string | null;
+            /** Published At */
+            published_at?: string | null;
+            /** Published By */
+            published_by?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Body */
+            body: string;
+            /** Format */
+            format: string;
+        };
+        /**
+         * PolicyVersionSummary
+         * @description A version without its body — for history lists and pickers.
+         */
+        PolicyVersionSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version No */
+            version_no: number;
+            /** Language */
+            language: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "published" | "archived";
+            /** Title */
+            title: string;
+            /** Changelog */
+            changelog?: string | null;
+            /** Published At */
+            published_at?: string | null;
+            /** Published By */
+            published_by?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** PreprocessModeRequest */
         PreprocessModeRequest: {
             /**
@@ -12820,6 +15845,54 @@ export interface components {
              */
             requires_reprocess: boolean;
         };
+        /**
+         * PriorityTask
+         * @description One item in the dashboard's Priority Today feed.
+         *
+         *     The feed mixes kinds -- a named student, a content backlog, an
+         *     uncalibrated quiz -- because a teacher's next action is whichever is
+         *     most urgent, not whichever section it happens to live in.
+         *
+         *     No URL is returned. ``kind`` plus the id fields let the client build a
+         *     typed route; a server-built path would hard-code the SPA's routing
+         *     table into the API and break silently when a route is renamed.
+         */
+        PriorityTask: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "student_risk" | "quiz_questions_pending" | "interview_questions_pending" | "quiz_calibration" | "materials_ready" | "reviews_overdue";
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "high" | "medium" | "low";
+            /** Title */
+            title: string;
+            /** Reason */
+            reason: string;
+            /** Course Id */
+            course_id?: string | null;
+            /** Course Title */
+            course_title?: string | null;
+            /** Student Id */
+            student_id?: string | null;
+            /** Age Hours */
+            age_hours?: number | null;
+            /**
+             * Blocking
+             * @default false
+             */
+            blocking: boolean;
+            /**
+             * Count
+             * @default 1
+             */
+            count: number;
+        };
         /** ProcessingJobOut */
         ProcessingJobOut: {
             /**
@@ -12858,6 +15931,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** Request Id */
+            request_id?: string | null;
         };
         /**
          * ProcessingJobRow
@@ -12932,6 +16007,463 @@ export interface components {
             latest_log_line?: string | null;
             /** Error Message */
             error_message?: string | null;
+        };
+        /**
+         * ProgramAttentionRow
+         * @description One learning program with unreleased or unreviewed work.
+         *
+         *     Emitted when the program has an open draft version OR at least one open
+         *     path-change request, i.e. it is mid-revise or someone is waiting on a
+         *     decision.
+         *
+         *     ``open_path_change_request_count`` counts OPEN statuses ONLY (``pending``
+         *     plus ``in_progress``), matching the management list card. The per-program
+         *     ``GET /management/learning-programs/{id}/path-change-requests`` drill-down
+         *     returns EVERY status, so it will legitimately show more rows than this
+         *     number — that is by design, not drift. Do not mix the two.
+         */
+        ProgramAttentionRow: {
+            /**
+             * Program Id
+             * Format: uuid
+             */
+            program_id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /**
+             * Faculty Id
+             * Format: uuid
+             */
+            faculty_id: string;
+            /**
+             * Student Count
+             * @default 0
+             */
+            student_count: number;
+            /**
+             * Has Draft Version
+             * @default false
+             */
+            has_draft_version: boolean;
+            /**
+             * Open Path Change Request Count
+             * @default 0
+             */
+            open_path_change_request_count: number;
+            /** Reason */
+            reason: string;
+        };
+        /** ProgramAuthoringOptions */
+        ProgramAuthoringOptions: {
+            /** Faculties */
+            faculties?: components["schemas"]["ProgramOptionRead"][];
+            /** Career Paths */
+            career_paths?: components["schemas"]["CareerPathOptionRead"][];
+            /** Default Faculty Id */
+            default_faculty_id?: string | null;
+            /**
+             * Max Career Paths Per Program
+             * @default 10
+             */
+            max_career_paths_per_program: number;
+        };
+        /** ProgramCreate */
+        ProgramCreate: {
+            /**
+             * Faculty Id
+             * Format: uuid
+             */
+            faculty_id: string;
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /**
+             * Max Path Switches
+             * @default 3
+             */
+            max_path_switches: number;
+            /**
+             * Max Career Paths Per Enrollment
+             * @default 1
+             */
+            max_career_paths_per_enrollment: number;
+            /** Career Path Ids */
+            career_path_ids?: string[];
+            /** Default Career Path Id */
+            default_career_path_id?: string | null;
+        };
+        /**
+         * ProgramCsvImportFailure
+         * @description Why one row did not import, keyed to its position in the file.
+         */
+        ProgramCsvImportFailure: {
+            /** Row Number */
+            row_number: number;
+            /** Identifier */
+            identifier?: string | null;
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * ProgramCsvImportPayload
+         * @description Roster upload. The SPA sends `csv_text`; `csv_base64` exists so a
+         *     file with an odd encoding can be shipped byte-exact.
+         */
+        ProgramCsvImportPayload: {
+            /** Csv Text */
+            csv_text?: string | null;
+            /** Csv Base64 */
+            csv_base64?: string | null;
+        };
+        /**
+         * ProgramCsvImportResult
+         * @description Per-row outcome of a roster import.
+         *
+         *     ``enrolled`` and ``created_users`` are disjoint counts of the same run:
+         *     a row can enrol an existing account (enrolled, not created) or a brand
+         *     new one (both). ``failures`` carries the rows that did not import, with
+         *     the reason — a bad row must not abort the batch, because a roster file
+         *     with one typo in it is the normal case, not the exception.
+         */
+        ProgramCsvImportResult: {
+            /** Enrolled */
+            enrolled?: string[];
+            /** Created Users */
+            created_users?: string[];
+            /** Already Enrolled */
+            already_enrolled?: string[];
+            /** Failures */
+            failures?: components["schemas"]["ProgramCsvImportFailure"][];
+        };
+        /** ProgramEnrollRequest */
+        ProgramEnrollRequest: {
+            /** Student Ids */
+            student_ids: string[];
+        };
+        /** ProgramEnrollmentRead */
+        ProgramEnrollmentRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Learning Program Id
+             * Format: uuid
+             */
+            learning_program_id: string;
+            /**
+             * Program Version Id
+             * Format: uuid
+             */
+            program_version_id: string;
+            /**
+             * Student Id
+             * Format: uuid
+             */
+            student_id: string;
+            /** Status */
+            status: string;
+            /**
+             * Enrolled At
+             * Format: date-time
+             */
+            enrolled_at: string;
+            /** Completed At */
+            completed_at: string | null;
+            /** Withdrawn At */
+            withdrawn_at: string | null;
+            /** Program Name */
+            program_name: string;
+            /** Program Version No */
+            program_version_no: number;
+            /** Max Path Switches */
+            max_path_switches: number;
+            /**
+             * Approved Switch Count
+             * @default 0
+             */
+            approved_switch_count: number;
+            /**
+             * Max Career Paths
+             * @default 1
+             */
+            max_career_paths: number;
+            /**
+             * Selected Path Count
+             * @default 0
+             */
+            selected_path_count: number;
+            /**
+             * Current Progress Percent
+             * @default 0
+             */
+            current_progress_percent: number;
+            /**
+             * Current Completed Courses
+             * @default 0
+             */
+            current_completed_courses: number;
+            /**
+             * Current Total Courses
+             * @default 0
+             */
+            current_total_courses: number;
+            /** Paths */
+            paths?: components["schemas"]["ProgramPathRead"][];
+            /** Attempts */
+            attempts?: components["schemas"]["PathAttemptRead"][];
+            /** Pending Change Request */
+            pending_change_request?: {
+                [key: string]: unknown;
+            } | null;
+            /** Change Request History */
+            change_request_history?: components["schemas"]["PathChangeRequestRead"][];
+        };
+        /** ProgramOptionRead */
+        ProgramOptionRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug?: string | null;
+            /** Description */
+            description?: string | null;
+        };
+        /**
+         * ProgramPathAttemptRead
+         * @description One path a student took inside a learning program.
+         *
+         *     A switch is recorded as a NEW attempt rather than by mutating the old
+         *     one, so the list is the student's path history: what they picked, what
+         *     they abandoned, and when.
+         */
+        ProgramPathAttemptRead: {
+            /**
+             * Career Path Id
+             * Format: uuid
+             */
+            career_path_id: string;
+            /** Career Path Name */
+            career_path_name?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Selected At
+             * Format: date-time
+             */
+            selected_at: string;
+            /** Ended At */
+            ended_at?: string | null;
+        };
+        /** ProgramPathRead */
+        ProgramPathRead: {
+            /**
+             * Career Path Id
+             * Format: uuid
+             */
+            career_path_id: string;
+            /**
+             * Career Path Version Id
+             * Format: uuid
+             */
+            career_path_version_id: string;
+            /** Career Path Version No */
+            career_path_version_no: number;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Description */
+            description: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+            /** Status */
+            status: string;
+            /** Position */
+            position: number;
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+        };
+        /**
+         * ProgramProgressRead
+         * @description Learning-program enrolment + progress, sibling of the career-path row.
+         *
+         *     ``completion_percent`` is measured against the path version PINNED to
+         *     this enrolment, not the path's current head — which is the whole point
+         *     of program versioning, and why this cannot be derived from the
+         *     career-path section beside it.
+         */
+        ProgramProgressRead: {
+            /**
+             * Enrollment Id
+             * Format: uuid
+             */
+            enrollment_id: string;
+            /**
+             * Learning Program Id
+             * Format: uuid
+             */
+            learning_program_id: string;
+            /** Program Name */
+            program_name: string;
+            /** Program Version No */
+            program_version_no: number;
+            /** Status */
+            status: string;
+            /**
+             * Enrolled At
+             * Format: date-time
+             */
+            enrolled_at: string;
+            /** Completed At */
+            completed_at?: string | null;
+            /** Withdrawn At */
+            withdrawn_at?: string | null;
+            /**
+             * Completed Courses
+             * @default 0
+             */
+            completed_courses: number;
+            /**
+             * Course Count
+             * @default 0
+             */
+            course_count: number;
+            /**
+             * Completion Percent
+             * @default 0
+             */
+            completion_percent: number;
+            /**
+             * Max Path Switches
+             * @default 0
+             */
+            max_path_switches: number;
+            /**
+             * Approved Switch Count
+             * @default 0
+             */
+            approved_switch_count: number;
+            /** Attempts */
+            attempts?: components["schemas"]["ProgramPathAttemptRead"][];
+        };
+        /** ProgramRead */
+        ProgramRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /**
+             * Faculty Id
+             * Format: uuid
+             */
+            faculty_id: string;
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            /** Status */
+            status: string;
+            current_version: components["schemas"]["ProgramVersionRead"];
+            /** Paths */
+            paths?: components["schemas"]["ProgramPathRead"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /**
+             * Student Count
+             * @default 0
+             */
+            student_count: number;
+            /**
+             * Path Change Request Count
+             * @default 0
+             */
+            path_change_request_count: number;
+            /**
+             * Has Draft Version
+             * @default false
+             */
+            has_draft_version: boolean;
+        };
+        /** ProgramUpdate */
+        ProgramUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Slug */
+            slug?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Max Path Switches */
+            max_path_switches?: number | null;
+            /** Max Career Paths Per Enrollment */
+            max_career_paths_per_enrollment?: number | null;
+            /** Career Path Ids */
+            career_path_ids?: string[] | null;
+            /** Default Career Path Id */
+            default_career_path_id?: string | null;
+        };
+        /** ProgramVersionRead */
+        ProgramVersionRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version No */
+            version_no: number;
+            /** Status */
+            status: string;
+            /** Max Path Switches */
+            max_path_switches: number;
+            /** Max Career Paths Per Enrollment */
+            max_career_paths_per_enrollment: number;
+            /** Published At */
+            published_at: string | null;
+            /** Published By */
+            published_by?: string | null;
+            /** Published By Name */
+            published_by_name?: string | null;
+        };
+        /** ProgramWithdrawRequest */
+        ProgramWithdrawRequest: {
+            /** Reason */
+            reason: string;
         };
         /**
          * QuarantinedUnit
@@ -13240,15 +16772,15 @@ export interface components {
             score_percent?: string | null;
             /** Passed */
             passed?: boolean | null;
-            /**
-             * Grading Pending
-             * @default false
-             */
-            grading_pending?: boolean;
             /** Total Questions */
             total_questions?: number | null;
             /** Correct Count */
             correct_count?: number | null;
+            /**
+             * Grading Pending
+             * @default false
+             */
+            grading_pending: boolean;
         };
         /**
          * QuizAttemptReviewOption
@@ -13373,6 +16905,16 @@ export interface components {
             password?: string | null;
         };
         /**
+         * QuizAttemptTeacherPage
+         * @description One page of :class:`QuizAttemptTeacherRead`, newest attempt first.
+         */
+        QuizAttemptTeacherPage: {
+            /** Items */
+            items: components["schemas"]["QuizAttemptTeacherRead"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /**
          * QuizAttemptTeacherRead
          * @description One row in a teacher's cross-quiz / cross-student attempts list.
          *
@@ -13479,6 +17021,8 @@ export interface components {
             id: string;
             /** Title */
             title: string;
+            /** Slug */
+            slug?: string | null;
             /** Description */
             description?: string | null;
             /**
@@ -13504,6 +17048,11 @@ export interface components {
              * @default true
              */
             show_hints: boolean;
+            /**
+             * Require Camera
+             * @default false
+             */
+            require_camera: boolean;
             /** Available From */
             available_from?: string | null;
             /** Available Until */
@@ -13514,14 +17063,14 @@ export interface components {
              * Review Options
              * @default {}
              */
-            review_options?: {
+            review_options: {
                 [key: string]: unknown;
             };
             /**
              * Question Count
              * @default 0
              */
-            question_count?: number;
+            question_count: number;
             /**
              * Course Id
              * Format: uuid
@@ -13532,6 +17081,32 @@ export interface components {
              * Format: uuid
              */
             module_id: string;
+            /**
+             * Integrity Weight Tab Switch
+             * @default 3
+             */
+            integrity_weight_tab_switch: number;
+            /**
+             * Integrity Weight Focus Lost
+             * @default 1
+             */
+            integrity_weight_focus_lost: number;
+            /**
+             * Integrity Weight Fullscreen Exit
+             * @default 2
+             */
+            integrity_weight_fullscreen_exit: number;
+            /**
+             * Integrity Score Threshold
+             * @default 3
+             */
+            integrity_score_threshold: number;
+            /**
+             * Integrity Response Policy
+             * @default warn_and_continue
+             * @enum {string}
+             */
+            integrity_response_policy: "continue_and_log" | "warn_and_continue";
             /**
              * Grading Method
              * @default highest
@@ -13791,6 +17366,34 @@ export interface components {
             /** Events */
             events: components["schemas"]["QuizIntegrityEventItem"][];
         };
+        /**
+         * QuizIntegrityEventBatchResponse
+         * @description Server-authoritative ingest result (migration 0115).
+         *
+         *     ``warning_issued`` is True ONLY on the request whose events first crossed
+         *     the attempt's threshold; a retried crossing batch re-reads the persisted
+         *     flag and reports False. The client cannot forge a warning - the flag lives
+         *     on the attempt row.
+         */
+        QuizIntegrityEventBatchResponse: {
+            /** Accepted */
+            accepted: number;
+            /**
+             * Integrity Score
+             * @default 0
+             */
+            integrity_score: number;
+            /**
+             * Integrity Score Threshold
+             * @default 0
+             */
+            integrity_score_threshold: number;
+            /**
+             * Warning Issued
+             * @default false
+             */
+            warning_issued: boolean;
+        };
         /** QuizIntegrityEventItem */
         QuizIntegrityEventItem: {
             /**
@@ -13985,10 +17588,7 @@ export interface components {
             id: string;
             /** Title */
             title: string;
-            /**
-             * Slug
-             * @description URL slug (immutable once published) for breadcrumb-style student links.
-             */
+            /** Slug */
             slug?: string | null;
             /** Description */
             description?: string | null;
@@ -14015,6 +17615,11 @@ export interface components {
              * @default true
              */
             show_hints: boolean;
+            /**
+             * Require Camera
+             * @default false
+             */
+            require_camera: boolean;
             /** Available From */
             available_from?: string | null;
             /** Available Until */
@@ -14025,14 +17630,14 @@ export interface components {
              * Review Options
              * @default {}
              */
-            review_options?: {
+            review_options: {
                 [key: string]: unknown;
             };
             /**
              * Question Count
              * @default 0
              */
-            question_count?: number;
+            question_count: number;
         };
         /**
          * QuizQuestionAuthoring
@@ -14068,17 +17673,17 @@ export interface components {
              * Prompt Format
              * @default plain
              */
-            prompt_format?: string;
+            prompt_format: string;
             /**
              * Hint Format
              * @default plain
              */
-            hint_format?: string;
+            hint_format: string;
             /**
              * Single Answer
              * @default true
              */
-            single_answer?: boolean;
+            single_answer: boolean;
             /**
              * Options
              * @default []
@@ -14094,29 +17699,29 @@ export interface components {
              * Match Prompts
              * @default []
              */
-            match_prompts?: string[];
+            match_prompts: string[];
             /**
              * Match Choices
              * @default []
              */
-            match_choices?: string[];
+            match_choices: string[];
             /**
              * Ordering Items
              * @default []
              */
-            ordering_items?: string[];
+            ordering_items: string[];
             /**
              * Fill Blank Choices
              * @default []
              */
-            fill_blank_choices?: string[];
+            fill_blank_choices: string[];
             /** Explanation */
             explanation?: string | null;
             /**
              * Explanation Format
              * @default plain
              */
-            explanation_format?: string;
+            explanation_format: string;
             /** Numeric Answer */
             numeric_answer?: string | null;
             /** Numeric Tolerance */
@@ -14153,6 +17758,8 @@ export interface components {
             } | null;
             /** Imported From Question Id */
             imported_from_question_id?: string | null;
+            /** Imported From Bank Item Id */
+            imported_from_bank_item_id?: string | null;
             /** Reviewed By */
             reviewed_by?: string | null;
             /** Reviewed At */
@@ -14177,6 +17784,335 @@ export interface components {
             deleted_at?: string | null;
             /** Deleted By */
             deleted_by?: string | null;
+        };
+        /** QuizQuestionBankCopyRequest */
+        QuizQuestionBankCopyRequest: {
+            /** Question Ids */
+            question_ids: string[];
+        };
+        /**
+         * QuizQuestionBankCopyResult
+         * @description Outcome of copying Quiz questions into the curated bank.
+         *
+         *     ``skipped`` lists the SOURCE question ids whose content already has a
+         *     live bank copy in this course — they are not copied again, and the
+         *     caller can report them to the teacher instead of failing the batch.
+         */
+        QuizQuestionBankCopyResult: {
+            /** Created */
+            created: components["schemas"]["QuizQuestionBankItemRead"][];
+            /** Skipped */
+            skipped: string[];
+        };
+        /** QuizQuestionBankImportRequest */
+        QuizQuestionBankImportRequest: {
+            /** Item Ids */
+            item_ids: string[];
+        };
+        /**
+         * QuizQuestionBankItemCreate
+         * @description Portable Quiz question content authored directly in the course bank.
+         */
+        QuizQuestionBankItemCreate: {
+            /**
+             * Question Type
+             * @enum {string}
+             */
+            question_type: "multiple_choice" | "true_false" | "short_answer" | "fill_blank" | "code" | "numerical" | "matching" | "ordering";
+            /** Prompt Text */
+            prompt_text: string;
+            /** Hint Text */
+            hint_text?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Difficulty */
+            difficulty?: ("easy" | "medium" | "hard") | null;
+            /** Bloom Level */
+            bloom_level?: ("remember" | "understand" | "apply" | "analyze" | "evaluate" | "create") | null;
+            /** Expected Response Time Ms */
+            expected_response_time_ms?: number | null;
+            /** Expected Ef Ceiling */
+            expected_ef_ceiling?: number | string | null;
+            /** Learning Outcome Id */
+            learning_outcome_id?: string | null;
+            /**
+             * Source Refs
+             * @default []
+             */
+            source_refs: unknown[];
+            /** Original Generated Payload */
+            original_generated_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Prompt Format
+             * @default plain
+             */
+            prompt_format: string;
+            /**
+             * Hint Format
+             * @default plain
+             */
+            hint_format: string;
+            /**
+             * Explanation Format
+             * @default plain
+             */
+            explanation_format: string;
+            /**
+             * Single Answer
+             * @default true
+             */
+            single_answer: boolean;
+            /**
+             * Answer Numbering
+             * @default abc
+             */
+            answer_numbering: string;
+            /** Numeric Answer */
+            numeric_answer?: number | string | null;
+            /** Numeric Tolerance */
+            numeric_tolerance?: number | string | null;
+            /** Match Pairs */
+            match_pairs?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Match Distractors */
+            match_distractors?: string[] | null;
+            /** Ordering Sequence */
+            ordering_sequence?: unknown[] | null;
+            /** Category Id */
+            category_id?: string | null;
+            /**
+             * Options
+             * @default []
+             */
+            options: components["schemas"]["QuizQuestionBankOptionCreate"][];
+            /**
+             * Status
+             * @default draft
+             * @enum {string}
+             */
+            status: "draft" | "approved" | "archived";
+        };
+        /** QuizQuestionBankItemRead */
+        QuizQuestionBankItemRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Source Question Id */
+            source_question_id?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "approved" | "archived";
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Question Type
+             * @enum {string}
+             */
+            question_type: "multiple_choice" | "true_false" | "short_answer" | "fill_blank" | "code" | "numerical" | "matching" | "ordering";
+            /** Prompt Text */
+            prompt_text: string;
+            /** Hint Text */
+            hint_text?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Difficulty */
+            difficulty?: ("easy" | "medium" | "hard") | null;
+            /** Bloom Level */
+            bloom_level?: ("remember" | "understand" | "apply" | "analyze" | "evaluate" | "create") | null;
+            /** Expected Response Time Ms */
+            expected_response_time_ms?: number | null;
+            /** Expected Ef Ceiling */
+            expected_ef_ceiling?: string | null;
+            /** Learning Outcome Id */
+            learning_outcome_id?: string | null;
+            /**
+             * Source Refs
+             * @default []
+             */
+            source_refs: unknown[];
+            /** Original Generated Payload */
+            original_generated_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Prompt Format
+             * @default plain
+             */
+            prompt_format: string;
+            /**
+             * Hint Format
+             * @default plain
+             */
+            hint_format: string;
+            /**
+             * Explanation Format
+             * @default plain
+             */
+            explanation_format: string;
+            /**
+             * Single Answer
+             * @default true
+             */
+            single_answer: boolean;
+            /**
+             * Answer Numbering
+             * @default abc
+             */
+            answer_numbering: string;
+            /** Numeric Answer */
+            numeric_answer?: string | null;
+            /** Numeric Tolerance */
+            numeric_tolerance?: string | null;
+            /** Match Pairs */
+            match_pairs?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Match Distractors */
+            match_distractors?: string[] | null;
+            /** Ordering Sequence */
+            ordering_sequence?: unknown[] | null;
+            /** Category Id */
+            category_id?: string | null;
+            /**
+             * Options
+             * @default []
+             */
+            options: components["schemas"]["QuizQuestionBankOptionRead"][];
+            /** Created By */
+            created_by?: string | null;
+            /** Updated By */
+            updated_by?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** QuizQuestionBankItemUpdate */
+        QuizQuestionBankItemUpdate: {
+            /** Question Type */
+            question_type?: ("multiple_choice" | "true_false" | "short_answer" | "fill_blank" | "code" | "numerical" | "matching" | "ordering") | null;
+            /** Prompt Text */
+            prompt_text?: string | null;
+            /** Hint Text */
+            hint_text?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Difficulty */
+            difficulty?: ("easy" | "medium" | "hard") | null;
+            /** Bloom Level */
+            bloom_level?: ("remember" | "understand" | "apply" | "analyze" | "evaluate" | "create") | null;
+            /** Expected Response Time Ms */
+            expected_response_time_ms?: number | null;
+            /** Expected Ef Ceiling */
+            expected_ef_ceiling?: number | string | null;
+            /** Learning Outcome Id */
+            learning_outcome_id?: string | null;
+            /** Prompt Format */
+            prompt_format?: string | null;
+            /** Hint Format */
+            hint_format?: string | null;
+            /** Explanation Format */
+            explanation_format?: string | null;
+            /** Single Answer */
+            single_answer?: boolean | null;
+            /** Answer Numbering */
+            answer_numbering?: string | null;
+            /** Numeric Answer */
+            numeric_answer?: number | string | null;
+            /** Numeric Tolerance */
+            numeric_tolerance?: number | string | null;
+            /** Match Pairs */
+            match_pairs?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Match Distractors */
+            match_distractors?: string[] | null;
+            /** Ordering Sequence */
+            ordering_sequence?: unknown[] | null;
+            /** Category Id */
+            category_id?: string | null;
+            /** Options */
+            options?: components["schemas"]["QuizQuestionBankOptionCreate"][] | null;
+        };
+        /** QuizQuestionBankOptionCreate */
+        QuizQuestionBankOptionCreate: {
+            /** Option Key */
+            option_key: string;
+            /** Option Text */
+            option_text: string;
+            /**
+             * Is Correct
+             * @default false
+             */
+            is_correct: boolean;
+            /** Position */
+            position: number;
+            /**
+             * Option Format
+             * @default plain
+             */
+            option_format: string;
+            /** Grade Fraction */
+            grade_fraction?: number | string | null;
+            /** Feedback Text */
+            feedback_text?: string | null;
+            /** Feedback Format */
+            feedback_format?: string | null;
+        };
+        /** QuizQuestionBankOptionRead */
+        QuizQuestionBankOptionRead: {
+            /** Option Key */
+            option_key: string;
+            /** Option Text */
+            option_text: string;
+            /**
+             * Is Correct
+             * @default false
+             */
+            is_correct: boolean;
+            /** Position */
+            position: number;
+            /**
+             * Option Format
+             * @default plain
+             */
+            option_format: string;
+            /** Grade Fraction */
+            grade_fraction?: string | null;
+            /** Feedback Text */
+            feedback_text?: string | null;
+            /** Feedback Format */
+            feedback_format?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** QuizQuestionBankPage */
+        QuizQuestionBankPage: {
+            /** Items */
+            items: components["schemas"]["QuizQuestionBankItemRead"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /**
          * QuizQuestionBreakdown
@@ -14317,17 +18253,17 @@ export interface components {
              * Prompt Format
              * @default plain
              */
-            prompt_format?: string;
+            prompt_format: string;
             /**
              * Hint Format
              * @default plain
              */
-            hint_format?: string;
+            hint_format: string;
             /**
              * Single Answer
              * @default true
              */
-            single_answer?: boolean;
+            single_answer: boolean;
             /**
              * Options
              * @default []
@@ -14343,22 +18279,22 @@ export interface components {
              * Match Prompts
              * @default []
              */
-            match_prompts?: string[];
+            match_prompts: string[];
             /**
              * Match Choices
              * @default []
              */
-            match_choices?: string[];
+            match_choices: string[];
             /**
              * Ordering Items
              * @default []
              */
-            ordering_items?: string[];
+            ordering_items: string[];
             /**
              * Fill Blank Choices
              * @default []
              */
-            fill_blank_choices?: string[];
+            fill_blank_choices: string[];
         };
         /**
          * QuizResultsRead
@@ -14432,6 +18368,9 @@ export interface components {
          *     package so the cross-feature import-linter contract stays intact.
          *     The field surface intentionally matches :class:`LessonPublic` so
          *     frontend code can address ``item.target.{id,title}`` polymorphically.
+         *
+         *     ``slug`` carries the item's URL slug so the student curriculum tree
+         *     can build breadcrumb links without per-item fetches.
          */
         QuizSummaryPublic: {
             /**
@@ -14441,11 +18380,8 @@ export interface components {
             id: string;
             /** Title */
             title: string;
-            /**
-             * Slug
-             * @description URL slug (immutable once published) for breadcrumb-style student links.
-             */
-            slug?: string | null;
+            /** Slug */
+            slug: string;
         };
         /**
          * ReadinessWarningRead
@@ -14845,6 +18781,16 @@ export interface components {
              */
             show_points: boolean;
         };
+        /** RevokeSessionOut */
+        RevokeSessionOut: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /** Revoked */
+            revoked: boolean;
+        };
         /** RoleAssignmentCreate */
         RoleAssignmentCreate: {
             /** Role Code */
@@ -14977,6 +18923,11 @@ export interface components {
             role: components["schemas"]["RoleRead"];
             /** Permissions */
             permissions: string[];
+        };
+        /** RollbackIn */
+        RollbackIn: {
+            /** Reason */
+            reason: string;
         };
         /**
          * RosterEntry
@@ -15118,6 +19069,93 @@ export interface components {
             /** Output Guard Version */
             output_guard_version?: string | null;
         };
+        /**
+         * SecuritySummaryOut
+         * @description Security & access counts for the dashboard's Security row.
+         *
+         *     Deliberately absent: severity, risk score and review state. Those require
+         *     alert rules that are still an open product decision (D-03), and a
+         *     fabricated severity trains operators to ignore the real one when it lands.
+         */
+        SecuritySummaryOut: {
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /** Window Days */
+            window_days: number;
+            /** Failed Logins */
+            failed_logins: number;
+            /** Distinct Failed Ips */
+            distinct_failed_ips: number | null;
+            /** Denied Requests */
+            denied_requests: number;
+            /** Role Changes */
+            role_changes: number;
+            /** Role Revocations */
+            role_revocations: number;
+            /** Privileged Accounts */
+            privileged_accounts: number;
+            /** Active Sessions */
+            active_sessions: number;
+            /** Request Scope */
+            request_scope: string;
+            /** Identity Scope */
+            identity_scope: string;
+        };
+        /** SelectPathRequest */
+        SelectPathRequest: {
+            /**
+             * Career Path Id
+             * Format: uuid
+             */
+            career_path_id: string;
+        };
+        /**
+         * SettingChangeOut
+         * @description One recorded change.
+         *
+         *     ``before_value`` / ``after_value`` are nullable in both directions and the
+         *     null carries meaning: null before = the value was inherited, null after =
+         *     the override was removed and inheritance resumed.
+         */
+        SettingChangeOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Setting Key */
+            setting_key: string;
+            /** Organization Id */
+            organization_id: string | null;
+            /** Organization Name */
+            organization_name?: string | null;
+            /** Scope */
+            scope: string;
+            /** Action */
+            action: string;
+            /** Before Value */
+            before_value?: unknown;
+            /** After Value */
+            after_value?: unknown;
+            /** Reason */
+            reason: string;
+            /** Actor Id */
+            actor_id: string | null;
+            /** Actor Email */
+            actor_email?: string | null;
+            /** Source */
+            source: string;
+            /** Reverted Change Id */
+            reverted_change_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** SettingOut */
         SettingOut: {
             /** Key */
@@ -15151,13 +19189,38 @@ export interface components {
             /** Source */
             source: string;
         };
-        /** SettingWrite */
+        /**
+         * SettingPreviewIn
+         * @description A pending edit to dry-run. ``value`` omitted previews a clear.
+         */
+        SettingPreviewIn: {
+            /** Value */
+            value?: unknown;
+            /**
+             * Clear
+             * @default false
+             */
+            clear: boolean;
+        };
+        /**
+         * SettingWrite
+         * @description One applied configuration change.
+         *
+         *     ``reason`` is required, not optional (PRD ADM-033). An audit trail whose
+         *     reason column is usually empty answers "what changed" but never "why", and
+         *     "why" is the question asked during the incident the trail exists for.
+         */
         SettingWrite: {
             /**
              * Value
              * @description Validated against the registry spec for this key.
              */
             value: unknown;
+            /**
+             * Reason
+             * @description Why this change is being made. Recorded in the audit trail.
+             */
+            reason: string;
         };
         /** SlugAvailability */
         SlugAvailability: {
@@ -15406,6 +19469,47 @@ export interface components {
             /** Cards Due Now */
             cards_due_now: number;
         };
+        /**
+         * StudentNeedingAttention
+         * @description One (student, course) risk row for the teacher dashboard.
+         *
+         *     Composed across three features: the risk scoring comes from progress,
+         *     the display name and email from identity, the course title from here.
+         *     One row per (student, course) -- a student struggling in two of the
+         *     teacher's courses appears twice, because the follow-up is per course.
+         *     This is why the row count exceeds the headline
+         *     ``students_needing_attention`` figure, which counts people.
+         */
+        StudentNeedingAttention: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** Email */
+            email: string;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /** Completion Percent */
+            completion_percent: number;
+            /** Last Engagement At */
+            last_engagement_at?: string | null;
+            /** Days Since Last Engagement */
+            days_since_last_engagement?: number | null;
+            /** Primary Reason */
+            primary_reason: string;
+            /** Signal Count */
+            signal_count: number;
+            /** Severity */
+            severity: string;
+        };
         /** StudentPathProgressAuthoring */
         StudentPathProgressAuthoring: {
             /**
@@ -15416,9 +19520,9 @@ export interface components {
             /** Student Email */
             student_email: string;
             /** Student Display Name */
-            student_display_name: string | null;
+            student_display_name?: string | null;
             /** Student Avatar Url */
-            student_avatar_url: string | null;
+            student_avatar_url?: string | null;
             /** Overall Percent */
             overall_percent: number;
             /** Completed Courses */
@@ -15561,6 +19665,91 @@ export interface components {
             buckets: components["schemas"]["TimeBucket"][];
         };
         /**
+         * SyllabusImportResult
+         * @description Outcome of ``POST /teacher/courses/import-syllabus``.
+         *
+         *     Returned on success (HTTP 201). Failures raise instead, so this shape
+         *     never carries an error — ``warnings`` is the "succeeded, but look at
+         *     this" channel: outcomes renumbered because the source syllabus skipped
+         *     a code, no total-hours row, a title that fell back to the other
+         *     language. The SPA shows them next to the created course.
+         */
+        SyllabusImportResult: {
+            /**
+             * Import Id
+             * Format: uuid
+             */
+            import_id: string;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Slug */
+            course_slug: string;
+            /** Title */
+            title: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "vi" | "en";
+            /** Description */
+            description?: string | null;
+            /** Estimated Minutes */
+            estimated_minutes?: number | null;
+            /**
+             * Outcome Count
+             * @default 0
+             */
+            outcome_count: number;
+            /** Warnings */
+            warnings?: string[];
+        };
+        /**
+         * SyllabusImportRow
+         * @description One past import attempt in the manager's history list.
+         *
+         *     Unlike :class:`SyllabusImportResult` this covers FAILED attempts too
+         *     (``course_id`` is then ``None`` and ``error_message`` says why), which
+         *     is the whole point of keeping the attempts.
+         */
+        SyllabusImportRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Course Id */
+            course_id?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "succeeded" | "failed";
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "vi" | "en";
+            /** Original Filename */
+            original_filename?: string | null;
+            /** Error Message */
+            error_message?: string | null;
+            /** Warnings */
+            warnings?: string[];
+            /**
+             * Outcome Count
+             * @default 0
+             */
+            outcome_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
          * TagAuthoring
          * @description Authoring projection of :class:`Tag`.
          *
@@ -15649,15 +19838,18 @@ export interface components {
              * Format: uuid
              */
             granted_by: string;
+            /**
+             * Is Instructor
+             * @default false
+             */
+            is_instructor: boolean;
+            /**
+             * Is Assistant
+             * @default false
+             */
+            is_assistant: boolean;
         };
-        /**
-         * TeacherAssignmentRead
-         * @description Authoring DTO for a teacher-on-course assignment.
-         *
-         *     ``primary_email`` / ``display_name`` are joined from ``users`` +
-         *     ``user_profiles``; ``active_until`` is non-null for soft-revoked
-         *     rows (audit trail).
-         */
+        /** TeacherAssignmentRead */
         TeacherAssignmentRead: {
             /**
              * User Id
@@ -15670,6 +19862,16 @@ export interface components {
             primary_email: string;
             /** Assignment Id */
             assignment_id?: string | null;
+            /**
+             * Is Instructor
+             * @default false
+             */
+            is_instructor: boolean;
+            /**
+             * Is Assistant
+             * @default false
+             */
+            is_assistant: boolean;
             /** Active From */
             active_from?: string | null;
             /** Active Until */
@@ -15747,6 +19949,96 @@ export interface components {
              * @default 0
              */
             cards_overdue: number;
+            /**
+             * Students Needing Attention
+             * @default 0
+             */
+            students_needing_attention: number;
+        };
+        /**
+         * TeacherInterviewRecordingRead
+         * @description Teacher-side replay payload (gap-report workspace, Transcript tab).
+         *
+         *     Availability-state only — no provider identity leaks. ``stream_url`` is a
+         *     SHORT-LIVED presigned GET (inline disposition, TTL =
+         *     ``s3_url_ttl_seconds``); the client refreshes it before ``expires_at``.
+         */
+        TeacherInterviewRecordingRead: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "not_recorded" | "processing" | "available" | "failed" | "expired";
+            /** Media Kind */
+            media_kind?: "audio" | null;
+            /** Stream Url */
+            stream_url?: string | null;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+            /** Recorded At */
+            recorded_at?: string | null;
+        };
+        /**
+         * TenantOperationsOut
+         * @description One tenant's operational picture (PRD ADM-042).
+         *
+         *     Job figures here ARE organization-scoped, unlike the platform-wide job
+         *     aggregates elsewhere in this console. For a single tenant the entity set
+         *     can be walked directly; across every tenant it cannot, which is why the
+         *     dashboard still reports its job metrics as global.
+         */
+        TenantOperationsOut: {
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /** Window Days */
+            window_days: number;
+            /** Active Members */
+            active_members: number;
+            /** Members Active In Window */
+            members_active_in_window: number;
+            /** Course Count */
+            course_count: number;
+            /** Published Course Count */
+            published_course_count: number;
+            /** Material Count */
+            material_count: number;
+            /** Storage Bytes */
+            storage_bytes: number;
+            /** Jobs Terminal Window */
+            jobs_terminal_window: number;
+            /** Jobs Failed Window */
+            jobs_failed_window: number;
+            /** Jobs In Flight */
+            jobs_in_flight: number;
+            /** Job Failure Rate Pct */
+            job_failure_rate_pct: number | null;
+            /** Spend Window Usd */
+            spend_window_usd: number;
+            /** Spend Coverage Pct */
+            spend_coverage_pct: number | null;
+            /** Config Overrides */
+            config_overrides: number;
+            /** Is Inactive */
+            is_inactive: boolean;
+            /** Last Activity At */
+            last_activity_at: string | null;
+            /** Days Quiet */
+            days_quiet: number | null;
         };
         /** TimeBucket */
         TimeBucket: {
@@ -15827,6 +20119,11 @@ export interface components {
          *     invited email can sign in via Google OAuth immediately (the
          *     pre-registration gate accepts existing ``users`` rows) and is already
          *     scoped to its organization.
+         *
+         *     ``organization_id`` is optional at the schema level because a non-admin
+         *     inviter (manager) is never allowed to pick: the router forces the
+         *     caller's own primary organization server-side. Platform admins MUST
+         *     still provide it.
          */
         UserCreate: {
             /** Primary Email */
@@ -15837,11 +20134,8 @@ export interface components {
             family_name?: string | null;
             /** Display Name */
             display_name?: string | null;
-            /**
-             * Organization Id
-             * Format: uuid
-             */
-            organization_id: string;
+            /** Organization Id */
+            organization_id?: string | null;
             /**
              * Role Code
              * @default student
@@ -15896,6 +20190,8 @@ export interface components {
             courses?: components["schemas"]["CourseProgressRead"][];
             /** Career Paths */
             career_paths?: components["schemas"]["abridgeai__features__identity__schemas__profile__CareerPathProgressRead"][];
+            /** Programs */
+            programs?: components["schemas"]["ProgramProgressRead"][];
             /** Assigned Courses */
             assigned_courses?: components["schemas"]["AssignedCourseRead"][];
             /** Last Active At */
@@ -15908,30 +20204,6 @@ export interface components {
         UserPermissionsRead: {
             /** Permissions */
             permissions: string[];
-        };
-        /** UserProfileRead */
-        UserProfileRead: {
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /** Given Name */
-            given_name?: string | null;
-            /** Family Name */
-            family_name?: string | null;
-            /** Display Name */
-            display_name: string;
-            /** Avatar Object Id */
-            avatar_object_id?: string | null;
-            /** Avatar Url */
-            avatar_url?: string | null;
-            /** Bio */
-            bio?: string | null;
-            /** Locale */
-            locale?: string | null;
-            /** Links */
-            links?: components["schemas"]["UserProfileLinkRead"][];
         };
         /**
          * UserProfileLinkIn
@@ -15994,6 +20266,30 @@ export interface components {
             /** Label */
             label?: string | null;
         };
+        /** UserProfileRead */
+        UserProfileRead: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Given Name */
+            given_name?: string | null;
+            /** Family Name */
+            family_name?: string | null;
+            /** Display Name */
+            display_name: string;
+            /** Avatar Object Id */
+            avatar_object_id?: string | null;
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Bio */
+            bio?: string | null;
+            /** Locale */
+            locale?: string | null;
+            /** Links */
+            links?: components["schemas"]["UserProfileLinkRead"][];
+        };
         /** UserProfileUpdate */
         UserProfileUpdate: {
             /** Given Name */
@@ -16037,6 +20333,10 @@ export interface components {
             organization_id?: string | null;
             /** Organization Name */
             organization_name?: string | null;
+            /** Student Code */
+            student_code?: string | null;
+            /** Employee Code */
+            employee_code?: string | null;
         };
         /** UserSpendOut */
         UserSpendOut: {
@@ -16128,6 +20428,11 @@ export interface components {
             /** Url */
             url: string;
         };
+        /** _QuizBankStatusBody */
+        _QuizBankStatusBody: {
+            /** Status */
+            status: string;
+        };
         /**
          * _UploadUrlRequest
          * @description Request body for ``POST /materials/upload-url``.
@@ -16182,10 +20487,6 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
-        /** CareerPathProgressRead (short-key alias: the FE references the
-         *  un-namespaced name via `Schemas["CareerPathProgressRead"]`; the
-         *  regenerated snapshot only emits the namespaced form). */
-        CareerPathProgressRead: components["schemas"]["abridgeai__features__career_paths__schemas__public__CareerPathProgressRead"];
         /** CareerPathProgressRead */
         abridgeai__features__career_paths__schemas__public__CareerPathProgressRead: {
             /**
@@ -16274,6 +20575,7 @@ export type SchemaActiveUsersTrendPoint = components['schemas']['ActiveUsersTren
 export type SchemaAdaptiveModeRolloutStatus = components['schemas']['AdaptiveModeRolloutStatus'];
 export type SchemaAdaptiveReadinessRead = components['schemas']['AdaptiveReadinessRead'];
 export type SchemaAdminCoursePage = components['schemas']['AdminCoursePage'];
+export type SchemaApplyResult = components['schemas']['ApplyResult'];
 export type SchemaAssignTeacherRequest = components['schemas']['AssignTeacherRequest'];
 export type SchemaAssignableTeacher = components['schemas']['AssignableTeacher'];
 export type SchemaAssignedCourseRead = components['schemas']['AssignedCourseRead'];
@@ -16281,6 +20583,8 @@ export type SchemaAtRiskListRead = components['schemas']['AtRiskListRead'];
 export type SchemaAtRiskReason = components['schemas']['AtRiskReason'];
 export type SchemaAtRiskStudent = components['schemas']['AtRiskStudent'];
 export type SchemaAtRiskStudentRead = components['schemas']['AtRiskStudentRead'];
+export type SchemaAuthEventRow = components['schemas']['AuthEventRow'];
+export type SchemaBlockedCourseRow = components['schemas']['BlockedCourseRow'];
 export type SchemaBulkApproveRequest = components['schemas']['BulkApproveRequest'];
 export type SchemaBulkApproveResponse = components['schemas']['BulkApproveResponse'];
 export type SchemaBulkEnrollFailure = components['schemas']['BulkEnrollFailure'];
@@ -16304,12 +20608,15 @@ export type SchemaCareerPathCoursePatch = components['schemas']['CareerPathCours
 export type SchemaCareerPathCoursePublic = components['schemas']['CareerPathCoursePublic'];
 export type SchemaCareerPathCourseReorder = components['schemas']['CareerPathCourseReorder'];
 export type SchemaCareerPathCreate = components['schemas']['CareerPathCreate'];
+export type SchemaCareerPathDetailPublic = components['schemas']['CareerPathDetailPublic'];
 export type SchemaCareerPathImpactRead = components['schemas']['CareerPathImpactRead'];
 export type SchemaCareerPathImpactStage = components['schemas']['CareerPathImpactStage'];
 export type SchemaCareerPathListPage = components['schemas']['CareerPathListPage'];
+export type SchemaCareerPathOptionRead = components['schemas']['CareerPathOptionRead'];
 export type SchemaCareerPathPublic = components['schemas']['CareerPathPublic'];
 export type SchemaCareerPathStageAuthoring = components['schemas']['CareerPathStageAuthoring'];
 export type SchemaCareerPathStageCreate = components['schemas']['CareerPathStageCreate'];
+export type SchemaCareerPathStagePublic = components['schemas']['CareerPathStagePublic'];
 export type SchemaCareerPathStageReorder = components['schemas']['CareerPathStageReorder'];
 export type SchemaCareerPathStageReorderResult = components['schemas']['CareerPathStageReorderResult'];
 export type SchemaCareerPathStageUpdate = components['schemas']['CareerPathStageUpdate'];
@@ -16318,16 +20625,24 @@ export type SchemaCareerPathUpdate = components['schemas']['CareerPathUpdate'];
 export type SchemaCareerPathVersionRead = components['schemas']['CareerPathVersionRead'];
 export type SchemaCareerReadinessSnapshotRead = components['schemas']['CareerReadinessSnapshotRead'];
 export type SchemaCategorySpendOut = components['schemas']['CategorySpendOut'];
+export type SchemaChangeImpactOut = components['schemas']['ChangeImpactOut'];
+export type SchemaChangePathRequestCreate = components['schemas']['ChangePathRequestCreate'];
+export type SchemaChangeRequestDecision = components['schemas']['ChangeRequestDecision'];
+export type SchemaChangeRequestRejection = components['schemas']['ChangeRequestRejection'];
 export type SchemaCheckStatus = components['schemas']['CheckStatus'];
 export type SchemaChunkPreview = components['schemas']['ChunkPreview'];
 export type SchemaClassKrDistributionRead = components['schemas']['ClassKRDistributionRead'];
 export type SchemaContentOut = components['schemas']['ContentOut'];
 export type SchemaCostTotals = components['schemas']['CostTotals'];
+export type SchemaCourseAssessmentSummaryRead = components['schemas']['CourseAssessmentSummaryRead'];
 export type SchemaCourseAuthoring = components['schemas']['CourseAuthoring'];
+export type SchemaCourseCareerPlacementPublic = components['schemas']['CourseCareerPlacementPublic'];
+export type SchemaCourseCloneRequest = components['schemas']['CourseCloneRequest'];
 export type SchemaCourseContentAuthoring = components['schemas']['CourseContentAuthoring'];
 export type SchemaCourseContentPublic = components['schemas']['CourseContentPublic'];
 export type SchemaCourseCreate = components['schemas']['CourseCreate'];
 export type SchemaCourseFilterSummaryRow = components['schemas']['CourseFilterSummaryRow'];
+export type SchemaCourseHealthRow = components['schemas']['CourseHealthRow'];
 export type SchemaCourseLearningOutcomeAuthoring = components['schemas']['CourseLearningOutcomeAuthoring'];
 export type SchemaCourseLearningOutcomeCreate = components['schemas']['CourseLearningOutcomeCreate'];
 export type SchemaCourseLearningOutcomePublic = components['schemas']['CourseLearningOutcomePublic'];
@@ -16342,6 +20657,9 @@ export type SchemaCourseReadiness = components['schemas']['CourseReadiness'];
 export type SchemaCourseRosterRead = components['schemas']['CourseRosterRead'];
 export type SchemaCourseStats = components['schemas']['CourseStats'];
 export type SchemaCourseStatusCount = components['schemas']['CourseStatusCount'];
+export type SchemaCourseTeacherBulkRemoveRequest = components['schemas']['CourseTeacherBulkRemoveRequest'];
+export type SchemaCourseTeacherBulkRemoveResult = components['schemas']['CourseTeacherBulkRemoveResult'];
+export type SchemaCourseTeacherRoleRequest = components['schemas']['CourseTeacherRoleRequest'];
 export type SchemaCourseUpdate = components['schemas']['CourseUpdate'];
 export type SchemaCoverageOptions = components['schemas']['CoverageOptions'];
 export type SchemaCuratedKgDraft = components['schemas']['CuratedKGDraft'];
@@ -16362,10 +20680,13 @@ export type SchemaDiscussionTopicCreate = components['schemas']['DiscussionTopic
 export type SchemaDiscussionTopicList = components['schemas']['DiscussionTopicList'];
 export type SchemaDiscussionTopicRead = components['schemas']['DiscussionTopicRead'];
 export type SchemaDiscussionTopicUpdate = components['schemas']['DiscussionTopicUpdate'];
+export type SchemaDropPathRequestCreate = components['schemas']['DropPathRequestCreate'];
 export type SchemaEnableUserOut = components['schemas']['EnableUserOut'];
 export type SchemaEnrollmentAuthoring = components['schemas']['EnrollmentAuthoring'];
 export type SchemaEnrollmentPatch = components['schemas']['EnrollmentPatch'];
 export type SchemaEnrollmentRead = components['schemas']['EnrollmentRead'];
+export type SchemaFacultyAssignmentRead = components['schemas']['FacultyAssignmentRead'];
+export type SchemaFacultyMembersAddRequest = components['schemas']['FacultyMembersAddRequest'];
 export type SchemaFailedSpend = components['schemas']['FailedSpend'];
 export type SchemaFeedbackBandIn = components['schemas']['FeedbackBandIn'];
 export type SchemaFeedbackBandRead = components['schemas']['FeedbackBandRead'];
@@ -16381,6 +20702,7 @@ export type SchemaHttpAuditRow = components['schemas']['HttpAuditRow'];
 export type SchemaInstructorAuthoring = components['schemas']['InstructorAuthoring'];
 export type SchemaInstructorRead = components['schemas']['InstructorRead'];
 export type SchemaIntegrityEventBatchRequest = components['schemas']['IntegrityEventBatchRequest'];
+export type SchemaIntegrityEventBatchResponse = components['schemas']['IntegrityEventBatchResponse'];
 export type SchemaIntegrityEventItem = components['schemas']['IntegrityEventItem'];
 export type SchemaInterviewConfigAuthoring = components['schemas']['InterviewConfigAuthoring'];
 export type SchemaInterviewConfigCreate = components['schemas']['InterviewConfigCreate'];
@@ -16396,15 +20718,23 @@ export type SchemaInterviewOnboardingRespondRequest = components['schemas']['Int
 export type SchemaInterviewOnboardingRespondResponse = components['schemas']['InterviewOnboardingRespondResponse'];
 export type SchemaInterviewOutcomeAuthoring = components['schemas']['InterviewOutcomeAuthoring'];
 export type SchemaInterviewOutcomeCreate = components['schemas']['InterviewOutcomeCreate'];
+export type SchemaInterviewOutcomeUpdate = components['schemas']['InterviewOutcomeUpdate'];
 export type SchemaInterviewProgressRead = components['schemas']['InterviewProgressRead'];
 export type SchemaInterviewQuestionAuthoring = components['schemas']['InterviewQuestionAuthoring'];
+export type SchemaInterviewQuestionBankImportRequest = components['schemas']['InterviewQuestionBankImportRequest'];
+export type SchemaInterviewQuestionBankImportResult = components['schemas']['InterviewQuestionBankImportResult'];
 export type SchemaInterviewQuestionBankItemCreate = components['schemas']['InterviewQuestionBankItemCreate'];
 export type SchemaInterviewQuestionBankItemRead = components['schemas']['InterviewQuestionBankItemRead'];
 export type SchemaInterviewQuestionBankItemUpdate = components['schemas']['InterviewQuestionBankItemUpdate'];
+export type SchemaInterviewQuestionBankLogicalGroupCreate = components['schemas']['InterviewQuestionBankLogicalGroupCreate'];
+export type SchemaInterviewQuestionBankSiblingCreate = components['schemas']['InterviewQuestionBankSiblingCreate'];
 export type SchemaInterviewQuestionCreate = components['schemas']['InterviewQuestionCreate'];
 export type SchemaInterviewQuestionDuplicateCheck = components['schemas']['InterviewQuestionDuplicateCheck'];
 export type SchemaInterviewQuestionDuplicateCheckRequest = components['schemas']['InterviewQuestionDuplicateCheckRequest'];
 export type SchemaInterviewQuestionPublic = components['schemas']['InterviewQuestionPublic'];
+export type SchemaInterviewQuestionUpdate = components['schemas']['InterviewQuestionUpdate'];
+export type SchemaInterviewRecordingConsentRequest = components['schemas']['InterviewRecordingConsentRequest'];
+export type SchemaInterviewRecordingConsentResponse = components['schemas']['InterviewRecordingConsentResponse'];
 export type SchemaInterviewRubricScore = components['schemas']['InterviewRubricScore'];
 export type SchemaInterviewSessionFinishRequest = components['schemas']['InterviewSessionFinishRequest'];
 export type SchemaInterviewSessionFinishResponse = components['schemas']['InterviewSessionFinishResponse'];
@@ -16413,6 +20743,7 @@ export type SchemaInterviewSessionPublic = components['schemas']['InterviewSessi
 export type SchemaInterviewSessionStartRequest = components['schemas']['InterviewSessionStartRequest'];
 export type SchemaInterviewSessionStartResponse = components['schemas']['InterviewSessionStartResponse'];
 export type SchemaInterviewSessionSummary = components['schemas']['InterviewSessionSummary'];
+export type SchemaInterviewSessionTeacherPage = components['schemas']['InterviewSessionTeacherPage'];
 export type SchemaInterviewSessionTeacherRead = components['schemas']['InterviewSessionTeacherRead'];
 export type SchemaInterviewSubmitAnswerRequest = components['schemas']['InterviewSubmitAnswerRequest'];
 export type SchemaInterviewSubmitAnswerResponse = components['schemas']['InterviewSubmitAnswerResponse'];
@@ -16422,8 +20753,15 @@ export type SchemaInterviewTranscriptTurn = components['schemas']['InterviewTran
 export type SchemaInvitationCodeAuthoring = components['schemas']['InvitationCodeAuthoring'];
 export type SchemaInvitationCodeCreate = components['schemas']['InvitationCodeCreate'];
 export type SchemaInvitationCodePatch = components['schemas']['InvitationCodePatch'];
+export type SchemaJobAiCallOut = components['schemas']['JobAiCallOut'];
+export type SchemaJobInvestigationOut = components['schemas']['JobInvestigationOut'];
+export type SchemaJobOwnerOut = components['schemas']['JobOwnerOut'];
+export type SchemaJobStageOut = components['schemas']['JobStageOut'];
+export type SchemaJobTimingOut = components['schemas']['JobTimingOut'];
 export type SchemaKgEdge = components['schemas']['KGEdge'];
 export type SchemaKgNode = components['schemas']['KGNode'];
+export type SchemaLatencyTrendOut = components['schemas']['LatencyTrendOut'];
+export type SchemaLatencyTrendPoint = components['schemas']['LatencyTrendPoint'];
 export type SchemaLessonAuthoring = components['schemas']['LessonAuthoring'];
 export type SchemaLessonCreate = components['schemas']['LessonCreate'];
 export type SchemaLessonKnowledgeGraph = components['schemas']['LessonKnowledgeGraph'];
@@ -16437,6 +20775,9 @@ export type SchemaLessonResourceAuthoring = components['schemas']['LessonResourc
 export type SchemaLessonResourceCreate = components['schemas']['LessonResourceCreate'];
 export type SchemaLessonResourcePublic = components['schemas']['LessonResourcePublic'];
 export type SchemaLessonUpdate = components['schemas']['LessonUpdate'];
+export type SchemaLogoutRequest = components['schemas']['LogoutRequest'];
+export type SchemaManagementDashboard = components['schemas']['ManagementDashboard'];
+export type SchemaManagementDashboardCounts = components['schemas']['ManagementDashboardCounts'];
 export type SchemaManualGradeIn = components['schemas']['ManualGradeIn'];
 export type SchemaManualGradeRead = components['schemas']['ManualGradeRead'];
 export type SchemaMaterialAuthoring = components['schemas']['MaterialAuthoring'];
@@ -16486,6 +20827,7 @@ export type SchemaNotificationPreferenceRead = components['schemas']['Notificati
 export type SchemaNotificationPreferenceUpdate = components['schemas']['NotificationPreferenceUpdate'];
 export type SchemaNotificationRead = components['schemas']['NotificationRead'];
 export type SchemaOrgUnitCreate = components['schemas']['OrgUnitCreate'];
+export type SchemaOrgUnitNode = components['schemas']['OrgUnitNode'];
 export type SchemaOrgUnitPatch = components['schemas']['OrgUnitPatch'];
 export type SchemaOrgUnitRead = components['schemas']['OrgUnitRead'];
 export type SchemaOrganizationCreate = components['schemas']['OrganizationCreate'];
@@ -16495,22 +20837,53 @@ export type SchemaOrganizationDomainRead = components['schemas']['OrganizationDo
 export type SchemaOrganizationListPage = components['schemas']['OrganizationListPage'];
 export type SchemaOrganizationPatch = components['schemas']['OrganizationPatch'];
 export type SchemaOrganizationRead = components['schemas']['OrganizationRead'];
+export type SchemaOrganizationSpendOut = components['schemas']['OrganizationSpendOut'];
+export type SchemaOrganizationSpendPage = components['schemas']['OrganizationSpendPage'];
 export type SchemaOutlineSection = components['schemas']['OutlineSection'];
 export type SchemaOverviewOut = components['schemas']['OverviewOut'];
 export type SchemaPageResponseCourseAuthoring = components['schemas']['PageResponse_CourseAuthoring_'];
 export type SchemaPageResponseOrganizationRead = components['schemas']['PageResponse_OrganizationRead_'];
 export type SchemaPageResponseUserRead = components['schemas']['PageResponse_UserRead_'];
+export type SchemaPathAttemptRead = components['schemas']['PathAttemptRead'];
+export type SchemaPathChangeRequestRead = components['schemas']['PathChangeRequestRead'];
 export type SchemaPathReadinessOverview = components['schemas']['PathReadinessOverview'];
 export type SchemaPermissionRead = components['schemas']['PermissionRead'];
 export type SchemaPersonaProfileRead = components['schemas']['PersonaProfileRead'];
 export type SchemaPersonaProfileWrite = components['schemas']['PersonaProfileWrite'];
 export type SchemaPipelineSpendOut = components['schemas']['PipelineSpendOut'];
 export type SchemaPipelineStage = components['schemas']['PipelineStage'];
+export type SchemaPolicyAudienceRoleRead = components['schemas']['PolicyAudienceRoleRead'];
+export type SchemaPolicyAudienceUpdate = components['schemas']['PolicyAudienceUpdate'];
+export type SchemaPolicyCreate = components['schemas']['PolicyCreate'];
+export type SchemaPolicyDetail = components['schemas']['PolicyDetail'];
+export type SchemaPolicyDocument = components['schemas']['PolicyDocument'];
+export type SchemaPolicySummary = components['schemas']['PolicySummary'];
+export type SchemaPolicyVersionCreate = components['schemas']['PolicyVersionCreate'];
+export type SchemaPolicyVersionPatch = components['schemas']['PolicyVersionPatch'];
+export type SchemaPolicyVersionRead = components['schemas']['PolicyVersionRead'];
+export type SchemaPolicyVersionSummary = components['schemas']['PolicyVersionSummary'];
 export type SchemaPreprocessModeRequest = components['schemas']['PreprocessModeRequest'];
 export type SchemaPreprocessReportView = components['schemas']['PreprocessReportView'];
+export type SchemaPriorityTask = components['schemas']['PriorityTask'];
 export type SchemaProcessingJobOut = components['schemas']['ProcessingJobOut'];
 export type SchemaProcessingJobRow = components['schemas']['ProcessingJobRow'];
 export type SchemaProcessingProgress = components['schemas']['ProcessingProgress'];
+export type SchemaProgramAttentionRow = components['schemas']['ProgramAttentionRow'];
+export type SchemaProgramAuthoringOptions = components['schemas']['ProgramAuthoringOptions'];
+export type SchemaProgramCreate = components['schemas']['ProgramCreate'];
+export type SchemaProgramCsvImportFailure = components['schemas']['ProgramCsvImportFailure'];
+export type SchemaProgramCsvImportPayload = components['schemas']['ProgramCsvImportPayload'];
+export type SchemaProgramCsvImportResult = components['schemas']['ProgramCsvImportResult'];
+export type SchemaProgramEnrollRequest = components['schemas']['ProgramEnrollRequest'];
+export type SchemaProgramEnrollmentRead = components['schemas']['ProgramEnrollmentRead'];
+export type SchemaProgramOptionRead = components['schemas']['ProgramOptionRead'];
+export type SchemaProgramPathAttemptRead = components['schemas']['ProgramPathAttemptRead'];
+export type SchemaProgramPathRead = components['schemas']['ProgramPathRead'];
+export type SchemaProgramProgressRead = components['schemas']['ProgramProgressRead'];
+export type SchemaProgramRead = components['schemas']['ProgramRead'];
+export type SchemaProgramUpdate = components['schemas']['ProgramUpdate'];
+export type SchemaProgramVersionRead = components['schemas']['ProgramVersionRead'];
+export type SchemaProgramWithdrawRequest = components['schemas']['ProgramWithdrawRequest'];
 export type SchemaQuarantinedUnit = components['schemas']['QuarantinedUnit'];
 export type SchemaQuestionBankEntry = components['schemas']['QuestionBankEntry'];
 export type SchemaQuestionBankImportRequest = components['schemas']['QuestionBankImportRequest'];
@@ -16526,6 +20899,7 @@ export type SchemaQuizAttemptReviewOption = components['schemas']['QuizAttemptRe
 export type SchemaQuizAttemptReviewQuestion = components['schemas']['QuizAttemptReviewQuestion'];
 export type SchemaQuizAttemptReviewRead = components['schemas']['QuizAttemptReviewRead'];
 export type SchemaQuizAttemptStart = components['schemas']['QuizAttemptStart'];
+export type SchemaQuizAttemptTeacherPage = components['schemas']['QuizAttemptTeacherPage'];
 export type SchemaQuizAttemptTeacherRead = components['schemas']['QuizAttemptTeacherRead'];
 export type SchemaQuizAttemptTeacherReview = components['schemas']['QuizAttemptTeacherReview'];
 export type SchemaQuizAuthoring = components['schemas']['QuizAuthoring'];
@@ -16537,6 +20911,7 @@ export type SchemaQuizGenerationRunRead = components['schemas']['QuizGenerationR
 export type SchemaQuizGenerationStageEvent = components['schemas']['QuizGenerationStageEvent'];
 export type SchemaQuizGradeRow = components['schemas']['QuizGradeRow'];
 export type SchemaQuizIntegrityEventBatchRequest = components['schemas']['QuizIntegrityEventBatchRequest'];
+export type SchemaQuizIntegrityEventBatchResponse = components['schemas']['QuizIntegrityEventBatchResponse'];
 export type SchemaQuizIntegrityEventItem = components['schemas']['QuizIntegrityEventItem'];
 export type SchemaQuizOptionDistribution = components['schemas']['QuizOptionDistribution'];
 export type SchemaQuizOverrideIn = components['schemas']['QuizOverrideIn'];
@@ -16545,6 +20920,15 @@ export type SchemaQuizPerStudentRow = components['schemas']['QuizPerStudentRow']
 export type SchemaQuizProgressRead = components['schemas']['QuizProgressRead'];
 export type SchemaQuizPublic = components['schemas']['QuizPublic'];
 export type SchemaQuizQuestionAuthoring = components['schemas']['QuizQuestionAuthoring'];
+export type SchemaQuizQuestionBankCopyRequest = components['schemas']['QuizQuestionBankCopyRequest'];
+export type SchemaQuizQuestionBankCopyResult = components['schemas']['QuizQuestionBankCopyResult'];
+export type SchemaQuizQuestionBankImportRequest = components['schemas']['QuizQuestionBankImportRequest'];
+export type SchemaQuizQuestionBankItemCreate = components['schemas']['QuizQuestionBankItemCreate'];
+export type SchemaQuizQuestionBankItemRead = components['schemas']['QuizQuestionBankItemRead'];
+export type SchemaQuizQuestionBankItemUpdate = components['schemas']['QuizQuestionBankItemUpdate'];
+export type SchemaQuizQuestionBankOptionCreate = components['schemas']['QuizQuestionBankOptionCreate'];
+export type SchemaQuizQuestionBankOptionRead = components['schemas']['QuizQuestionBankOptionRead'];
+export type SchemaQuizQuestionBankPage = components['schemas']['QuizQuestionBankPage'];
 export type SchemaQuizQuestionBreakdown = components['schemas']['QuizQuestionBreakdown'];
 export type SchemaQuizQuestionOptionAuthoring = components['schemas']['QuizQuestionOptionAuthoring'];
 export type SchemaQuizQuestionOptionPublic = components['schemas']['QuizQuestionOptionPublic'];
@@ -16568,17 +20952,23 @@ export type SchemaReviewQueueItem = components['schemas']['ReviewQueueItem'];
 export type SchemaReviewSubmitRequest = components['schemas']['ReviewSubmitRequest'];
 export type SchemaReviewSubmitResult = components['schemas']['ReviewSubmitResult'];
 export type SchemaReviewVisibilityFlags = components['schemas']['ReviewVisibilityFlags'];
+export type SchemaRevokeSessionOut = components['schemas']['RevokeSessionOut'];
 export type SchemaRoleAssignmentCreate = components['schemas']['RoleAssignmentCreate'];
 export type SchemaRoleAssignmentRead = components['schemas']['RoleAssignmentRead'];
 export type SchemaRoleBreakdown = components['schemas']['RoleBreakdown'];
 export type SchemaRoleChangeRow = components['schemas']['RoleChangeRow'];
 export type SchemaRoleRead = components['schemas']['RoleRead'];
 export type SchemaRoleWithPermissionsRead = components['schemas']['RoleWithPermissionsRead'];
+export type SchemaRollbackIn = components['schemas']['RollbackIn'];
 export type SchemaRosterEntry = components['schemas']['RosterEntry'];
 export type SchemaRosterProgressRead = components['schemas']['RosterProgressRead'];
 export type SchemaRosterStudentRead = components['schemas']['RosterStudentRead'];
 export type SchemaSecuritySessionSummary = components['schemas']['SecuritySessionSummary'];
+export type SchemaSecuritySummaryOut = components['schemas']['SecuritySummaryOut'];
+export type SchemaSelectPathRequest = components['schemas']['SelectPathRequest'];
+export type SchemaSettingChangeOut = components['schemas']['SettingChangeOut'];
 export type SchemaSettingOut = components['schemas']['SettingOut'];
+export type SchemaSettingPreviewIn = components['schemas']['SettingPreviewIn'];
 export type SchemaSettingWrite = components['schemas']['SettingWrite'];
 export type SchemaSlugAvailability = components['schemas']['SlugAvailability'];
 export type SchemaStageBreakdown = components['schemas']['StageBreakdown'];
@@ -16589,6 +20979,7 @@ export type SchemaStreamUrlResponse = components['schemas']['StreamUrlResponse']
 export type SchemaStudentCareerEnrollmentAuthoring = components['schemas']['StudentCareerEnrollmentAuthoring'];
 export type SchemaStudentDashboardSummaryRead = components['schemas']['StudentDashboardSummaryRead'];
 export type SchemaStudentLessonSummaryRead = components['schemas']['StudentLessonSummaryRead'];
+export type SchemaStudentNeedingAttention = components['schemas']['StudentNeedingAttention'];
 export type SchemaStudentPathProgressAuthoring = components['schemas']['StudentPathProgressAuthoring'];
 export type SchemaStudentProgressRow = components['schemas']['StudentProgressRow'];
 export type SchemaStudentReadinessRead = components['schemas']['StudentReadinessRead'];
@@ -16597,12 +20988,16 @@ export type SchemaStudentSrDetailRead = components['schemas']['StudentSrDetailRe
 export type SchemaStudentSrDetailReviewRead = components['schemas']['StudentSrDetailReviewRead'];
 export type SchemaStudyPlanItem = components['schemas']['StudyPlanItem'];
 export type SchemaSummaryOut = components['schemas']['SummaryOut'];
+export type SchemaSyllabusImportResult = components['schemas']['SyllabusImportResult'];
+export type SchemaSyllabusImportRow = components['schemas']['SyllabusImportRow'];
 export type SchemaTagAuthoring = components['schemas']['TagAuthoring'];
 export type SchemaTagPublic = components['schemas']['TagPublic'];
 export type SchemaTeacherActionRequest = components['schemas']['TeacherActionRequest'];
 export type SchemaTeacherAssignmentCreated = components['schemas']['TeacherAssignmentCreated'];
 export type SchemaTeacherAssignmentRead = components['schemas']['TeacherAssignmentRead'];
 export type SchemaTeacherDashboardStats = components['schemas']['TeacherDashboardStats'];
+export type SchemaTeacherInterviewRecordingRead = components['schemas']['TeacherInterviewRecordingRead'];
+export type SchemaTenantOperationsOut = components['schemas']['TenantOperationsOut'];
 export type SchemaTimeBucket = components['schemas']['TimeBucket'];
 export type SchemaTokenResponse = components['schemas']['TokenResponse'];
 export type SchemaTopOwnerRow = components['schemas']['TopOwnerRow'];
@@ -16612,10 +21007,10 @@ export type SchemaUserCreate = components['schemas']['UserCreate'];
 export type SchemaUserListRow = components['schemas']['UserListRow'];
 export type SchemaUserOverviewRead = components['schemas']['UserOverviewRead'];
 export type SchemaUserPermissionsRead = components['schemas']['UserPermissionsRead'];
-export type SchemaUserProfileRead = components['schemas']['UserProfileRead'];
 export type SchemaUserProfileLinkIn = components['schemas']['UserProfileLinkIn'];
 export type SchemaUserProfileLinkRead = components['schemas']['UserProfileLinkRead'];
 export type SchemaUserProfileLinkUpdate = components['schemas']['UserProfileLinkUpdate'];
+export type SchemaUserProfileRead = components['schemas']['UserProfileRead'];
 export type SchemaUserProfileUpdate = components['schemas']['UserProfileUpdate'];
 export type SchemaUserRead = components['schemas']['UserRead'];
 export type SchemaUserSpendOut = components['schemas']['UserSpendOut'];
@@ -16625,6 +21020,7 @@ export type SchemaCompletedPartIn = components['schemas']['_CompletedPartIn'];
 export type SchemaFeedbackBandsBody = components['schemas']['_FeedbackBandsBody'];
 export type SchemaImportBody = components['schemas']['_ImportBody'];
 export type SchemaMultipartPartOut = components['schemas']['_MultipartPartOut'];
+export type SchemaQuizBankStatusBody = components['schemas']['_QuizBankStatusBody'];
 export type SchemaUploadUrlRequest = components['schemas']['_UploadUrlRequest'];
 export type SchemaUploadUrlResponse = components['schemas']['_UploadUrlResponse'];
 export type SchemaUploadUrlStorageObject = components['schemas']['_UploadUrlStorageObject'];
@@ -16725,7 +21121,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LogoutRequest"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {
@@ -16733,6 +21133,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
@@ -16805,6 +21214,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserRead"];
+                };
+            };
+        };
+    };
+    list_my_links_api_v1_users_me_links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileLinkRead"][];
+                };
+            };
+        };
+    };
+    create_my_link_api_v1_users_me_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserProfileLinkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileLinkRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_my_link_api_v1_users_me_links__link_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_my_link_api_v1_users_me_links__link_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserProfileLinkUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileLinkRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -17096,6 +21622,7 @@ export interface operations {
                 status?: string | null;
                 role?: string | null;
                 organization?: string | null;
+                org_unit?: string | null;
                 sort?: string | null;
                 sort_dir?: string;
                 page?: number;
@@ -17595,6 +22122,8 @@ export interface operations {
                 sort_dir?: string;
                 page?: number;
                 page_size?: number;
+                /** @description Only tenants with no member login, course edit, quiz attempt or interview in this many days. Same definition the dashboard counts, so its inactive-tenant tile links straight here. */
+                inactive_days?: number | null;
             };
             header?: never;
             path?: never;
@@ -17916,6 +22445,37 @@ export interface operations {
             };
         };
     };
+    list_unit_tree_endpoint_api_v1_admin_organizations__org_id__units_tree_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgUnitNode"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_unit_endpoint_api_v1_admin_org_units__unit_id__get: {
         parameters: {
             query?: never;
@@ -17999,6 +22559,104 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["OrgUnitRead"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_faculty_assignments_endpoint_api_v1_admin_organizations__org_id__faculty_assignments_get: {
+        parameters: {
+            query?: {
+                faculty_id?: string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacultyAssignmentRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_faculty_members_endpoint_api_v1_admin_faculties__faculty_id__members_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                faculty_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FacultyMembersAddRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacultyAssignmentRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_faculty_member_endpoint_api_v1_admin_faculties__faculty_id__members__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                faculty_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -18479,6 +23137,37 @@ export interface operations {
             };
         };
     };
+    get_course_syllabus_download_url_api_v1_courses__course_id__syllabus_download_url_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceDownloadUrlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_my_enrolled_courses_api_v1_me_courses_get: {
         parameters: {
             query?: {
@@ -18575,6 +23264,103 @@ export interface operations {
             };
         };
     };
+    import_course_from_syllabus_api_v1_teacher_courses_import_syllabus_post: {
+        parameters: {
+            query: {
+                language: "vi" | "en";
+                filename?: string | null;
+                faculty_id?: string | null;
+                mode?: "attach" | "override" | "create";
+                course_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyllabusImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_syllabus_imports_api_v1_teacher_courses_syllabus_imports_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyllabusImportRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_course_syllabus_download_url_api_v1_teacher_courses__course_id__syllabus_download_url_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StreamUrlResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     check_course_slug_api_v1_teacher_courses_check_slug_get: {
         parameters: {
             query: {
@@ -18622,6 +23408,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TeacherDashboardStats"];
+                };
+            };
+        };
+    };
+    list_priority_tasks_api_v1_teacher_dashboard_priority_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriorityTask"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_course_health_api_v1_teacher_dashboard_course_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseHealthRow"][];
+                };
+            };
+        };
+    };
+    list_students_needing_attention_api_v1_teacher_dashboard_students_needing_attention_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentNeedingAttention"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -19670,7 +24538,9 @@ export interface operations {
     };
     list_dept_courses_api_v1_dept_courses_get: {
         parameters: {
-            query?: never;
+            query?: {
+                faculty_id?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -19684,6 +24554,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CourseAuthoring"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -19756,7 +24635,9 @@ export interface operations {
     };
     list_assignable_teachers_for_new_course_api_v1_dept_assignable_teachers_get: {
         parameters: {
-            query?: never;
+            query?: {
+                faculty_id?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -19770,6 +24651,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssignableTeacher"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -19836,6 +24726,41 @@ export interface operations {
             };
         };
     };
+    bulk_remove_teachers_api_v1_dept_courses__course_id__teachers_bulk_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseTeacherBulkRemoveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseTeacherBulkRemoveResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     remove_teacher_api_v1_dept_courses__course_id__teachers__user_id__delete: {
         parameters: {
             query?: never;
@@ -19854,6 +24779,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_teacher_titles_api_v1_dept_courses__course_id__teachers__user_id__role_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseTeacherRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherAssignmentRead"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -19961,12 +24922,47 @@ export interface operations {
             };
         };
     };
-    list_org_unit_courses_api_v1_dept_org_units__org_unit_id__courses_get: {
+    clone_dept_course_api_v1_dept_courses__course_id__clone_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                org_unit_id: string;
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseCloneRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_faculty_courses_api_v1_dept_faculties__faculty_id__courses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                faculty_id: string;
             };
             cookie?: never;
         };
@@ -20215,6 +25211,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_management_dashboard_api_v1_management_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagementDashboard"];
                 };
             };
         };
@@ -21324,6 +26340,72 @@ export interface operations {
             };
         };
     };
+    list_course_topics_api_v1_courses__course_id__discussion_topics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscussionTopicList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_course_topic_api_v1_courses__course_id__discussion_topics_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscussionTopicCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscussionTopicRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     delete_topic_api_v1_discussion_topics__topic_id__delete: {
         parameters: {
             query?: never;
@@ -21518,6 +26600,326 @@ export interface operations {
             };
         };
     };
+    list_policies_endpoint_api_v1_policies_get: {
+        parameters: {
+            query?: {
+                /** @description Reader's role codes; omit for the public set. */
+                role?: string[] | null;
+                language?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicySummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_policy_endpoint_api_v1_policies__slug__get: {
+        parameters: {
+            query?: {
+                language?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDocument"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_policies_endpoint_api_v1_admin_policies_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDetail"][];
+                };
+            };
+        };
+    };
+    create_policy_endpoint_api_v1_admin_policies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_policy_endpoint_api_v1_admin_policies__policy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_endpoint_api_v1_admin_policies__policy_id__versions__version_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyVersionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_draft_endpoint_api_v1_admin_policies__policy_id__versions__version_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyVersionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyVersionSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_draft_endpoint_api_v1_admin_policies__policy_id__versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyVersionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyVersionSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_endpoint_api_v1_admin_policies__policy_id__versions__version_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyVersionSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_audience_endpoint_api_v1_admin_policies__policy_id__audience_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyAudienceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_published_quiz_api_v1_quizzes__quiz_id__get: {
         parameters: {
             query?: never;
@@ -21640,9 +27042,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: number;
-                    };
+                    "application/json": components["schemas"]["QuizIntegrityEventBatchResponse"];
                 };
             };
             /** @description Validation Error */
@@ -21675,6 +27075,122 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["QuizAttemptRead"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_attempt_session_api_v1_attempts__attempt_id__session_claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    heartbeat_attempt_session_api_v1_attempts__attempt_id__session_heartbeat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    takeover_attempt_session_api_v1_attempts__attempt_id__session_takeover_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    release_attempt_session_api_v1_attempts__attempt_id__session_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attempt_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -21842,6 +27358,252 @@ export interface operations {
             };
         };
     };
+    list_curated_quiz_question_bank_api_v1_teacher_courses__course_id__quiz_question_bank_get: {
+        parameters: {
+            query?: {
+                bank_status?: string | null;
+                question_type?: string | null;
+                bloom_level?: string | null;
+                difficulty?: string | null;
+                search?: string | null;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizQuestionBankPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_curated_quiz_question_bank_item_api_v1_teacher_courses__course_id__quiz_question_bank_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizQuestionBankItemCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizQuestionBankItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    copy_quiz_questions_to_curated_bank_api_v1_teacher_courses__course_id__quiz_question_bank_from_questions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizQuestionBankCopyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizQuestionBankCopyResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_curated_quiz_question_bank_item_api_v1_teacher_courses__course_id__quiz_question_bank__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_curated_quiz_question_bank_item_api_v1_teacher_courses__course_id__quiz_question_bank__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizQuestionBankItemUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizQuestionBankItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_curated_quiz_question_bank_item_status_api_v1_teacher_courses__course_id__quiz_question_bank__item_id__status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["_QuizBankStatusBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizQuestionBankItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_curated_quiz_question_bank_items_api_v1_teacher_quizzes__quiz_id__questions_import_bank_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quiz_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizQuestionBankImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizQuestionAuthoring"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_quiz_under_course_api_v1_teacher_courses__course_id__quizzes_post: {
         parameters: {
             query?: never;
@@ -21978,6 +27740,44 @@ export interface operations {
     };
     list_course_quiz_attempts_api_v1_teacher_courses__course_id__quiz_attempts_get: {
         parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                search?: string | null;
+                title?: string | null;
+                result?: string | null;
+                since?: string | null;
+            };
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizAttemptTeacherPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    course_assessment_summary_api_v1_teacher_courses__course_id__assessment_summary_get: {
+        parameters: {
             query?: never;
             header?: never;
             path: {
@@ -21993,7 +27793,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QuizAttemptTeacherRead"][];
+                    "application/json": components["schemas"]["CourseAssessmentSummaryRead"];
                 };
             };
             /** @description Validation Error */
@@ -23342,6 +29142,41 @@ export interface operations {
             };
         };
     };
+    submit_recording_consent_api_v1_interview_sessions__session_id__recording_consent_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["InterviewRecordingConsentRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewRecordingConsentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     dispatch_realtime_agent_api_v1_interview_sessions__session_id__realtime_agent_post: {
         parameters: {
             query?: never;
@@ -23614,6 +29449,77 @@ export interface operations {
             };
         };
     };
+    create_interview_question_bank_logical_group_api_v1_teacher_courses__course_id__interview_question_bank_logical_groups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewQuestionBankLogicalGroupCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewQuestionBankItemRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_interview_question_bank_sibling_api_v1_teacher_courses__course_id__interview_question_bank__item_id__siblings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewQuestionBankSiblingCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewQuestionBankItemRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     delete_interview_question_bank_item_api_v1_teacher_courses__course_id__interview_question_bank__item_id__delete: {
         parameters: {
             query?: never;
@@ -23680,6 +29586,40 @@ export interface operations {
             };
         };
     };
+    delete_interview_question_bank_group_api_v1_teacher_courses__course_id__interview_question_bank__item_id__group_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_interview_config_api_v1_teacher_courses__course_id__interview_configs_post: {
         parameters: {
             query?: never;
@@ -23717,7 +29657,14 @@ export interface operations {
     };
     list_course_interview_sessions_api_v1_teacher_courses__course_id__interview_sessions_get: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                search?: string | null;
+                title?: string | null;
+                result?: string | null;
+                since?: string | null;
+            };
             header?: never;
             path: {
                 course_id: string;
@@ -23732,7 +29679,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["InterviewSessionTeacherRead"][];
+                    "application/json": components["schemas"]["InterviewSessionTeacherPage"];
                 };
             };
             /** @description Validation Error */
@@ -24095,6 +30042,41 @@ export interface operations {
             };
         };
     };
+    import_interview_question_bank_items_api_v1_teacher_interview_configs__config_id__questions_import_bank_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewQuestionBankImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewQuestionBankImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_question_api_v1_teacher_interview_configs__config_id__questions_post: {
         parameters: {
             query?: never;
@@ -24207,9 +30189,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["InterviewQuestionUpdate"];
             };
         };
         responses: {
@@ -24220,6 +30200,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewQuestionAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_question_variants_api_v1_teacher_interview_configs__config_id__questions__question_id__approve_variants_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_question_variants_api_v1_teacher_interview_configs__config_id__questions__question_id__variants_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                config_id: string;
+                question_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -24342,9 +30390,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["InterviewOutcomeUpdate"];
             };
         };
         responses: {
@@ -24545,6 +30591,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GapReportAuthoringRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_recording_api_v1_teacher_interview_sessions__session_id__recording_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherInterviewRecordingRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    livekit_webhook_internal_livekit_webhook_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -25156,6 +31264,37 @@ export interface operations {
             };
         };
     };
+    get_published_path_detail_api_v1_career_paths__slug__detail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerPathDetailPublic"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_published_path_api_v1_career_paths__slug__get: {
         parameters: {
             query?: never;
@@ -25432,6 +31571,37 @@ export interface operations {
             };
         };
     };
+    upload_career_path_thumbnail_api_v1_management_career_paths__career_path_id__thumbnail_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                career_path_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerPathAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_path_impact_api_v1_management_career_paths__career_path_id__impact_get: {
         parameters: {
             query?: never;
@@ -25527,7 +31697,9 @@ export interface operations {
     };
     list_career_path_courses_api_v1_management_career_paths__career_path_id__courses_get: {
         parameters: {
-            query?: never;
+            query?: {
+                version_id?: string | null;
+            };
             header?: never;
             path: {
                 career_path_id: string;
@@ -25624,7 +31796,9 @@ export interface operations {
     };
     list_path_stages_api_v1_management_career_paths__career_path_id__stages_get: {
         parameters: {
-            query?: never;
+            query?: {
+                version_id?: string | null;
+            };
             header?: never;
             path: {
                 career_path_id: string;
@@ -26115,6 +32289,706 @@ export interface operations {
             };
         };
     };
+    list_my_programs_api_v1_me_learning_program_enrollments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramEnrollmentRead"][];
+                };
+            };
+        };
+    };
+    select_path_api_v1_me_learning_program_enrollments__enrollment_id__select_path_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectPathRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramEnrollmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_path_change_api_v1_me_learning_program_enrollments__enrollment_id__path_change_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePathRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathChangeRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_path_drop_api_v1_me_learning_program_enrollments__enrollment_id__path_drop_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DropPathRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathChangeRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_change_request_api_v1_me_learning_program_enrollments_path_change_requests__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathChangeRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_authoring_options_api_v1_management_learning_programs_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramAuthoringOptions"];
+                };
+            };
+        };
+    };
+    list_programs_api_v1_management_learning_programs_get: {
+        parameters: {
+            query?: {
+                organization_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_program_api_v1_management_learning_programs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_program_api_v1_management_learning_programs__program_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_program_api_v1_management_learning_programs__program_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_program_versions_api_v1_management_learning_programs__program_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramVersionRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_program_version_api_v1_management_learning_programs__program_id__versions__version_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_program_api_v1_management_learning_programs__program_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_program_api_v1_management_learning_programs__program_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_roster_api_v1_management_learning_programs__program_id__students_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramEnrollmentRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enroll_students_api_v1_management_learning_programs__program_id__students_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramEnrollRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramEnrollmentRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_students_csv_api_v1_management_learning_programs__program_id__students_import_csv_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramCsvImportPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramCsvImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_student_api_v1_management_learning_programs__program_id__students__student_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+                student_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramWithdrawRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramEnrollmentRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_change_requests_api_v1_management_learning_programs__program_id__path_change_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                program_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathChangeRequestRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_change_request_api_v1_management_learning_programs_path_change_requests__request_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeRequestDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathChangeRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_change_request_in_progress_api_v1_management_learning_programs_path_change_requests__request_id__in_progress_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathChangeRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_change_request_api_v1_management_learning_programs_path_change_requests__request_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeRequestRejection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathChangeRequestRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_my_notifications_api_v1_me_notifications_get: {
         parameters: {
             query?: {
@@ -26347,7 +33221,12 @@ export interface operations {
     get_active_users_trend_api_v1_admin_stats_active_users_trend_get: {
         parameters: {
             query?: {
+                /** @description Lookback in days. Ignored when 'from'/'to' are given. */
                 days?: number;
+                /** @description Exact window start date (inclusive). Must pair with 'to'. Supplied by the page's date-range filter so the chart plots the same span the KPIs above it were computed over. */
+                from?: string | null;
+                /** @description Exact window end date (inclusive). Must pair with 'from'. Interpreted as a calendar date; a client one day ahead of the server's UTC date (any timezone east of UTC, early in the local day) is accepted and clamped to today. */
+                to?: string | null;
             };
             header?: never;
             path?: never;
@@ -26362,6 +33241,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActiveUsersTrendOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_api_latency_trend_api_v1_admin_stats_latency_trend_get: {
+        parameters: {
+            query?: {
+                /** @description Lookback in days. Ignored when 'from'/'to' are given. */
+                days?: number;
+                /** @description Exact window start date (inclusive). Must pair with 'to'. Supplied by the page's date-range filter so the chart plots the same span the KPIs above it were computed over. */
+                from?: string | null;
+                /** @description Exact window end date (inclusive). Must pair with 'from'. Interpreted as a calendar date; a client one day ahead of the server's UTC date (any timezone east of UTC, early in the local day) is accepted and clamped to today. */
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatencyTrendOut"];
                 };
             };
             /** @description Validation Error */
@@ -26397,7 +33312,16 @@ export interface operations {
     };
     get_dashboard_api_v1_admin_stats_dashboard_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Length of every windowed metric, in days. All tiles move together so they stay comparable. */
+                window_days?: number;
+                /** @description Exact window start date (inclusive). Must pair with 'to'; overrides window_days with a fixed calendar range so a custom picker range (e.g. Aug 1 - Aug 29) counts exactly the rows in it. */
+                from?: string | null;
+                /** @description Exact window end date (inclusive). Must pair with 'from'. Interpreted as a calendar date; a client one day ahead of the server's UTC date (any timezone east of UTC, early in the local day) is accepted and clamped to today. */
+                to?: string | null;
+                /** @description Narrow org-traceable metrics to one tenant. Honoured only for callers holding system.administer -- everyone else is already pinned to their own organization. */
+                organization_id?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -26413,6 +33337,15 @@ export interface operations {
                     "application/json": components["schemas"]["DashboardOut"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     get_role_changes_api_v1_admin_audit_role_changes_get: {
@@ -26420,6 +33353,8 @@ export interface operations {
             query: {
                 /** @description Lower bound on updated_at (required). */
                 since: string;
+                /** @description Exclusive upper bound on updated_at (optional). */
+                until?: string | null;
                 limit?: number;
             };
             header?: never;
@@ -26455,6 +33390,8 @@ export interface operations {
                 table: string;
                 /** @description Lower bound on updated_at (required). */
                 since: string;
+                /** @description Exclusive upper bound on updated_at (optional). */
+                until?: string | null;
                 limit?: number;
             };
             header?: never;
@@ -26522,10 +33459,18 @@ export interface operations {
             query: {
                 /** @description Lower bound on created_at (required). */
                 since: string;
+                /** @description Exclusive upper bound on created_at (optional). */
+                until?: string | null;
                 user_id?: string | null;
-                /** @description SQL LIKE pattern, e.g. '/api/v1/admin/%'. */
-                path_pattern?: string | null;
+                /** @description Case-insensitive substring of the request path, e.g. 'admin/audit'. Wildcards are escaped, not interpreted. */
+                path_contains?: string | null;
+                /** @description Verified deep-link filter for a login failure or denied request. */
+                event_kind?: string | null;
+                /** @description Exact request correlation id. */
+                request_id?: string | null;
                 limit?: number;
+                /** @description Return unmasked IP addresses. Requires system.administer. The request itself is recorded in this log. */
+                reveal?: boolean;
             };
             header?: never;
             path?: never;
@@ -26566,7 +33511,7 @@ export interface operations {
                 actor_user_id?: string | null;
                 /** @description Exact event name, e.g. mfa_verified, login_failed, role_assigned. See ck_auth_events_event_type. */
                 event_type?: string | null;
-                /** @description Org edge on role/status events; login/MFA rows are NULL. */
+                /** @description Narrow to one tenant's role/status events. Honoured only for system.administer; every other caller is pinned to their own organization and the parameter is ignored. */
                 organization_id?: string | null;
                 limit?: number;
             };
@@ -26705,6 +33650,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProcessingJobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_investigation_api_v1_admin_processing_jobs__job_id__investigation_get: {
+        parameters: {
+            query?: {
+                ai_call_limit?: number;
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobInvestigationOut"];
                 };
             };
             /** @description Validation Error */
@@ -26879,10 +33857,43 @@ export interface operations {
             };
         };
     };
+    revoke_user_session_api_v1_admin_users__user_id__sessions__session_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokeSessionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_my_cards_due_api_v1_me_cards_due_get: {
         parameters: {
             query?: {
                 lesson_id?: string | null;
+                lesson_slug?: string | null;
                 course_slug?: string | null;
                 cursor?: string | null;
                 limit?: number;
@@ -26917,6 +33928,7 @@ export interface operations {
         parameters: {
             query?: {
                 lesson_id?: string | null;
+                lesson_slug?: string | null;
                 course_slug?: string | null;
                 limit?: number;
             };
@@ -27233,6 +34245,8 @@ export interface operations {
                 period?: string;
                 /** @description ISO date or datetime; defaults to NOW() - 30 days. */
                 since?: string | null;
+                /** @description Exclusive window end (ISO date or datetime); omit for an open-ended window ending at NOW(). */
+                until?: string | null;
                 /** @description Filter to one model_name. */
                 model?: string | null;
                 /** @description Filter to one role. */
@@ -27273,6 +34287,8 @@ export interface operations {
             query?: {
                 /** @description ISO date or datetime; defaults to NOW() - 30 days. */
                 since?: string | null;
+                /** @description Exclusive window end (ISO date or datetime); omit for an open-ended window ending at NOW(). */
+                until?: string | null;
                 top_n?: number;
             };
             header?: never;
@@ -27301,11 +34317,48 @@ export interface operations {
             };
         };
     };
+    get_by_organization_api_v1_admin_ai_costs_by_organization_get: {
+        parameters: {
+            query?: {
+                /** @description ISO date or datetime; defaults to NOW() - 30 days. */
+                since?: string | null;
+                /** @description Exclusive window end (ISO date or datetime); defaults to NOW() -- kept open by default so freshly-written calls stay attributable until the caller sends a bounded window. */
+                until?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationSpendPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_by_pipeline_api_v1_admin_ai_costs_by_pipeline_get: {
         parameters: {
             query?: {
                 /** @description ISO date or datetime; defaults to NOW() - 30 days. */
                 since?: string | null;
+                /** @description Exclusive window end (ISO date or datetime); omit for an open-ended window ending at NOW(). */
+                until?: string | null;
                 top_n?: number;
             };
             header?: never;
@@ -27341,6 +34394,8 @@ export interface operations {
                 dimension?: string;
                 /** @description ISO date or datetime; defaults to NOW() - 30 days. */
                 since?: string | null;
+                /** @description Exclusive window end (ISO date or datetime); omit for an open-ended window ending at NOW(). */
+                until?: string | null;
                 top_n?: number;
                 /** @description Filter to one model_name. */
                 model?: string | null;
@@ -27382,6 +34437,8 @@ export interface operations {
             query?: {
                 /** @description ISO date or datetime; defaults to NOW() - 30 days. */
                 since?: string | null;
+                /** @description Exclusive window end (ISO date or datetime); omit for an open-ended window ending at NOW(). */
+                until?: string | null;
                 top_n?: number;
                 /** @description Filter to one model_name. */
                 model?: string | null;
@@ -27586,7 +34643,42 @@ export interface operations {
             };
         };
     };
-    set_global_setting_api_v1_admin_settings__setting_key__put: {
+    preview_global_setting_api_v1_admin_settings__setting_key__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                setting_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeImpactOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_global_setting_api_v1_admin_settings__setting_key__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -27607,7 +34699,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SettingOut"];
+                    "application/json": components["schemas"]["ApplyResult"];
                 };
             };
             /** @description Validation Error */
@@ -27623,7 +34715,10 @@ export interface operations {
     };
     clear_global_setting_api_v1_admin_settings__setting_key__delete: {
         parameters: {
-            query?: never;
+            query: {
+                /** @description Why the override is being removed. Recorded in the audit trail. */
+                reason: string;
+            };
             header?: never;
             path: {
                 setting_key: string;
@@ -27638,7 +34733,74 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SettingOut"];
+                    "application/json": components["schemas"]["ApplyResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_global_setting_changes_api_v1_admin_settings_changes_get: {
+        parameters: {
+            query?: {
+                setting_key?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingChangeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rollback_global_setting_change_api_v1_admin_settings_changes__change_id__rollback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RollbackIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyResult"];
                 };
             };
             /** @description Validation Error */
@@ -27683,7 +34845,7 @@ export interface operations {
             };
         };
     };
-    set_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__put: {
+    apply_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -27705,7 +34867,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SettingOut"];
+                    "application/json": components["schemas"]["ApplyResult"];
                 };
             };
             /** @description Validation Error */
@@ -27721,7 +34883,9 @@ export interface operations {
     };
     clear_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__delete: {
         parameters: {
-            query?: never;
+            query: {
+                reason: string;
+            };
             header?: never;
             path: {
                 org_id: string;
@@ -27737,7 +34901,179 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SettingOut"];
+                    "application/json": components["schemas"]["ApplyResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_org_setting_api_v1_admin_organizations__org_id__settings__setting_key__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+                setting_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeImpactOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_org_setting_changes_api_v1_admin_organizations__org_id__settings_changes_get: {
+        parameters: {
+            query?: {
+                setting_key?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingChangeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rollback_org_setting_change_api_v1_admin_organizations__org_id__settings_changes__change_id__rollback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RollbackIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_security_summary_api_v1_admin_security_summary_get: {
+        parameters: {
+            query?: {
+                window_days?: number;
+                /** @description Narrow the role and account figures to one tenant. Honoured only for system.administer; request counts stay global either way. */
+                organization_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecuritySummaryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tenant_operations_api_v1_admin_organizations__org_id__operations_get: {
+        parameters: {
+            query?: {
+                window_days?: number;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantOperationsOut"];
                 };
             };
             /** @description Validation Error */
@@ -27875,123 +35211,6 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
-                };
-            };
-        };
-    };
-    list_my_links_api_v1_users_me_links_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserProfileLinkRead"][];
-                };
-            };
-        };
-    };
-    create_my_link_api_v1_users_me_links_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserProfileLinkIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserProfileLinkRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_my_link_api_v1_users_me_links__link_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                link_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserProfileLinkUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserProfileLinkRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_my_link_api_v1_users_me_links__link_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                link_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Field, LockableSection, SettingsSection } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
 
@@ -153,6 +154,32 @@ export function SettingsAccessSection({
               threshold: draft.integrity_score_threshold || "3",
             })}
           </p>
+
+          <Field
+            label={t(`${K}.response_policy_label`)}
+            hint={t(`${K}.response_policy_hint`)}
+          >
+            <Select<SettingsDraft["integrity_response_policy"]>
+              id="quiz-setting-integrity-response-policy"
+              value={draft.integrity_response_policy}
+              onValueChange={(next) => update("integrity_response_policy", next)}
+              options={[
+                {
+                  value: "warn_and_continue",
+                  label: t(`${K}.response_policy_warn`),
+                },
+                {
+                  value: "continue_and_log",
+                  label: t(`${K}.response_policy_silent`),
+                },
+              ]}
+            />
+          </Field>
+          {draft.integrity_response_policy === "continue_and_log" && (
+            <p className="text-xs text-m3-on-surface-variant">
+              {t(`${K}.response_policy_silent_note`)}
+            </p>
+          )}
           <p className="text-xs text-m3-on-surface-variant">
             {t(`${K}.frozen_note`)}
           </p>

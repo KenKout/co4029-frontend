@@ -237,6 +237,18 @@ export interface QuizScheduleWindow {
   integrity_score_threshold?: number | null;
   /** Required local camera track for the duration of the attempt. */
   require_camera?: boolean | null;
+  /**
+   * What the learner is told when the proctoring threshold is crossed
+   * (migration 0128). `continue_and_log` records the crossing for the teacher
+   * and shows the student nothing; `warn_and_continue` — the default, and the
+   * behaviour before the column existed — warns them. Scoring and the
+   * teacher-facing flag are identical either way.
+   *
+   * Declared here rather than read from the generated schema because the
+   * checked-in OpenAPI snapshot is refreshed periodically and does not yet
+   * carry this field; same reason as the proctoring weights above.
+   */
+  integrity_response_policy?: "continue_and_log" | "warn_and_continue" | null;
 }
 
 export type Quiz = Schemas["QuizPublic"] & QuizScheduleWindow;
@@ -1088,7 +1100,12 @@ export interface StartCourseResult {
   max_concurrent?: number | null;
 }
 
-export type CareerPathProgressRead = Schemas["CareerPathProgressRead"] & {
+// Two features now declare a ``CareerPathProgressRead``, so FastAPI
+// disambiguates both by their full module path. The learner progress endpoint
+// (`/me/career-enrollments/{id}/progress`) serves the career_paths one; the
+// identity/profile variant is a different, smaller shape.
+export type CareerPathProgressRead =
+  Schemas["abridgeai__features__career_paths__schemas__public__CareerPathProgressRead"] & {
   stages?: StageProgressRead[];
   max_concurrent?: number | null;
   active_in_path?: number;

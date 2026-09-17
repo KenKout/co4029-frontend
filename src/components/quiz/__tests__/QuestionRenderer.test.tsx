@@ -23,6 +23,12 @@ describe("QuestionRenderer fill-blank safety", () => {
         },
       ],
       fill_blank_choices: [],
+      prompt_format: "plain",
+      hint_format: "plain",
+      single_answer: true,
+      match_prompts: [],
+      match_choices: [],
+      ordering_items: [],
     } as QuizQuestionPublic;
 
     render(
@@ -51,6 +57,12 @@ describe("QuestionRenderer fill-blank safety", () => {
       prompt_text: "The capital of France is ___.",
       options: [],
       fill_blank_choices: ["Paris", "Lyon"],
+      prompt_format: "plain",
+      hint_format: "plain",
+      single_answer: true,
+      match_prompts: [],
+      match_choices: [],
+      ordering_items: [],
     } as QuizQuestionPublic;
 
     render(
