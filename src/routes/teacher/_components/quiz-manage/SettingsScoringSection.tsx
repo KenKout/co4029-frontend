@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { hasMultipleAttempts } from "./settings-insights";
  * Scoring section: passing score, time limit, headline-grade policy. Frozen
  * once the quiz is published. Extracted from SettingsTab verbatim.
  */
-export function SettingsScoringSection({
+function SettingsScoringSectionComponent({
   draft,
   update,
   locked,
@@ -125,3 +126,14 @@ export function SettingsScoringSection({
     </SettingsSection>
   );
 }
+
+export const SettingsScoringSection = memo(
+  SettingsScoringSectionComponent,
+  (previous, next) =>
+    previous.update === next.update &&
+    previous.locked === next.locked &&
+    previous.draft.passing_score_percent === next.draft.passing_score_percent &&
+    previous.draft.allow_retakes === next.draft.allow_retakes &&
+    previous.draft.max_attempts === next.draft.max_attempts &&
+    previous.draft.grading_method === next.draft.grading_method,
+);

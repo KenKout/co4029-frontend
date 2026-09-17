@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { useNavigate } from "@tanstack/react-router";
 
 import { draftFromQuiz } from "@/routes/teacher/_components/quiz-manage/helpers";
@@ -40,6 +41,7 @@ export function QuizManageTabPanels({
 }) {
   const { questions, outcomes, pendingDeletes } = data;
   const { tab, draft, setDraft } = state;
+  const savedDraft = useMemo(() => draftFromQuiz(quiz), [quiz]);
   return (
     <>
       {/* When published the quiz is frozen (backend hard-blocks with 409). A
@@ -93,13 +95,13 @@ export function QuizManageTabPanels({
           onOverrideDirtyChange={state.setOverrideDirty}
           onBusyChange={state.setSettingsBusy}
           draft={draft}
-          savedDraft={draftFromQuiz(quiz)}
+          savedDraft={savedDraft}
           setDraft={setDraft}
           onSubmit={actions.handleSaveSettings}
           saving={data.patchQuiz.isPending}
           locked={isPublished}
           dirty={state.settingsDirty}
-          onReset={() => setDraft(draftFromQuiz(quiz))}
+          onReset={() => setDraft(savedDraft)}
         />
       )}
 

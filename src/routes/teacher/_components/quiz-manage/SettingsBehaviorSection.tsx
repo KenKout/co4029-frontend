@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SettingsSection, ToggleRow } from "./form-primitives";
@@ -7,7 +8,7 @@ import type { SettingsDraft, SettingsUpdate } from "./types";
  * Behavior section: the five short presentation/access switches. Extracted from
  * SettingsTab verbatim.
  */
-export function SettingsBehaviorSection({
+function SettingsBehaviorSectionComponent({
   draft,
   update,
   locked,
@@ -87,3 +88,15 @@ export function SettingsBehaviorSection({
     </SettingsSection>
   );
 }
+
+export const SettingsBehaviorSection = memo(
+  SettingsBehaviorSectionComponent,
+  (previous, next) =>
+    previous.update === next.update &&
+    previous.locked === next.locked &&
+    previous.draft.shuffle_questions === next.draft.shuffle_questions &&
+    previous.draft.shuffle_options === next.draft.shuffle_options &&
+    previous.draft.show_hints === next.draft.show_hints &&
+    previous.draft.require_camera === next.draft.require_camera &&
+    previous.draft.reminders_enabled === next.draft.reminders_enabled,
+);

@@ -39,9 +39,9 @@ export function QuizManageActionStrip({
       <div className="sticky top-16 z-20 -mx-1 px-1">
         <div
           className={cn(
-            "flex items-center justify-between gap-3 rounded-xl transition-all",
+            "flex items-center justify-between gap-3 rounded-xl transition-[background-color,border-color,box-shadow,padding] duration-200",
             actionsStuck
-              ? "border border-m3-outline-variant/30 bg-m3-surface/95 backdrop-blur-md shadow-sm px-2 py-2"
+              ? "border border-m3-outline-variant/30 bg-m3-surface shadow-sm px-2 py-2"
               : "border border-transparent px-0 py-0",
           )}
         >
