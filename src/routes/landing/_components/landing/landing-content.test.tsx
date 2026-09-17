@@ -6,9 +6,11 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import LandingPage from "../../landing";
 import i18n from "@/i18n";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 async function renderLanding() {
   await i18n.changeLanguage("en");
@@ -22,7 +24,19 @@ async function renderLanding() {
     routeTree: root.addChildren([index]),
     history: createMemoryHistory({ initialEntries: ["/"] }),
   });
-  render(<RouterProvider router={router} />);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  render(
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
   await screen.findByRole("heading", { level: 1 });
 }
 
@@ -79,7 +93,10 @@ describe("public landing content", () => {
 
   it("switches all landing content between English and Vietnamese", async () => {
     await renderLanding();
-    fireEvent.click(screen.getAllByRole("button", { name: "VI" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Language" }));
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "Tiếng Việt" }),
+    );
     expect(
       await screen.findByText("Tài liệu môn học của bạn."),
     ).toBeInTheDocument();
@@ -90,7 +107,8 @@ describe("public landing content", () => {
       screen.getByText("Quyết định rõ ràng hơn cho mọi người."),
     ).toBeInTheDocument();
     expect(document.documentElement.lang).toBe("vi");
-    fireEvent.click(screen.getAllByRole("button", { name: "EN" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Ngôn ngữ" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "English" }));
     expect(
       await screen.findByText("Clearer decisions for everyone involved."),
     ).toBeInTheDocument();
