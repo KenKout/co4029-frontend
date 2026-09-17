@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { CheckCircle2, Clock, Eye, History, XCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 import type {
@@ -49,9 +51,11 @@ export function OpenChangeRequestBanner({
 }) {
   const { t } = useTranslation();
   const formatDateTime = useFormatDateTimeMedium();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const inProgress = request.status === "in_progress";
   return (
-    <div
+    <>
+      <div
       className={cn(
         "flex flex-wrap items-center justify-between gap-3 rounded-xl p-4 text-sm",
         inProgress ? "bg-m3-primary-container/50 text-m3-on-surface" : "bg-amber-50 text-amber-900",
@@ -94,11 +98,25 @@ export function OpenChangeRequestBanner({
         variant="outline"
         size="sm"
         disabled={isCancelling}
-        onClick={onCancel}
+        onClick={() => setConfirmOpen(true)}
       >
         {t("my_learning_programs.requests.cancel")}
       </Button>
-    </div>
+      </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("my_learning_programs.requests.cancel_title")}
+        description={t("my_learning_programs.requests.cancel_description")}
+        confirmLabel={t("my_learning_programs.requests.confirm_cancel")}
+        cancelLabel={t("common.cancel")}
+        isPending={isCancelling}
+        onConfirm={() => {
+          onCancel();
+          setConfirmOpen(false);
+        }}
+      />
+    </>
   );
 }
 
