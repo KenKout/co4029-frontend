@@ -209,28 +209,26 @@ export function SettingsSummary({
             onNavigate={onNavigate}
           />
         ))}
-      </div>
-      {(draft.available_from || draft.available_until) && (
-        <div className="grid grid-cols-2 gap-2 rounded-lg border border-m3-outline-variant/20 p-1">
-          <SummaryCell
-            row={{
-              label: t("teacher_quiz_manage.settings.schedule.open_label"),
-              value: date(draft.available_from),
-              target: "quiz-setting-available-from",
-            }}
-            onNavigate={onNavigate}
-          />
-          <SummaryCell
-            row={{
-              label: t("teacher_quiz_manage.settings.schedule.close_label"),
-              value: date(draft.available_until),
-              target: "quiz-setting-available-until",
-            }}
-            onNavigate={onNavigate}
-          />
-        </div>
-      )}
-      <div className="grid grid-cols-1 gap-1 border-t border-m3-outline-variant/20 pt-2 sm:grid-cols-2">
+        {(draft.available_from || draft.available_until) && (
+          <>
+            <SummaryCell
+              row={{
+                label: t("teacher_quiz_manage.settings.schedule.open_label"),
+                value: date(draft.available_from),
+                target: "quiz-setting-available-from",
+              }}
+              onNavigate={onNavigate}
+            />
+            <SummaryCell
+              row={{
+                label: t("teacher_quiz_manage.settings.schedule.close_label"),
+                value: date(draft.available_until),
+                target: "quiz-setting-available-until",
+              }}
+              onNavigate={onNavigate}
+            />
+          </>
+        )}
         {dynamicRows.map((row) => (
           <SummaryCell key={row.target} row={row} onNavigate={onNavigate} />
         ))}
