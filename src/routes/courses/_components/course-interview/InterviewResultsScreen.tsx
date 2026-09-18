@@ -1,4 +1,5 @@
 import { ResultsVerdictHero } from "./ResultsVerdictHero";
+import { InterviewCameraErrorNotice } from "./InterviewCameraGateScreen";
 import { resolveResultFacts, resolveResultPhase } from "./results-helpers";
 import { StudyPlanCard, StudyPlanPendingCard } from "./StudyPlanCard";
 import type { CourseInterviewController } from "./use-course-interview";
@@ -46,6 +47,10 @@ export function InterviewResultsScreen({
           startPending={iv.startSession.isPending}
           onRetry={() => void iv.handleRetry()}
         />
+
+        {/* Camera refusal from a retry: the reason shows here, the results
+            screen is untouched (zero mutations happened). */}
+        <InterviewCameraErrorNotice camera={iv.cameraGate} />
 
         {/* ── Study plan pending skeleton (#6) ── */}
         {!iv.gapReport &&

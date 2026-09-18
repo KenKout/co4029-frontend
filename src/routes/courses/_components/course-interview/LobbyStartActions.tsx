@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, History } from "lucide-react";
 
 import { StartInterviewDialog } from "@/components/interview/dialogs";
+import { InterviewCameraErrorNotice } from "./InterviewCameraGateScreen";
 import { Button } from "@/components/ui/button";
 import type { CourseInterviewController } from "./use-course-interview";
 
@@ -63,6 +64,7 @@ export function LobbyStartDialog({ iv }: { iv: CourseInterviewController }) {
       }
       recordingConsentAccepted={iv.recordingConsentAccepted}
       onRecordingConsentChange={iv.setRecordingConsentAccepted}
+      cameraNotice={<InterviewCameraErrorNotice camera={iv.cameraGate} />}
     />
   );
 }

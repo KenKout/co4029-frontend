@@ -16,7 +16,21 @@ export interface QuizCameraController {
   ensureActive: () => Promise<boolean>;
   retry: () => Promise<boolean>;
   stop: () => void;
+  /**
+   * Drop a stale error so the NEXT gated action can ask again. ensureActive
+   * itself overwrites the error on every attempt, so this is only needed by
+   * callers that surface the error in their own UI (the interview start
+   * dialog) and must not show last attempt's failure on a fresh open.
+   */
+  clearError: () => void;
 }
+
+/**
+ * The interview reuses the quiz controller verbatim (same local-only privacy
+ * contract, same error taxonomy); the alias documents the second consumer
+ * without forking the shape.
+ */
+export type InterviewCameraController = QuizCameraController;
 
 function hasActiveVideoTrack(stream: MediaStream | null): boolean {
   return Boolean(
@@ -164,6 +178,10 @@ export function useQuizCamera(
     stop();
   }, [keepAlive, required, stop]);
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   useEffect(() => stop, [stop]);
 
   return {
@@ -175,5 +193,6 @@ export function useQuizCamera(
     ensureActive,
     retry: ensureActive,
     stop,
+    clearError,
   };
 }

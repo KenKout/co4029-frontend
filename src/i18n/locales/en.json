@@ -3799,6 +3799,24 @@
     "status": {
       "compiling_results": "Compiling interview results..."
     },
+    "camera": {
+      "required_title": "Camera required",
+      "required_description": "This interview requires your camera to be on. You need to allow the browser to use your camera to continue.",
+      "enable": "Enable camera",
+      "preview_aria": "Local camera preview",
+      "privacy": "The camera is shown locally on your device only, to confirm the video feed is working; nothing is recorded, uploaded or analysed, and the interviewer cannot see it.",
+      "interrupted_description": "The camera must have an active video feed to continue. Nothing is recorded, uploaded or analysed.",
+      "checking": "Checking camera…",
+      "turn_back_on": "Turn camera back on",
+      "try_again": "Try again",
+      "errors": {
+        "permission-denied": "Camera permission was denied. Allow camera access in browser settings, then try again.",
+        "no-camera": "No camera was found. Connect a camera, then try again.",
+        "camera-unavailable": "The camera is unavailable or being used by another application.",
+        "unsupported": "This browser does not support camera access. Use a modern browser, then try again.",
+        "inactive-track": "The camera did not return an active video track. Try again."
+      }
+    },
     "integrity_threshold_warning": {
       "title": "Integrity warning recorded",
       "body": "Your browser activity reached this interview's warning threshold. This attempt is flagged for teacher review — the interview continues; please stay in fullscreen."

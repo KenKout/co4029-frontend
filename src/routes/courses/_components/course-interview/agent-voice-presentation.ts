@@ -284,6 +284,15 @@ export function interviewRoomProps(args: {
   pendingFirstQuestion: unknown;
   micOn: boolean;
   fullscreenGranted: boolean;
+  /**
+   * Whether the mandatory camera gate is satisfied right now. A live session
+   * whose camera died (or was never granted) drops every room capability,
+   * exactly like a lost fullscreen — the workspace unmounts into the camera
+   * gate screen and the agent sees the candidate leave. OPTIONAL and
+   * defaulting to satisfied so call sites opt in explicitly: a caller that
+   * does not pass it keeps today's behaviour.
+   */
+  cameraGranted?: boolean;
 }): {
   active: boolean;
   prefetch: boolean;
@@ -298,8 +307,14 @@ export function interviewRoomProps(args: {
   // The fullscreen gate feeds roomRequested BEFORE every other computation:
   // no fullscreen → no connection, no token mint, no warm room, no dispatch,
   // no mic — all five props false. See the doc block above.
+  // The camera gate is the second mandatory hold (same all-false semantics):
+  // a required camera that is not live locks the room exactly like a lost
+  // fullscreen. Absent flag = not gated (explicit opt-in per call site).
   const roomRequested =
-    !terminal && Boolean(args.sessionId) && args.fullscreenGranted;
+    !terminal &&
+    Boolean(args.sessionId) &&
+    args.fullscreenGranted &&
+    (args.cameraGranted ?? true);
   const roomActive =
     roomRequested &&
     args.onboardingStage === "completed" &&

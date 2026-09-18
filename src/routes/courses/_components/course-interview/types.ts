@@ -3,6 +3,7 @@ import type { MutableRefObject } from "react";
 import type { UseInterviewChatResult } from "@/components/interview/use-interview-chat";
 import type { AssessmentFullscreenGate } from "@/lib/hooks/useAssessmentFullscreenGate";
 import type { FinishReason } from "@/lib/interview/turn-factory";
+import type { InterviewCameraController } from "@/lib/quiz/use-quiz-camera";
 import type { useInterviewDrafts } from "./use-interview-drafts";
 import type { useInterviewPhaseState } from "./use-interview-phase-state";
 import type { useInterviewProgress } from "./use-interview-progress";
@@ -50,6 +51,19 @@ export type InterviewActionsContext = InterviewBase & {
    * unexpected exit cannot send after the gate has locked.
    */
   fullscreenGate: AssessmentFullscreenGate;
+  /**
+   * The mandatory CAMERA gate (local-only stream, see use-quiz-camera),
+   * mirrored from useInterviewProgress like fullscreenGate. The start/retry
+   * sequencing awaits it BEFORE fullscreen (a browser prompt must not cost a
+   * fullscreen flicker), and the workspace/gate screens read it to lock a
+   * live session whose camera died mid-interview.
+   *
+   * Optional on the context: the flag is a FE decision — the public config
+   * schema carries no camera field — so `undefined` means "no gate" and the
+   * sequencing passes through. The progress hook always provides one, so
+   * only tests and not-yet-migrated call sites see the falsy case.
+   */
+  cameraGate?: InterviewCameraController;
   /**
    * True between a start attempt's fullscreen request and its completion —
    * guards against a double-click issuing two requests or two start

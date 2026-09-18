@@ -3620,6 +3620,24 @@
     "voice": {
       "dropped_fallback_text": "Mất kết nối thoại — đang tiếp tục bằng văn bản. Tiến trình của bạn đã được lưu."
     },
+    "camera": {
+      "required_title": "Cần bật camera",
+      "required_description": "Buổi phỏng vấn này yêu cầu camera phải bật. Bạn cần cho phép trình duyệt sử dụng camera để tiếp tục.",
+      "enable": "Bật camera",
+      "preview_aria": "Xem trước camera cục bộ",
+      "privacy": "Camera chỉ hiển thị cục bộ trên máy bạn để xác nhận video đang hoạt động; không ghi hình, không tải lên, không phân tích, và người phỏng vấn không nhìn thấy.",
+      "interrupted_description": "Camera phải có một luồng video đang hoạt động để tiếp tục. Không có video nào được ghi, tải lên hoặc phân tích.",
+      "checking": "Đang kiểm tra camera…",
+      "turn_back_on": "Bật lại camera",
+      "try_again": "Thử lại",
+      "errors": {
+        "permission-denied": "Quyền camera bị từ chối. Hãy cho phép camera trong cài đặt trình duyệt rồi thử lại.",
+        "no-camera": "Không tìm thấy camera. Hãy kết nối camera rồi thử lại.",
+        "camera-unavailable": "Camera không khả dụng hoặc đang được ứng dụng khác sử dụng.",
+        "unsupported": "Trình duyệt này không hỗ trợ camera. Hãy dùng trình duyệt hiện đại rồi thử lại.",
+        "inactive-track": "Camera không trả về luồng video đang hoạt động. Hãy thử lại."
+      }
+    },
     "integrity_threshold_warning": {
       "title": "Đã ghi nhận cảnh báo toàn vẹn",
       "body": "Hoạt động trình duyệt của bạn đã đạt ngưỡng cảnh báo của buổi phỏng vấn này. Lượt làm bài được đánh dấu để giáo viên xem lại — buổi phỏng vấn vẫn tiếp tục; hãy giữ chế độ toàn màn hình."

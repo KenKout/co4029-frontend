@@ -19,6 +19,8 @@ import type { CoursePublic, LessonPublic, ModulePublic } from "@/lib/api/types";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import { useQuizAttemptSession } from "@/lib/quiz/use-quiz-attempt-session";
 import { interviewRoomProps } from "@/routes/courses/_components/course-interview/agent-voice-presentation";
+import { InterviewCameraGateScreen } from "@/routes/courses/_components/course-interview/InterviewCameraGateScreen";
+import { cameraGateBlocks } from "@/routes/courses/_components/course-interview/use-interview-camera-gate";
 import { InterviewFullscreenGateScreen } from "@/routes/courses/_components/course-interview/InterviewFullscreenGateScreen";
 import { InterviewLobbyScreen } from "@/routes/courses/_components/course-interview/InterviewLobbyScreen";
 import { InterviewResultsScreen } from "@/routes/courses/_components/course-interview/InterviewResultsScreen";
@@ -649,6 +651,7 @@ function InterviewProxyInner({
     pendingFirstQuestion: iv.pendingFirstQuestion,
     micOn: iv.micOn,
     fullscreenGranted: iv.fullscreenGate.isFullscreen,
+    cameraGranted: !cameraGateBlocks(iv.cameraGate),
   });
 
   const screen = (() => {
@@ -669,6 +672,8 @@ function InterviewProxyInner({
       );
     if (iv.fullscreenGate.requiredOpen)
       return <InterviewFullscreenGateScreen iv={iv as never} />;
+    if (cameraGateBlocks(iv.cameraGate))
+      return <InterviewCameraGateScreen camera={iv.cameraGate} />;
     return (
       <InterviewWorkspaceScreen
         iv={iv as never}

@@ -159,6 +159,48 @@ export function LeaveInterviewDialog({
  * API. It is not a "continue windowed" offer — there is no such path any
  * more — and the copy says what the click does.
  */
+/**
+ * The recording-consent checkbox block, extracted verbatim from
+ * StartInterviewDialog when the camera notice joined its `extraContent` —
+ * the dialog sat one branch under the complexity cap and this kept it there.
+ */
+function RecordingConsentBlock({
+  accepted,
+  onAcceptedChange,
+}: {
+  accepted: boolean;
+  onAcceptedChange?: (accepted: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-2 rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container-low p-3">
+      <label className="flex items-start gap-3 text-sm text-m3-on-surface">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 accent-m3-primary"
+          checked={accepted}
+          onChange={(event) => onAcceptedChange?.(event.target.checked)}
+          aria-describedby="interview-recording-consent-description"
+        />
+        <span className="font-medium">
+          {t("course_interview.recording_consent.label")}
+        </span>
+      </label>
+      <p
+        id="interview-recording-consent-description"
+        className="pl-7 text-xs text-m3-on-surface-variant"
+      >
+        {t("course_interview.recording_consent.description")}
+      </p>
+      {!accepted && (
+        <p className="pl-7 text-xs text-m3-on-surface-variant" role="status">
+          {t("course_interview.recording_consent.required")}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function StartInterviewDialog({
   open,
   onOpenChange,
@@ -168,6 +210,7 @@ export function StartInterviewDialog({
   recordingConsentRequired = false,
   recordingConsentAccepted = false,
   onRecordingConsentChange,
+  cameraNotice = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -177,6 +220,12 @@ export function StartInterviewDialog({
   recordingConsentRequired?: boolean;
   recordingConsentAccepted?: boolean;
   onRecordingConsentChange?: (accepted: boolean) => void;
+  /**
+   * Camera-gate feedback slot: the start sequencing refuses BEFORE fullscreen
+   * when the required camera is not live, and this is where the reason shows
+   * (the dialog stays open — a refusal must not look like a dead button).
+   */
+  cameraNotice?: React.ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
@@ -234,35 +283,15 @@ export function StartInterviewDialog({
             })
       }
       extraContent={
-        recordingConsentRequired ? (
-          <div className="space-y-2 rounded-lg border border-m3-outline-variant/30 bg-m3-surface-container-low p-3">
-            <label className="flex items-start gap-3 text-sm text-m3-on-surface">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 accent-m3-primary"
-                checked={recordingConsentAccepted}
-                onChange={(event) =>
-                  onRecordingConsentChange?.(event.target.checked)
-                }
-                aria-describedby="interview-recording-consent-description"
-              />
-              <span className="font-medium">
-                {t("course_interview.recording_consent.label")}
-              </span>
-            </label>
-            <p
-              id="interview-recording-consent-description"
-              className="pl-7 text-xs text-m3-on-surface-variant"
-            >
-              {t("course_interview.recording_consent.description")}
-            </p>
-            {!recordingConsentAccepted && (
-              <p className="pl-7 text-xs text-m3-on-surface-variant" role="status">
-                {t("course_interview.recording_consent.required")}
-              </p>
-            )}
-          </div>
-        ) : null
+        <>
+          {cameraNotice}
+          {recordingConsentRequired ? (
+            <RecordingConsentBlock
+              accepted={recordingConsentAccepted}
+              onAcceptedChange={onRecordingConsentChange}
+            />
+          ) : null}
+        </>
       }
       confirmDisabled={recordingConsentRequired && !recordingConsentAccepted}
       onConfirm={onConfirm}

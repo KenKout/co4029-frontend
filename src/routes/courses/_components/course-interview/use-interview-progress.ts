@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
 import { useAssessmentFullscreenGate } from "@/lib/hooks/useAssessmentFullscreenGate";
+import {
+  INTERVIEW_CAMERA_REQUIRED,
+  useInterviewCameraGate,
+} from "./use-interview-camera-gate";
 import { useIntegrityReporter } from "@/components/interview/use-integrity-reporter";
 import { resolveInterviewState } from "@/lib/interview/format";
 import type {
@@ -193,6 +197,20 @@ export function useInterviewProgress(
     },
   });
 
+  // ── Mandatory camera gate ──────────────────────────────────────────────────
+  // LOCAL-ONLY enforcement, mirroring the fullscreen gate beside it: the
+  // stream lives in the browser only — it is never attached to the LiveKit
+  // room (video:false there), so the agent worker and the server cannot see
+  // it. The start/retry sequencing runs it BEFORE fullscreen; mid-session a
+  // camera that dies flips the controller inactive after the debounce, which
+  // locks the room via interviewRoomProps. `keepAlive` follows the live
+  // session: prestart and results release the device. The flag is a FE
+  // decision (the public config carries no camera field).
+  const cameraGate = useInterviewCameraGate(
+    INTERVIEW_CAMERA_REQUIRED,
+    interviewActive,
+  );
+
   // Once the session is over, restore the normal app shell (sidebar back).
   useEffect(() => {
     if (interviewActive) return;
@@ -215,6 +233,7 @@ export function useInterviewProgress(
     outcomeProgress,
     questionPacing,
     fullscreenGate,
+    cameraGate,
     resolveHeldFullscreenExit,
     agentStatus,
   };

@@ -22,6 +22,47 @@ import type { InterviewActionsContext } from "./types";
  */
 
 /**
+ * The mandatory CAMERA gate, run before fullscreen so a browser prompt that
+ * sits pending (or a denial) does not cost a fullscreen flicker. Resolves
+ * false when the interview requires a camera and the gate cannot produce a
+ * live local stream — zero mutations in that case; the lobby's camera notice
+ * owns the error copy.
+ *
+ * A falsy `cameraGate` (or `required: false`) passes: the flag is a FE
+ * decision (InterviewConfigPublic carries no camera field), so no config
+ * plumbing exists yet.
+ */
+async function ensureInterviewCamera(
+  ctx: InterviewActionsContext,
+): Promise<boolean> {
+  const camera = ctx.cameraGate;
+  if (!camera || !camera.required) return true;
+  camera.clearError();
+  return camera.ensureActive();
+}
+
+/**
+ * The one start/resume/retry sequencing: CAMERA gate → fullscreen gate →
+ * start. `beginSessionAfterFullscreen` is kept as the fullscreen-only tail
+ * so legacy callers and the existing fullscreen tests stay valid.
+ */
+export async function beginSessionAfterCamera(
+  ctx: InterviewActionsContext,
+  start: () => Promise<void>,
+): Promise<void> {
+  if (ctx.startInFlightRef.current) return;
+  ctx.startInFlightRef.current = true;
+  try {
+    if (!(await ensureInterviewCamera(ctx))) return;
+    const granted = await ctx.fullscreenGate.enter();
+    if (!granted || !ctx.fullscreenGate.isFullscreenNow()) return;
+    await start();
+  } finally {
+    ctx.startInFlightRef.current = false;
+  }
+}
+
+/**
  * The backend published a config with no answerable question. Roll the whole
  * start back to the lobby (extracted from handleStartSuccess unchanged).
  */
@@ -178,7 +219,7 @@ export async function beginSessionAfterFullscreen(
 }
 
 export async function handleStart(ctx: InterviewActionsContext) {
-  await beginSessionAfterFullscreen(ctx, async () => {
+  await beginSessionAfterCamera(ctx, async () => {
     try {
       const payload = await ctx.startSession.mutateAsync(buildStartBody(ctx));
       handleStartSuccess(ctx, payload);
@@ -199,7 +240,7 @@ export async function handleStart(ctx: InterviewActionsContext) {
  */
 export async function handleRetry(ctx: InterviewActionsContext) {
   if (ctx.startSession.isPending) return;
-  await beginSessionAfterFullscreen(ctx, async () => {
+  await beginSessionAfterCamera(ctx, async () => {
     ctx.setFinishResult(null);
     ctx.setPendingFinishResult(null);
     ctx.setTranscript([]);

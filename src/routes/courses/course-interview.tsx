@@ -2,6 +2,8 @@ import { InterviewRoomProvider } from "@/components/interview/interview-room-pro
 import type { InterviewCourse, InterviewConfig } from "./_components/course-interview/use-course-interview";
 import { interviewRoomProps } from "./_components/course-interview/agent-voice-presentation";
 import { InterviewFullscreenGateScreen } from "./_components/course-interview/InterviewFullscreenGateScreen";
+import { InterviewCameraGateScreen } from "./_components/course-interview/InterviewCameraGateScreen";
+import { cameraGateBlocks } from "./_components/course-interview/use-interview-camera-gate";
 import { InterviewLobbyScreen } from "./_components/course-interview/InterviewLobbyScreen";
 import { InterviewResultsScreen } from "./_components/course-interview/InterviewResultsScreen";
 import {
@@ -67,6 +69,7 @@ export default function CourseInterviewPage() {
     pendingFirstQuestion: iv.pendingFirstQuestion,
     micOn: iv.micOn,
     fullscreenGranted: iv.fullscreenGate.isFullscreen,
+    cameraGranted: !cameraGateBlocks(iv.cameraGate),
   });
 
   const screen = resolveInterviewScreen({
@@ -129,6 +132,13 @@ export function resolveInterviewScreen(args: {
   //    question, no composer, no AiTypingMessage, no audio.
   if (iv.fullscreenGate.requiredOpen) {
     return <InterviewFullscreenGateScreen iv={iv} />;
+  }
+
+  // ── Live session whose required camera is not live → the camera gate
+  //    screen, same lock semantics as the fullscreen gate (the room is
+  //    already torn down via cameraGranted in interviewRoomProps).
+  if (cameraGateBlocks(iv.cameraGate)) {
+    return <InterviewCameraGateScreen camera={iv.cameraGate} />;
   }
 
   // ── Text mode chat UI ────────────────────────────────────────────────────
