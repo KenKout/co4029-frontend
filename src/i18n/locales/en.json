@@ -6451,6 +6451,14 @@
         "label": "Daily review cap (cards/day)",
         "description": "Maximum spaced-repetition cards a student is served for review in one day, so a large backlog stays a finishable daily goal instead of an unbounded wall. Cards already reviewed today count toward the cap. This bounds the REVIEW QUEUE only — it never changes lesson unlock eligibility or retention scoring, so progression is unaffected. Set to 0 for no cap (serve the whole backlog)."
       },
+      "spaced_repetition__max_interval_days": {
+        "label": "Maximum review interval (days)",
+        "description": "Longest a card may wait before it is shown again. Lowering this cap makes cards return for review more often."
+      },
+      "spaced_repetition__retire_beyond_max_interval": {
+        "label": "Retire cards past the maximum interval",
+        "description": "When enabled, a card whose next interval exceeds the cap is retired instead of being scheduled at the cap. Its history is kept and it leaves the review queue."
+      },
       "learning_program__max_concurrent_paths_per_student": {
         "label": "Concurrent career paths per student",
         "description": "Maximum career paths one student may have running at once across all their learning programs. The per-program ceiling below applies to a single enrolment, so without this a student in two programs could hold the sum of both limits. Existing paths are kept when this is lowered."
@@ -6756,6 +6764,80 @@
       "empty": "No courses found in this organization.",
       "added": "In this unit",
       "currently_in": "currently in {{unit}}"
+    }
+  },
+  "teacher_course_student_detail": {
+    "student_not_found": "Student not found",
+    "back_to_students": "Back to Students",
+    "back_to_roster": "Back to Roster",
+    "course_progress": "Course Progress",
+    "overall_completion": "Overall completion",
+    "progress_not_started": "Student has not started this course yet.",
+    "progress_completed": "Course completed.",
+    "progress_completed_percent": "{{percent}}% of course content completed.",
+    "enrolled_on": "Enrolled {{date}}",
+    "enrollment_management": "Enrollment Management",
+    "enrollment_timeline": "Enrollment Timeline",
+    "status": "Status",
+    "risk_level": "Risk Level",
+    "enrolled": "Enrolled",
+    "last_active": "Last Active",
+    "final_grade": "Final Grade",
+    "quiz_attempts": "Quiz Attempts",
+    "interview_attempts": "Interview Attempts",
+    "navigate": "Navigate",
+    "course_structure": "Course Structure",
+    "attention_needed": "Attention Needed",
+    "high_risk_body": "This student is at high risk of dropping out. They have low activity or falling grades.",
+    "medium_risk_body": "This student's activity has slowed. Consider reaching out to re-engage them.",
+    "email_student": "Email {{name}}",
+    "never": "Never",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "days_ago": "{{count}}d ago",
+    "weeks_ago": "{{count}}w ago",
+    "risk": {
+      "on_track": "On Track",
+      "low": "Low Risk",
+      "at_risk": "At Risk",
+      "high": "High Risk"
+    },
+    "enrollment": {
+      "active": "Active",
+      "completed": "Completed",
+      "dropped": "Dropped",
+      "waitlist": "Waitlist"
+    },
+    "timeline": {
+      "enrolled": "Enrolled",
+      "joined_via": "Joined via {{method}}",
+      "waitlist": "waitlist",
+      "direct_enrollment": "direct enrollment",
+      "last_activity": "Last Activity",
+      "last_seen": "Last seen {{date}}",
+      "completed_course": "Completed Course",
+      "final_grade": "Final grade: {{grade}}",
+      "no_grade": "No grade assigned",
+      "dropped": "Dropped",
+      "dropped_detail": "Student dropped or was removed from the course"
+    },
+    "filters": {
+      "by_interview": "Filter by interview",
+      "all_interviews": "All interviews",
+      "by_result": "Filter by result",
+      "all_results": "All results",
+      "passed": "Passed",
+      "not_passed": "Not passed",
+      "evaluating": "Evaluating",
+      "in_progress": "In progress",
+      "evaluation_failed": "Evaluation failed",
+      "not_graded": "Not graded",
+      "by_time": "Filter by time",
+      "all_time": "All time",
+      "last_24_hours": "Last 24 hours",
+      "last_7_days": "Last 7 days",
+      "last_30_days": "Last 30 days",
+      "last_90_days": "Last 90 days"
     }
   }
 }

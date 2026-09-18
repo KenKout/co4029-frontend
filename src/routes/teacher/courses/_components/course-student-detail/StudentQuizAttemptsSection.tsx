@@ -1,4 +1,5 @@
 import { ClipboardList } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { QuizAttemptsTable } from "@/routes/teacher/_components/assessment-tables";
 
@@ -14,6 +15,7 @@ export function StudentQuizAttemptsSection({
 }: {
   controller: CourseStudentDetailController;
 }) {
+  const { t } = useTranslation();
   const { quizAttempts, quizAttemptsLoading, navigate, courseId, studentId } =
     controller;
   return (
@@ -21,7 +23,7 @@ export function StudentQuizAttemptsSection({
       <div className="flex items-center gap-2">
         <ClipboardList className="h-4 w-4 text-m3-secondary" />
         <h2 className="font-headline font-bold text-lg text-m3-on-surface">
-          Quiz Attempts
+          {t("teacher_course_student_detail.quiz_attempts")}
         </h2>
       </div>
       <QuizAttemptsTable

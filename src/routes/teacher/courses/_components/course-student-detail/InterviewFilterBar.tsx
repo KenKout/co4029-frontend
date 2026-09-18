@@ -1,4 +1,5 @@
 import { FilterBar, type FilterDef } from "@/components/ui/filter-bar";
+import { useTranslation } from "react-i18next";
 
 import { INTERVIEW_RESULT_OPTIONS, INTERVIEW_TIME_OPTIONS } from "./constants";
 import type { StudentInterviewFiltersController } from "./use-student-interview-filters";
@@ -15,6 +16,7 @@ export function InterviewFilterBar({
 }: {
   filters: StudentInterviewFiltersController;
 }) {
+  const { t } = useTranslation();
   const {
     ivInterviewFilter,
     setIvInterviewFilter,
@@ -29,8 +31,8 @@ export function InterviewFilterBar({
   const filterDefs: FilterDef[] = [
     {
       id: "interview",
-      label: "Filter by interview",
-      allLabel: "All interviews",
+      label: t("teacher_course_student_detail.filters.by_interview"),
+      allLabel: t("teacher_course_student_detail.filters.all_interviews"),
       options: ivInterviewTitles.map((title) => ({
         value: title,
         label: title,
@@ -39,16 +41,22 @@ export function InterviewFilterBar({
     },
     {
       id: "result",
-      label: "Filter by result",
-      allLabel: "All results",
-      options: INTERVIEW_RESULT_OPTIONS,
+      label: t("teacher_course_student_detail.filters.by_result"),
+      allLabel: t("teacher_course_student_detail.filters.all_results"),
+      options: INTERVIEW_RESULT_OPTIONS.map((option) => ({
+        ...option,
+        label: t(option.label),
+      })),
       className: "w-40",
     },
     {
       id: "time",
-      label: "Filter by time",
-      allLabel: "All time",
-      options: INTERVIEW_TIME_OPTIONS,
+      label: t("teacher_course_student_detail.filters.by_time"),
+      allLabel: t("teacher_course_student_detail.filters.all_time"),
+      options: INTERVIEW_TIME_OPTIONS.map((option) => ({
+        ...option,
+        label: t(option.label),
+      })),
       className: "w-36",
     },
   ];

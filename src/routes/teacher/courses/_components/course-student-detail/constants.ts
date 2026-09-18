@@ -10,53 +10,62 @@ export const RISK_META: Record<
   { label: string; badge: string; bar: string }
 > = {
   none: {
-    label: "On Track",
+    label: "teacher_course_student_detail.risk.on_track",
     badge: "bg-emerald-100 text-emerald-700",
     bar: "bg-emerald-500",
   },
   low: {
-    label: "Low Risk",
+    label: "teacher_course_student_detail.risk.low",
     badge: "bg-blue-100 text-blue-700",
     bar: "bg-blue-400",
   },
   medium: {
-    label: "At Risk",
+    label: "teacher_course_student_detail.risk.at_risk",
     badge: "bg-amber-100 text-amber-700",
     bar: "bg-amber-500",
   },
   high: {
-    label: "High Risk",
+    label: "teacher_course_student_detail.risk.high",
     badge: "bg-red-100 text-red-700",
     bar: "bg-red-500",
   },
 };
 
 export const ENROLL_META: Record<string, { label: string; badge: string }> = {
-  active: { label: "Active", badge: "bg-emerald-100 text-emerald-700" },
+  active: {
+    label: "teacher_course_student_detail.enrollment.active",
+    badge: "bg-emerald-100 text-emerald-700",
+  },
   completed: {
-    label: "Completed",
+    label: "teacher_course_student_detail.enrollment.completed",
     badge: "bg-m3-primary-fixed text-m3-primary",
   },
-  dropped: { label: "Dropped", badge: "bg-slate-100 text-slate-500" },
-  waitlisted: { label: "Waitlist", badge: "bg-amber-100 text-amber-700" },
+  dropped: {
+    label: "teacher_course_student_detail.enrollment.dropped",
+    badge: "bg-slate-100 text-slate-500",
+  },
+  waitlisted: {
+    label: "teacher_course_student_detail.enrollment.waitlist",
+    badge: "bg-amber-100 text-amber-700",
+  },
 };
 
 /** "Result" dropdown of the Interview Attempts filters. */
 export const INTERVIEW_RESULT_OPTIONS = [
-  { value: "all", label: "All results" },
-  { value: "passed", label: "Passed" },
-  { value: "not_passed", label: "Not passed" },
-  { value: "evaluating", label: "Evaluating" },
-  { value: "in_progress", label: "In progress" },
-  { value: "failed", label: "Evaluation failed" },
-  { value: "not_graded", label: "Not graded" },
+  { value: "all", label: "teacher_course_student_detail.filters.all_results" },
+  { value: "passed", label: "teacher_course_student_detail.filters.passed" },
+  { value: "not_passed", label: "teacher_course_student_detail.filters.not_passed" },
+  { value: "evaluating", label: "teacher_course_student_detail.filters.evaluating" },
+  { value: "in_progress", label: "teacher_course_student_detail.filters.in_progress" },
+  { value: "failed", label: "teacher_course_student_detail.filters.evaluation_failed" },
+  { value: "not_graded", label: "teacher_course_student_detail.filters.not_graded" },
 ];
 
 /** "Time" dropdown of the Interview Attempts filters. */
 export const INTERVIEW_TIME_OPTIONS = [
-  { value: "all", label: "All time" },
-  { value: "today", label: "Last 24 hours" },
-  { value: "7", label: "Last 7 days" },
-  { value: "30", label: "Last 30 days" },
-  { value: "90", label: "Last 90 days" },
+  { value: "all", label: "teacher_course_student_detail.filters.all_time" },
+  { value: "today", label: "teacher_course_student_detail.filters.last_24_hours" },
+  { value: "7", label: "teacher_course_student_detail.filters.last_7_days" },
+  { value: "30", label: "teacher_course_student_detail.filters.last_30_days" },
+  { value: "90", label: "teacher_course_student_detail.filters.last_90_days" },
 ];

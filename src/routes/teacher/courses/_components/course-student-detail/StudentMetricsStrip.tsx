@@ -1,4 +1,5 @@
 import { AlertTriangle, CheckCircle2, Clock, TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { RosterStudent } from "@/lib/api/types/teacher";
 
@@ -17,22 +18,27 @@ export function StudentMetricsStrip({
   student: RosterStudent;
   risk: RiskMeta;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-m3-outline-variant/10">
       {[
         {
-          label: "Course Progress",
+          label: t("teacher_course_student_detail.course_progress"),
           value: `${Math.round(student.progress_percent)}%`,
           icon: TrendingUp,
         },
-        { label: "Risk Level", value: risk.label, icon: AlertTriangle },
         {
-          label: "Last Active",
-          value: relDate(student.last_activity_at),
+          label: t("teacher_course_student_detail.risk_level"),
+          value: t(risk.label),
+          icon: AlertTriangle,
+        },
+        {
+          label: t("teacher_course_student_detail.last_active"),
+          value: relDate(student.last_activity_at, t),
           icon: Clock,
         },
         {
-          label: "Final Grade",
+          label: t("teacher_course_student_detail.final_grade"),
           value: student.final_grade ?? "—",
           icon: CheckCircle2,
         },

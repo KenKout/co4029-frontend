@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Calendar, Mail } from "lucide-react";
 
 import { avatarColor, avatarInitials } from "@/components/ui/avatar";
@@ -26,6 +27,7 @@ export function StudentProfileHero({
   risk: RiskMeta;
   enroll: EnrollMeta;
 }) {
+  const { t } = useTranslation();
   const aColor = avatarColor(student.student_id);
   const initials = avatarInitials(student.display_name);
   return (
@@ -61,7 +63,7 @@ export function StudentProfileHero({
                   enroll.badge,
                 )}
               >
-                {enroll.label}
+                {t(enroll.label)}
               </span>
               <span
                 className={cn(
@@ -69,7 +71,7 @@ export function StudentProfileHero({
                   risk.badge,
                 )}
               >
-                {risk.label}
+                {t(risk.label)}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-sm text-m3-on-surface-variant">
@@ -80,7 +82,9 @@ export function StudentProfileHero({
               <span className="opacity-30">·</span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5" />
-                Enrolled {fmtDate(student.enrolled_at)}
+                {t("teacher_course_student_detail.enrolled_on", {
+                  date: fmtDate(student.enrolled_at),
+                })}
               </span>
             </div>
           </div>
@@ -93,7 +97,7 @@ export function StudentProfileHero({
             className="gap-2 border-m3-outline-variant/30"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Roster
+            {t("teacher_course_student_detail.back_to_roster")}
           </Button>
         </Link>
       </div>
