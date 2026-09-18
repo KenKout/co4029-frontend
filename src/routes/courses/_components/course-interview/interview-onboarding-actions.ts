@@ -109,6 +109,9 @@ function revealFirstQuestion(
   });
 }
 
+// Module-level single-flight for onboarding actions (see handleOnboarding).
+let onboardingInFlight = false;
+
 export async function handleOnboarding(
   ctx: InterviewActionsContext,
   action?: InterviewOnboardingAction,
@@ -116,12 +119,20 @@ export async function handleOnboarding(
   nameOverride?: string,
 ) {
   if (!ctx.sessionId || ctx.onboardingStage === "completed") return;
+  // In-flight guard (audit P1 #14): a second click before the rerender sends
+  // a NEW turn key for the SAME stage — the backend's same-key dedupe can't
+  // catch it. One onboarding action at a time per tab.
+  if (onboardingInFlight) return;
+  onboardingInFlight = true;
   // Mandatory-gate guard: an unexpected fullscreen exit and a click still in
   // flight can land in the same tick, and readiness `ready` MUST NOT reach the
   // backend after the gate has locked — the backend then stamps
   // assessment_started_at for a fresh attempt the candidate cannot see. The
   // instant DOM check is authoritative; React state can lag a render.
-  if (!ctx.fullscreenGate.isFullscreenNow()) return;
+  if (!ctx.fullscreenGate.isFullscreenNow()) {
+    onboardingInFlight = false;
+    return;
+  }
   const naturalText = ctx.answerText.trim();
   const submittedText = resolveSubmittedText(ctx, {
     action,
@@ -182,5 +193,7 @@ export async function handleOnboarding(
       (error as Error).message ||
         ctx.t("course_interview.onboarding.send_failed"),
     );
+  } finally {
+    onboardingInFlight = false;
   }
 }
