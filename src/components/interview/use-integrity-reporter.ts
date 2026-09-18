@@ -32,6 +32,47 @@ function newClientEventId(): string {
     .slice(2)}`;
 }
 
+/**
+ * Drain the pending queue in MAX_BATCH chunks, one POST at a time.
+ *
+ * Audit P1 #3 contract: a batch is removed from the queue only when its POST
+ * RESOLVES. A rejected batch goes back at the HEAD (retry order matches the
+ * original order; the server dedupes on client_event_id) and the drain stops
+ * — `scheduleRetry` re-arms the batch timer so the failure is retried even if
+ * no new event arrives. Events are never swallowed, and `flush` stays
+ * single-flight via `flushingRef`.
+ */
+function drainIntegrityQueue(io: {
+  report: { mutateAsync: (body: { events: IntegrityEvent[] }) => Promise<IntegrityReportResult> };
+  pendingRef: React.RefObject<IntegrityEvent[]>;
+  flushingRef: React.RefObject<boolean>;
+  onThreshold: ((score: number, threshold: number) => void) | undefined;
+  scheduleRetry: () => void;
+}): void {
+  const drain = () => {
+    const pending = io.pendingRef.current;
+    if (!pending || pending.length === 0) {
+      io.flushingRef.current = false;
+      return;
+    }
+    const events = pending.splice(0, MAX_BATCH);
+    io.report
+      .mutateAsync({ events })
+      .then((res) => {
+        if (res?.warning_issued) {
+          io.onThreshold?.(res.integrity_score ?? 0, res.integrity_score_threshold ?? 0);
+        }
+        drain();
+      })
+      .catch(() => {
+        if (pending) pending.unshift(...events);
+        io.flushingRef.current = false;
+        io.scheduleRetry();
+      });
+  };
+  drain();
+}
+
 export interface IntegrityReporterOptions {
   /**
    * Fired synchronously the moment a warning-level signal is recorded, so the
@@ -83,26 +124,26 @@ export function useIntegrityReporter(
   // parked in `heldFsExitRef` instead of the queue until released.
   const holdNextRef = useRef(false);
 
+  // One flush in flight at a time: the drain loop must not race itself when
+  // the queue holds more than MAX_BATCH events.
+  const flushingRef = useRef(false);
+
+  const flushRef = useRef<() => void>(() => {});
   const flush = useCallback(() => {
-    if (!sessionId || pendingRef.current.length === 0) return;
-    const events = pendingRef.current.splice(0, MAX_BATCH);
-    // Fire-and-forget for ERRORS — integrity failures must never break the
-    // interview UI — but the SUCCESS path reports the server's crossing
-    // signal, which the lobby policy promised would appear exactly once.
-    report
-      .mutateAsync({ events })
-      .then((res) => {
-        if (res?.warning_issued) {
-          onThresholdRef.current?.(
-            res.integrity_score ?? 0,
-            res.integrity_score_threshold ?? 0,
-          );
-        }
-      })
-      .catch(() => {
-        /* intentionally silent */
-      });
+    if (!sessionId || flushingRef.current) return;
+    flushingRef.current = true;
+    drainIntegrityQueue({
+      report,
+      pendingRef,
+      flushingRef,
+      onThreshold: onThresholdRef.current,
+      scheduleRetry: () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => flushRef.current(), BATCH_DELAY_MS);
+      },
+    });
   }, [sessionId, report]);
+  flushRef.current = flush;
 
   const resolveHeldFullscreenExit = useCallback(
     (record: boolean) => {
