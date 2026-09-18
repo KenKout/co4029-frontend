@@ -7,7 +7,7 @@ import type { SrSummaryView } from "./types";
 
 interface DashboardStatsSectionProps extends SrSummaryView {
   coursesLoading: boolean;
-  enrolledCount: number;
+  enrolledCount: number | string;
   notificationsLoading: boolean;
   unreadCount: number;
 }

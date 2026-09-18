@@ -18,6 +18,8 @@ export default function MyCoursesSection({
     carouselRef,
     coursesLoading,
     enrolledCount,
+    hasMoreCourses,
+    hasLearningPrograms,
     visibleCourses,
     scrollCarousel,
   } = courses;
@@ -30,7 +32,7 @@ export default function MyCoursesSection({
           subtitle={t("dashboard.your_courses_sub")}
         />
         <div className="flex items-center gap-2 shrink-0">
-          {enrolledCount > 8 && (
+          {hasMoreCourses && (
             <Link
               to="/courses"
               search={{ scope: "enrolled" }}
@@ -72,16 +74,12 @@ export default function MyCoursesSection({
         </div>
       ) : enrolledCount === 0 ? (
         <div className="grid grid-cols-1">
-          <EmptyCourses />
+          <EmptyCourses hasLearningPrograms={hasLearningPrograms} />
         </div>
       ) : enrolledCount <= 3 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {visibleCourses.map((course) => (
-            <CourseCard
-              key={course.id}
-              course={course}
-              status="active"
-            />
+            <CourseCard key={course.id} course={course} status="active" />
           ))}
         </div>
       ) : (
@@ -91,10 +89,7 @@ export default function MyCoursesSection({
         >
           {visibleCourses.map((course) => (
             <div key={course.id} className="flex-none w-80 snap-start">
-              <CourseCard
-                course={course}
-                status="active"
-              />
+              <CourseCard course={course} status="active" />
             </div>
           ))}
         </div>

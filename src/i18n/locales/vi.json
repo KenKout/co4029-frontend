@@ -1722,6 +1722,7 @@
     "active_session": "Phiên đang hoạt động",
     "welcome": "Chào mừng trở lại, {{name}}.",
     "enrolled_count": "Bạn đang theo học {{count}} khóa học.",
+    "enrolled_count_more": "Bạn đang theo học ít nhất {{count}} khóa học.",
     "explore_intro": "Khám phá thư viện khóa học để bắt đầu hành trình học tập.",
     "stats": {
       "enrolled": "Đã đăng ký",
@@ -1750,7 +1751,9 @@
     "empty_notifications_body": "Khi có bài kiểm tra, phỏng vấn hoặc cập nhật khóa học, thông báo sẽ xuất hiện ở đây.",
     "empty_courses_title": "Bạn chưa được đăng ký khóa học nào",
     "empty_courses_body": "Liên hệ giảng viên hoặc bộ phận đào tạo để được đăng ký khóa học phù hợp với lộ trình của bạn.",
+    "empty_courses_program_body": "Mở kế hoạch học tập để chọn lộ trình hoặc bắt đầu khóa học được giao qua chương trình.",
     "discover_courses": "Khám phá khóa học",
+    "view_learning_plan": "Xem kế hoạch học tập",
     "open_course": "Mở khóa học",
     "open_course_named": "Mở khóa học: {{title}}",
     "enrolled_badge": "Đã ghi danh",
@@ -1761,13 +1764,37 @@
     "enrolled_count_other": "Bạn đang theo học {{count}} khóa học.",
     "enrolled_count_one": "Bạn đang theo học {{count}} khóa học.",
     "awaiting_path_intro": "Hãy chọn lộ trình nghề nghiệp để mở khóa học của bạn.",
+    "learning_plan_loading_intro": "Đang tải kế hoạch học tập được giao cho bạn…",
+    "learning_plan_unavailable_intro": "Các khóa học vẫn có ở bên dưới, nhưng hiện chưa thể tải chi tiết chương trình.",
     "no_enrollments_intro": "Bạn chưa được phân công nội dung nào. Giảng viên hoặc phòng đào tạo sẽ ghi danh cho bạn.",
     "choose_path": {
       "title": "Chọn lộ trình nghề nghiệp",
       "body_one": "{{program}} có {{count}} lộ trình. Hãy chọn để nhận khóa học của bạn.",
       "body_other": "{{program}} có {{count}} lộ trình. Hãy so sánh và chọn lộ trình bạn muốn theo đuổi — đó là thứ sẽ lấp đầy khóa học cho bảng điều khiển của bạn.",
       "body_many": "Bạn có {{count}} chương trình đang chờ bạn chọn lộ trình.",
+      "path_count_one": "{{count}} lộ trình",
+      "path_count_other": "{{count}} lộ trình",
       "cta": "So sánh các lộ trình"
+    },
+    "learning_plan": {
+      "title": "Kế hoạch học tập của bạn",
+      "subtitle": "Các chương trình và lộ trình nghề nghiệp được giao cho bạn",
+      "status": {
+        "active": "Đang học",
+        "completed": "Đã hoàn thành"
+      },
+      "version": "Phiên bản chương trình {{version}}",
+      "overall_progress": "Tiến độ tổng thể",
+      "course_progress": "{{completed}}/{{total}} khóa học",
+      "more_paths_one": "+{{count}} lộ trình khác",
+      "more_paths_other": "+{{count}} lộ trình khác",
+      "view_program": "Xem chương trình",
+      "request": {
+        "pending": "Yêu cầu đổi lộ trình đang chờ xét duyệt",
+        "in_progress": "Yêu cầu đổi lộ trình đang được xem xét"
+      },
+      "load_failed": "Không thể tải kế hoạch học tập",
+      "load_failed_body": "Các khóa học của bạn vẫn có ở bên dưới. Hãy thử tải lại thông tin chương trình."
     }
   },
   "admin": {

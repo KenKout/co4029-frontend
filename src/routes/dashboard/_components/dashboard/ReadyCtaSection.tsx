@@ -4,7 +4,11 @@ import { ArrowRight } from "lucide-react";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Button } from "@/components/ui/button";
 
-export default function ReadyCtaSection() {
+export default function ReadyCtaSection({
+  hasLearningPrograms,
+}: {
+  hasLearningPrograms: boolean;
+}) {
   const { t } = useTranslation();
   return (
     <section className="relative overflow-hidden rounded-xl gradient-primary p-8 flex flex-col gap-5 shadow-editorial">
@@ -27,9 +31,13 @@ export default function ReadyCtaSection() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Link to="/courses">
+        <Link to={hasLearningPrograms ? "/me/learning-programs" : "/courses"}>
           <Button className="bg-white text-m3-primary hover:bg-white/90 rounded-xl font-semibold gap-2 transition-colors">
-            {t("dashboard.discover_courses")}
+            {t(
+              hasLearningPrograms
+                ? "dashboard.view_learning_plan"
+                : "dashboard.discover_courses",
+            )}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>

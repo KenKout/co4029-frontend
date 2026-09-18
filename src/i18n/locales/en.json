@@ -1813,6 +1813,7 @@
     "active_session": "Active session",
     "welcome": "Welcome back, {{name}}.",
     "enrolled_count": "You are enrolled in {{count}} course.",
+    "enrolled_count_more": "You are enrolled in at least {{count}} courses.",
     "explore_intro": "Explore the catalog to start your learning journey.",
     "stats": {
       "enrolled": "Enrolled",
@@ -1841,7 +1842,9 @@
     "empty_notifications_body": "When quizzes, interviews, or course updates arrive, they will appear here.",
     "empty_courses_title": "You are not enrolled in any course yet",
     "empty_courses_body": "Contact your instructor or training office to be enrolled in a course that matches your path.",
+    "empty_courses_program_body": "Open your learning plan to choose a path or start a course assigned through your program.",
     "discover_courses": "Discover courses",
+    "view_learning_plan": "View learning plan",
     "open_course": "Open course",
     "open_course_named": "Open course: {{title}}",
     "enrolled_badge": "Enrolled",
@@ -1852,13 +1855,37 @@
     "enrolled_count_other": "You are enrolled in {{count}} courses.",
     "enrolled_count_one": "You are enrolled in {{count}} course.",
     "awaiting_path_intro": "Choose your career path to unlock your courses.",
+    "learning_plan_loading_intro": "Loading your assigned learning plan…",
+    "learning_plan_unavailable_intro": "Your courses are available below, but program details could not be loaded yet.",
     "no_enrollments_intro": "Nothing is assigned to you yet. Your instructor or training office enrols you.",
     "choose_path": {
       "title": "Choose your career path",
       "body_one": "{{program}} offers {{count}} path. Pick one to get your courses.",
       "body_other": "{{program}} offers {{count}} paths. Compare them and pick the one you want to follow — that is what fills your dashboard with courses.",
       "body_many": "You have {{count}} programmes waiting for you to choose a path.",
+      "path_count_one": "{{count}} path",
+      "path_count_other": "{{count}} paths",
       "cta": "Compare paths"
+    },
+    "learning_plan": {
+      "title": "Your learning plan",
+      "subtitle": "Programs and career paths assigned to you",
+      "status": {
+        "active": "Active",
+        "completed": "Completed"
+      },
+      "version": "Program version {{version}}",
+      "overall_progress": "Overall progress",
+      "course_progress": "{{completed}}/{{total}} courses",
+      "more_paths_one": "+{{count}} more path",
+      "more_paths_other": "+{{count}} more paths",
+      "view_program": "View program",
+      "request": {
+        "pending": "Your path request is waiting for review",
+        "in_progress": "Your path request is being reviewed"
+      },
+      "load_failed": "We could not load your learning plan",
+      "load_failed_body": "Your courses are still available below. Try loading the program details again."
     }
   },
   "admin": {

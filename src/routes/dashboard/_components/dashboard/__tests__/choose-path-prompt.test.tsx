@@ -8,7 +8,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-import { ChoosePathPrompt } from "../ChoosePathPrompt";
+import { ChoosePathPrompt, LearningPlanSection } from "../ChoosePathPrompt";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
 
 vi.mock("react-i18next", () => ({
@@ -109,5 +109,65 @@ describe("ChoosePathPrompt", () => {
     expect(
       screen.getByText(/dashboard\.choose_path\.body\|/),
     ).toHaveTextContent("Data Science");
+  });
+});
+
+describe("LearningPlanSection", () => {
+  it("shows an active program and preserves enrollment context on path links", () => {
+    render(
+      <LearningPlanSection
+        enrollments={[
+          enrollment({
+            status: "active",
+            program_version_no: 2,
+            current_progress_percent: 35,
+            current_completed_courses: 1,
+            current_total_courses: 3,
+            attempts: [
+              {
+                id: "attempt-1",
+                career_path_id: "p1",
+                status: "active",
+                progress_percent: 35,
+                completed_courses: 1,
+                total_courses: 3,
+              },
+            ],
+            pending_change_request: null,
+            paths: [
+              {
+                career_path_id: "p1",
+                name: "Backend Engineer",
+                slug: "backend-engineer",
+                status: "published",
+              },
+            ],
+          } as Partial<LearningProgramEnrollment>),
+        ]}
+        isLoading={false}
+        isError={false}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Software Engineering")).toBeInTheDocument();
+    expect(screen.getByText("Backend Engineer")).toBeInTheDocument();
+    expect(
+      screen.getByText("dashboard.learning_plan.overall_progress"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not silently turn a failed program request into an empty state", () => {
+    render(
+      <LearningPlanSection
+        enrollments={[]}
+        isLoading={false}
+        isError
+        onRetry={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText("dashboard.learning_plan.load_failed"),
+    ).toBeInTheDocument();
   });
 });

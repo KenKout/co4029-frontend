@@ -17,6 +17,8 @@ export interface CoursesSectionController {
   carouselRef: RefObject<HTMLDivElement | null>;
   coursesLoading: boolean;
   enrolledCount: number;
+  hasMoreCourses: boolean;
+  hasLearningPrograms: boolean;
   visibleCourses: Course[];
   scrollCarousel: (direction: "left" | "right") => void;
 }

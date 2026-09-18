@@ -8,7 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { useSrDashboardSummary } from "@/lib/api/hooks/spaced-repetition";
 import { getAuthDisplayName, getAuthUserInitials } from "@/lib/auth";
-import { ChoosePathPrompt } from "./_components/dashboard/ChoosePathPrompt";
+import {
+  ChoosePathPrompt,
+  LearningPlanSection,
+} from "./_components/dashboard/ChoosePathPrompt";
 import DashboardStatsSection from "./_components/dashboard/DashboardStatsSection";
 import MyCoursesSection from "./_components/dashboard/MyCoursesSection";
 import NotificationsSection from "./_components/dashboard/NotificationsSection";
@@ -19,11 +22,15 @@ export default function DashboardPage() {
   const { t } = useTranslation();
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  const { items: myCourses, isLoading: coursesLoading } = useMyCourses(8);
+  const {
+    items: myCourses,
+    isLoading: coursesLoading,
+    hasNextPage: hasMoreCourses,
+  } = useMyCourses(8);
   const { items: notifications, isLoading: notificationsLoading } =
     useNotifications();
   const { data: sr, isLoading: srLoading } = useSrDashboardSummary();
-  const { data: programs } = useMyLearningPrograms();
+  const programs = useMyLearningPrograms();
 
   const firstName = getAuthDisplayName(user).split(" ")[0];
   const initials = getAuthUserInitials(user);
@@ -31,7 +38,13 @@ export default function DashboardPage() {
   const visibleCourses = myCourses.slice(0, 8);
   const enrolledCount = myCourses.length;
   const unreadCount = notifications.filter((n) => n.read_at === null).length;
-  const programEnrollments = programs ?? [];
+  const programEnrollments = programs.data ?? [];
+  const hasLearningPrograms = programEnrollments.some(
+    (enrollment) =>
+      enrollment.status === "active" ||
+      enrollment.status === "completed" ||
+      enrollment.status === "awaiting_path",
+  );
   const awaitingPath = programEnrollments.some(
     (e) => e.status === "awaiting_path",
   );
@@ -69,21 +82,38 @@ export default function DashboardPage() {
               {/* Three states. A student awaiting a path and a student with no
                   programme at all both have zero courses, but only one of them
                   has something they can do about it. */}
-              {awaitingPath
-                ? t("dashboard.awaiting_path_intro")
-                : enrolledCount > 0
-                  ? t("dashboard.enrolled_count", { count: enrolledCount })
-                  : t("dashboard.no_enrollments_intro")}
+              {programs.isLoading
+                ? t("dashboard.learning_plan_loading_intro")
+                : programs.isError
+                  ? t("dashboard.learning_plan_unavailable_intro")
+                  : awaitingPath
+                    ? t("dashboard.awaiting_path_intro")
+                    : hasMoreCourses
+                      ? t("dashboard.enrolled_count_more", {
+                          count: enrolledCount,
+                        })
+                      : enrolledCount > 0
+                        ? t("dashboard.enrolled_count", {
+                            count: enrolledCount,
+                          })
+                        : t("dashboard.no_enrollments_intro")}
             </p>
           </div>
         </header>
 
         <ChoosePathPrompt enrollments={programEnrollments} />
 
+        <LearningPlanSection
+          enrollments={programEnrollments}
+          isLoading={programs.isLoading}
+          isError={programs.isError}
+          onRetry={() => void programs.refetch()}
+        />
+
         <DashboardStatsSection
           stats={{
             coursesLoading,
-            enrolledCount,
+            enrolledCount: hasMoreCourses ? `${enrolledCount}+` : enrolledCount,
             notificationsLoading,
             unreadCount,
             srLoading,
@@ -96,6 +126,8 @@ export default function DashboardPage() {
             carouselRef,
             coursesLoading,
             enrolledCount,
+            hasMoreCourses,
+            hasLearningPrograms,
             visibleCourses,
             scrollCarousel,
           }}
@@ -105,7 +137,7 @@ export default function DashboardPage() {
           inbox={{ notifications, notificationsLoading, unreadCount }}
         />
 
-        <ReadyCtaSection />
+        <ReadyCtaSection hasLearningPrograms={hasLearningPrograms} />
       </div>
     </div>
   );
