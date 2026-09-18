@@ -49,6 +49,7 @@ function SelectedPaths({
             <Link
               to="/catalog/career-paths/$slug"
               params={{ slug: path.slug }}
+              search={{ enrollment: enrollment.id }}
               className="flex items-center justify-between hover:opacity-80"
             >
               <div>
@@ -238,6 +239,7 @@ function ProgramCard({
                   key={path.career_path_id}
                   path={path}
                   isCurrent={false}
+                  programEnrollmentId={enrollment.id}
                 />
               ))}
           </div>
@@ -262,6 +264,7 @@ function ProgramCard({
              detail behind its roadmap and a confirmation dialog. */
           <Link
             to="/catalog/career-paths"
+            search={{ enrollment: enrollment.id }}
             className="flex items-center justify-between rounded-xl border border-m3-outline-variant p-4 hover:bg-m3-surface-container"
           >
             <div>

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -71,14 +73,90 @@ function findActiveHere(
   );
 }
 
-function pathErrorMessage(error: unknown, fallback: string): string {
+function pathErrorMessage(
+  error: unknown,
+  fallback: string,
+  alreadyActive: string,
+): string {
   if (isApiErrorCode(error, "path_already_active")) {
-    return "You are already taking this career path. Finish or drop it before taking it again.";
+    return alreadyActive;
   }
   return getApiErrorMessage(error, fallback);
 }
 
-export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
+function hasProgramRoom(program: LearningProgramEnrollment) {
+  return (
+    program.max_career_paths === null ||
+    program.selected_path_count < program.max_career_paths
+  );
+}
+
+function resolvePathChoice(
+  programs: LearningProgramEnrollment[],
+  careerPathId: string,
+) {
+  const activeHere = findActiveHere(programs, careerPathId);
+  const eligiblePrograms = activeHere
+    ? []
+    : findEligiblePrograms(programs, careerPathId);
+  const eligible = eligiblePrograms.find(hasProgramRoom) ?? eligiblePrograms[0];
+  const hasProgramSlot = Boolean(eligible && hasProgramRoom(eligible));
+  const atStudentPathLimit = Boolean(
+    eligible &&
+      eligible.student_active_path_count >=
+        eligible.max_concurrent_paths_per_student,
+  );
+  return {
+    activeHere,
+    eligiblePrograms,
+    eligible,
+    hasProgramSlot,
+    atStudentPathLimit,
+    canAdd: hasProgramSlot && !atStudentPathLimit,
+    switchable:
+      eligible && !hasProgramSlot && eligible.status === "active"
+        ? eligible
+        : undefined,
+  };
+}
+
+function ProgramLoadError({
+  isFetching,
+  retry,
+}: {
+  isFetching: boolean;
+  retry: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5">
+      <div className="min-w-0">
+        <p className="font-semibold text-text-strong">
+          {t("career_path_detail.choice.load_failed_title")}
+        </p>
+        <p className="mt-0.5 text-xs text-text-muted">
+          {t("career_path_detail.choice.load_failed_body")}
+        </p>
+      </div>
+      <Button variant="outline" disabled={isFetching} onClick={retry}>
+        {isFetching
+          ? t("career_path_detail.choice.retrying")
+          : t("career_path_detail.choice.retry")}
+      </Button>
+    </section>
+  );
+}
+
+export function ChoosePathBanner({
+  careerPathId,
+  careerPathSlug,
+  programEnrollmentId,
+}: {
+  careerPathId: string;
+  careerPathSlug: string;
+  programEnrollmentId?: string;
+}) {
+  const { t } = useTranslation();
   const programs = useMyLearningPrograms();
   const selectPath = useSelectProgramPath();
   const requestChange = useRequestProgramPathChange();
@@ -91,61 +169,33 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
   // the failure with a retry instead.
   if (programs.isError) {
     return (
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5">
-        <div className="min-w-0">
-          <p className="font-semibold text-text-strong">
-            Couldn&apos;t load your program enrolment
-          </p>
-          <p className="mt-0.5 text-xs text-text-muted">
-            Your path choice couldn&apos;t be checked. Retry in a moment.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          disabled={programs.isFetching}
-          onClick={() => void programs.refetch()}
-        >
-          {programs.isFetching ? "Retrying…" : "Retry"}
-        </Button>
-      </section>
+      <ProgramLoadError
+        isFetching={programs.isFetching}
+        retry={() => void programs.refetch()}
+      />
     );
   }
 
-  const data = programs.data ?? [];
-  const activeHere = findActiveHere(data, careerPathId);
-  const eligiblePrograms = activeHere
-    ? []
-    : findEligiblePrograms(data, careerPathId);
-  /**
-   * `max_career_paths` is null when the program sets no cap of its own, and
-   * a null must read as "room available". Comparing against it directly is
-   * the trap: `1 < null` is false in JS, so every uncapped program would look
-   * full and the student would be offered a switch — spending switch budget
-   * to solve a limit that does not exist.
-   */
-  const hasRoom = (item: LearningProgramEnrollment) =>
-    item.max_career_paths === null ||
-    item.selected_path_count < item.max_career_paths;
-  const eligible = eligiblePrograms.find(hasRoom) ?? eligiblePrograms[0];
-  /**
-   * Two independent ceilings, and BOTH have to have room.
-   *
-   * A program capped at 2 that holds 1 path has a free slot, but the student
-   * may already be at the organization's limit for concurrent paths across
-   * all their programs — the backend refuses with `student_path_limit_reached`
-   * and the button would have promised something it cannot deliver.
-   */
-  const hasProgramSlot = Boolean(eligible && hasRoom(eligible));
-  const atStudentPathLimit = Boolean(
-    eligible &&
-      eligible.student_active_path_count >=
-        eligible.max_concurrent_paths_per_student,
-  );
-  const canAdd = hasProgramSlot && !atStudentPathLimit;
-  const switchable =
-    eligible && !hasProgramSlot && eligible.status === "active"
-      ? eligible
-      : undefined;
+  const data = programEnrollmentId
+    ? (programs.data ?? []).filter((item) => item.id === programEnrollmentId)
+    : (programs.data ?? []);
+  const {
+    activeHere,
+    eligiblePrograms,
+    eligible,
+    hasProgramSlot,
+    atStudentPathLimit,
+    canAdd,
+    switchable,
+  } = resolvePathChoice(data, careerPathId);
+  if (!programEnrollmentId && !activeHere && eligiblePrograms.length > 1) {
+    return (
+      <ProgramPickerBanner
+        programs={eligiblePrograms}
+        careerPathSlug={careerPathSlug}
+      />
+    );
+  }
   if (activeHere || !eligible) return null;
   // The program still has a slot, so switching is not the right offer — the
   // student has to free a path elsewhere first. Say that rather than showing
@@ -167,12 +217,20 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
         pathId: careerPathId,
       });
       toast.success(
-        eligible.selected_path_count === 0
-          ? "Learning path selected"
-          : "Career path added to your program",
+        t(
+          eligible.selected_path_count === 0
+            ? "career_path_detail.choice.selected"
+            : "career_path_detail.choice.added",
+        ),
       );
     } catch (error) {
-      toast.error(pathErrorMessage(error, "Could not select the path"));
+      toast.error(
+        pathErrorMessage(
+          error,
+          t("career_path_detail.choice.select_failed"),
+          t("career_path_detail.choice.already_active"),
+        ),
+      );
     }
   }
 
@@ -190,15 +248,17 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
         fromAttemptId,
         reason: reason.trim(),
       });
-      toast.success(
-        "Path change request submitted — waiting for your Faculty Dean's approval",
-      );
+      toast.success(t("career_path_detail.choice.switch_submitted"));
       setReason("");
       setSourceAttemptId("");
       setDialogOpen(false);
     } catch (error) {
       toast.error(
-        pathErrorMessage(error, "Could not submit the path change request"),
+        pathErrorMessage(
+          error,
+          t("career_path_detail.choice.switch_failed"),
+          t("career_path_detail.choice.already_active"),
+        ),
       );
     }
   }
@@ -230,13 +290,40 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
   );
 }
 
-function AtPathLimitBanner({
-  used,
-  limit,
+function ProgramPickerBanner({
+  programs,
+  careerPathSlug,
 }: {
-  used: number;
-  limit: number;
+  programs: LearningProgramEnrollment[];
+  careerPathSlug: string;
 }) {
+  const { t } = useTranslation();
+  return (
+    <section className="rounded-2xl border border-m3-primary/30 bg-m3-primary-fixed/40 p-5">
+      <p className="font-semibold text-text-strong">
+        {t("career_path_detail.choice.choose_program_title")}
+      </p>
+      <p className="mt-1 text-xs text-text-muted">
+        {t("career_path_detail.choice.choose_program_body")}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {programs.map((program) => (
+          <Link
+            key={program.id}
+            to="/catalog/career-paths/$slug"
+            params={{ slug: careerPathSlug }}
+            search={{ enrollment: program.id }}
+          >
+            <Button variant="outline">{program.program_name}</Button>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AtPathLimitBanner({ used, limit }: { used: number; limit: number }) {
+  const { t } = useTranslation();
   return (
     <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5">
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
@@ -244,11 +331,10 @@ function AtPathLimitBanner({
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-text-strong">
-          You are already taking {used} career path{used === 1 ? "" : "s"}
+          {t("career_path_detail.choice.student_limit_title", { count: used })}
         </p>
         <p className="mt-0.5 text-xs text-text-muted">
-          Your organization allows {limit} at a time. Finish or drop one of
-          your current paths to take this one.
+          {t("career_path_detail.choice.student_limit_body", { limit })}
         </p>
       </div>
     </section>
@@ -270,6 +356,7 @@ function AwaitingChoiceBanner({
   setDialogOpen: (open: boolean) => void;
   onChoose: () => void;
 }) {
+  const { t } = useTranslation();
   const remaining =
     enrollment.max_path_switches - enrollment.approved_switch_count;
   return (
@@ -280,8 +367,12 @@ function AwaitingChoiceBanner({
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-text-strong">
-            {enrollment.selected_path_count === 0 ? "Choose" : "Add"} this path
-            for {enrollment.program_name}
+            {t(
+              enrollment.selected_path_count === 0
+                ? "career_path_detail.choice.choose_for_program"
+                : "career_path_detail.choice.add_for_program",
+              { program: enrollment.program_name },
+            )}
           </p>
           <p className="mt-0.5 text-xs text-text-muted">
             {/* State the cost of the decision up front — the budget is finite
@@ -290,9 +381,15 @@ function AwaitingChoiceBanner({
                 organization-wide concurrent limit instead, and quoting the
                 program's null there would read as "1/". */}
             {enrollment.max_career_paths === null
-              ? `${enrollment.student_active_path_count + 1}/${enrollment.max_concurrent_paths_per_student} concurrent paths`
-              : `${enrollment.selected_path_count + 1}/${enrollment.max_career_paths} path slots`}{" "}
-            will be used. Adding a path does not require approval.
+              ? t("career_path_detail.choice.concurrent_slot_cost", {
+                  used: enrollment.student_active_path_count + 1,
+                  limit: enrollment.max_concurrent_paths_per_student,
+                })
+              : t("career_path_detail.choice.program_slot_cost", {
+                  used: enrollment.selected_path_count + 1,
+                  limit: enrollment.max_career_paths,
+                })}{" "}
+            {t("career_path_detail.choice.no_approval_needed")}
           </p>
         </div>
         <Button
@@ -302,10 +399,10 @@ function AwaitingChoiceBanner({
         >
           <CheckCircle2 className="h-4 w-4" />
           {isPending
-            ? "Saving…"
+            ? t("career_path_detail.choice.saving")
             : enrollment.selected_path_count === 0
-              ? "Choose this path"
-              : "Add this path"}
+              ? t("career_path_detail.choice.choose_this_path")
+              : t("career_path_detail.choice.add_this_path")}
         </Button>
       </section>
 
@@ -315,16 +412,21 @@ function AwaitingChoiceBanner({
       <ConfirmDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title={`${enrollment.selected_path_count === 0 ? "Choose" : "Add"} this career path?`}
-        description={
-          `This path becomes part of ${enrollment.program_name}. ` +
-          "The learning program completes only after every selected path is complete. " +
-          `Replacing it later uses one of ${remaining} remaining approved path changes.`
-        }
+        title={t(
+          enrollment.selected_path_count === 0
+            ? "career_path_detail.choice.confirm_choose_title"
+            : "career_path_detail.choice.confirm_add_title",
+        )}
+        description={t("career_path_detail.choice.confirm_description", {
+          program: enrollment.program_name,
+          remaining,
+        })}
         confirmLabel={
-          enrollment.selected_path_count === 0 ? "Choose path" : "Add path"
+          enrollment.selected_path_count === 0
+            ? t("career_path_detail.choice.choose_path")
+            : t("career_path_detail.choice.add_path")
         }
-        cancelLabel="Not yet"
+        cancelLabel={t("career_path_detail.choice.not_yet")}
         confirmVariant="default"
         isPending={isPending}
         onConfirm={onChoose}
@@ -354,6 +456,7 @@ function SwitchRequestSection({
   isPending: boolean;
   onSubmit: () => void;
 }) {
+  const { t } = useTranslation();
   const remaining =
     switchable.max_path_switches - switchable.approved_switch_count;
   // Any OPEN request blocks a second one — `pending` and `in_progress` alike.
@@ -374,26 +477,28 @@ function SwitchRequestSection({
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-text-strong">
-            Switch to this path for {switchable.program_name}
+            {t("career_path_detail.choice.switch_for_program", {
+              program: switchable.program_name,
+            })}
           </p>
           {blockedByPending ? (
             <p className="mt-0.5 text-xs text-text-muted">
               {openRequest?.status === "in_progress"
-                ? "Your Faculty Dean is already reviewing a path change request from you."
-                : "You already have a path change request waiting for your Faculty Dean's approval."}
+                ? t("career_path_detail.choice.request_in_review")
+                : t("career_path_detail.choice.request_pending")}
             </p>
           ) : (
             <p className="mt-0.5 text-xs text-text-muted">
-              You can still switch {remaining} more time
-              {remaining === 1 ? "" : "s"}, with approval from your Faculty
-              Dean.
+              {t("career_path_detail.choice.switches_remaining", {
+                count: remaining,
+              })}
             </p>
           )}
         </div>
         {canAsk ? (
           <Button className="gap-2" onClick={() => setDialogOpen(true)}>
             <CheckCircle2 className="h-4 w-4" />
-            Switch to this path
+            {t("career_path_detail.choice.switch_to_path")}
           </Button>
         ) : null}
       </section>
@@ -407,29 +512,33 @@ function SwitchRequestSection({
             setSourceAttemptId("");
           }
         }}
-        title={"Request to switch to this path?"}
-        description={
-          "Submitting this request signs you up for a path change. Once your " +
-          "Faculty Dean approves it, the switch is irreversible — your " +
-          "progress on the current path will be closed and you will continue " +
-          `on this path for ${switchable.program_name}.`
+        title={t("career_path_detail.choice.switch_dialog_title")}
+        description={t("career_path_detail.choice.switch_dialog_description", {
+          program: switchable.program_name,
+        })}
+        confirmLabel={
+          isPending
+            ? t("career_path_detail.choice.submitting")
+            : t("career_path_detail.choice.submit_request")
         }
-        confirmLabel={isPending ? "Submitting…" : "Submit request"}
-        cancelLabel="Cancel"
+        cancelLabel={t("career_path_detail.choice.cancel")}
         isPending={isPending}
         onConfirm={onSubmit}
       >
         {activeAttempts.length > 1 ? (
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-text-strong">
-              Path to replace <span className="text-destructive">*</span>
+              {t("career_path_detail.choice.path_to_replace")}{" "}
+              <span className="text-destructive">*</span>
             </span>
             <select
               className="w-full rounded-lg border border-m3-outline-variant/50 bg-white p-3 text-sm outline-none focus:border-m3-primary"
               value={sourceAttemptId}
               onChange={(event) => setSourceAttemptId(event.target.value)}
             >
-              <option value="">Select a path</option>
+              <option value="">
+                {t("career_path_detail.choice.select_path")}
+              </option>
               {activeAttempts.map((attempt) => (
                 <option key={attempt.id} value={attempt.id}>
                   {switchable.paths.find(
@@ -442,11 +551,14 @@ function SwitchRequestSection({
         ) : null}
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-text-strong">
-            Reason for switching <span className="text-destructive">*</span>
+            {t("career_path_detail.choice.switch_reason")}{" "}
+            <span className="text-destructive">*</span>
           </span>
           <textarea
             className="w-full min-h-24 rounded-lg border border-m3-outline-variant/50 bg-white p-3 text-sm outline-none focus:border-m3-primary"
-            placeholder="Tell your Faculty Dean why you want to switch…"
+            placeholder={t(
+              "career_path_detail.choice.switch_reason_placeholder",
+            )}
             value={reason}
             maxLength={2000}
             onChange={(event) => setReason(event.target.value)}

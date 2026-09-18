@@ -1,26 +1,31 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
   GraduationCap,
+  ShieldAlert,
   Sparkles,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { AIInsightChip } from "@/components/ui/ai-insight-chip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { SegmentedFilter } from "@/components/ui/segmented-filter";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
   useCareerPaths,
   useMyCareerEnrollments,
 } from "@/lib/api/hooks/career-paths";
 import type { CareerPathPublic, MyCareerEnrollmentRead } from "@/lib/api/types";
+import type { LearningProgramEnrollment } from "@/lib/api/types";
+import { useMyLearningPrograms } from "@/lib/api/hooks/learning-programs";
 import { cn } from "@/lib/utils";
 import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
 import { getApiErrorMessage } from "@/lib/api/error-codes";
@@ -56,9 +61,11 @@ export function visibleCareerPaths(
 function PathCard({
   path,
   enrollment,
+  programEnrollmentId,
 }: {
   path: CareerPathPublic;
   enrollment?: MyCareerEnrollmentRead;
+  programEnrollmentId?: string;
 }) {
   const { t } = useTranslation();
   const isMine = Boolean(enrollment);
@@ -69,6 +76,7 @@ function PathCard({
     <Link
       to="/catalog/career-paths/$slug"
       params={{ slug: path.slug }}
+      search={{ enrollment: programEnrollmentId }}
       className="group block"
     >
       <div
@@ -155,6 +163,23 @@ function PathCard({
   );
 }
 
+export function programCareerPathEnrollments(
+  program: LearningProgramEnrollment,
+  enrollmentByPathId: Map<string, MyCareerEnrollmentRead>,
+): Map<string, MyCareerEnrollmentRead> {
+  const selectedIds = new Set(
+    program.attempts
+      .filter(
+        (attempt) =>
+          attempt.status === "active" || attempt.status === "completed",
+      )
+      .map((attempt) => attempt.career_path_id),
+  );
+  return new Map(
+    [...enrollmentByPathId].filter(([pathId]) => selectedIds.has(pathId)),
+  );
+}
+
 function SkeletonCard() {
   return (
     <div className="rounded-xl ghost-border overflow-hidden">
@@ -163,6 +188,83 @@ function SkeletonCard() {
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
       </div>
+    </div>
+  );
+}
+
+function ProgramContextSummary({
+  enrollment,
+}: {
+  enrollment: LearningProgramEnrollment;
+}) {
+  const { t } = useTranslation();
+  const remainingSwitches = Math.max(
+    0,
+    enrollment.max_path_switches - enrollment.approved_switch_count,
+  );
+  return (
+    <section className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-m3-primary/20 bg-m3-primary-fixed/35 px-4 py-3 text-sm">
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-m3-on-surface">
+          {enrollment.program_name}
+        </p>
+        <p className="mt-0.5 text-xs text-m3-on-surface-variant">
+          {t("career_paths_page.program_context.version", {
+            version: enrollment.program_version_no,
+          })}
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-m3-on-surface-variant">
+          {t("career_paths_page.program_context.selected_label")}
+        </p>
+        <p className="font-semibold tabular-nums text-m3-on-surface">
+          {enrollment.max_career_paths === null
+            ? t("career_paths_page.program_context.selected_uncapped", {
+                selected: enrollment.selected_path_count,
+              })
+            : t("career_paths_page.program_context.selected", {
+                selected: enrollment.selected_path_count,
+                limit: enrollment.max_career_paths,
+              })}
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-m3-on-surface-variant">
+          {t("career_paths_page.program_context.changes_label")}
+        </p>
+        <p className="font-semibold tabular-nums text-m3-on-surface">
+          {t("career_paths_page.program_context.changes_remaining", {
+            count: remainingSwitches,
+          })}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function ProgramContextError({ retry }: { retry?: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="mx-auto max-w-3xl py-16">
+      <EmptyState
+        icon={ShieldAlert}
+        title={t("career_paths_page.program_context.unavailable_title")}
+        description={t("career_paths_page.program_context.unavailable_body")}
+        cta={
+          retry ? (
+            <Button variant="outline" onClick={retry}>
+              {t("career_paths_page.retry")}
+            </Button>
+          ) : (
+            <Link to="/me/learning-programs">
+              <Button variant="outline">
+                {t("career_paths_page.program_context.back_to_programs")}
+              </Button>
+            </Link>
+          )
+        }
+      />
     </div>
   );
 }
@@ -176,6 +278,7 @@ interface PathCatalogContentProps {
   isLoading: boolean;
   items: CareerPathPublic[];
   onShowAll: () => void;
+  programEnrollmentId?: string;
   sentinelRef: RefObject<HTMLDivElement | null>;
   visibleItems: CareerPathPublic[];
 }
@@ -189,6 +292,7 @@ function PathCatalogContent({
   isLoading,
   items,
   onShowAll,
+  programEnrollmentId,
   sentinelRef,
   visibleItems,
 }: PathCatalogContentProps) {
@@ -259,6 +363,7 @@ function PathCatalogContent({
             key={path.id}
             path={path}
             enrollment={enrollmentByPathId.get(path.id)}
+            programEnrollmentId={programEnrollmentId}
           />
         ))}
       </div>
@@ -275,10 +380,122 @@ function PathCatalogContent({
   );
 }
 
-export default function CareerPathsPage() {
+function CareerPathsHeader({
+  program,
+}: {
+  program?: LearningProgramEnrollment;
+}) {
   const { t } = useTranslation();
+  return (
+    <>
+      <header className="pt-2">
+        {program ? (
+          <Breadcrumbs
+            items={[
+              {
+                label: t("career_paths_page.program_context.learning_programs"),
+                to: "/me/learning-programs",
+              },
+              { label: program.program_name },
+              { label: t("career_paths_page.program_context.explore_paths") },
+            ]}
+          />
+        ) : null}
+        <div className="flex items-center gap-3 mb-2">
+          <AIInsightChip pulse>
+            {t(
+              program
+                ? "career_paths_page.program_context.chip"
+                : "career_paths_page.chip",
+            )}
+          </AIInsightChip>
+        </div>
+        <h1 className="font-headline font-black text-4xl sm:text-5xl text-m3-on-surface leading-none tracking-tight">
+          {program
+            ? t("career_paths_page.program_context.title", {
+                program: program.program_name,
+              })
+            : t("career_paths_page.title")}
+        </h1>
+        <p className="mt-3 text-m3-on-surface-variant text-base sm:text-lg max-w-xl">
+          {t(
+            program
+              ? "career_paths_page.program_context.intro"
+              : "career_paths_page.intro",
+          )}
+        </p>
+      </header>
+      {program ? <ProgramContextSummary enrollment={program} /> : null}
+    </>
+  );
+}
+
+interface CareerPathsSectionProps extends PathCatalogContentProps {
+  program?: LearningProgramEnrollment;
+  scope: CareerPathScope;
+  setScope: (scope: CareerPathScope) => void;
+}
+
+function CareerPathsSection({
+  program,
+  scope,
+  setScope,
+  ...catalogProps
+}: CareerPathsSectionProps) {
+  const { t } = useTranslation();
+  const { enrollmentByPathId, items } = catalogProps;
+  const subtitleKey =
+    scope === "mine"
+      ? "career_paths_page.my_paths_subtitle"
+      : program
+        ? "career_paths_page.program_context.section_subtitle"
+        : "career_paths_page.section_subtitle";
+  return (
+    <section className="space-y-5 pb-4">
+      <SectionHeader
+        title={t(
+          program
+            ? "career_paths_page.program_context.section_title"
+            : "career_paths_page.section_title",
+        )}
+        subtitle={t(subtitleKey)}
+        action={
+          enrollmentByPathId.size > 0 ? (
+            <SegmentedFilter
+              ariaLabel={t("career_paths_page.scope_label")}
+              value={scope}
+              onChange={setScope}
+              options={[
+                {
+                  key: "all",
+                  label: t(
+                    program
+                      ? "career_paths_page.program_context.scope_all"
+                      : "career_paths_page.scope_all",
+                  ),
+                  count: items.length,
+                },
+                {
+                  key: "mine",
+                  label: t("career_paths_page.scope_mine"),
+                  count: enrollmentByPathId.size,
+                },
+              ]}
+            />
+          ) : undefined
+        }
+      />
+      <PathCatalogContent {...catalogProps} />
+    </section>
+  );
+}
+
+export default function CareerPathsPage() {
+  const search = useSearch({ strict: false });
+  const programEnrollmentId = search.enrollment;
   const list = useCareerPaths();
   const myEnrollments = useMyCareerEnrollments();
+  const programs = useMyLearningPrograms();
   const [scope, setScope] = useState<CareerPathScope>("all");
 
   // Dropped/switched-out attempts belong to history, not the student's current
@@ -287,10 +504,42 @@ export default function CareerPathsPage() {
     () => currentCareerPathEnrollments(myEnrollments.data ?? []),
     [myEnrollments.data],
   );
+  const program = useMemo(
+    () =>
+      programEnrollmentId
+        ? programs.data?.find((item) => item.id === programEnrollmentId)
+        : undefined,
+    [programEnrollmentId, programs.data],
+  );
+  const displayedEnrollmentByPathId = useMemo(
+    () =>
+      program
+        ? programCareerPathEnrollments(program, enrollmentByPathId)
+        : enrollmentByPathId,
+    [enrollmentByPathId, program],
+  );
   const items = list.items;
+  const programPathIds = useMemo(
+    () =>
+      program
+        ? new Set(
+            program.paths
+              .filter((path) => path.status !== "archived")
+              .map((path) => path.career_path_id),
+          )
+        : undefined,
+    [program],
+  );
+  const scopedItems = useMemo(
+    () =>
+      programPathIds
+        ? items.filter((item) => programPathIds.has(item.id))
+        : items,
+    [items, programPathIds],
+  );
   const visibleItems = useMemo(
-    () => visibleCareerPaths(items, enrollmentByPathId, scope),
-    [enrollmentByPathId, items, scope],
+    () => visibleCareerPaths(scopedItems, displayedEnrollmentByPathId, scope),
+    [displayedEnrollmentByPathId, scopedItems, scope],
   );
 
   // Auto-load next page when the sentinel scrolls into view (mirrors
@@ -298,6 +547,15 @@ export default function CareerPathsPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchNextPageRef = useRef(list.fetchNextPage);
   fetchNextPageRef.current = list.fetchNextPage;
+  const missingProgramPath = Boolean(
+    programPathIds &&
+      [...programPathIds].some((id) => !items.some((p) => p.id === id)),
+  );
+  useEffect(() => {
+    if (missingProgramPath && list.hasNextPage && !list.isFetchingNextPage) {
+      fetchNextPageRef.current();
+    }
+  }, [list.hasNextPage, list.isFetchingNextPage, missingProgramPath]);
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node) return;
@@ -311,65 +569,38 @@ export default function CareerPathsPage() {
     return () => observer.disconnect();
   }, [list.hasNextPage, list.isFetchingNextPage]);
 
+  if (programEnrollmentId && programs.isLoading) {
+    return <PageSkeleton rows={4} />;
+  }
+  if (programEnrollmentId && programs.isError) {
+    return <ProgramContextError retry={() => void programs.refetch()} />;
+  }
+  if (programEnrollmentId && !program) {
+    return <ProgramContextError />;
+  }
+
   return (
     <div className="relative min-h-screen pb-28">
       <div className="max-w-6xl mx-auto space-y-8">
-        <header className="pt-2">
-          <div className="flex items-center gap-3 mb-2">
-            <AIInsightChip pulse>{t("career_paths_page.chip")}</AIInsightChip>
-          </div>
-          <h1 className="font-headline font-black text-4xl sm:text-5xl text-m3-on-surface leading-none tracking-tight">
-            {t("career_paths_page.title")}
-          </h1>
-          <p className="mt-3 text-m3-on-surface-variant text-base sm:text-lg max-w-xl">
-            {t("career_paths_page.intro")}
-          </p>
-        </header>
-
-        <section className="space-y-5 pb-4">
-          <SectionHeader
-            title={t("career_paths_page.section_title")}
-            subtitle={
-              scope === "mine"
-                ? t("career_paths_page.my_paths_subtitle")
-                : t("career_paths_page.section_subtitle")
-            }
-            action={
-              enrollmentByPathId.size > 0 ? (
-                <SegmentedFilter
-                  ariaLabel={t("career_paths_page.scope_label")}
-                  value={scope}
-                  onChange={setScope}
-                  options={[
-                    {
-                      key: "all",
-                      label: t("career_paths_page.scope_all"),
-                      count: items.length,
-                    },
-                    {
-                      key: "mine",
-                      label: t("career_paths_page.scope_mine"),
-                      count: enrollmentByPathId.size,
-                    },
-                  ]}
-                />
-              ) : undefined
-            }
-          />
-
-          <PathCatalogContent
-            error={list.error}
-            enrollmentByPathId={enrollmentByPathId}
-            fetchNextPage={list.fetchNextPage}
-            isError={list.isError}
-            isFetchingNextPage={list.isFetchingNextPage}
-            isLoading={list.isLoading}
-            items={items}
-            onShowAll={() => setScope("all")}
-            sentinelRef={sentinelRef}
-            visibleItems={visibleItems}
-          />
-        </section>
+        <CareerPathsHeader program={program} />
+        <CareerPathsSection
+          error={list.error}
+          enrollmentByPathId={displayedEnrollmentByPathId}
+          fetchNextPage={list.fetchNextPage}
+          isError={list.isError}
+          isFetchingNextPage={list.isFetchingNextPage}
+          isLoading={
+            list.isLoading || (missingProgramPath && Boolean(list.hasNextPage))
+          }
+          items={scopedItems}
+          onShowAll={() => setScope("all")}
+          sentinelRef={sentinelRef}
+          visibleItems={visibleItems}
+          programEnrollmentId={programEnrollmentId}
+          program={program}
+          scope={scope}
+          setScope={setScope}
+        />
       </div>
     </div>
   );

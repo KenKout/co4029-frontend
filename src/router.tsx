@@ -703,12 +703,28 @@ const managementEnrolmentAliasRoute = createRoute({
 const careerPathsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/catalog/career-paths",
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { enrollment?: string } => ({
+    enrollment:
+      typeof search.enrollment === "string" && search.enrollment.trim()
+        ? search.enrollment
+        : undefined,
+  }),
   component: CareerPathsPage,
 });
 
 const careerPathDetailRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
   path: "/catalog/career-paths/$slug",
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { enrollment?: string } => ({
+    enrollment:
+      typeof search.enrollment === "string" && search.enrollment.trim()
+        ? search.enrollment
+        : undefined,
+  }),
   component: CareerPathDetailPage,
 });
 

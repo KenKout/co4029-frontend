@@ -2,7 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, BookOpen, CheckCircle2, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { CareerPathProgressRead, CareerPathPublic } from "@/lib/api/types";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import type {
+  CareerPathProgressRead,
+  CareerPathPublic,
+  LearningProgramEnrollment,
+} from "@/lib/api/types";
 import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
 import { cn } from "@/lib/utils";
 
@@ -10,20 +15,86 @@ export function CareerPathHeader({
   data,
   enrolled,
   progress,
+  program,
+  programEnrollmentId,
 }: {
   data: CareerPathPublic;
   enrolled: boolean;
   progress: CareerPathProgressRead | undefined;
+  program?: LearningProgramEnrollment;
+  programEnrollmentId?: string;
 }) {
   const { t } = useTranslation();
   return (
     <div>
-      <Link to="/catalog/career-paths">
+      <Breadcrumbs
+        items={
+          program
+            ? [
+                {
+                  label: t(
+                    "career_path_detail.program_context.learning_programs",
+                  ),
+                  to: "/me/learning-programs",
+                },
+                { label: program.program_name },
+                { label: data.name },
+              ]
+            : [
+                {
+                  label: t("career_path_detail.program_context.career_paths"),
+                  to: "/catalog/career-paths",
+                },
+                { label: data.name },
+              ]
+        }
+      />
+      <Link
+        to="/catalog/career-paths"
+        search={{ enrollment: programEnrollmentId }}
+      >
         <Button variant="ghost" size="sm" className="gap-2 -ml-3 mb-4">
           <ArrowLeft className="h-4 w-4" />
-          {t("career_path_detail.back")}
+          {program
+            ? t("career_path_detail.program_context.back_to_program", {
+                program: program.program_name,
+              })
+            : t("career_path_detail.back")}
         </Button>
       </Link>
+      {program ? (
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-m3-primary-fixed/35 px-3 py-2 text-xs text-m3-on-surface-variant">
+          <span className="font-semibold text-m3-on-surface">
+            {program.program_name}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            {t("career_path_detail.program_context.version", {
+              version: program.program_version_no,
+            })}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            {program.max_career_paths === null
+              ? t("career_path_detail.program_context.selected_uncapped", {
+                  selected: program.selected_path_count,
+                })
+              : t("career_path_detail.program_context.selected", {
+                  selected: program.selected_path_count,
+                  limit: program.max_career_paths,
+                })}
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>
+            {t("career_path_detail.program_context.changes_remaining", {
+              count: Math.max(
+                0,
+                program.max_path_switches - program.approved_switch_count,
+              ),
+            })}
+          </span>
+        </div>
+      ) : null}
       <div className="flex items-start gap-4">
         <div
           className={cn(
@@ -32,7 +103,11 @@ export function CareerPathHeader({
           )}
         >
           {data.thumbnail_url ? (
-            <img src={data.thumbnail_url} alt="" className="h-full w-full object-cover" />
+            <img
+              src={data.thumbnail_url}
+              alt=""
+              className="h-full w-full object-cover"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <GraduationCap className="h-7 w-7 text-white" />

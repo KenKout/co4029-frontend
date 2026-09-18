@@ -35,12 +35,14 @@ export function PathCard({
   courseCount,
   requiredCount,
   stageCount,
+  programEnrollmentId,
 }: {
   path: ProgramPath;
   isCurrent: boolean;
   courseCount?: number;
   requiredCount?: number;
   stageCount?: number;
+  programEnrollmentId: string;
 }) {
   const { t } = useTranslation();
   const hasAttributes =
@@ -51,6 +53,7 @@ export function PathCard({
     <Link
       to="/catalog/career-paths/$slug"
       params={{ slug: path.slug }}
+      search={{ enrollment: programEnrollmentId }}
       className={cn(
         "group flex h-full flex-col overflow-hidden rounded-xl bg-card shadow-editorial ghost-border transition-all duration-300",
         "hover:-translate-y-1 hover:shadow-glass",
