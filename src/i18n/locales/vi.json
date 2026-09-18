@@ -4896,6 +4896,9 @@
       "spacing": {
         "title": "Mức thành thạo & nhịp học",
         "description": "Chọn mức thành thạo học viên cần đạt trước khi mở bài học tiếp theo.",
+        "enabled_label": "Kích hoạt lặp lại ngắt quãng SM-2",
+        "enabled_desc": "Cho phép quiz này tạo thẻ ôn tập và dùng cấu hình thành thạo cho tiến trình học. Khi tắt, thẻ đã có không bị xóa và câu trả lời vẫn cập nhật những thẻ học viên đang sở hữu.",
+        "enabled_summary": "Lặp lại ngắt quãng SM-2",
         "starting_ef": "EF khởi đầu",
         "unlock_ef": "EF mở khoá",
         "coverage": "Độ bao phủ (%)",

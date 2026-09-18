@@ -120,15 +120,22 @@ export function settingsPatchFromDraft(
     passing_score_percent: String(draft.passing_score_percent),
     max_attempts: integerOrNull(draft.max_attempts),
     cooldown_hours: integerOrNull(draft.cooldown_hours),
-    initial_ef: decimalOrNull(draft.initial_ef),
-    min_ef_for_unlock: decimalOrNull(draft.min_ef_for_unlock),
-    coverage_threshold: decimalOrNull(draft.coverage_threshold),
+    initial_ef: draft.feeds_spaced_repetition
+      ? decimalOrNull(draft.initial_ef)
+      : null,
+    min_ef_for_unlock: draft.feeds_spaced_repetition
+      ? decimalOrNull(draft.min_ef_for_unlock)
+      : null,
+    coverage_threshold: draft.feeds_spaced_repetition
+      ? decimalOrNull(draft.coverage_threshold)
+      : null,
     allow_retakes: draft.allow_retakes,
     shuffle_questions: draft.shuffle_questions,
     shuffle_options: draft.shuffle_options,
     show_hints: draft.show_hints,
     require_camera: draft.require_camera,
-    reminders_enabled: draft.reminders_enabled,
+    reminders_enabled: draft.feeds_spaced_repetition && draft.reminders_enabled,
+    feeds_spaced_repetition: draft.feeds_spaced_repetition,
     grading_method: draft.grading_method,
     available_from: localInputToIso(draft.available_from),
     available_until: localInputToIso(draft.available_until),

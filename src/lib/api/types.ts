@@ -237,6 +237,8 @@ export interface QuizScheduleWindow {
   integrity_score_threshold?: number | null;
   /** Required local camera track for the duration of the attempt. */
   require_camera?: boolean | null;
+  /** Whether this quiz may create new SM-2 review cards. */
+  feeds_spaced_repetition?: boolean;
   /**
    * What the learner is told when the proctoring threshold is crossed
    * (migration 0128). `continue_and_log` records the crossing for the teacher
@@ -1106,12 +1108,12 @@ export interface StartCourseResult {
 // identity/profile variant is a different, smaller shape.
 export type CareerPathProgressRead =
   Schemas["abridgeai__features__career_paths__schemas__public__CareerPathProgressRead"] & {
-  stages?: StageProgressRead[];
-  max_concurrent?: number | null;
-  active_in_path?: number;
-  over_concurrency_cap?: boolean;
-  courses: CourseProgressSummaryWithStage[];
-};
+    stages?: StageProgressRead[];
+    max_concurrent?: number | null;
+    active_in_path?: number;
+    over_concurrency_cap?: boolean;
+    courses: CourseProgressSummaryWithStage[];
+  };
 /**
  * The enrollment list contract does not require aggregate progress. Some
  * deployments enrich the same response with these values, while the learner

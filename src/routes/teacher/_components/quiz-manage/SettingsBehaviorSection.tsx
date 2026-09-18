@@ -75,15 +75,17 @@ function SettingsBehaviorSectionComponent({
           onChange={(v) => update("require_camera", v)}
           disabled={locked}
         />
-        <ToggleRow
-          id="quiz-setting-reminders"
-          label={t("teacher_quiz_manage.settings.behavior.reminders_label")}
-          description={t(
-            "teacher_quiz_manage.settings.behavior.reminders_desc",
-          )}
-          value={draft.reminders_enabled}
-          onChange={(v) => update("reminders_enabled", v)}
-        />
+        {draft.feeds_spaced_repetition ? (
+          <ToggleRow
+            id="quiz-setting-reminders"
+            label={t("teacher_quiz_manage.settings.behavior.reminders_label")}
+            description={t(
+              "teacher_quiz_manage.settings.behavior.reminders_desc",
+            )}
+            value={draft.reminders_enabled}
+            onChange={(v) => update("reminders_enabled", v)}
+          />
+        ) : null}
       </div>
     </SettingsSection>
   );
@@ -98,5 +100,7 @@ export const SettingsBehaviorSection = memo(
     previous.draft.shuffle_options === next.draft.shuffle_options &&
     previous.draft.show_hints === next.draft.show_hints &&
     previous.draft.require_camera === next.draft.require_camera &&
+    previous.draft.feeds_spaced_repetition ===
+      next.draft.feeds_spaced_repetition &&
     previous.draft.reminders_enabled === next.draft.reminders_enabled,
 );

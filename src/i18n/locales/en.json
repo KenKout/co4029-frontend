@@ -5074,6 +5074,9 @@
       "spacing": {
         "title": "Mastery & pacing",
         "description": "Choose how much students should master before the next lesson unlocks.",
+        "enabled_label": "Use SM-2 spaced repetition",
+        "enabled_desc": "Let this quiz create review cards and use mastery settings for learning progression. Turning it off does not erase existing cards, and answers still update cards students already have.",
+        "enabled_summary": "SM-2 spaced repetition",
         "starting_ef": "Starting EF",
         "unlock_ef": "Unlock EF",
         "coverage": "Coverage (%)",

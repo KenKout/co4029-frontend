@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MasterySelector } from "../MasterySelector";
 import { ReviewOptionsMatrix } from "./ReviewOptionsMatrix";
 import { SettingsAccessSection } from "./SettingsAccessSection";
-import { SettingsSection } from "./form-primitives";
+import { SettingsSection, ToggleRow } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
 
 /** Freeze mutation controls, never the disclosures needed to inspect them. */
@@ -44,19 +44,37 @@ function SettingsLockedSectionsComponent({
             title={t("teacher_quiz_manage.settings.spacing.title")}
             description={t("teacher_quiz_manage.settings.spacing.description")}
           >
-            <MasterySelector
+            <ToggleRow
+              id="quiz-setting-feeds-spaced-repetition"
+              label={t("teacher_quiz_manage.settings.spacing.enabled_label")}
+              description={t(
+                "teacher_quiz_manage.settings.spacing.enabled_desc",
+              )}
+              value={draft.feeds_spaced_repetition}
               disabled={locked}
-              values={{
-                initial_ef: draft.initial_ef,
-                min_ef_for_unlock: draft.min_ef_for_unlock,
-                coverage_threshold: draft.coverage_threshold,
-              }}
-              onPatch={(patch) =>
+              onChange={(feeds_spaced_repetition) =>
                 setDraft((current) =>
-                  current ? { ...current, ...patch } : current,
+                  current ? { ...current, feeds_spaced_repetition } : current,
                 )
               }
             />
+            {draft.feeds_spaced_repetition ? (
+              <div className="border-t border-m3-outline-variant/20 pt-4">
+                <MasterySelector
+                  disabled={locked}
+                  values={{
+                    initial_ef: draft.initial_ef,
+                    min_ef_for_unlock: draft.min_ef_for_unlock,
+                    coverage_threshold: draft.coverage_threshold,
+                  }}
+                  onPatch={(patch) =>
+                    setDraft((current) =>
+                      current ? { ...current, ...patch } : current,
+                    )
+                  }
+                />
+              </div>
+            ) : null}
           </SettingsSection>
         </CardContent>
       </Card>
@@ -80,6 +98,8 @@ export const SettingsLockedSections = memo(
     previous.setDraft === next.setDraft &&
     previous.locked === next.locked &&
     previous.draft.review_options === next.draft.review_options &&
+    previous.draft.feeds_spaced_repetition ===
+      next.draft.feeds_spaced_repetition &&
     previous.draft.initial_ef === next.draft.initial_ef &&
     previous.draft.min_ef_for_unlock === next.draft.min_ef_for_unlock &&
     previous.draft.coverage_threshold === next.draft.coverage_threshold &&

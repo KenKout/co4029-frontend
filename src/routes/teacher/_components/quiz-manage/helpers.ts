@@ -18,6 +18,14 @@ export function toDraftString(value: string | number | null | undefined) {
   return value == null ? "" : String(value);
 }
 
+function minutesFromSeconds(value: number | null | undefined): string {
+  return value == null ? "" : String(value / 60);
+}
+
+function defaultTrue(value: boolean | null | undefined): boolean {
+  return value !== false;
+}
+
 /**
  * Convert a server ISO-8601 UTC instant to the local-time value a
  * `datetime-local` input expects ("YYYY-MM-DDTHH:mm"). Returns "" for
@@ -65,10 +73,7 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
   return {
     title: quiz.title ?? "",
     description: quiz.description ?? "",
-    time_limit_minutes:
-      quiz.time_limit_seconds == null
-        ? ""
-        : String(quiz.time_limit_seconds / 60),
+    time_limit_minutes: minutesFromSeconds(quiz.time_limit_seconds),
     passing_score_percent: Number.isFinite(passingNum)
       ? Math.max(0, Math.min(100, passingNum))
       : 70,
@@ -83,6 +88,7 @@ export function draftFromQuiz(quiz: QuizAuthoring): SettingsDraft {
     show_hints: quiz.show_hints,
     require_camera: Boolean(quiz.require_camera),
     reminders_enabled: quiz.reminders_enabled,
+    feeds_spaced_repetition: defaultTrue(quiz.feeds_spaced_repetition),
     grading_method: quiz.grading_method ?? "highest",
     available_from: isoToLocalInput(quiz.available_from),
     available_until: isoToLocalInput(quiz.available_until),

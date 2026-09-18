@@ -157,6 +157,7 @@ export interface QuizCreatePayload {
   min_ef_for_unlock?: string | null;
   coverage_threshold?: string | null;
   reminders_enabled?: boolean;
+  feeds_spaced_repetition?: boolean;
   generation_instructions?: string | null;
 }
 
@@ -179,6 +180,7 @@ export interface QuizRead {
   min_ef_for_unlock: string | null;
   coverage_threshold: string | null;
   reminders_enabled: boolean;
+  feeds_spaced_repetition: boolean;
   generation_instructions: string | null;
   generation_run_id: string | null;
   published_at: string | null;

@@ -134,7 +134,16 @@ function buildSummaryRows(draft: SettingsDraft, t: TFunction) {
       "require_camera_label",
       "quiz-setting-require-camera",
     ],
-    ["reminders_enabled", false, "reminders_label", "quiz-setting-reminders"],
+    ...(draft.feeds_spaced_repetition
+      ? [
+          [
+            "reminders_enabled",
+            false,
+            "reminders_label",
+            "quiz-setting-reminders",
+          ],
+        ]
+      : []),
   ].flatMap(([field, defaultValue, label, target]) =>
     draft[field as keyof SettingsDraft] !== defaultValue
       ? [
@@ -150,17 +159,27 @@ function buildSummaryRows(draft: SettingsDraft, t: TFunction) {
   );
   const dynamicRows: SummaryRow[] = [
     ...behaviorRows,
-    {
-      label: t(`${k}.mastery_mode`),
-      value:
-        masteryPreset === "custom"
-          ? t(`${k}.custom`)
-          : t(
-              `teacher_quiz_manage.settings.spacing.presets.${masteryPreset}.name`,
-            ),
-      target: "quiz-settings-mastery",
-      focus: false,
-    },
+    ...(draft.feeds_spaced_repetition
+      ? [
+          {
+            label: t(`${k}.mastery_mode`),
+            value:
+              masteryPreset === "custom"
+                ? t(`${k}.custom`)
+                : t(
+                    `teacher_quiz_manage.settings.spacing.presets.${masteryPreset}.name`,
+                  ),
+            target: "quiz-settings-mastery",
+            focus: false,
+          },
+        ]
+      : [
+          {
+            label: t("teacher_quiz_manage.settings.spacing.enabled_summary"),
+            value: t(`${k}.disabled`),
+            target: "quiz-setting-feeds-spaced-repetition",
+          },
+        ]),
     ...(draft.require_password.trim()
       ? [
           {
@@ -233,9 +252,11 @@ export function SettingsSummary({
           <SummaryCell key={row.target} row={row} onNavigate={onNavigate} />
         ))}
       </div>
-      <p className="text-xs text-m3-on-surface-variant">
-        {t(`${k}.mastery_distinction`)}
-      </p>
+      {draft.feeds_spaced_repetition ? (
+        <p className="text-xs text-m3-on-surface-variant">
+          {t(`${k}.mastery_distinction`)}
+        </p>
+      ) : null}
       {settingsErrors(draft).map((key) => (
         <p key={key} role="alert" className="text-sm text-m3-error">
           {t(`${k}.${key}`)}
