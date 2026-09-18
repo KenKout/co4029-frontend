@@ -21,7 +21,8 @@ import {
  * so React's hook sequence is unchanged.
  */
 export function useQuizManageData(courseId: string, quizId: string) {
-  const { data: course } = useTeacherCourseById(courseId);
+  const { data: course, isLoading: courseLoading } =
+    useTeacherCourseById(courseId);
   const { data: authoring, isLoading: authoringLoading } =
     useQuizAuthoring(quizId);
   const { data: content, isLoading: contentLoading } =
@@ -52,6 +53,7 @@ export function useQuizManageData(courseId: string, quizId: string) {
 
   return {
     course,
+    courseLoading,
     authoringLoading,
     contentLoading,
     outcomes,

@@ -14,6 +14,7 @@ export function QuizManageActionStrip({
   courseId,
   quizId,
   isPublished,
+  canDelete,
   publishDisabled,
   data,
   state,
@@ -22,6 +23,7 @@ export function QuizManageActionStrip({
   courseId: string;
   quizId: string;
   isPublished: boolean;
+  canDelete: boolean;
   publishDisabled: boolean;
   data: QuizManageDataController;
   state: QuizManageStateController;
@@ -70,6 +72,7 @@ export function QuizManageActionStrip({
               courseId={courseId}
               quizId={quizId}
               isPublished={isPublished}
+              canDelete={canDelete}
               actionsStuck={actionsStuck}
               publishDisabled={publishDisabled}
               publishPending={data.publishQuiz.isPending}

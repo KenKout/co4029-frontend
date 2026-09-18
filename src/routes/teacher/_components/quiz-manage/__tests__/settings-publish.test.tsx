@@ -5,7 +5,14 @@ import QuizManagePage from "@/routes/teacher/quiz/quiz-manage";
 import type { QuizManageStateController } from "@/routes/teacher/quiz/_components/quiz-manage/use-quiz-manage-state";
 import { quizFixture } from "./settings-fixture";
 
-const mocks = vi.hoisted(() => ({ publish: vi.fn(), approved: true }));
+const mocks = vi.hoisted(() => ({
+  publish: vi.fn(),
+  approved: true,
+  quizStatus: "draft",
+  publishedAt: null as string | null,
+  courseStatus: "draft",
+  moduleStatus: "draft",
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }),
 }));
@@ -32,11 +39,17 @@ vi.mock(
   "@/routes/teacher/quiz/_components/quiz-manage/use-quiz-manage-data",
   () => ({
     useQuizManageData: () => ({
-      quiz: quizFixture,
+      course: { status: mocks.courseStatus },
+      courseLoading: false,
+      quiz: {
+        ...quizFixture,
+        status: mocks.quizStatus,
+        published_at: mocks.publishedAt,
+      },
       questions: [
         { id: "q-1", review_status: mocks.approved ? "approved" : "pending" },
       ],
-      courseModule: { id: "module-1" },
+      courseModule: { id: "module-1", status: mocks.moduleStatus },
       publishQuiz: { isPending: false, mutateAsync: mocks.publish },
       patchQuiz: { isPending: false },
       deleteQuiz: { isPending: false },
@@ -75,6 +88,10 @@ vi.mock(
 beforeEach(() => {
   mocks.publish.mockReset().mockResolvedValue({});
   mocks.approved = true;
+  mocks.quizStatus = "draft";
+  mocks.publishedAt = null;
+  mocks.courseStatus = "draft";
+  mocks.moduleStatus = "draft";
 });
 
 describe("quiz publish safety", () => {
@@ -124,5 +141,25 @@ describe("quiz publish safety", () => {
       }),
     );
     expect(mocks.publish).toHaveBeenCalledOnce();
+  });
+
+  it("only hides delete after the quiz has reached a published course and module", () => {
+    const view = render(<QuizManagePage />);
+    expect(screen.getByRole("button", { name: "common.delete" })).toBeVisible();
+
+    mocks.quizStatus = "published";
+    mocks.publishedAt = "2026-09-18T00:00:00Z";
+    mocks.courseStatus = "published";
+    mocks.moduleStatus = "draft";
+    view.rerender(<QuizManagePage />);
+    expect(screen.getByRole("button", { name: "common.delete" })).toBeVisible();
+
+    mocks.moduleStatus = "published";
+    view.rerender(<QuizManagePage />);
+    expect(screen.queryByRole("button", { name: "common.delete" })).toBeNull();
+
+    mocks.quizStatus = "archived";
+    view.rerender(<QuizManagePage />);
+    expect(screen.queryByRole("button", { name: "common.delete" })).toBeNull();
   });
 });

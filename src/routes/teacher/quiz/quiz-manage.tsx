@@ -19,6 +19,24 @@ import { useQuizManageData } from "./_components/quiz-manage/use-quiz-manage-dat
 import { useQuizManageState } from "./_components/quiz-manage/use-quiz-manage-state";
 import { useStickyActions } from "./_components/quiz-manage/use-sticky-actions";
 
+function isQuizDeletable({
+  quizStatus,
+  publishedAt,
+  courseStatus,
+  moduleStatus,
+}: {
+  quizStatus: string;
+  publishedAt?: string | null;
+  courseStatus?: string | null;
+  moduleStatus?: string | null;
+}) {
+  const hasBeenPublished = quizStatus === "published" || Boolean(publishedAt);
+  const parentsArePublished =
+    courseStatus === "published" && moduleStatus === "published";
+
+  return !hasBeenPublished || !parentsArePublished;
+}
+
 /**
  * Quiz authoring workspace: header, sticky action strip, the three authoring
  * tabs, and the page-level overlays. A thin orchestrator — data fetching lives
@@ -50,7 +68,7 @@ export default function QuizManagePage() {
     setScrollToTopBump(pendingDeletes.comboCount > 0 ? "bottom-24" : "");
   }, [pendingDeletes.comboCount]);
 
-  if (data.authoringLoading || data.contentLoading) {
+  if (data.courseLoading || data.authoringLoading || data.contentLoading) {
     return <QuizManageLoading />;
   }
 
@@ -60,6 +78,12 @@ export default function QuizManagePage() {
 
   const moduleId = courseModule.id;
   const isPublished = quiz.status === "published";
+  const canDelete = isQuizDeletable({
+    quizStatus: quiz.status,
+    publishedAt: quiz.published_at,
+    courseStatus: data.course?.status,
+    moduleStatus: courseModule.status,
+  });
   // Partial publish: students only ever see approved questions, so publish is
   // allowed as soon as at least ONE question is approved. Un-approved
   // questions stay on the quiz as reusable drafts and are never served to
@@ -68,7 +92,12 @@ export default function QuizManagePage() {
     (q) => q.review_status === "approved",
   ).length;
   const publishDisabled =
-    data.publishQuiz.isPending || data.patchQuiz.isPending || isPublished || approvedCount === 0 || state.hasUnsavedWork || pendingDeletes.comboCount > 0;
+    data.publishQuiz.isPending ||
+    data.patchQuiz.isPending ||
+    isPublished ||
+    approvedCount === 0 ||
+    state.hasUnsavedWork ||
+    pendingDeletes.comboCount > 0;
 
   const actions = createQuizManageActions({
     t,
@@ -96,6 +125,7 @@ export default function QuizManagePage() {
         courseId={courseId}
         quizId={quizId}
         isPublished={isPublished}
+        canDelete={canDelete}
         publishDisabled={publishDisabled}
         data={data}
         state={state}
@@ -127,7 +157,10 @@ export default function QuizManagePage() {
       />
 
       {state.leaveGuard.dialog}
-      <QuizNavigationGuard dirty={state.hasUnsavedWork} busy={state.settingsBusy || data.patchQuiz.isPending} />
+      <QuizNavigationGuard
+        dirty={state.hasUnsavedWork}
+        busy={state.settingsBusy || data.patchQuiz.isPending}
+      />
     </div>
   );
 }

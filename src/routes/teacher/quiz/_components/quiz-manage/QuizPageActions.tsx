@@ -20,6 +20,7 @@ export function QuizPageActions({
   courseId,
   quizId,
   isPublished,
+  canDelete,
   actionsStuck,
   publishDisabled,
   publishPending,
@@ -31,6 +32,7 @@ export function QuizPageActions({
   courseId: string;
   quizId: string;
   isPublished: boolean;
+  canDelete: boolean;
   actionsStuck: boolean;
   publishDisabled: boolean;
   publishPending: boolean;
@@ -82,10 +84,10 @@ export function QuizPageActions({
         questionCount={questionCount}
         onClick={onPublish}
       />
-      {/* Delete is hidden once published: students may be mid-attempt,
-          and the backend blocks destructive changes on a live quiz.
-          Archive first (frees the freeze) to delete. */}
-      {!isPublished && (
+      {/* A published quiz may still be deleted while its course or module is
+          a draft: learners cannot reach it yet. Once all parent levels are
+          live, keep the quiz as assessment evidence even after archiving. */}
+      {canDelete && (
         <Button
           type="button"
           variant="outline"
