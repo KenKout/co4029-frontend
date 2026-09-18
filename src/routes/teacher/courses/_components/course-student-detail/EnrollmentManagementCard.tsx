@@ -1,4 +1,5 @@
 import type { RosterStudent } from "@/lib/api/types/teacher";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 import { fmtDate } from "./helpers";
@@ -17,37 +18,38 @@ export function EnrollmentManagementCard({
   risk: RiskMeta;
   enroll: EnrollMeta;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-4">
       <h3 className="font-headline font-bold text-m3-primary text-base">
-        Enrollment Management
+        {t("teacher_course_student_detail.enrollment_management")}
       </h3>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between py-2">
-          <span className="text-sm text-m3-on-surface-variant">Status</span>
+          <span className="text-sm text-m3-on-surface-variant">{t("teacher_course_student_detail.status")}</span>
           <span
             className={cn(
               "text-xs font-bold px-2.5 py-1 rounded-full",
               enroll.badge,
             )}
           >
-            {enroll.label}
+            {t(enroll.label)}
           </span>
         </div>
         <div className="flex items-center justify-between py-2">
-          <span className="text-sm text-m3-on-surface-variant">Risk Level</span>
+          <span className="text-sm text-m3-on-surface-variant">{t("teacher_course_student_detail.risk_level")}</span>
           <span
             className={cn(
               "text-xs font-bold px-2.5 py-1 rounded-full",
               risk.badge,
             )}
           >
-            {risk.label}
+            {t(risk.label)}
           </span>
         </div>
         <div className="flex items-center justify-between py-2">
-          <span className="text-sm text-m3-on-surface-variant">Enrolled</span>
+          <span className="text-sm text-m3-on-surface-variant">{t("teacher_course_student_detail.enrolled")}</span>
           <span className="text-xs font-medium text-m3-on-surface">
             {fmtDate(student.enrolled_at)}
           </span>

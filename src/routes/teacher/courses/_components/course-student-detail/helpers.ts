@@ -5,6 +5,7 @@ import {
   UserMinus,
   type LucideIcon,
 } from "lucide-react";
+import type { TFunction } from "i18next";
 
 import type { InterviewSessionTeacherRead } from "@/lib/api/types";
 import type { RosterStudent } from "@/lib/api/types/teacher";
@@ -18,17 +19,23 @@ import { verdictState } from "@/lib/interview/verdict-state";
  * without touching a single branch.
  */
 
-export function relDate(iso: string | null) {
-  if (!iso) return "Never";
+export function relDate(iso: string | null, t?: TFunction) {
+  if (!iso) return t?.("teacher_course_student_detail.never") ?? "Never";
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const d = new Date(iso);
   d.setHours(0, 0, 0, 0);
   const days = Math.round((today.getTime() - d.getTime()) / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days === 0) return t?.("teacher_course_student_detail.today") ?? "Today";
+  if (days === 1) return t?.("teacher_course_student_detail.yesterday") ?? "Yesterday";
+  if (days < 7) {
+    return t?.("teacher_course_student_detail.days_ago", { count: days }) ?? `${days}d ago`;
+  }
+  if (days < 30) {
+    return t?.("teacher_course_student_detail.weeks_ago", {
+      count: Math.floor(days / 7),
+    }) ?? `${Math.floor(days / 7)}w ago`;
+  }
   return new Date(iso).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -69,15 +76,20 @@ export interface TimelineEntry {
 }
 
 /** Enrollment timeline rows — enrolled, plus whichever milestones exist. */
-export function buildTimelineEntries(student: RosterStudent): TimelineEntry[] {
+export function buildTimelineEntries(student: RosterStudent, t: TFunction): TimelineEntry[] {
   return [
     {
       icon: Calendar,
       color: "text-m3-primary",
       bg: "bg-m3-primary-fixed",
-      label: "Enrolled",
+      label: t("teacher_course_student_detail.timeline.enrolled"),
       date: fmtDate(student.enrolled_at),
-      detail: `Joined via ${student.enrollment_status === "waitlisted" ? "waitlist" : "direct enrollment"}`,
+      detail: t("teacher_course_student_detail.timeline.joined_via", {
+        method:
+          student.enrollment_status === "waitlisted"
+            ? t("teacher_course_student_detail.timeline.waitlist")
+            : t("teacher_course_student_detail.timeline.direct_enrollment"),
+      }),
     },
     ...(student.last_activity_at
       ? [
@@ -85,9 +97,11 @@ export function buildTimelineEntries(student: RosterStudent): TimelineEntry[] {
             icon: Clock,
             color: "text-m3-secondary",
             bg: "bg-m3-secondary-fixed",
-            label: "Last Activity",
-            date: relDate(student.last_activity_at),
-            detail: `Last seen ${fmtDate(student.last_activity_at)}`,
+            label: t("teacher_course_student_detail.timeline.last_activity"),
+            date: relDate(student.last_activity_at, t),
+            detail: t("teacher_course_student_detail.timeline.last_seen", {
+              date: fmtDate(student.last_activity_at),
+            }),
           },
         ]
       : []),
@@ -97,11 +111,13 @@ export function buildTimelineEntries(student: RosterStudent): TimelineEntry[] {
             icon: CheckCircle2,
             color: "text-emerald-600",
             bg: "bg-emerald-50",
-            label: "Completed Course",
+            label: t("teacher_course_student_detail.timeline.completed_course"),
             date: fmtDate(student.completed_at),
             detail: student.final_grade
-              ? `Final grade: ${student.final_grade}`
-              : "No grade assigned",
+              ? t("teacher_course_student_detail.timeline.final_grade", {
+                  grade: student.final_grade,
+                })
+              : t("teacher_course_student_detail.timeline.no_grade"),
           },
         ]
       : []),
@@ -111,9 +127,9 @@ export function buildTimelineEntries(student: RosterStudent): TimelineEntry[] {
             icon: UserMinus,
             color: "text-slate-500",
             bg: "bg-slate-100",
-            label: "Dropped",
+            label: t("teacher_course_student_detail.timeline.dropped"),
             date: fmtDate(student.dropped_at),
-            detail: "Student dropped or was removed from the course",
+            detail: t("teacher_course_student_detail.timeline.dropped_detail"),
           },
         ]
       : []),

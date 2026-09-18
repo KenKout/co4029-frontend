@@ -1,4 +1,5 @@
 import type { RosterStudent } from "@/lib/api/types/teacher";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 import { buildTimelineEntries } from "./helpers";
@@ -10,16 +11,17 @@ import { buildTimelineEntries } from "./helpers";
  * `buildTimelineEntries` so the conditional milestones stay one expression.
  */
 export function EnrollmentTimeline({ student }: { student: RosterStudent }) {
+  const { t } = useTranslation();
   return (
     <section className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-5">
       <h2 className="font-headline font-bold text-lg text-m3-on-surface">
-        Enrollment Timeline
+        {t("teacher_course_student_detail.enrollment_timeline")}
       </h2>
 
       <div className="space-y-0 relative">
         <div className="absolute left-5 top-5 bottom-5 w-px bg-m3-outline-variant/20" />
 
-        {buildTimelineEntries(student).map((entry, idx, arr) => (
+        {buildTimelineEntries(student, t).map((entry, idx, arr) => (
           <div key={entry.label} className="flex gap-4 relative pb-6">
             <div
               className={cn(

@@ -1,4 +1,5 @@
 import { MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { InterviewSessionsTable } from "@/routes/teacher/_components/assessment-tables";
 
@@ -15,6 +16,7 @@ export function StudentInterviewSection({
 }: {
   controller: CourseStudentDetailController;
 }) {
+  const { t } = useTranslation();
   const { filters, interviewSessionsLoading, navigate } = controller;
   return (
     <section className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-4">
@@ -22,7 +24,7 @@ export function StudentInterviewSection({
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-m3-secondary" />
           <h2 className="font-headline font-bold text-lg text-m3-on-surface">
-            Interview Attempts
+            {t("teacher_course_student_detail.interview_attempts")}
           </h2>
         </div>
         {/* Filters: Interview / Result / Time — mirror the course
