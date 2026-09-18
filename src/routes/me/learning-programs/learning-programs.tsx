@@ -32,67 +32,78 @@ function SelectedPaths({
 }) {
   const { t } = useTranslation();
   return (
-    <section className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-m3-primary">
-        {t("my_learning_programs.selected_paths")}
-      </p>
-      {attempts.map((attempt) => {
-        const path = enrollment.paths.find(
-          (item) => item.career_path_id === attempt.career_path_id,
-        );
-        if (!path) return null;
-        return (
-          <div
-            key={attempt.id}
-            className="rounded-xl bg-m3-primary-container/40 p-4 space-y-3"
-          >
-            <Link
-              to="/catalog/career-paths/$slug"
-              params={{ slug: path.slug }}
-              search={{ enrollment: enrollment.id }}
-              className="flex items-center justify-between hover:opacity-80"
+    <section className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-m3-primary">
+          {t("my_learning_programs.selected_paths")}
+        </p>
+        <span className="rounded-full bg-m3-primary-fixed/60 px-2 py-0.5 text-xs font-semibold tabular-nums text-m3-primary">
+          {attempts.length}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {attempts.map((attempt) => {
+          const path = enrollment.paths.find(
+            (item) => item.career_path_id === attempt.career_path_id,
+          );
+          if (!path) return null;
+          return (
+            <article
+              key={attempt.id}
+              className="flex min-w-0 flex-col gap-3 rounded-xl border border-m3-primary/15 bg-m3-primary-container/40 p-3 sm:p-4"
             >
-              <div>
-                <p className="font-semibold text-m3-on-surface">{path.name}</p>
-                {attempt.status === "completed" ? (
-                  <p className="mt-0.5 text-xs font-semibold text-emerald-700">
-                    {t("my_learning_programs.path_completed")}
+              <Link
+                to="/catalog/career-paths/$slug"
+                params={{ slug: path.slug }}
+                search={{ enrollment: enrollment.id }}
+                className="group flex min-w-0 items-start justify-between gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-m3-primary"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-m3-on-surface group-hover:text-m3-primary">
+                    {path.name}
                   </p>
-                ) : null}
+                  {attempt.status === "completed" ? (
+                    <p className="mt-0.5 text-xs font-semibold text-emerald-700">
+                      {t("my_learning_programs.path_completed")}
+                    </p>
+                  ) : null}
+                </div>
+                <ArrowRight className="h-5 w-5 shrink-0 text-m3-primary transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <div>
+                <div className="mb-1 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-m3-on-surface-variant">
+                  <span>
+                    {t("my_learning_programs.course_progress", {
+                      completed: attempt.completed_courses,
+                      total: attempt.total_courses,
+                    })}
+                  </span>
+                  <span className="tabular-nums">
+                    {attempt.progress_percent}%
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-card/70">
+                  <div
+                    className="h-full rounded-full bg-m3-primary"
+                    style={{ width: `${attempt.progress_percent}%` }}
+                  />
+                </div>
               </div>
-              <ArrowRight className="h-5 w-5 text-m3-primary" />
-            </Link>
-            <div>
-              <div className="mb-1 flex justify-between text-xs text-m3-on-surface-variant">
-                <span>
-                  {t("my_learning_programs.course_progress", {
-                    completed: attempt.completed_courses,
-                    total: attempt.total_courses,
-                  })}
-                </span>
-                <span>{attempt.progress_percent}%</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-card/70">
-                <div
-                  className="h-full rounded-full bg-m3-primary"
-                  style={{ width: `${attempt.progress_percent}%` }}
-                />
-              </div>
-            </div>
-            {/* Only on a path still being studied: a completed path is a
-                result, not a commitment to walk back. */}
-            {attempt.status === "active" ? (
-              <div className="flex justify-end">
-                <DropPathRequest
-                  enrollment={enrollment}
-                  attemptId={attempt.id}
-                  pathName={path.name}
-                />
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
+              {/* Only on a path still being studied: a completed path is a
+                  result, not a commitment to walk back. */}
+              {attempt.status === "active" ? (
+                <div className="mt-auto border-t border-m3-primary/10 pt-3">
+                  <DropPathRequest
+                    enrollment={enrollment}
+                    attemptId={attempt.id}
+                    pathName={path.name}
+                  />
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -142,10 +153,14 @@ function TransitionHistory({
         return (
           <div
             key={attempt.id}
-            className="flex justify-between rounded-lg bg-m3-surface-container px-3 py-2 text-sm"
+            className="flex flex-col gap-1 rounded-lg bg-m3-surface-container px-3 py-2 text-sm sm:flex-row sm:justify-between sm:gap-3"
           >
-            <span>{path?.name ?? attempt.career_path_id}</span>
-            <span className="text-m3-on-surface-variant">{details}</span>
+            <span className="font-medium">
+              {path?.name ?? attempt.career_path_id}
+            </span>
+            <span className="text-m3-on-surface-variant sm:text-right">
+              {details}
+            </span>
           </div>
         );
       })}
@@ -172,7 +187,7 @@ function ProgramCard({
   );
 
   return (
-    <article className="rounded-2xl bg-card ghost-border p-5 space-y-5">
+    <article className="space-y-5 rounded-2xl bg-card p-4 ghost-border sm:p-5">
       <div className="flex items-start gap-4">
         <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center shrink-0">
           <GraduationCap className="h-6 w-6 text-white" />
@@ -267,9 +282,9 @@ function ProgramCard({
           <Link
             to="/catalog/career-paths"
             search={{ enrollment: enrollment.id }}
-            className="flex items-center justify-between rounded-xl border border-m3-outline-variant p-4 hover:bg-m3-surface-container"
+            className="flex items-center justify-between gap-3 rounded-xl border border-m3-outline-variant p-4 hover:bg-m3-surface-container"
           >
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-m3-on-surface">
                 {t("my_learning_programs.explore_paths.title")}
               </p>
@@ -282,7 +297,7 @@ function ProgramCard({
                 )}
               </p>
             </div>
-            <ArrowRight className="h-5 w-5 text-m3-primary" />
+            <ArrowRight className="h-5 w-5 shrink-0 text-m3-primary" />
           </Link>
         ))}
 

@@ -3,7 +3,9 @@ import { MinusCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useRequestProgramPathDrop } from "@/lib/api/hooks/learning-programs";
 import { getApiErrorMessage } from "@/lib/api/error-codes";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
@@ -81,17 +83,17 @@ export function DropPathRequest({
           never-refunded allowance -- and it costs the same on a path at 0% as
           on one nearly finished, which is exactly when a student would want
           to know. */}
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex flex-col gap-1 sm:items-end">
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5"
+          className="w-full gap-1.5 sm:w-auto"
           onClick={() => setOpen(true)}
         >
           <MinusCircle className="h-3.5 w-3.5" />
           {t("my_learning_programs.drop_path.action")}
         </Button>
-        <span className="text-[11px] text-m3-on-surface-variant">
+        <span className="text-[11px] leading-snug text-m3-on-surface-variant sm:text-right">
           {t("my_learning_programs.drop_path.cost", { remaining })}
         </span>
       </div>
@@ -116,19 +118,25 @@ export function DropPathRequest({
         isPending={requestDrop.isPending}
         onConfirm={() => void submit()}
       >
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-text-strong">
-            {t("my_learning_programs.drop_path.reason_label")}{" "}
-            <span className="text-destructive">*</span>
-          </span>
-          <textarea
-            className="w-full min-h-24 rounded-lg border border-m3-outline-variant/50 bg-white p-3 text-sm outline-none focus:border-m3-primary"
-            placeholder={t("my_learning_programs.drop_path.reason_placeholder")}
-            value={reason}
-            maxLength={2000}
-            onChange={(event) => setReason(event.target.value)}
-          />
-        </label>
+        <Field
+          label={t("my_learning_programs.drop_path.reason_label")}
+          required
+          renderControl={(fieldProps) => (
+            <Textarea
+              {...fieldProps}
+              variant="low"
+              rows={4}
+              resize="y"
+              placeholder={t(
+                "my_learning_programs.drop_path.reason_placeholder",
+              )}
+              value={reason}
+              maxLength={2000}
+              disabled={requestDrop.isPending}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          )}
+        />
       </PromptDialog>
     </>
   );
