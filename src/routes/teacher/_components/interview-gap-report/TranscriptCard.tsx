@@ -143,7 +143,7 @@ export function TranscriptCard({
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
-                {t("teacher_interview_gap_report.transcript.prev")}
+                {t("common.previous")}
               </Button>
               <span className="text-xs text-m3-on-surface-variant tabular-nums px-1">
                 {safePage + 1} / {pageCount}

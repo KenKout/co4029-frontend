@@ -72,7 +72,7 @@ export function ToolbarEditControls({
         type="button"
         onClick={undo}
         disabled={!canUndo}
-        aria-label={t("teacher_kg_editor.undo")}
+        aria-label={t("common.undo")}
         className="flex h-8 w-8 items-center justify-center rounded-lg text-m3-on-surface-variant hover:bg-m3-surface-container-high disabled:opacity-30"
       >
         <Undo2 className="h-4 w-4" />

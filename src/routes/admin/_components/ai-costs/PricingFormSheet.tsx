@@ -124,10 +124,10 @@ export function PricingFormSheet({
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <SheetClose render={<Button type="button" variant="ghost" />}>
-              {t("admin.ai_costs.pricing.cancel")}
+              {t("common.cancel")}
             </SheetClose>
             <Button type="submit" disabled={isPending}>
-              {t("admin.ai_costs.pricing.save")}
+              {t("common.save")}
             </Button>
           </div>
         </form>

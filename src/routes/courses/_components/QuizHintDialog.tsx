@@ -52,7 +52,7 @@ export function QuizHintDialog({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={t("course_quiz.actions.close_hint", "Close")}
+                  aria-label={t("common.close", "Close")}
                 />
               }
             >

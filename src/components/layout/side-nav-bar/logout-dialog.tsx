@@ -31,7 +31,7 @@ export function SideNavLogoutDialog({
           t("logout_confirm.confirm")
         )
       }
-      cancelLabel={t("logout_confirm.cancel")}
+      cancelLabel={t("common.cancel")}
       confirmVariant="destructive"
       isPending={isLoggingOut}
       onConfirm={onConfirm}

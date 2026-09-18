@@ -278,7 +278,7 @@ export function StartInterviewDialog({
           ? t("course_interview.resume_dialog.cancel", {
               defaultValue: fallback.cancel,
             })
-          : t("course_interview.start_dialog.cancel", {
+          : t("common.back", {
               defaultValue: fallback.cancel,
             })
       }

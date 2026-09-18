@@ -48,7 +48,7 @@ export function useReviewCard(
       setResult(res);
       onResolved(res);
     } catch {
-      setError(t("study_review.submit_failed", "Couldn't submit — try again."));
+      setError(t("common.submit_failed", "Couldn't submit — try again."));
     } finally {
       setSubmitting(false);
     }

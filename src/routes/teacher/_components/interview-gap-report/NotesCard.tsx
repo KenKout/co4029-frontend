@@ -34,12 +34,12 @@ export function NotesCard({
   async function handleSave() {
     try {
       await saveNotes.mutateAsync(draft.trim() || null);
-      toast.success(t("teacher_interview_gap_report.labels.saved"));
+      toast.success(t("common.saved"));
       setEditing(false);
     } catch (err) {
       toast.error(
         (err as Error).message ||
-          t("teacher_interview_gap_report.labels.save_failed"),
+          t("common.save_failed"),
       );
     }
   }
@@ -108,7 +108,7 @@ export function NotesCard({
                   )}
                   {saveNotes.isPending
                     ? t("teacher_interview_gap_report.labels.saving")
-                    : t("teacher_interview_gap_report.labels.save")}
+                    : t("common.save")}
                 </Button>
               </div>
             </div>

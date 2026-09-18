@@ -68,7 +68,7 @@ export function KgPreviewOverlays({
       {editing && (
         <KnowledgeGraphEditor
           lessonId={lessonId}
-          title={t("teacher_lesson_materials.kg.editor_title")}
+          title={t("common.editor_title")}
           onClose={() => setEditing(false)}
         />
       )}

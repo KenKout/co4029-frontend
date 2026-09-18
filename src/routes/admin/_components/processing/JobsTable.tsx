@@ -182,7 +182,7 @@ export function JobsTable({
             dialogTitle: t("admin.processing.time.custom_title"),
             from: t("admin.processing.time.from"),
             to: t("admin.processing.time.to"),
-            apply: t("admin.processing.time.apply"),
+            apply: t("common.apply"),
             clear: t("admin.processing.time.clear"),
           }}
         />

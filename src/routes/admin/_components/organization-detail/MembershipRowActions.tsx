@@ -75,7 +75,7 @@ export function MembershipRowActions({
             size="sm"
             className="p-1.5 h-auto text-m3-primary hover:bg-m3-primary-fixed/40 rounded-md"
             onClick={() => setEditing(true)}
-            aria-label={t("admin.organizations.actions.edit_status", {
+            aria-label={t("common.edit_status", {
               defaultValue: "Edit status",
             })}
           >

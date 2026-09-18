@@ -37,7 +37,7 @@ function StudentDetailHeader({
         to="/teacher/courses/$courseId/at-risk"
         params={{ courseId }}
         className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-        aria-label={t("teacher_sr_cohort.back")}
+        aria-label={t("common.back")}
       >
         <ArrowLeft className="h-4 w-4" />
       </Link>

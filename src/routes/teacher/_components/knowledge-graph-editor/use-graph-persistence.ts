@@ -70,9 +70,9 @@ export function useGraphPersistence(options: {
         edges: graph.edges,
       });
       hist.setSavedSnapshot(JSON.stringify(graph));
-      toast.success(t("teacher_kg_editor.saved"));
+      toast.success(t("common.saved"));
     } catch (err) {
-      toast.error((err as Error).message || t("teacher_kg_editor.save_failed"));
+      toast.error((err as Error).message || t("common.save_failed"));
     }
   }, [validationError, saveMutation, graph, t]);
 

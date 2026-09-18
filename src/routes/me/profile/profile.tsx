@@ -59,12 +59,12 @@ export default function ProfilePage() {
           size="icon"
           className="h-8 w-8"
           onClick={goBack}
-          aria-label={t("profile.back")}
+          aria-label={t("common.back")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <span className="text-sm font-medium text-m3-on-surface-variant">
-          {t("profile.back")}
+          {t("common.back")}
         </span>
       </div>
 

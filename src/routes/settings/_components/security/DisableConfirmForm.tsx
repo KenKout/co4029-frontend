@@ -115,7 +115,7 @@ export default function DisableConfirmForm({
           onClick={() => setState({ phase: "idle" })}
           disabled={isPending}
         >
-          {t("settings_security.cancel")}
+          {t("common.cancel")}
         </Button>
         <Button
           type="submit"
@@ -127,7 +127,7 @@ export default function DisableConfirmForm({
           ) : (
             <ShieldOff className="h-4 w-4" />
           )}
-          {t("settings_security.confirm_disable")}
+          {t("common.confirm_disable")}
         </Button>
       </div>
     </form>

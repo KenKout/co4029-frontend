@@ -68,7 +68,7 @@ export default function RegenConfirmForm({
           onClick={() => setState({ phase: "idle" })}
           disabled={isPending}
         >
-          {t("settings_security.cancel")}
+          {t("common.cancel")}
         </Button>
         <Button
           type="submit"
@@ -80,7 +80,7 @@ export default function RegenConfirmForm({
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-          {t("settings_security.confirm_and_regen")}
+          {t("common.confirm_and_regen")}
         </Button>
       </div>
     </form>

@@ -126,7 +126,7 @@ function CreateOrgDialog({ onClose }: { onClose: () => void }) {
           <Button type="submit" disabled={create.isPending} className="gap-2">
             {create.isPending
               ? t("admin.organizations.actions.creating")
-              : t("admin.organizations.actions.create")}
+              : t("common.create")}
           </Button>
         </div>
       </form>

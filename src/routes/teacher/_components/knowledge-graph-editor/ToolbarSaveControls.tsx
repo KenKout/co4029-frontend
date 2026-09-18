@@ -47,7 +47,7 @@ export function ToolbarSaveControls({
         ) : (
           <Save className="h-4 w-4" />
         )}
-        {t("teacher_kg_editor.save")}
+        {t("common.save")}
       </Button>
       <Button
         type="button"

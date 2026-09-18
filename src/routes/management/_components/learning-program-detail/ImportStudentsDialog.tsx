@@ -98,7 +98,7 @@ export function ImportStudentsDialog({
           <div className="mt-6 flex justify-end gap-2">
             <Button variant="ghost" onClick={onClose} disabled={importCsv.isPending}>
               {result
-                ? t("management_learning_program_detail.actions.close")
+                ? t("common.close")
                 : t("management_learning_program_detail.actions.cancel")}
             </Button>
           </div>

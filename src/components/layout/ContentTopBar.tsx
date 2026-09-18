@@ -274,7 +274,7 @@ export default function ContentTopBar({
             t("logout_confirm.confirm")
           )
         }
-        cancelLabel={t("logout_confirm.cancel")}
+        cancelLabel={t("common.cancel")}
         confirmVariant="destructive"
         isPending={isLoggingOut}
         onConfirm={handleConfirmLogout}

@@ -25,12 +25,12 @@ export function DeleteButton({ course }: { course: CourseAuthoring }) {
 
   return (
     <>
-      <Tooltip content={t("admin.course_detail.delete")}>
+      <Tooltip content={t("common.delete")}>
         <Button
           type="button"
           variant="ghost"
           size="icon-sm"
-          aria-label={t("admin.course_detail.delete")}
+          aria-label={t("common.delete")}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -48,11 +48,11 @@ export function DeleteButton({ course }: { course: CourseAuthoring }) {
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title={t("admin.course_detail.delete")}
-        description={t("admin.course_detail.delete_confirm", {
+        title={t("common.delete")}
+        description={t("common.delete_confirm", {
           title: course.title,
         })}
-        confirmLabel={t("admin.course_detail.delete")}
+        confirmLabel={t("common.delete")}
         cancelLabel={t("common.cancel")}
         onConfirm={runDelete}
         isPending={del.isPending}

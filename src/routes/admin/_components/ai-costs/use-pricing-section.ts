@@ -32,7 +32,7 @@ export function usePricingSection(t: TFunction) {
   const handleSubmit = (values: AiModelPricingInput) => {
     const onError = (err: unknown) => {
       const message = err instanceof ApiError ? err.message : undefined;
-      toast.error(message ?? t("admin.ai_costs.pricing.save_failed"));
+      toast.error(message ?? t("common.save_failed"));
     };
     if (editing) {
       updateMutation.mutate(
@@ -44,7 +44,7 @@ export function usePricingSection(t: TFunction) {
         },
         {
           onSuccess: () => {
-            toast.success(t("admin.ai_costs.pricing.save_success"));
+            toast.success(t("common.save_success"));
             setSheetOpen(false);
           },
           onError,
@@ -53,7 +53,7 @@ export function usePricingSection(t: TFunction) {
     } else {
       createMutation.mutate(values, {
         onSuccess: () => {
-          toast.success(t("admin.ai_costs.pricing.save_success"));
+          toast.success(t("common.save_success"));
           setSheetOpen(false);
         },
         onError,

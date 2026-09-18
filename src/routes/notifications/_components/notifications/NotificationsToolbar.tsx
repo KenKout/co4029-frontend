@@ -114,7 +114,7 @@ function FiltersSheet({
                 dialogTitle: t("notifications.time.custom_title"),
                 from: t("notifications.time.from"),
                 to: t("notifications.time.to"),
-                apply: t("notifications.time.apply"),
+                apply: t("common.apply"),
                 clear: t("notifications.time.clear"),
               }}
             />
@@ -243,7 +243,7 @@ function DesktopNotificationsToolbar({ c }: { c: NotificationsPageController }) 
         dialogTitle: t("notifications.time.custom_title"),
         from: t("notifications.time.from"),
         to: t("notifications.time.to"),
-        apply: t("notifications.time.apply"),
+        apply: t("common.apply"),
         clear: t("notifications.time.clear"),
       }}
       filters={filters}

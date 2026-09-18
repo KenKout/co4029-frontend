@@ -89,7 +89,7 @@ export function QuestionBank({
   const approveQuestionVariants = useApproveInterviewQuestionVariants(configId);
   const { data: bankItems } = useInterviewQuestionBank(courseId);
   const { confirm: confirmAction, dialog: confirmActionDialog } = useConfirm({
-    title: t("teacher_interview_config.qbank.confirm_title", {
+    title: t("common.confirm", {
       defaultValue: "Confirm",
     }),
     confirmLabel: t("common.confirm"),

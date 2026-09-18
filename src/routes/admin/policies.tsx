@@ -135,12 +135,12 @@ function CreatePolicyDialog({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             disabled={create.isPending}
           >
-            {t("admin.policies.actions.cancel")}
+            {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={create.isPending || !slug}>
             {create.isPending
               ? t("admin.policies.actions.creating")
-              : t("admin.policies.actions.create")}
+              : t("common.create")}
           </Button>
         </div>
       </form>

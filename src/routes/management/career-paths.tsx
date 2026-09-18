@@ -361,7 +361,7 @@ export function CreateDialog({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             disabled={create.isPending}
           >
-            {t("management_career_paths.create_dialog.cancel")}
+            {t("common.cancel")}
           </Button>
           <Button
             type="submit"
@@ -370,7 +370,7 @@ export function CreateDialog({ onClose }: { onClose: () => void }) {
             className="gap-2"
           >
             {create.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {t("management_career_paths.create_dialog.submit")}
+            {t("common.create")}
           </Button>
         </div>
       </form>

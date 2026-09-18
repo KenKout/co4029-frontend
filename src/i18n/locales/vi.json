@@ -197,8 +197,6 @@
     "copy_secret": "Sao chép khoá",
     "open_in_app": "Mở trong ứng dụng",
     "six_digit_code": "Mã 6 chữ số",
-    "cancel": "Huỷ",
-    "confirm": "Xác nhận",
     "confirm_and_regen": "Xác nhận và tạo lại",
     "regen_panel_title": "Xác nhận lại bằng TOTP",
     "regen_panel_intro": "Nhập mã 6 chữ số từ ứng dụng xác thực để tạo lại mã khôi phục.",
@@ -320,7 +318,6 @@
       "ungraded_quizzes": "Lượt kiểm tra cần chấm",
       "pending_interviews": "Phỏng vấn chờ đánh giá",
       "course_pending": "{{count}} mục chờ xem xét trong khoá này",
-      "loading_items": "Đang tải…",
       "items_failed": "Không thể tải chi tiết.",
       "items_empty": "Không còn mục nào — có thể vừa được xử lý xong.",
       "load_details": "Xem mục"
@@ -389,7 +386,6 @@
     "archive_confirm_body": "{{title}} sẽ bị xóa khỏi danh sách khóa học của học viên. Khóa học đã lưu trữ không thể khôi phục.",
     "archive_success": "Đã lưu trữ khóa học",
     "archive_failed": "Không thể lưu trữ khóa học.",
-    "save": "Lưu",
     "saved": "Đã lưu cài đặt khóa học",
     "save_failed": "Lưu thất bại",
     "save_status": {
@@ -510,7 +506,6 @@
     "pagination": {
       "label": "Phân trang",
       "page": "Trang {{page}}",
-      "previous": "Trước",
       "next": "Sau"
     }
   },
@@ -697,7 +692,6 @@
       "search_placeholder": "Tìm câu hỏi trong ngân hàng bài kiểm tra",
       "saved_from_quiz": "Được lưu từ một bài kiểm tra",
       "edit": "Sửa",
-      "save": "Lưu",
       "approve": "Duyệt",
       "archive": "Lưu trữ",
       "delete": "Xóa",
@@ -1107,7 +1101,6 @@
     "load_failed_body": "Kết quả phỏng vấn này hiện chưa khả dụng. Vui lòng thử lại."
   },
   "career_path_detail": {
-    "back": "Quay lại",
     "load_failed": "Không thể tải lộ trình",
     "program_context": {
       "learning_programs": "Chương trình học",
@@ -1222,7 +1215,6 @@
   "study_cards_due": {
     "back": "Về bảng điều khiển",
     "title": "Thẻ đến hạn ôn tập",
-    "loading": "Đang tải…",
     "empty_subtitle": "Bạn đã ôn hết thẻ",
     "empty_title": "Chưa có thẻ đến hạn",
     "empty_body": "Tất cả thẻ đã được ôn xong. Thẻ mới sẽ xuất hiện ở đây khi đến hạn.",
@@ -1250,13 +1242,11 @@
   },
   "study_review": {
     "title": "Phiên ôn tập",
-    "back": "Quay lại",
     "progress": "Thẻ {{current}} / {{total}}",
     "session_progress": "Tiến độ",
     "stat_correct": "Đúng",
     "stat_remaining": "Còn lại",
     "load_failed": "Không thể tải phiên ôn tập.",
-    "submit": "Gửi",
     "submit_failed": "Không gửi được — hãy thử lại.",
     "next": "Thẻ tiếp theo",
     "finish": "Hoàn thành",
@@ -1320,7 +1310,6 @@
     },
     "save": "Lưu hồ sơ",
     "saving": "Đang lưu...",
-    "back": "Quay lại",
     "errors": {
       "display_name_required": "Tên hiển thị không được để trống.",
       "display_name_max": "Tên hiển thị tối đa 100 ký tự.",
@@ -1438,7 +1427,6 @@
       "from_to": "Từ – Đến",
       "from": "Từ",
       "to": "Đến",
-      "apply": "Áp dụng",
       "clear": "Xóa"
     },
     "showing_count": "{{count}} hiển thị",
@@ -1553,7 +1541,6 @@
     "breadcrumb_teaching": "Khoá của tôi",
     "breadcrumb_course": "Khóa học",
     "breadcrumb_overview": "Tổng quan lớp",
-    "back": "Quay lại",
     "title": "Tổng quan lớp",
     "subtitle": "Mức độ ghi nhớ của lớp cho từng bài, và những câu hỏi các em thấy khó nhất.",
     "view_at_risk": "Học viên cần hỗ trợ",
@@ -1629,8 +1616,6 @@
       "slug_help": "Dùng trong URL của lộ trình. Phải là duy nhất trong tổ chức.",
       "description": "Mô tả",
       "description_placeholder": "Mô tả ngắn về lộ trình…",
-      "cancel": "Huỷ",
-      "submit": "Tạo",
       "errors": {
         "need_name_slug": "Hãy nhập tên và slug",
         "create_failed": "Tạo lộ trình thất bại"
@@ -1942,7 +1927,6 @@
         "custom_title": "Khoảng thời gian tùy chỉnh",
         "from": "Từ",
         "to": "Đến",
-        "apply": "Áp dụng",
         "clear": "Xóa"
       },
       "retry": "Thử lại",
@@ -2008,7 +1992,6 @@
       "back_to_list": "Quay lại danh sách",
       "restore": "Khôi phục khoá học",
       "restoring": "Đang khôi phục…",
-      "delete": "Xoá",
       "deleting": "Đang xoá…",
       "delete_confirm": "Xoá \"{{title}}\" cùng các chương và bài học? Có thể hoàn tác bằng Khôi phục.",
       "audit_load_failed": "Không thể tải dữ liệu audit.",
@@ -2166,7 +2149,6 @@
         "day_hint": "Chọn ngày bắt đầu và kết thúc khoảng thời gian",
         "days_one": "1 ngày",
         "days_other": "{{count}} ngày",
-        "apply": "Áp dụng",
         "cancel": "Hủy",
         "preset": {
           "today": "Hôm nay",
@@ -2244,8 +2226,7 @@
       "drilldown": {
         "title": "Chi tiết pipeline",
         "stages": "Phân tích theo bước",
-        "no_stages": "Không có dữ liệu bước cho pipeline này.",
-        "close": "Đóng"
+        "no_stages": "Không có dữ liệu bước cho pipeline này."
       },
       "period_options": {
         "24h": "24 giờ qua",
@@ -2299,9 +2280,6 @@
         "edit_title": "Sửa giá mô hình",
         "delete_title": "Xoá giá mô hình?",
         "delete_description": "Việc này sẽ xoá giá của \"{{model}}\". Các lượt gọi mới của mô hình này sẽ không ghi chi phí cho đến khi thêm lại giá.",
-        "delete_confirm": "Xoá",
-        "save": "Lưu",
-        "cancel": "Huỷ",
         "load_failed": "Không thể tải cấu hình giá.",
         "save_failed": "Không thể lưu giá.",
         "delete_failed": "Không thể xoá giá.",
@@ -2536,13 +2514,11 @@
       "actions": {
         "save": "Lưu thay đổi",
         "saving": "Đang lưu...",
-        "create": "Tạo",
         "creating": "Đang tạo...",
         "cancel": "Hủy",
         "delete": "Xóa",
         "add": "Thêm",
         "adding": "Đang thêm...",
-        "edit": "Chỉnh sửa",
         "remove_member": "Xóa thành viên"
       },
       "confirm": {
@@ -2830,8 +2806,6 @@
       "no_draft_hint": "Tạo bản nháp để sửa đổi chính sách này. Nội dung được sao chép từ bản đã xuất bản, và người đọc vẫn thấy bản cũ cho đến khi bạn xuất bản bản mới.",
       "slug_hint": "Dùng trong đường dẫn: /policy/<slug>. Không thể thay đổi sau này.",
       "actions": {
-        "cancel": "Huỷ",
-        "create": "Tạo",
         "creating": "Đang tạo…",
         "save": "Lưu bản nháp",
         "saving": "Đang lưu…",
@@ -2876,7 +2850,6 @@
       "empty": "Không có bản ghi nào cho buổi phỏng vấn này.",
       "audio_only": "(câu trả lời bằng giọng nói — chưa có bản chữ)",
       "page_status": "{{start}}–{{end}} trên {{total}}",
-      "prev": "Trước",
       "next": "Sau",
       "role": {
         "user": "Sinh viên",
@@ -2995,7 +2968,6 @@
       "notes_placeholder": "Thêm ghi chú của bạn về buổi phỏng vấn này…",
       "notes_empty": "Chưa có ghi chú. Nhấn Sửa để thêm nhận xét của bạn.",
       "edit": "Sửa",
-      "save": "Lưu",
       "cancel": "Hủy",
       "saving": "Đang lưu…",
       "saved": "Đã lưu ghi chú",
@@ -3233,9 +3205,7 @@
       "saving": "Đang lưu...",
       "submit": "Nộp bài",
       "next": "Tiếp theo",
-      "previous": "Trước",
       "save_and_continue": "Lưu & tiếp tục",
-      "save": "Lưu",
       "saved": "Đã lưu",
       "continue": "Tiếp tục",
       "back_to_course": "Quay lại khoá học",
@@ -3244,7 +3214,6 @@
       "flag": "Đánh dấu",
       "show_hint": "Xem gợi ý",
       "view_hint_again": "Xem lại gợi ý",
-      "close_hint": "Đóng",
       "close_config": "Đóng cài đặt",
       "close_integrity": "Đóng thông tin giám sát",
       "close_summary": "Đóng danh sách câu hỏi",
@@ -3511,8 +3480,7 @@
     },
     "start_dialog": {
       "title": "Bạn chắc chắn muốn bắt đầu?",
-      "description": "Sẽ có bước chuẩn bị trước — đồng hồ chấm điểm chỉ bắt đầu khi bạn xác nhận sẵn sàng.",
-      "cancel": "Quay lại"
+      "description": "Sẽ có bước chuẩn bị trước — đồng hồ chấm điểm chỉ bắt đầu khi bạn xác nhận sẵn sàng."
     },
     "steps": {
       "aria_label": "Tiến trình phỏng vấn",
@@ -3808,7 +3776,6 @@
       "enroll_students": "Ghi danh sinh viên",
       "import_csv": "Nhập CSV",
       "cancel": "Hủy",
-      "close": "Đóng",
       "approve": "Phê duyệt",
       "approving": "Đang phê duyệt…",
       "reject": "Từ chối",
@@ -4613,7 +4580,6 @@
     "add": "Thêm chuẩn đầu ra",
     "add_placeholder": "Mô tả một chuẩn đầu ra…",
     "edit": "Sửa",
-    "save": "Lưu",
     "cancel": "Hủy",
     "delete": "Xóa",
     "empty": "Chưa có chuẩn đầu ra nào. Thêm một chuẩn để mô tả điều sinh viên sẽ đạt được.",
@@ -4794,7 +4760,6 @@
       "idle_hint": "Chọn câu hỏi để thao tác hàng loạt",
       "apply_short": "Đặt thời gian",
       "approve_short": "Duyệt",
-      "delete_short": "Xoá",
       "question_count": "{{count}} câu hỏi"
     },
     "questions": {
@@ -5067,7 +5032,6 @@
       "empty_approved_body": "Chưa có câu hỏi nào được duyệt. Hãy duyệt câu hỏi trong tab Câu hỏi — học viên chỉ thấy câu hỏi đã duyệt.",
       "no_content": "(Chưa có nội dung)",
       "correct": "Đúng",
-      "edit_question": "Chỉnh sửa",
       "correct_pairs": "Các cặp đúng",
       "correct_order": "Thứ tự đúng",
       "tolerance": "± {{value}}",
@@ -5592,7 +5556,6 @@
       "collapse_all": "Thu gọn tất cả",
       "view_answer": "Xem câu trả lời",
       "hide_answer": "Ẩn câu trả lời",
-      "edit_question": "Chỉnh sửa",
       "more_actions": "Thêm hành động",
       "assign_outcome": "Chuẩn đầu ra",
       "no_outcome_option": "Chưa gán",
@@ -5610,7 +5573,6 @@
       "density_compact": "Thu gọn",
       "density_comfortable": "Thoáng",
       "unsaved_confirm": "Bạn có thay đổi chưa lưu. Bỏ các thay đổi này?",
-      "confirm_title": "Xác nhận",
       "duplicate_title": "Câu hỏi này có vẻ đã có rồi",
       "duplicate_description": "Một câu hỏi rất giống đã có trong buổi phỏng vấn này. Bạn vẫn có thể lưu nếu khác biệt là có chủ đích.",
       "duplicate_existing": "Câu hỏi đã có",
@@ -5971,7 +5933,6 @@
       "materials": "Tài liệu"
     },
     "header": {
-      "subtitle_loading": "Đang tải…",
       "subtitle_suffix": "· Tải tài liệu để AI dựng đồ thị tri thức",
       "title": "Tài liệu & AI Hub",
       "processing_count": "{{count}} đang xử lý",
@@ -6000,7 +5961,6 @@
       "layout_label": "Bố cục",
       "layout_circular": "Vòng tròn",
       "layout_tree": "Cây",
-      "edit": "Chỉnh sửa",
       "editor_title": "Chỉnh sửa sơ đồ kiến thức",
       "source_label": "Nguồn sơ đồ",
       "source_ai": "AI",
@@ -6049,7 +6009,6 @@
   "settings_hub": {
     "title": "Cài đặt",
     "subtitle": "Quản lý hồ sơ, bảo mật và thông báo của bạn.",
-    "back": "Quay lại",
     "cards": {
       "profile_title": "Hồ sơ",
       "profile_body": "Cập nhật tên, ảnh đại diện và thông tin cá nhân.",
@@ -6062,7 +6021,6 @@
   "profile": {
     "title": "Hồ sơ của tôi",
     "subtitle": "Tổng quan thông tin cá nhân và tài khoản của bạn.",
-    "back": "Quay lại",
     "edit": "Chỉnh sửa hồ sơ",
     "go_to_settings": "Mở cài đặt",
     "sections": {
@@ -6095,8 +6053,7 @@
     "title": "Đăng xuất khỏi aBridgeAI?",
     "description": "Bạn sẽ cần đăng nhập lại để tiếp tục truy cập khoá học, tiến độ và thông báo.",
     "confirm": "Đăng xuất",
-    "confirming": "Đang đăng xuất…",
-    "cancel": "Huỷ"
+    "confirming": "Đang đăng xuất…"
   },
   "nav_groups": {
     "learning": "Học tập",
@@ -6232,7 +6189,6 @@
       "edit_topic": "Sửa chủ đề",
       "delete_comment": "Xóa bình luận",
       "delete_topic": "Xóa",
-      "close": "Đóng",
       "reopen": "Mở lại",
       "cancel": "Hủy"
     },
@@ -6285,9 +6241,7 @@
     "edge_exists": "Quan hệ này đã tồn tại",
     "canvas_label": "Khung sơ đồ kiến thức",
     "seeded_hint": "Được tạo sẵn từ sơ đồ khái niệm AI — chỉnh sửa tùy ý, rồi Lưu.",
-    "undo": "Hoàn tác",
     "redo": "Làm lại",
-    "save": "Lưu",
     "saved": "Đã lưu",
     "save_failed": "Lưu thất bại",
     "unsaved": "Thay đổi chưa lưu",

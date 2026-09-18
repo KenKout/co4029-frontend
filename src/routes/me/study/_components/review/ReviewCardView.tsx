@@ -27,7 +27,7 @@ function ReviewCardAction({
           className="gap-2 cursor-pointer"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {t("study_review.submit", "Submit")}
+          {t("common.submit", "Submit")}
         </Button>
       ) : (
         <Button onClick={onNext} className="gap-2 cursor-pointer">

@@ -115,7 +115,7 @@ export default function StudyReviewPage() {
                 to="/me/study/cards-due"
                 search={{ lesson, course }}
                 className="p-2 rounded-xl hover:bg-m3-surface-container-high text-m3-on-surface-variant transition-colors cursor-pointer"
-                aria-label={t("study_review.back", "Back")}
+                aria-label={t("common.back", "Back")}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Link>

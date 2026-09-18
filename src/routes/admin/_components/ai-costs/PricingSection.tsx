@@ -77,7 +77,7 @@ export function PricingSection() {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={t("admin.ai_costs.pricing.delete_confirm")}
+                aria-label={t("common.delete")}
                 onClick={() => setDeleteTarget(r)}
               >
                 <Trash2 className="h-4 w-4 text-danger" />
@@ -104,8 +104,8 @@ export function PricingSection() {
         description={t("admin.ai_costs.pricing.delete_description", {
           model: deleteTarget?.model_name ?? "",
         })}
-        confirmLabel={t("admin.ai_costs.pricing.delete_confirm")}
-        cancelLabel={t("admin.ai_costs.pricing.cancel")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
         onConfirm={handleDelete}
         isPending={deleteMutation.isPending}
       />

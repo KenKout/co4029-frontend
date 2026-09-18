@@ -64,7 +64,7 @@ export function PolicyVersionPanel({
       title: t("admin.policies.fork_confirm_title"),
       description: t("admin.policies.fork_confirm_body"),
       confirmLabel: t("admin.policies.actions.new_draft"),
-      cancelLabel: t("admin.policies.actions.cancel"),
+      cancelLabel: t("common.cancel"),
       confirmVariant: "default",
     });
     if (!accepted) return;

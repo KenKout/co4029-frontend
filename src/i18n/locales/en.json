@@ -197,8 +197,6 @@
     "copy_secret": "Copy secret",
     "open_in_app": "Open in app",
     "six_digit_code": "6-digit code",
-    "cancel": "Cancel",
-    "confirm": "Confirm",
     "confirm_and_regen": "Confirm and regenerate",
     "regen_panel_title": "Confirm with TOTP",
     "regen_panel_intro": "Enter the 6-digit code from your authenticator app to regenerate recovery codes.",
@@ -322,7 +320,6 @@
       "course_pending": "{{count}} item awaiting review in this course",
       "course_pending_other": "{{count}} items awaiting review in this course",
       "course_pending_one": "{{count}} item awaiting review in this course",
-      "loading_items": "Loading…",
       "items_failed": "Couldn't load the details.",
       "items_empty": "Nothing left here — it may have just been cleared.",
       "load_details": "Show items"
@@ -441,7 +438,6 @@
     "archive_confirm_body": "{{title}} will be removed from students' course lists. Archived courses cannot be restored.",
     "archive_success": "Course archived",
     "archive_failed": "Couldn't archive the course.",
-    "save": "Save",
     "saved": "Course settings saved",
     "save_failed": "Save failed",
     "save_status": {
@@ -562,7 +558,6 @@
     "pagination": {
       "label": "Pagination",
       "page": "Page {{page}}",
-      "previous": "Previous",
       "next": "Next"
     }
   },
@@ -766,7 +761,6 @@
       "search_placeholder": "Search quiz bank questions",
       "saved_from_quiz": "Saved from a quiz",
       "edit": "Edit",
-      "save": "Save",
       "approve": "Approve",
       "archive": "Archive",
       "delete": "Delete",
@@ -1183,7 +1177,6 @@
     "load_failed_body": "This interview result isn't available right now. Please try again."
   },
   "career_path_detail": {
-    "back": "Back",
     "load_failed": "Couldn't load the path",
     "program_context": {
       "learning_programs": "Learning programs",
@@ -1299,7 +1292,6 @@
   "study_cards_due": {
     "back": "Back to dashboard",
     "title": "Cards due for review",
-    "loading": "Loading…",
     "empty_subtitle": "You're all caught up",
     "empty_title": "Nothing due right now",
     "empty_body": "Your reviews are all caught up. New cards appear here when they're due.",
@@ -1327,13 +1319,11 @@
   },
   "study_review": {
     "title": "Review session",
-    "back": "Back",
     "progress": "Card {{current}} of {{total}}",
     "session_progress": "Progress",
     "stat_correct": "Correct",
     "stat_remaining": "Left",
     "load_failed": "Couldn't load your review session.",
-    "submit": "Submit",
     "submit_failed": "Couldn't submit — try again.",
     "next": "Next card",
     "finish": "Finish",
@@ -1397,7 +1387,6 @@
     },
     "save": "Save profile",
     "saving": "Saving…",
-    "back": "Back",
     "avatar": {
       "change": "Change photo",
       "hint": "JPEG, PNG, WebP or GIF · up to 2 MB",
@@ -1515,7 +1504,6 @@
       "from_to": "From – To",
       "from": "From",
       "to": "To",
-      "apply": "Apply",
       "clear": "Clear"
     },
     "showing_count": "{{count}} shown",
@@ -1644,7 +1632,6 @@
     "breadcrumb_teaching": "My Courses",
     "breadcrumb_course": "Course",
     "breadcrumb_overview": "Class overview",
-    "back": "Back",
     "title": "Class overview",
     "subtitle": "How well your class remembers each lesson, and which questions they find hardest.",
     "view_at_risk": "At-risk students",
@@ -1720,8 +1707,6 @@
       "slug_help": "Used in the URL. Must be unique within your organization.",
       "description": "Description",
       "description_placeholder": "Short description of the path…",
-      "cancel": "Cancel",
-      "submit": "Create",
       "errors": {
         "need_name_slug": "Please enter a name and slug",
         "create_failed": "Couldn't create the path"
@@ -2033,7 +2018,6 @@
         "custom_title": "Custom time range",
         "from": "From",
         "to": "To",
-        "apply": "Apply",
         "clear": "Clear"
       },
       "retry": "Retry",
@@ -2099,7 +2083,6 @@
       "back_to_list": "Back to list",
       "restore": "Restore course",
       "restoring": "Restoring…",
-      "delete": "Delete",
       "deleting": "Deleting…",
       "delete_confirm": "Delete \"{{title}}\" and its modules and lessons? This can be undone with Restore.",
       "audit_load_failed": "Couldn't load audit data.",
@@ -2257,7 +2240,6 @@
         "day_hint": "Select the start and end of the range",
         "days_one": "1 day",
         "days_other": "{{count}} days",
-        "apply": "Apply",
         "cancel": "Cancel",
         "preset": {
           "today": "Today",
@@ -2335,8 +2317,7 @@
       "drilldown": {
         "title": "Pipeline detail",
         "stages": "Stage breakdown",
-        "no_stages": "No stage data for this pipeline.",
-        "close": "Close"
+        "no_stages": "No stage data for this pipeline."
       },
       "period_options": {
         "24h": "Last 24 hours",
@@ -2390,9 +2371,6 @@
         "edit_title": "Edit model pricing",
         "delete_title": "Delete model pricing?",
         "delete_description": "This removes the rate for \"{{model}}\". New calls for this model will record no cost until a rate is added again.",
-        "delete_confirm": "Delete",
-        "save": "Save",
-        "cancel": "Cancel",
         "load_failed": "Couldn't load model pricing.",
         "save_failed": "Couldn't save pricing.",
         "delete_failed": "Couldn't delete pricing.",
@@ -2627,13 +2605,11 @@
       "actions": {
         "save": "Save changes",
         "saving": "Saving...",
-        "create": "Create",
         "creating": "Creating...",
         "cancel": "Cancel",
         "delete": "Delete",
         "add": "Add",
         "adding": "Adding...",
-        "edit": "Edit",
         "remove_member": "Remove member"
       },
       "confirm": {
@@ -2921,8 +2897,6 @@
       "no_draft_hint": "Start a draft to revise this policy. It is copied from the published text, and readers keep seeing the published version until you publish the new one.",
       "slug_hint": "Used in the URL: /policy/<slug>. It cannot be changed later.",
       "actions": {
-        "cancel": "Cancel",
-        "create": "Create",
         "creating": "Creating…",
         "save": "Save draft",
         "saving": "Saving…",
@@ -2967,7 +2941,6 @@
       "empty": "No transcript recorded for this session.",
       "audio_only": "(voice answer — no text transcription)",
       "page_status": "{{start}}–{{end}} of {{total}}",
-      "prev": "Previous",
       "next": "Next",
       "role": {
         "user": "Student",
@@ -3092,7 +3065,6 @@
       "notes_placeholder": "Add your notes about this interview…",
       "notes_empty": "No notes yet. Click Edit to add your observations.",
       "edit": "Edit",
-      "save": "Save",
       "cancel": "Cancel",
       "saving": "Saving…",
       "saved": "Notes saved",
@@ -3225,7 +3197,6 @@
       "edit_topic": "Edit topic",
       "delete_comment": "Delete comment",
       "delete_topic": "Delete",
-      "close": "Close",
       "reopen": "Reopen",
       "cancel": "Cancel"
     },
@@ -3419,9 +3390,7 @@
       "saving": "Saving...",
       "submit": "Submit",
       "next": "Next",
-      "previous": "Previous",
       "save_and_continue": "Save and continue",
-      "save": "Save",
       "saved": "Saved",
       "continue": "Continue",
       "back_to_course": "Back to course",
@@ -3430,7 +3399,6 @@
       "flag": "Flag",
       "show_hint": "View hint",
       "view_hint_again": "View hint again",
-      "close_hint": "Close",
       "close_config": "Close settings",
       "close_integrity": "Close monitoring info",
       "close_summary": "Close question list",
@@ -3693,8 +3661,7 @@
     },
     "start_dialog": {
       "title": "Ready to start?",
-      "description": "Setup comes first — the graded timer starts only when you confirm you are ready.",
-      "cancel": "Back"
+      "description": "Setup comes first — the graded timer starts only when you confirm you are ready."
     },
     "steps": {
       "aria_label": "Interview progress",
@@ -3987,7 +3954,6 @@
       "enroll_students": "Enroll students",
       "import_csv": "Import CSV",
       "cancel": "Cancel",
-      "close": "Close",
       "approve": "Approve",
       "approving": "Approving…",
       "reject": "Reject",
@@ -4792,7 +4758,6 @@
     "add": "Add outcome",
     "add_placeholder": "Describe a learning outcome…",
     "edit": "Edit",
-    "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "empty": "No learning outcomes yet. Add one to describe what students will achieve.",
@@ -4973,7 +4938,6 @@
       "idle_hint": "Select questions for bulk actions",
       "apply_short": "Set time",
       "approve_short": "Approve",
-      "delete_short": "Delete",
       "question_count": "{{count}} questions"
     },
     "questions": {
@@ -5246,7 +5210,6 @@
       "empty_approved_body": "No approved questions yet. Approve questions in the Questions tab — students only see approved ones.",
       "no_content": "(No content)",
       "correct": "Correct",
-      "edit_question": "Edit",
       "correct_pairs": "Correct pairs",
       "correct_order": "Correct order",
       "tolerance": "± {{value}}",
@@ -5771,7 +5734,6 @@
       "collapse_all": "Collapse all",
       "view_answer": "View answer",
       "hide_answer": "Hide answer",
-      "edit_question": "Edit",
       "more_actions": "More actions",
       "assign_outcome": "Learning outcome",
       "no_outcome_option": "No outcome",
@@ -5789,7 +5751,6 @@
       "density_compact": "Compact",
       "density_comfortable": "Comfortable",
       "unsaved_confirm": "You have unsaved changes. Discard them?",
-      "confirm_title": "Confirm",
       "duplicate_title": "This looks like a question you already have",
       "duplicate_description": "A very similar question is already in this interview. You can still save it if the difference matters.",
       "duplicate_existing": "Existing question",
@@ -6150,7 +6111,6 @@
       "materials": "Materials"
     },
     "header": {
-      "subtitle_loading": "Loading…",
       "subtitle_suffix": "· Upload materials so AI can build the knowledge graph",
       "title": "Materials & AI Hub",
       "processing_count": "{{count}} processing",
@@ -6179,7 +6139,6 @@
       "layout_label": "Layout",
       "layout_circular": "Circular",
       "layout_tree": "Tree",
-      "edit": "Edit",
       "editor_title": "Edit knowledge graph",
       "source_label": "Graph source",
       "source_ai": "AI",
@@ -6228,7 +6187,6 @@
   "settings_hub": {
     "title": "Settings",
     "subtitle": "Manage your profile, security, and notifications.",
-    "back": "Back",
     "cards": {
       "profile_title": "Profile",
       "profile_body": "Update your name, avatar, and personal information.",
@@ -6241,7 +6199,6 @@
   "profile": {
     "title": "My profile",
     "subtitle": "An overview of your personal and account information.",
-    "back": "Back",
     "edit": "Edit profile",
     "go_to_settings": "Open settings",
     "sections": {
@@ -6274,8 +6231,7 @@
     "title": "Sign out of aBridgeAI?",
     "description": "You'll need to sign in again to access your courses, progress, and notifications.",
     "confirm": "Sign out",
-    "confirming": "Signing out…",
-    "cancel": "Cancel"
+    "confirming": "Signing out…"
   },
   "nav_groups": {
     "learning": "Learning",
@@ -6309,9 +6265,7 @@
     "edge_exists": "That relationship already exists",
     "canvas_label": "Knowledge graph canvas",
     "seeded_hint": "Seeded from the AI concept graph — edit freely, then Save.",
-    "undo": "Undo",
     "redo": "Redo",
-    "save": "Save",
     "saved": "Saved",
     "save_failed": "Save failed",
     "unsaved": "Unsaved changes",

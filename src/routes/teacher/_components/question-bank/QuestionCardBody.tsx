@@ -54,7 +54,7 @@ export function QuestionCardBody({
             <>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-                  {t("teacher_interview_config.qbank.edit_question")}
+                  {t("common.edit")}
                 </label>
                 <Textarea
                   value={editingText}

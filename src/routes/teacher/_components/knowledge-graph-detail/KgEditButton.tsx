@@ -27,8 +27,8 @@ export function KgEditButton({
       disabled={source !== "curated"}
       title={
         source === "curated"
-          ? t("teacher_lesson_materials.kg.edit")
-          : t("teacher_lesson_materials.kg.edit_ai_disabled")
+          ? t("common.edit")
+          : t("common.edit_ai_disabled")
       }
       className={cn(
         "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors h-auto whitespace-normal",
@@ -38,7 +38,7 @@ export function KgEditButton({
       )}
     >
       <Pencil className="h-3.5 w-3.5" />
-      {t("teacher_lesson_materials.kg.edit")}
+      {t("common.edit")}
     </Button>
   );
 }

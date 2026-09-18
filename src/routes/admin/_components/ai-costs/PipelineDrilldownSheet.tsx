@@ -88,7 +88,7 @@ export function PipelineDrilldownSheet({
               </div>
             </div>
             <SheetClose render={<Button variant="ghost" className="w-full" />}>
-              {t("admin.ai_costs.drilldown.close")}
+              {t("common.close")}
             </SheetClose>
           </div>
         ) : null}

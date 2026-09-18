@@ -86,7 +86,7 @@ export default function TopNavBar() {
             t("logout_confirm.confirm")
           )
         }
-        cancelLabel={t("logout_confirm.cancel")}
+        cancelLabel={t("common.cancel")}
         confirmVariant="destructive"
         isPending={isLoggingOut}
         onConfirm={() => void handleConfirmLogout()}

@@ -220,7 +220,7 @@ function TopicManageActions({
         }
         aria-label={
           topic.status === "open"
-            ? t("discussion.actions.close")
+            ? t("common.close")
             : t("discussion.actions.reopen")
         }
       >

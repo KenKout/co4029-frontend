@@ -168,7 +168,7 @@ export default function StudyCardsDuePage() {
             title={t("study_cards_due.title", "Cards due for review")}
             subtitle={
               isLoading
-                ? t("study_cards_due.loading", "Loading…")
+                ? t("common.loading", "Loading…")
                 : total === 0
                   ? t("study_cards_due.empty_subtitle", "You're all caught up")
                   : undefined
@@ -219,7 +219,7 @@ export default function StudyCardsDuePage() {
 
             {isFetchingNextPage && (
               <p className="text-center text-xs text-m3-on-surface-variant">
-                {t("study_cards_due.loading", "Loading…")}
+                {t("common.loading", "Loading…")}
               </p>
             )}
           </>

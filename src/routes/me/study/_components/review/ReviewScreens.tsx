@@ -64,7 +64,7 @@ export function ReviewEmptyQueue({ stats }: { stats: ReviewQueueStats }) {
         cta={
           <Link to="/me/study">
             <Button variant="default" className="cursor-pointer">
-              {t("study_review.back_to_dashboard", "Back to dashboard")}
+              {t("common.back_to_dashboard", "Back to dashboard")}
             </Button>
           </Link>
         }
@@ -172,7 +172,7 @@ export function ReviewDoneScreen({
       <div>
         <Link to="/me/study">
           <Button variant="outline" className="cursor-pointer">
-            {t("study_review.back_to_dashboard", "Back to dashboard")}
+            {t("common.back_to_dashboard", "Back to dashboard")}
           </Button>
         </Link>
       </div>

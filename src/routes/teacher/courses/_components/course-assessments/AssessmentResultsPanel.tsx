@@ -87,7 +87,7 @@ export function AssessmentResultsPanel({
             onClick={goPrevPage}
             disabled={!canGoPrev}
           >
-            {t("teacher_assessments.pagination.previous")}
+            {t("common.previous")}
           </Button>
           <Button
             type="button"

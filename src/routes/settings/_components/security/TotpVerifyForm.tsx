@@ -76,7 +76,7 @@ export default function TotpVerifyForm({
           onClick={() => setState({ phase: "idle" })}
           disabled={isPending}
         >
-          {t("settings_security.cancel")}
+          {t("common.cancel")}
         </Button>
         <Button
           type="submit"
@@ -88,7 +88,7 @@ export default function TotpVerifyForm({
           ) : (
             <ShieldCheck className="h-4 w-4" />
           )}
-          {t("settings_security.confirm")}
+          {t("common.confirm")}
         </Button>
       </div>
     </form>

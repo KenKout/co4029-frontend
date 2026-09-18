@@ -47,11 +47,11 @@ export function PreviewQuestionHeader({
           variant="outline"
           onClick={() => onEditQuestion(question.id)}
           className="gap-1.5 h-8 px-2.5"
-          title={t("teacher_quiz_manage.preview.edit_question", "Edit")}
+          title={t("common.edit", "Edit")}
         >
           <Pencil className="h-3.5 w-3.5" />
           <span className="text-xs">
-            {t("teacher_quiz_manage.preview.edit_question", "Edit")}
+            {t("common.edit", "Edit")}
           </span>
         </Button>
         <Button

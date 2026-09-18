@@ -63,7 +63,7 @@ export function CareerPathHeader({
             ? t("career_path_detail.program_context.back_to_program", {
                 program: program.program_name,
               })
-            : t("career_path_detail.back")}
+            : t("common.back")}
         </Button>
       </Link>
       {program ? (

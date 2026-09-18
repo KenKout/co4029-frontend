@@ -112,7 +112,7 @@ export function ExpandableReviewRow({
         <div className="border-t border-m3-outline-variant/20 bg-m3-surface-container-lowest">
           {items.isLoading ? (
             <p className="px-5 py-3 text-xs text-m3-on-surface-variant">
-              {t("teacher_dashboard.review.loading_items")}
+              {t("common.loading")}
             </p>
           ) : items.isError ? (
             <p className="px-5 py-3 text-xs text-danger">
