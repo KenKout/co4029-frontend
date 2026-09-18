@@ -13,6 +13,7 @@ export function SettingsToolbar({
   controller: AdminSettingsPageController;
 }) {
   const {
+    t,
     orgId,
     setOrgId,
     search,
@@ -33,7 +34,7 @@ export function SettingsToolbar({
         <SearchInput
           wrapperClassName="min-w-[180px] flex-1"
           size="sm"
-          placeholder="Search settings…"
+          placeholder={t("admin_settings.toolbar.search")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -43,10 +44,10 @@ export function SettingsToolbar({
           value={orgId}
           onValueChange={setOrgId}
           options={[
-            { value: "", label: "Global (all orgs)" },
+            { value: "", label: t("admin_settings.toolbar.global") },
             ...orgs.items.map((org) => ({ value: org.id, label: org.name })),
           ]}
-          aria-label="Scope"
+          aria-label={t("admin_settings.toolbar.scope")}
         />
 
         <label className="flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-600">
@@ -55,7 +56,7 @@ export function SettingsToolbar({
             checked={overriddenOnly}
             onCheckedChange={setOverriddenOnly}
           />
-          Overridden only
+          {t("admin_settings.toolbar.overridden_only")}
           {totalOverrides > 0 && (
             <span className="rounded-full bg-indigo-100 px-1.5 text-[10px] font-semibold text-indigo-700">
               {totalOverrides}
@@ -67,7 +68,7 @@ export function SettingsToolbar({
           variant="ghost"
           type="button"
           onClick={() => setShowKeys((v) => !v)}
-          title="Show config keys and env vars"
+          title={t("admin_settings.toolbar.show_keys_title")}
           className={cn(
             "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm h-auto whitespace-normal",
             showKeys
@@ -76,14 +77,18 @@ export function SettingsToolbar({
           )}
         >
           <Code2 className="h-4 w-4" />
-          Keys
+          {t("admin_settings.toolbar.keys")}
         </Button>
 
         <Button
           variant="ghost"
           type="button"
           onClick={() => setDense((v) => !v)}
-          title={dense ? "Card view" : "Table view"}
+          title={
+            dense
+              ? t("admin_settings.toolbar.card_view")
+              : t("admin_settings.toolbar.table_view")
+          }
           className={cn(
             "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm h-auto whitespace-normal",
             dense
@@ -96,7 +101,9 @@ export function SettingsToolbar({
           ) : (
             <Table2 className="h-4 w-4" />
           )}
-          {dense ? "Cards" : "Table"}
+          {dense
+            ? t("admin_settings.toolbar.cards")
+            : t("admin_settings.toolbar.table")}
         </Button>
       </div>
 
@@ -105,10 +112,10 @@ export function SettingsToolbar({
           as already applied, which is the more dangerous misreading of the
           two. */}
       <p className="mt-1.5 text-[11px] text-slate-400">
-        Changes are staged until you review and apply them.
+        {t("admin_settings.toolbar.staged")}
         {orgId
-          ? " Editing overrides for the selected organization only."
-          : " Editing the global default for all organizations."}
+          ? t("admin_settings.toolbar.org_scope")
+          : t("admin_settings.toolbar.global_scope")}
       </p>
     </div>
   );

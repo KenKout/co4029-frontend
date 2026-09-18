@@ -16,7 +16,7 @@ export function SettingsTableResetButton({
   controller: SettingsTableController;
   setting: RuntimeSetting;
 }) {
-  const { draft, overrideAtScope } = controller;
+  const { draft, overrideAtScope, t } = controller;
   // Nothing to remove if the value is inherited and no clear is already staged.
   const canReset = overrideAtScope(s) && draft.pending.get(s.key) !== CLEAR;
   return (
@@ -24,7 +24,9 @@ export function SettingsTableResetButton({
       variant="ghost"
       type="button"
       title={
-        canReset ? "Remove this override" : "Nothing overridden at this scope"
+        canReset
+          ? t("admin_settings.row.remove_override")
+          : t("admin_settings.row.no_override")
       }
       className="rounded-md p-1 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 h-auto whitespace-normal"
       disabled={!canReset}

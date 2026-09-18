@@ -15,14 +15,14 @@ export function SettingRowValueColumn({
   globalFallback: boolean | number;
   control: ReactNode;
 }) {
-  const { overrideAtThisScope, stageClear } = controller;
+  const { overrideAtThisScope, stageClear, t } = controller;
 
   return (
     <div className="flex items-start gap-1.5">
       <div className="min-w-0 flex-1">
         {showComparison && (
           <p className="mb-1 text-[11px] text-slate-400">
-            Global:{" "}
+            {t("admin_settings.row.global")} {" "}
             <span className="font-mono text-slate-500">
               {String(globalFallback)}
             </span>
@@ -35,8 +35,8 @@ export function SettingRowValueColumn({
         type="button"
         title={
           overrideAtThisScope
-            ? "Remove this override and fall back to the level below"
-            : "Nothing is overridden at this scope"
+            ? t("admin_settings.row.remove_override")
+            : t("admin_settings.row.no_override")
         }
         className="mt-0.5 shrink-0 rounded-md p-1.5 text-slate-400 enabled:hover:bg-slate-100 enabled:hover:text-slate-700 disabled:opacity-30 h-auto whitespace-normal"
         disabled={!overrideAtThisScope}

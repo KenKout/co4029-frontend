@@ -18,7 +18,9 @@ export function useSettingsTable(orgId?: string, sharedDraft?: SettingsDraft) {
   const ownDraft = useSettingsDraft(orgId);
   const draft = sharedDraft ?? ownDraft;
 
-  const scopeLabel = orgId ? "This org" : "Global";
+  const scopeLabel = orgId
+    ? t("admin_settings.table.this_org")
+    : t("admin_settings.table.global");
 
   const overrideAtScope = (s: RuntimeSetting) =>
     orgId !== undefined ? s.org_value !== null : s.global_value !== null;

@@ -6332,7 +6332,11 @@
       "careerpath": "Learning programs",
       "courses": "Courses",
       "progress": "Student progress",
-      "audit": "Audit & retention"
+      "audit": "Audit & retention",
+      "setting_count_one": "{{count}} setting",
+      "setting_count_other": "{{count}} settings",
+      "overridden": "overridden",
+      "reprocess_note": "Changes apply to the next ingest, not to already-processed content."
     },
     "item": {
       "learning_program__max_concurrent_enrollments": {
@@ -6524,6 +6528,58 @@
         "clear": "Cleared",
         "rollback": "Rolled back"
       }
+    },
+    "title": "Runtime settings",
+    "subtitle": "Ingestion and retrieval behaviour, changeable without a deploy. Resolves organization → global → environment → built-in.",
+    "sections": "Sections",
+    "toolbar": {
+      "search": "Search settings…",
+      "scope": "Scope",
+      "global": "Global (all orgs)",
+      "overridden_only": "Overridden only",
+      "show_keys_title": "Show config keys and env vars",
+      "keys": "Keys",
+      "card_view": "Card view",
+      "table_view": "Table view",
+      "cards": "Cards",
+      "table": "Table",
+      "staged": "Changes are staged until you review and apply them.",
+      "org_scope": " Editing overrides for the selected organization only.",
+      "global_scope": " Editing the global default for all organizations."
+    },
+    "table": {
+      "setting": "Setting",
+      "value": "Value",
+      "default": "Default",
+      "source": "Source",
+      "scope": "Scope",
+      "overridden": "overridden",
+      "inherited": "inherited",
+      "resolution_order": "Resolution order",
+      "show_source": "Show where this value comes from",
+      "global": "Global",
+      "this_org": "This org"
+    },
+    "source": {
+      "organization": "org override",
+      "global": "global",
+      "environment": "env var",
+      "default": "built-in"
+    },
+    "resolution": {
+      "organization": "Organization override",
+      "global": "Global default",
+      "environment": "Environment variable",
+      "default": "Built-in default"
+    },
+    "row": {
+      "next_ingest": "Applies on next ingest",
+      "hide_details": "Hide details",
+      "show_details": "Show details",
+      "copy_config_key": "Copy config key",
+      "remove_override": "Remove this override and fall back to the level below",
+      "no_override": "Nothing is overridden at this scope",
+      "global": "Global:"
     }
   },
   "management_users": {

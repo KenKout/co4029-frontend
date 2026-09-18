@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, Code2, Copy } from "lucide-react";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ export function ConfigKeyReveal({
   setting: RuntimeSetting;
   forceShow: boolean;
 }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const copy = () => {
@@ -29,7 +31,7 @@ export function ConfigKeyReveal({
         variant="ghost"
         type="button"
         onClick={copy}
-        title="Copy config key"
+        title={t("admin_settings.row.copy_config_key")}
         className="group inline-flex items-center gap-1 font-mono text-xs text-slate-400 hover:text-slate-700"
       >
         <span>{setting.key}</span>

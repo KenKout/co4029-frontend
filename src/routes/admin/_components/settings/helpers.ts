@@ -42,31 +42,29 @@ export function unitFor(setting: RuntimeSetting): string | null {
  * The four resolution rungs in precedence order, each flagged `present` when
  * that layer actually carries a value. Hoisted out of ResolutionPopover so the
  * popover body is pure markup.
- */ export function resolutionLayers(
-  setting: RuntimeSetting,
-): ResolutionLayer[] {
+ */ export function resolutionLayers(setting: RuntimeSetting, t: TFn): ResolutionLayer[] {
   return [
     {
       source: "organization",
-      name: "Organization override",
+      name: t("admin_settings.resolution.organization"),
       value: setting.org_value,
       present: setting.org_value !== null,
     },
     {
       source: "global",
-      name: "Global default",
+      name: t("admin_settings.resolution.global"),
       value: setting.global_value,
       present: setting.global_value !== null,
     },
     {
       source: "environment",
-      name: "Environment variable",
+      name: t("admin_settings.resolution.environment"),
       value: setting.env_value,
       present: setting.env_value !== null,
     },
     {
       source: "default",
-      name: "Built-in default",
+      name: t("admin_settings.resolution.default"),
       value: setting.default_value,
       present: true,
     },

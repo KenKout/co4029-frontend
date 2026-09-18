@@ -13,7 +13,7 @@ export function SettingsSectionRail({
     <aside className="hidden w-[200px] shrink-0 lg:block">
       <div className="sticky top-24">
         <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Sections
+          {t("admin_settings.sections")}
         </p>
         <nav className="space-y-0.5">
           {visibleGroups.map((g) => (

@@ -1,5 +1,5 @@
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
-import { HEADER_OFFSET, REPROCESS_NOTE } from "./constants";
+import { HEADER_OFFSET } from "./constants";
 import { groupLabel } from "./helpers";
 import { SettingRow } from "./SettingRow";
 import type { AdminSettingsPageController } from "./use-admin-settings-page";
@@ -31,13 +31,13 @@ export function SettingsGroupSection({
             {groupLabel(t, group)}
           </h2>
           <span className="text-xs text-slate-400">
-            {rows.length} setting{rows.length !== 1 ? "s" : ""}
+            {t("admin_settings.group.setting_count", { count: rows.length })}
           </span>
         </div>
         {anyReprocess && (
           <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-amber-600">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            {REPROCESS_NOTE}
+            {t("admin_settings.group.reprocess_note")}
           </p>
         )}
       </div>

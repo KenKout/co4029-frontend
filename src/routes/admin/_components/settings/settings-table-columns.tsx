@@ -22,7 +22,7 @@ export function buildSettingsTableColumns(
   return [
     {
       id: "setting",
-      header: "Setting",
+      header: t("admin_settings.table.setting"),
       cell: (node) => {
         if (node.kind === "group") {
           return <SettingsTableGroupLabel t={t} node={node} />;
@@ -38,7 +38,7 @@ export function buildSettingsTableColumns(
     },
     {
       id: "value",
-      header: "Value",
+      header: t("admin_settings.table.value"),
       width: 140,
       cell: (node) => {
         if (node.kind === "group") return null;
@@ -52,7 +52,7 @@ export function buildSettingsTableColumns(
     },
     {
       id: "default",
-      header: "Default",
+      header: t("admin_settings.table.default"),
       width: 100,
       cell: (node) => {
         if (node.kind === "group") return null;
@@ -68,7 +68,7 @@ export function buildSettingsTableColumns(
     },
     {
       id: "source",
-      header: "Source",
+      header: t("admin_settings.table.source"),
       width: 120,
       cell: (node) =>
         node.kind === "group" ? null : (
@@ -82,7 +82,9 @@ export function buildSettingsTableColumns(
       cell: (node) =>
         node.kind === "group" ? null : (
           <span className="text-xs text-slate-500">
-            {overrideAtScope(node.setting) ? "overridden" : "inherited"}
+            {overrideAtScope(node.setting)
+              ? t("admin_settings.table.overridden")
+              : t("admin_settings.table.inherited")}
           </span>
         ),
     },

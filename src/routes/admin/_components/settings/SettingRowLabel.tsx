@@ -20,14 +20,14 @@ export function SettingRowLabel({
   lead: string;
   rest: string;
 }) {
-  const { expanded, setExpanded, label } = controller;
+  const { expanded, setExpanded, label, t } = controller;
 
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-2">
         {setting.requires_reprocess && (
           <span
-            title="Applies on next ingest"
+            title={t("admin_settings.row.next_ingest")}
             className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
           />
         )}
@@ -39,7 +39,11 @@ export function SettingRowLabel({
             type="button"
             onClick={() => setExpanded((v) => !v)}
             className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 h-auto whitespace-normal"
-            aria-label={expanded ? "Hide details" : "Show details"}
+            aria-label={
+              expanded
+                ? t("admin_settings.row.hide_details")
+                : t("admin_settings.row.show_details")
+            }
             aria-expanded={expanded}
           >
             <ChevronDown

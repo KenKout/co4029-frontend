@@ -16,7 +16,7 @@ export function SettingsTableSettingLabel({
       <span className="flex items-center gap-1.5">
         {s.requires_reprocess && (
           <span
-            title="Applies on next ingest"
+            title={t("admin_settings.row.next_ingest")}
             className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
           />
         )}

@@ -22,11 +22,10 @@ export default function AdminSettingsPage() {
           className={cn("min-w-0 flex-1", !dense && "lg:max-w-[1040px]")}
         >
           <h1 className="text-2xl font-semibold text-slate-900">
-            {t("admin.settings.title", { defaultValue: "Runtime settings" })}
+            {t("admin_settings.title")}
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Ingestion and retrieval behaviour, changeable without a deploy.
-            Resolves organization → global → environment → built-in.
+            {t("admin_settings.subtitle")}
           </p>
 
           {/* ── Toolbar ── (not sticky: kept overlapping the section headers) */}

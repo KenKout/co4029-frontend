@@ -6308,7 +6308,11 @@
       "careerpath": "Chương trình học",
       "courses": "Khóa học",
       "progress": "Tiến độ học viên",
-      "audit": "Nhật ký & lưu trữ"
+      "audit": "Nhật ký & lưu trữ",
+      "setting_count_one": "{{count}} cài đặt",
+      "setting_count_other": "{{count}} cài đặt",
+      "overridden": "đã ghi đè",
+      "reprocess_note": "Thay đổi chỉ áp dụng cho lần nạp dữ liệu tiếp theo, không áp dụng cho nội dung đã xử lý."
     },
     "item": {
       "learning_program__max_concurrent_enrollments": {
@@ -6496,6 +6500,58 @@
         "clear": "Xóa ghi đè",
         "rollback": "Hoàn tác"
       }
+    },
+    "title": "Cấu hình runtime",
+    "subtitle": "Cấu hình hành vi nạp dữ liệu và truy xuất, có thể thay đổi mà không cần triển khai lại. Thứ tự áp dụng: tổ chức → toàn cục → môi trường → mặc định tích hợp.",
+    "sections": "Mục",
+    "toolbar": {
+      "search": "Tìm cài đặt…",
+      "scope": "Phạm vi",
+      "global": "Toàn cục (tất cả tổ chức)",
+      "overridden_only": "Chỉ hiện mục đã ghi đè",
+      "show_keys_title": "Hiện khóa cấu hình và biến môi trường",
+      "keys": "Khóa",
+      "card_view": "Dạng thẻ",
+      "table_view": "Dạng bảng",
+      "cards": "Thẻ",
+      "table": "Bảng",
+      "staged": "Thay đổi sẽ được tạm lưu cho đến khi bạn xem lại và áp dụng.",
+      "org_scope": " Đang chỉnh sửa ghi đè chỉ cho tổ chức đã chọn.",
+      "global_scope": " Đang chỉnh sửa mặc định toàn cục cho tất cả tổ chức."
+    },
+    "table": {
+      "setting": "Cài đặt",
+      "value": "Giá trị",
+      "default": "Mặc định",
+      "source": "Nguồn",
+      "scope": "Phạm vi",
+      "overridden": "đã ghi đè",
+      "inherited": "kế thừa",
+      "resolution_order": "Thứ tự phân giải",
+      "show_source": "Xem nguồn của giá trị này",
+      "global": "Toàn cục",
+      "this_org": "Tổ chức này"
+    },
+    "source": {
+      "organization": "ghi đè tổ chức",
+      "global": "toàn cục",
+      "environment": "biến môi trường",
+      "default": "tích hợp"
+    },
+    "resolution": {
+      "organization": "Ghi đè tổ chức",
+      "global": "Mặc định toàn cục",
+      "environment": "Biến môi trường",
+      "default": "Mặc định tích hợp"
+    },
+    "row": {
+      "next_ingest": "Áp dụng cho lần nạp dữ liệu tiếp theo",
+      "hide_details": "Ẩn chi tiết",
+      "show_details": "Hiện chi tiết",
+      "copy_config_key": "Sao chép khóa cấu hình",
+      "remove_override": "Xóa ghi đè này và quay về cấp bên dưới",
+      "no_override": "Không có ghi đè ở phạm vi này",
+      "global": "Toàn cục:"
     }
   },
   "management_users": {
