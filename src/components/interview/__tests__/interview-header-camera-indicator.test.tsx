@@ -13,10 +13,9 @@ import { InterviewHeader } from "@/components/interview/stages";
 /**
  * The in-session CAMERA ON indicator — placement contract.
  *
- * The pill lives in the header's trailing cell, BELOW the voice/End button
- * cluster (right-flush, its own row). It must NOT sit in
- * InterviewHeaderStatus (that squeezed the Connected/timer row and the
- * button row apart) and must NOT share a line with them.
+ * The pill sits on the SAME line as the Connected pill (leading it, before
+ * the timer and the action buttons). The user explicitly chose this row
+ * after seeing it stacked below the buttons.
  */
 
 const BASE = {
@@ -38,37 +37,30 @@ describe("InterviewHeader camera indicator", () => {
     expect(screen.getByText("Đang bật cam")).toBeInTheDocument();
   });
 
-  it("sits in the trailing cell BELOW the action-button row", () => {
+  it("shares ONE row with the Connected pill, leading it", () => {
     render(<InterviewHeader {...BASE} cameraOn />);
 
-    // onEndInterview is undefined in this harness, so the End button is not
-    // rendered; the first row of the trailing cell is the voice button's row.
-    const voiceRow = screen
-      .getByRole("button", { name: "Tắt giọng đọc của AI" })
-      .closest("button")!.parentElement!;
     const camPill = screen.getByTitle("Đang bật cam");
-    const camRow = camPill.parentElement!;
-    // A different row than the buttons...
-    expect(camRow).not.toBe(voiceRow);
-    // ...inside the SAME trailing cell (stacked under the buttons)...
-    expect(camRow.parentElement).toBe(voiceRow.parentElement);
-    // ...and AFTER the button row in DOM order.
+    const connPill = screen.getByTitle("Đã kết nối");
+    const timer = screen.getByLabelText("Thời gian phỏng vấn đã trôi qua");
+    // All three live in the SAME row container...
+    expect(camPill.parentElement).toBe(connPill.parentElement);
+    expect(connPill.parentElement).toBe(timer.parentElement);
+    // ...with the camera pill FIRST (left of Connected).
     expect(
-      voiceRow.parentElement!.compareDocumentPosition(camRow) &
+      camPill.compareDocumentPosition(connPill) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
-  it("leaves Connected and the timer on one single row", () => {
-    render(<InterviewHeader {...BASE} cameraOn />);
-
-    const connPill = screen.getByTitle("Đã kết nối");
-    const timer = screen.getByLabelText("Thời gian phỏng vấn đã trôi qua");
-    expect(connPill.parentElement).toBe(timer.parentElement);
-  });
-
   it("renders nothing when the camera is off — no lying chrome", () => {
     render(<InterviewHeader {...BASE} />);
+
+    expect(screen.queryByText("Đang bật cam")).not.toBeInTheDocument();
+  });
+
+  it("is also hidden when the prop is passed false explicitly", () => {
+    render(<InterviewHeader {...BASE} cameraOn={false} />);
 
     expect(screen.queryByText("Đang bật cam")).not.toBeInTheDocument();
   });

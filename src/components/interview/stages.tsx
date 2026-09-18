@@ -78,35 +78,31 @@ export function InterviewHeader({
           questionLingering={questionLingering}
         />
 
-        <div className="flex flex-col items-end gap-1 lg:col-start-3">
-          <div className="flex items-center gap-1.5">
-            <InterviewHeaderStatus
-              connected={connected}
-              timerActive={timerActive}
-              elapsed={elapsed}
-              expected={expected}
-            />
-            <InterviewHeaderActions
-              voiceOn={voiceOn}
-              onToggleVoice={onToggleVoice}
-              showVoiceControl={showVoiceControl}
-              onEndInterview={onEndInterview}
-              endInterviewDisabled={endInterviewDisabled}
-            />
-          </div>
+        <div className="flex items-center justify-end gap-1.5 lg:col-start-3">
           {cameraOn && (
-            <div className="flex items-center gap-1.5">
-              <span
-                className="hidden items-center gap-1.5 text-xs font-medium text-text-muted sm:inline-flex"
-                title={t("course_interview.workspace.camera_on")}
-              >
-                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                <span className="hidden xl:inline">
-                  {t("course_interview.workspace.camera_on")}
-                </span>
+            <span
+              className="hidden items-center gap-1.5 text-xs font-medium text-text-muted sm:inline-flex"
+              title={t("course_interview.workspace.camera_on")}
+            >
+              <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden xl:inline">
+                {t("course_interview.workspace.camera_on")}
               </span>
-            </div>
+            </span>
           )}
+          <InterviewHeaderStatus
+            connected={connected}
+            timerActive={timerActive}
+            elapsed={elapsed}
+            expected={expected}
+          />
+          <InterviewHeaderActions
+            voiceOn={voiceOn}
+            onToggleVoice={onToggleVoice}
+            showVoiceControl={showVoiceControl}
+            onEndInterview={onEndInterview}
+            endInterviewDisabled={endInterviewDisabled}
+          />
         </div>
       </div>
     </header>
