@@ -30,6 +30,7 @@ import { RosterTab } from "./_components/learning-program-detail/RosterTab";
 import { PathChangeRequestsTab } from "./_components/learning-program-detail/PathChangeRequestsTab";
 import { PathChangeHistoryTab } from "./_components/learning-program-detail/PathChangeHistoryTab";
 import { ImportStudentsDialog } from "./_components/learning-program-detail/ImportStudentsDialog";
+import { careerPathLimitToInput, parseCareerPathLimit } from "./_components/career-path-limit";
 
 type TabKey = "general" | "roster" | "requests" | "history";
 
@@ -130,7 +131,12 @@ export default function ManagementLearningProgramDetailPage() {
   );
   const currentPaths = data.paths;
   const hasDefaultPath = currentPaths.some((path) => path.is_default);
-  const pathLimitFits = data.current_version.max_career_paths_per_enrollment <= currentPaths.length;
+  // A program that sets no cap of its own can never promise more paths than
+  // it attaches, so publish is not blocked on this. Left as a bare
+  // comparison, `null <= n` coerces to `0 <= n` and happens to be true --
+  // right answer, wrong reason, and it flips the moment the operator changes.
+  const programLimit = data.current_version.max_career_paths_per_enrollment;
+  const pathLimitFits = programLimit === null || programLimit <= currentPaths.length;
   const publishBlockedReason = getPublishBlockedReason(t, hasDefaultPath, pathLimitFits);
 
   async function removePath(pathId: string, pathName: string) {
@@ -321,7 +327,7 @@ export default function ManagementLearningProgramDetailPage() {
  * versioning it, and the hint says so rather than leaving a manager to guess
  * whether a change is retroactive (it is not).
  */
-function ProgramGeneral({ data, maxCareerPathsCeiling, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; maxCareerPathsCeiling: number; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null; max_path_switches?: number; max_career_paths_per_enrollment?: number }) => Promise<unknown> }) {
+function ProgramGeneral({ data, maxCareerPathsCeiling, readOnly, onSave }: { data: NonNullable<ReturnType<typeof useManagedLearningProgram>["data"]>; maxCareerPathsCeiling: number; readOnly: boolean; onSave: (payload: { name?: string; slug?: string; description?: string | null; max_path_switches?: number; max_career_paths_per_enrollment?: number | null }) => Promise<unknown> }) {
   const { t } = useTranslation();
   const [name, setName] = useState(data.name);
   const [slug, setSlug] = useState(data.slug);
@@ -329,13 +335,12 @@ function ProgramGeneral({ data, maxCareerPathsCeiling, readOnly, onSave }: { dat
   const [maxPathSwitches, setMaxPathSwitches] = useState(
     String(data.current_version.max_path_switches),
   );
-  const [maxCareerPaths, setMaxCareerPaths] = useState(String(data.current_version.max_career_paths_per_enrollment));
+  const [maxCareerPaths, setMaxCareerPaths] = useState(careerPathLimitToInput(data.current_version.max_career_paths_per_enrollment));
 
   const switches = Number.parseInt(maxPathSwitches, 10);
   const switchesValid =
     Number.isInteger(switches) && switches >= 0 && switches <= 100;
-  const careerPathLimit = Number.parseInt(maxCareerPaths, 10);
-  const careerPathLimitValid = Number.isInteger(careerPathLimit) && careerPathLimit >= 1 && careerPathLimit <= maxCareerPathsCeiling;
+  const careerPathLimit = parseCareerPathLimit(maxCareerPaths, maxCareerPathsCeiling);
 
   return <section className="space-y-4 rounded-xl bg-card p-5 ghost-border"><h2 className="font-headline text-lg font-bold">{t("management_learning_program_detail.general.title")}</h2><div className="grid gap-4 sm:grid-cols-2"><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.name")} <span className="text-red-600">*</span><Input disabled={readOnly} value={name} onChange={(event) => setName(event.target.value)} /></label><label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.slug")} <span className="text-red-600">*</span><Input disabled={readOnly} className="font-mono" value={slug} onChange={(event) => setSlug(event.target.value)} /></label></div>
     <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
@@ -363,7 +368,7 @@ function ProgramGeneral({ data, maxCareerPathsCeiling, readOnly, onSave }: { dat
       {t("management_learning_program_detail.general.career_path_limit")}
       <Input type="number" min={1} max={maxCareerPathsCeiling} disabled={readOnly} value={maxCareerPaths} onChange={(event) => setMaxCareerPaths(event.target.value)} />
       <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">{t("management_learning_program_detail.general.career_path_limit_hint", { ceiling: maxCareerPathsCeiling, version: data.current_version.version_no })}</span>
-      {!readOnly && !careerPathLimitValid && <span className="block text-[11px] font-normal normal-case tracking-normal text-red-600">{t("management_learning_program_detail.general.career_path_limit_error", { ceiling: maxCareerPathsCeiling })}</span>}
+      {!readOnly && !careerPathLimit.ok && <span className="block text-[11px] font-normal normal-case tracking-normal text-red-600">{t("management_learning_program_detail.general.career_path_limit_error", { ceiling: maxCareerPathsCeiling })}</span>}
     </label>
-    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.description")}<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim() || !switchesValid || !careerPathLimitValid} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, max_path_switches: switches, max_career_paths_per_enrollment: careerPathLimit }).then(() => toast.success(t("management_learning_program_detail.toast.details_saved"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.save_failed"))))}>{t("management_learning_program_detail.actions.save")}</Button></div>}</section>;
+    <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">{t("management_learning_program_detail.general.description")}<Textarea disabled={readOnly} rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>{!readOnly && <div className="flex justify-end"><Button disabled={!name.trim() || !slug.trim() || !switchesValid || !careerPathLimit.ok} onClick={() => void onSave({ name: name.trim(), slug: slug.trim(), description: description.trim() || null, max_path_switches: switches, max_career_paths_per_enrollment: careerPathLimit.ok ? careerPathLimit.value : undefined }).then(() => toast.success(t("management_learning_program_detail.toast.details_saved"))).catch((error: unknown) => toast.error(getApiErrorMessage(error, t("management_learning_program_detail.toast.save_failed"))))}>{t("management_learning_program_detail.actions.save")}</Button></div>}</section>;
 }

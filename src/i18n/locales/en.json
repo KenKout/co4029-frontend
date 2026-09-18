@@ -3893,8 +3893,8 @@
       "switches_hint": "How many Career Path switches a student may request in this program, each needing Faculty Dean approval (0 locks the choice). Applies to program v{{version}}; students already enrolled keep the budget of the version they enrolled under.",
       "switches_error": "Enter a whole number between 0 and 100.",
       "career_path_limit": "Career paths per student",
-      "career_path_limit_hint": "Students may select up to this many paths in program v{{version}} and must complete every selected path. Organization limit: {{ceiling}}.",
-      "career_path_limit_error": "Enter a whole number between 1 and {{ceiling}}."
+      "career_path_limit_hint": "Students may select up to this many paths in program v{{version}} and must complete every selected path. Leave blank for no program limit (max {{ceiling}}).",
+      "career_path_limit_error": "Leave blank, or enter a whole number between 1 and {{ceiling}}."
     },
     "paths": {
       "title": "Career Paths",

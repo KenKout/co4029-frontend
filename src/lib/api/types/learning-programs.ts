@@ -28,7 +28,8 @@ export interface LearningProgramVersion {
   version_no: number;
   status: "draft" | "published";
   max_path_switches: number;
-  max_career_paths_per_enrollment: number;
+  /** `null` = this program sets no cap of its own. */
+  max_career_paths_per_enrollment: number | null;
   published_at: string | null;
   published_by: string | null;
   published_by_name: string | null;
@@ -82,7 +83,13 @@ export interface LearningProgramEnrollment {
   program_version_no: number;
   max_path_switches: number;
   approved_switch_count: number;
-  max_career_paths: number;
+  /**
+   * The program's own cap, or `null` when it sets none — in which case the
+   * student is bounded by `max_concurrent_paths_per_student` below. Treat
+   * null as "room available"; comparing against it numerically makes every
+   * uncapped program look full.
+   */
+  max_career_paths: number | null;
   selected_path_count: number;
   max_concurrent_paths_per_student: number;
   student_active_path_count: number;
@@ -105,7 +112,8 @@ export interface LearningProgramCreate {
   name: string;
   description?: string | null;
   max_path_switches?: number;
-  max_career_paths_per_enrollment?: number;
+  /** Omit to leave unchanged; send `null` to remove the cap. */
+  max_career_paths_per_enrollment?: number | null;
   career_path_ids: string[];
   default_career_path_id?: string | null;
 }

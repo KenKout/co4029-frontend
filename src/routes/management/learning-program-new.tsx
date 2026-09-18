@@ -12,14 +12,10 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { useCreateLearningProgram, useLearningProgramOptions } from "@/lib/api/hooks/learning-programs";
+import { parseCareerPathLimit } from "./_components/career-path-limit";
 
 function slugify(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
-function parseCareerPathLimit(value: string, ceiling: number): number | null {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed >= 1 && parsed <= ceiling ? parsed : null;
 }
 
 export default function ManagementLearningProgramNewPage() {
@@ -36,7 +32,9 @@ export default function ManagementLearningProgramNewPage() {
   // (3) so the form states the policy instead of leaving it invisible — every
   // program created before this field existed silently got 3.
   const [maxPathSwitches, setMaxPathSwitches] = useState("3");
-  const [maxCareerPaths, setMaxCareerPaths] = useState("1");
+  // Blank by default: a new program imposes no cap of its own unless its
+  // manager asks for one. This used to default to "1".
+  const [maxCareerPaths, setMaxCareerPaths] = useState("");
   const [selectedPathIds, setSelectedPathIds] = useState<string[]>([]);
   const [defaultPathId, setDefaultPathId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -71,8 +69,8 @@ export default function ManagementLearningProgramNewPage() {
       return;
     }
     const careerPathLimit = parseCareerPathLimit(maxCareerPaths, maxCareerPathsCeiling);
-    if (careerPathLimit === null) {
-      toast.error(`Career paths per student must be a whole number between 1 and ${maxCareerPathsCeiling}`);
+    if (!careerPathLimit.ok) {
+      toast.error(`Career paths per program must be blank, or a whole number between 1 and ${maxCareerPathsCeiling}`);
       return;
     }
     const accepted = await confirm({
@@ -94,7 +92,7 @@ export default function ManagementLearningProgramNewPage() {
         slug: slug.trim(),
         description: description.trim() || null,
         max_path_switches: switches,
-        max_career_paths_per_enrollment: careerPathLimit,
+        max_career_paths_per_enrollment: careerPathLimit.value,
         career_path_ids: selectedPathIds,
         default_career_path_id: defaultPathId,
       });
@@ -134,7 +132,7 @@ export default function ManagementLearningProgramNewPage() {
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             Career paths per student
             <Input type="number" min={1} max={maxCareerPathsCeiling} value={maxCareerPaths} onChange={(event) => setMaxCareerPaths(event.target.value)} />
-            <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">Students must complete every selected path. Organization limit: {maxCareerPathsCeiling}.</span>
+            <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">Students must complete every selected path. Leave blank for no program limit (max {maxCareerPathsCeiling}).</span>
           </label>
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
           <section className="space-y-3 border-t border-m3-outline-variant/30 pt-5">

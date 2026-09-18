@@ -28,7 +28,8 @@ import type { LearningProgramEnrollment } from "@/lib/api/types";
  * 2. Enrolled in this path right now (an `active` attempt on it): NO
  *    button — you are already here; leaving happens via another path's
  *    switch flow, not from your own page.
- * 3. The program is at its path limit: show "Switch to this path", but
+ * 3. The program is at its OWN path limit (a program that sets none is
+ *    never in this state): show "Switch to this path", but
  *    only while the student still has switch budget
  *    (`max_path_switches - approved_switch_count > 0`) and there is no
  *    pending change request already awaiting the Faculty Dean. Switching
@@ -107,10 +108,17 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
   const eligiblePrograms = activeHere
     ? []
     : findEligiblePrograms(data, careerPathId);
-  const eligible =
-    eligiblePrograms.find(
-      (item) => item.selected_path_count < item.max_career_paths,
-    ) ?? eligiblePrograms[0];
+  /**
+   * `max_career_paths` is null when the program sets no cap of its own, and
+   * a null must read as "room available". Comparing against it directly is
+   * the trap: `1 < null` is false in JS, so every uncapped program would look
+   * full and the student would be offered a switch — spending switch budget
+   * to solve a limit that does not exist.
+   */
+  const hasRoom = (item: LearningProgramEnrollment) =>
+    item.max_career_paths === null ||
+    item.selected_path_count < item.max_career_paths;
+  const eligible = eligiblePrograms.find(hasRoom) ?? eligiblePrograms[0];
   /**
    * Two independent ceilings, and BOTH have to have room.
    *
@@ -119,9 +127,7 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
    * all their programs — the backend refuses with `student_path_limit_reached`
    * and the button would have promised something it cannot deliver.
    */
-  const hasProgramSlot = Boolean(
-    eligible && eligible.selected_path_count < eligible.max_career_paths,
-  );
+  const hasProgramSlot = Boolean(eligible && hasRoom(eligible));
   const atStudentPathLimit = Boolean(
     eligible &&
       eligible.student_active_path_count >=
@@ -274,10 +280,15 @@ function AwaitingChoiceBanner({
             for {enrollment.program_name}
           </p>
           <p className="mt-0.5 text-xs text-text-muted">
-            {/* State the cost of the decision up front — the switch budget is
-                finite and enforced server-side. */}
-            {enrollment.selected_path_count + 1}/{enrollment.max_career_paths}{" "}
-            path slots will be used. Adding a path does not require approval.
+            {/* State the cost of the decision up front — the budget is finite
+                and enforced server-side. Which budget depends on the program:
+                one that sets no cap of its own spends against the
+                organization-wide concurrent limit instead, and quoting the
+                program's null there would read as "1/". */}
+            {enrollment.max_career_paths === null
+              ? `${enrollment.student_active_path_count + 1}/${enrollment.max_concurrent_paths_per_student} concurrent paths`
+              : `${enrollment.selected_path_count + 1}/${enrollment.max_career_paths} path slots`}{" "}
+            will be used. Adding a path does not require approval.
           </p>
         </div>
         <Button
