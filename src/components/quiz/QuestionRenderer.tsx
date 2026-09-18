@@ -1,12 +1,13 @@
-import { useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { CheckCircle2, GripVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { RichContent } from "@/components/ui/rich-content";
-import type { QuizQuestionPublic } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RichContent } from "@/components/ui/rich-content";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { QuizQuestionPublic } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, GripVertical } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Per-type input UI for the student quiz attempt page.
@@ -619,14 +620,14 @@ function NumericalInput({
   const { t } = useTranslation();
   return (
     <div className="space-y-2 max-w-xs">
-      <input
+      <Input
         type="number"
         inputMode="decimal"
         value={answerText ?? ""}
         onChange={(e) => onAnswerTextChange(e.target.value || null)}
         disabled={disabled}
         placeholder="0"
-        className="w-full rounded-xl border-2 border-m3-outline-variant/30 bg-m3-surface-container-lowest px-4 py-3 text-base text-m3-on-surface focus:outline-none focus:border-m3-primary focus:ring-2 focus:ring-m3-primary/20 disabled:opacity-50 disabled:cursor-not-allowed tabular-nums"
+        className="h-12 border-2 bg-m3-surface-container-lowest px-4 text-base tabular-nums"
         aria-label={t("course_quiz.question_input.numerical_answer_label")}
       />
     </div>
@@ -699,20 +700,18 @@ function MatchingInput({
             {prompt}
           </span>
           <span className="text-m3-on-surface-variant shrink-0">→</span>
-          <select
+          <Select
             value={selected[prompt] ?? ""}
-            onChange={(e) => choose(prompt, e.target.value)}
+            onValueChange={(value) => choose(prompt, value)}
+            options={choices.map((choice) => ({
+              value: choice,
+              label: choice,
+            }))}
+            placeholder="…"
             disabled={disabled}
-            className="shrink-0 max-w-[45%] rounded-lg border-2 border-m3-outline-variant/30 bg-m3-surface px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary disabled:opacity-50"
+            className="shrink-0 max-w-[45%] border-2"
             aria-label={t("course_quiz.question_input.match_for", { prompt })}
-          >
-            <option value="">…</option>
-            {choices.map((choice, j) => (
-              <option key={`${choice}-${j}`} value={choice}>
-                {choice}
-              </option>
-            ))}
-          </select>
+          />
         </div>
       ))}
     </div>

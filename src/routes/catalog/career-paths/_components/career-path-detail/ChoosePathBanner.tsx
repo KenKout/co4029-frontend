@@ -1,18 +1,21 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { CheckCircle2, GraduationCap } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Field } from "@/components/ui/field";
 import { PromptDialog } from "@/components/ui/prompt-dialog";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { getApiErrorMessage, isApiErrorCode } from "@/lib/api/error-codes";
 import {
   useMyLearningPrograms,
-  useSelectProgramPath,
   useRequestProgramPathChange,
+  useSelectProgramPath,
 } from "@/lib/api/hooks/learning-programs";
-import { getApiErrorMessage, isApiErrorCode } from "@/lib/api/error-codes";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
+import { Link } from "@tanstack/react-router";
+import { CheckCircle2, GraduationCap } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 /**
  * Path commitment controls on the public path detail page.
@@ -468,6 +471,13 @@ function SwitchRequestSection({
   const activeAttempts = switchable.attempts.filter(
     (item) => item.status === "active",
   );
+  const activeAttemptOptions = activeAttempts.map((attempt) => ({
+    value: attempt.id,
+    label:
+      switchable.paths.find(
+        (path) => path.career_path_id === attempt.career_path_id,
+      )?.name ?? attempt.career_path_id,
+  }));
 
   return (
     <>
@@ -525,45 +535,43 @@ function SwitchRequestSection({
         isPending={isPending}
         onConfirm={onSubmit}
       >
-        {activeAttempts.length > 1 ? (
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-text-strong">
-              {t("career_path_detail.choice.path_to_replace")}{" "}
-              <span className="text-destructive">*</span>
-            </span>
-            <select
-              className="w-full rounded-lg border border-m3-outline-variant/50 bg-white p-3 text-sm outline-none focus:border-m3-primary"
-              value={sourceAttemptId}
-              onChange={(event) => setSourceAttemptId(event.target.value)}
+        <div className="space-y-4">
+          {activeAttempts.length > 1 ? (
+            <Field
+              id="path-change-source"
+              label={t("career_path_detail.choice.path_to_replace")}
+              required
             >
-              <option value="">
-                {t("career_path_detail.choice.select_path")}
-              </option>
-              {activeAttempts.map((attempt) => (
-                <option key={attempt.id} value={attempt.id}>
-                  {switchable.paths.find(
-                    (path) => path.career_path_id === attempt.career_path_id,
-                  )?.name ?? attempt.career_path_id}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-text-strong">
-            {t("career_path_detail.choice.switch_reason")}{" "}
-            <span className="text-destructive">*</span>
-          </span>
-          <textarea
-            className="w-full min-h-24 rounded-lg border border-m3-outline-variant/50 bg-white p-3 text-sm outline-none focus:border-m3-primary"
-            placeholder={t(
-              "career_path_detail.choice.switch_reason_placeholder",
-            )}
-            value={reason}
-            maxLength={2000}
-            onChange={(event) => setReason(event.target.value)}
-          />
-        </label>
+              <Select
+                id="path-change-source"
+                value={sourceAttemptId}
+                onValueChange={setSourceAttemptId}
+                options={activeAttemptOptions}
+                placeholder={t("career_path_detail.choice.select_path")}
+                disabled={isPending}
+              />
+            </Field>
+          ) : null}
+          <Field
+            id="path-change-reason"
+            label={t("career_path_detail.choice.switch_reason")}
+            required
+          >
+            <Textarea
+              id="path-change-reason"
+              variant="low"
+              rows={4}
+              resize="y"
+              placeholder={t(
+                "career_path_detail.choice.switch_reason_placeholder",
+              )}
+              value={reason}
+              maxLength={2000}
+              disabled={isPending}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </Field>
+        </div>
       </PromptDialog>
     </>
   );
