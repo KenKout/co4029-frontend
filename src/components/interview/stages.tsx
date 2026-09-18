@@ -62,7 +62,7 @@ export function InterviewHeader({
 
   return (
     <header className="sticky top-0 z-20 shrink-0 border-b border-border bg-white/95 backdrop-blur-md">
-      <div className="mx-auto grid min-h-16 max-w-[1120px] grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-3 py-2.5 sm:px-6 lg:grid-cols-[minmax(220px,1fr)_minmax(260px,420px)_minmax(220px,1fr)]">
+      <div className="mx-auto grid min-h-16 max-w-[1120px] grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-3 py-2.5 sm:px-6 lg:grid-cols-[minmax(220px,1fr)_minmax(260px,420px)_minmax(auto,1fr)]">
         <InterviewHeaderBrand
           slug={slug}
           courseName={courseName}
@@ -81,11 +81,11 @@ export function InterviewHeader({
         <div className="flex items-center justify-end gap-1.5 lg:col-start-3">
           {cameraOn && (
             <span
-              className="hidden items-center gap-1.5 text-xs font-medium text-text-muted sm:inline-flex"
+              className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap border-border pr-2 text-xs font-medium text-text-muted sm:inline-flex sm:border-r sm:pr-2.5 sm:mr-0.5"
               title={t("course_interview.workspace.camera_on")}
             >
               <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden xl:inline">
+              <span className="hidden whitespace-nowrap xl:inline">
                 {t("course_interview.workspace.camera_on")}
               </span>
             </span>
