@@ -11,13 +11,12 @@ vi.mock("@tanstack/react-router", () => ({
 import { InterviewHeader } from "@/components/interview/stages";
 
 /**
- * The in-session CAMERA ON indicator.
+ * The in-session CAMERA ON indicator — placement contract.
  *
- * While a camera-gated interview is live the header must SAY the camera is
- * on — an icon alone can be mistaken for a decorative glyph. The pill sits
- * UNDER the "Connected" text (a vertical stack in the trailing cell), NOT on
- * the same line — on the line it read as a duplicate of the "Interview in
- * progress" status. Off/gate-off renders nothing (no lying chrome).
+ * The pill lives in the header's trailing cell, BELOW the voice/End button
+ * cluster (right-flush, its own row). It must NOT sit in
+ * InterviewHeaderStatus (that squeezed the Connected/timer row and the
+ * button row apart) and must NOT share a line with them.
  */
 
 const BASE = {
@@ -39,32 +38,37 @@ describe("InterviewHeader camera indicator", () => {
     expect(screen.getByText("Đang bật cam")).toBeInTheDocument();
   });
 
-  it("sits BELOW the Connected row — its own line in a stacked column", () => {
+  it("sits in the trailing cell BELOW the action-button row", () => {
     render(<InterviewHeader {...BASE} cameraOn />);
 
-    const cam = screen.getByText("Đang bật cam").closest("span");
-    const conn = screen.getByText("Đã kết nối").closest("span");
-    expect(cam).not.toBeNull();
-    expect(conn).not.toBeNull();
-    // Different row containers: the camera pill is NOT squeezed onto the
-    // Connected/timer line (that is what read as a duplicate of the
-    // "Interview in progress" text).
-    expect(cam!.parentElement).not.toBe(conn!.parentElement);
-    // ...and the camera row comes AFTER the Connected row in the column.
+    // onEndInterview is undefined in this harness, so the End button is not
+    // rendered; the first row of the trailing cell is the voice button's row.
+    const voiceRow = screen
+      .getByRole("button", { name: "Tắt giọng đọc của AI" })
+      .closest("button")!.parentElement!;
+    const camPill = screen.getByTitle("Đang bật cam");
+    const camRow = camPill.parentElement!;
+    // A different row than the buttons...
+    expect(camRow).not.toBe(voiceRow);
+    // ...inside the SAME trailing cell (stacked under the buttons)...
+    expect(camRow.parentElement).toBe(voiceRow.parentElement);
+    // ...and AFTER the button row in DOM order.
     expect(
-      conn!.parentElement!.compareDocumentPosition(cam!.parentElement!) &
+      voiceRow.parentElement!.compareDocumentPosition(camRow) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
-  it("renders nothing when the camera is off — no lying chrome", () => {
-    render(<InterviewHeader {...BASE} />);
+  it("leaves Connected and the timer on one single row", () => {
+    render(<InterviewHeader {...BASE} cameraOn />);
 
-    expect(screen.queryByText("Đang bật cam")).not.toBeInTheDocument();
+    const connPill = screen.getByTitle("Đã kết nối");
+    const timer = screen.getByLabelText("Thời gian phỏng vấn đã trôi qua");
+    expect(connPill.parentElement).toBe(timer.parentElement);
   });
 
-  it("is also hidden when the prop is passed false explicitly", () => {
-    render(<InterviewHeader {...BASE} cameraOn={false} />);
+  it("renders nothing when the camera is off — no lying chrome", () => {
+    render(<InterviewHeader {...BASE} />);
 
     expect(screen.queryByText("Đang bật cam")).not.toBeInTheDocument();
   });

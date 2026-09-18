@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, Camera } from "lucide-react";
 
 // Conversation building blocks the stages compose.
 import {
@@ -50,6 +50,7 @@ export function InterviewHeader({
   questionLingering = false,
   cameraOn = false,
 }: InterviewHeaderProps) {
+  const { t } = useTranslation();
   const { safeCurrent, safeTotal, progress, expected } = resolveHeaderProgress({
     timerActive,
     assessmentStartedAtMs,
@@ -77,21 +78,35 @@ export function InterviewHeader({
           questionLingering={questionLingering}
         />
 
-        <div className="flex items-center justify-end gap-1.5 lg:col-start-3">
-          <InterviewHeaderStatus
-            connected={connected}
-            timerActive={timerActive}
-            elapsed={elapsed}
-            expected={expected}
-            cameraOn={cameraOn}
-          />
-          <InterviewHeaderActions
-            voiceOn={voiceOn}
-            onToggleVoice={onToggleVoice}
-            showVoiceControl={showVoiceControl}
-            onEndInterview={onEndInterview}
-            endInterviewDisabled={endInterviewDisabled}
-          />
+        <div className="flex flex-col items-end gap-1 lg:col-start-3">
+          <div className="flex items-center gap-1.5">
+            <InterviewHeaderStatus
+              connected={connected}
+              timerActive={timerActive}
+              elapsed={elapsed}
+              expected={expected}
+            />
+            <InterviewHeaderActions
+              voiceOn={voiceOn}
+              onToggleVoice={onToggleVoice}
+              showVoiceControl={showVoiceControl}
+              onEndInterview={onEndInterview}
+              endInterviewDisabled={endInterviewDisabled}
+            />
+          </div>
+          {cameraOn && (
+            <div className="flex items-center gap-1.5">
+              <span
+                className="hidden items-center gap-1.5 text-xs font-medium text-text-muted sm:inline-flex"
+                title={t("course_interview.workspace.camera_on")}
+              >
+                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="hidden xl:inline">
+                  {t("course_interview.workspace.camera_on")}
+                </span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </header>
