@@ -6424,6 +6424,14 @@
         "label": "Giới hạn ôn tập mỗi ngày (thẻ/ngày)",
         "description": "Số thẻ ôn tập lặp lại ngắt quãng tối đa mà một học viên được đưa ra để ôn trong một ngày, để lượng thẻ tồn đọng lớn vẫn là một mục tiêu hằng ngày có thể hoàn thành thay vì một bức tường vô tận. Các thẻ đã ôn trong ngày được tính vào giới hạn. Điều này chỉ giới hạn HÀNG ĐỢI ÔN TẬP — không bao giờ thay đổi điều kiện mở khóa bài học hay điểm ghi nhớ, nên tiến độ không bị ảnh hưởng. Đặt 0 để không giới hạn (đưa ra toàn bộ thẻ tồn đọng)."
       },
+      "spaced_repetition__max_interval_days": {
+        "label": "Khoảng cách ôn tập tối đa (ngày)",
+        "description": "Khoảng thời gian dài nhất trước khi một thẻ được đưa ra ôn lại. Giảm giới hạn này sẽ khiến thẻ quay lại ôn thường xuyên hơn."
+      },
+      "spaced_repetition__retire_beyond_max_interval": {
+        "label": "Ngừng thẻ vượt quá khoảng cách tối đa",
+        "description": "Khi bật, thẻ có khoảng cách ôn tiếp theo vượt quá giới hạn sẽ được ngừng thay vì lên lịch ở đúng giới hạn. Lịch sử vẫn được giữ và thẻ rời khỏi hàng đợi ôn tập."
+      },
       "learning_program__max_concurrent_paths_per_student": {
         "label": "Số lộ trình đồng thời mỗi sinh viên",
         "description": "Số lộ trình nghề nghiệp tối đa mà một sinh viên được học cùng lúc trên tất cả các chương trình học. Trần mỗi chương trình bên dưới chỉ áp dụng cho một lượt ghi danh, nên nếu không có giới hạn này, sinh viên tham gia hai chương trình có thể giữ tổng của cả hai giới hạn. Lộ trình hiện có vẫn được giữ khi hạ giá trị này."

@@ -6448,6 +6448,14 @@
         "label": "Daily review cap (cards/day)",
         "description": "Maximum spaced-repetition cards a student is served for review in one day, so a large backlog stays a finishable daily goal instead of an unbounded wall. Cards already reviewed today count toward the cap. This bounds the REVIEW QUEUE only — it never changes lesson unlock eligibility or retention scoring, so progression is unaffected. Set to 0 for no cap (serve the whole backlog)."
       },
+      "spaced_repetition__max_interval_days": {
+        "label": "Maximum review interval (days)",
+        "description": "Longest a card may wait before it is shown again. Lowering this cap makes cards return for review more often."
+      },
+      "spaced_repetition__retire_beyond_max_interval": {
+        "label": "Retire cards past the maximum interval",
+        "description": "When enabled, a card whose next interval exceeds the cap is retired instead of being scheduled at the cap. Its history is kept and it leaves the review queue."
+      },
       "learning_program__max_concurrent_paths_per_student": {
         "label": "Concurrent career paths per student",
         "description": "Maximum career paths one student may have running at once across all their learning programs. The per-program ceiling below applies to a single enrolment, so without this a student in two programs could hold the sum of both limits. Existing paths are kept when this is lowered."
