@@ -1228,7 +1228,7 @@
       "confirm_description": "This path becomes part of {{program}}. The learning program completes only after every selected path is complete. Replacing it later uses one of {{remaining}} remaining approved path changes.",
       "choose_path": "Choose path",
       "add_path": "Add path",
-      "not_yet": "Not yet",
+      "not_yet": "Not now",
       "switch_for_program": "Switch to this path for {{program}}",
       "request_in_review": "Your Faculty Dean is already reviewing a path change request from you.",
       "request_pending": "You already have a path change request waiting for your Faculty Dean's approval.",
