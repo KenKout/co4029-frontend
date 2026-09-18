@@ -178,6 +178,10 @@ export function InterviewWorkspaceScreen({
         questionLingering={iv.questionPacing.lingering}
         connected={iv.connected}
         voiceOn={iv.voiceOn}
+        // Camera-on pill: the FE-only camera gate's live local stream. Hidden
+        // unless the gate is actually required-and-live, so it never claims a
+        // camera that is not running.
+        cameraOn={iv.cameraGate.required && iv.cameraGate.active}
         // When the LiveKit agent is live in the room it is the voice; the
         // client narration toggle cannot mute the room's audio track, so a
         // live toggle would lie. Same convention as the voice screen.

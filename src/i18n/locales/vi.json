@@ -3287,6 +3287,7 @@
     },
     "workspace": {
       "in_progress": "Đang phỏng vấn",
+      "camera_on": "Đang bật cam",
       "elapsed_time": "Thời gian phỏng vấn đã trôi qua",
       "time_on_question": "Thời gian cho câu hỏi này",
       "ai_interviewer": "Người phỏng vấn AI",

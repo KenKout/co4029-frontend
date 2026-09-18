@@ -3469,6 +3469,7 @@
     },
     "workspace": {
       "in_progress": "Interview in progress",
+      "camera_on": "Camera on",
       "elapsed_time": "Elapsed interview time",
       "time_on_question": "Time on this question",
       "ai_interviewer": "AI interviewer",

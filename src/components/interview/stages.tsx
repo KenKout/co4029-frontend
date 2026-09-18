@@ -48,6 +48,7 @@ export function InterviewHeader({
   showVoiceControl = true,
   questionElapsed,
   questionLingering = false,
+  cameraOn = false,
 }: InterviewHeaderProps) {
   const { safeCurrent, safeTotal, progress, expected } = resolveHeaderProgress({
     timerActive,
@@ -82,6 +83,7 @@ export function InterviewHeader({
             timerActive={timerActive}
             elapsed={elapsed}
             expected={expected}
+            cameraOn={cameraOn}
           />
           <InterviewHeaderActions
             voiceOn={voiceOn}

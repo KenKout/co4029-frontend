@@ -54,6 +54,12 @@ export type InterviewHeaderProps = {
   questionElapsed?: number | null;
   /** True once past the lingering threshold — switches the cue to a gentle nudge. */
   questionLingering?: boolean;
+  /**
+   * True while the mandatory camera gate has a live local stream (FE-only
+   * gate — the stream is never published). Shows a camera-on pill so the
+   * candidate knows capture is running; hidden entirely when off.
+   */
+  cameraOn?: boolean;
 };
 
 export type QuestionCardProps = {
