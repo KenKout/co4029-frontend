@@ -4149,6 +4149,12 @@
       "failed": "Could not submit the drop request",
       "reason_label": "Reason for dropping",
       "reason_placeholder": "Tell your Faculty Dean why you want to drop this path…"
+    },
+    "program_summary_uncapped": "Program version {{version}} · {{selected}} paths selected · {{used}}/{{max}} path changes used",
+    "path_budget": {
+      "label": "Career paths in progress",
+      "value": "{{used}} of {{limit}} across all your programs",
+      "at_limit": "You are at your limit. Finish or drop a path before taking another."
     }
   },
   "management_career_path_detail": {

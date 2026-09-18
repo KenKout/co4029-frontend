@@ -9,6 +9,7 @@ import {
   useSelectProgramPath,
   useRequestProgramPathChange,
 } from "@/lib/api/hooks/learning-programs";
+import { getApiErrorMessage, isApiErrorCode } from "@/lib/api/error-codes";
 import type { LearningProgramEnrollment } from "@/lib/api/types";
 
 /**
@@ -68,6 +69,13 @@ function findActiveHere(
         attempt.status === "active" && attempt.career_path_id === careerPathId,
     ),
   );
+}
+
+function pathErrorMessage(error: unknown, fallback: string): string {
+  if (isApiErrorCode(error, "path_already_active")) {
+    return "You are already taking this career path. Finish or drop it before taking it again.";
+  }
+  return getApiErrorMessage(error, fallback);
 }
 
 export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
@@ -164,9 +172,7 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
           : "Career path added to your program",
       );
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not select the path",
-      );
+      toast.error(pathErrorMessage(error, "Could not select the path"));
     }
   }
 
@@ -192,9 +198,7 @@ export function ChoosePathBanner({ careerPathId }: { careerPathId: string }) {
       setDialogOpen(false);
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Could not submit the path change request",
+        pathErrorMessage(error, "Could not submit the path change request"),
       );
     }
   }

@@ -186,13 +186,22 @@ function ProgramCard({
             </span>
           </div>
           <p className="mt-1 text-sm text-m3-on-surface-variant">
-            {t("my_learning_programs.program_summary", {
-              version: enrollment.program_version_no,
-              selected: enrollment.selected_path_count,
-              pathMax: enrollment.max_career_paths,
-              used: enrollment.approved_switch_count,
-              max: enrollment.max_path_switches,
-            })}
+            {/* `max_career_paths` is null when this program sets no limit of
+                its own, and "{selected}/{null}" renders as "1/". The student
+                is bounded by their student-wide budget instead, which is
+                stated once above the cards rather than repeated here. */}
+            {t(
+              enrollment.max_career_paths === null
+                ? "my_learning_programs.program_summary_uncapped"
+                : "my_learning_programs.program_summary",
+              {
+                version: enrollment.program_version_no,
+                selected: enrollment.selected_path_count,
+                pathMax: enrollment.max_career_paths,
+                used: enrollment.approved_switch_count,
+                max: enrollment.max_path_switches,
+              },
+            )}
           </p>
         </div>
       </div>
@@ -278,6 +287,38 @@ function ProgramCard({
   );
 }
 
+function StudentPathBudget({
+  enrollment,
+}: {
+  enrollment: LearningProgramEnrollment;
+}) {
+  const { t } = useTranslation();
+  const used = enrollment.student_active_path_count;
+  const limit = enrollment.max_concurrent_paths_per_student;
+  const atLimit = used >= limit;
+  return (
+    <section
+      className={`rounded-xl border p-4 ${
+        atLimit
+          ? "border-amber-300 bg-amber-50"
+          : "border-m3-outline-variant/40 bg-card"
+      }`}
+    >
+      <p className="text-xs font-semibold uppercase tracking-wide text-m3-on-surface-variant">
+        {t("my_learning_programs.path_budget.label")}
+      </p>
+      <p className="mt-0.5 font-semibold text-m3-on-surface">
+        {t("my_learning_programs.path_budget.value", { used, limit })}
+      </p>
+      {atLimit ? (
+        <p className="mt-1 text-xs text-amber-800">
+          {t("my_learning_programs.path_budget.at_limit")}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 export default function LearningProgramsPage() {
   const { t } = useTranslation();
   const programs = useMyLearningPrograms();
@@ -291,6 +332,9 @@ export default function LearningProgramsPage() {
       />
       {programs.data?.length ? (
         <div className="space-y-4">
+          {/* Any enrollment carries the student-wide totals; they are the
+              same on all of them. */}
+          <StudentPathBudget enrollment={programs.data[0]} />
           {programs.data.map((item) => (
             <ProgramCard key={item.id} enrollment={item} />
           ))}

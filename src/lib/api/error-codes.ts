@@ -7,7 +7,8 @@ export type ApiErrorCode =
   | "upload_invalid"
   | "permission_denied"
   | "not_found"
-  | "conflict";
+  | "conflict"
+  | "path_already_active";
 
 export function getApiErrorCode(err: unknown): ApiErrorCode | null {
   if (!(err instanceof ApiError)) return null;

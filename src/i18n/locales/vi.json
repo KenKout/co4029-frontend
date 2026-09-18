@@ -3970,6 +3970,12 @@
       "failed": "Không thể gửi đề nghị bỏ lộ trình",
       "reason_label": "Lý do bỏ lộ trình",
       "reason_placeholder": "Cho Trưởng khoa biết vì sao bạn muốn bỏ lộ trình này…"
+    },
+    "program_summary_uncapped": "Phiên bản chương trình {{version}} · Đã chọn {{selected}} lộ trình · Đã dùng {{used}}/{{max}} lần đổi lộ trình",
+    "path_budget": {
+      "label": "Lộ trình đang học",
+      "value": "{{used}} trên {{limit}} trong tất cả chương trình của bạn",
+      "at_limit": "Bạn đã đạt giới hạn. Hãy hoàn thành hoặc bỏ một lộ trình trước khi chọn thêm."
     }
   },
   "management_career_path_detail": {
