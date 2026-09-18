@@ -92,10 +92,9 @@ function DoneBacklogNotice({
     return (
       <div className="mx-auto max-w-sm rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 space-y-3">
         <p className="text-sm font-semibold text-amber-800">
-          {t("study_review.remaining_backlog", {
-            count: remaining,
-            defaultValue: "{{count}} more cards still due.",
-          })}
+          {remaining === 1
+            ? t("study_review.remaining_backlog_one", { count: remaining })
+            : t("study_review.remaining_backlog_other", { count: remaining })}
         </p>
         {/* Send the student back to the cards-due overview to pick what to
             review next. The cards-due cache was invalidated on each answer,
