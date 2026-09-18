@@ -78,6 +78,8 @@ export default function QuizManagePage() {
 
   const moduleId = courseModule.id;
   const isPublished = quiz.status === "published";
+  const isArchived = quiz.status === "archived";
+  const isReadOnly = isPublished || isArchived;
   const canDelete = isQuizDeletable({
     quizStatus: quiz.status,
     publishedAt: quiz.published_at,
@@ -94,7 +96,7 @@ export default function QuizManagePage() {
   const publishDisabled =
     data.publishQuiz.isPending ||
     data.patchQuiz.isPending ||
-    isPublished ||
+    isReadOnly ||
     approvedCount === 0 ||
     state.hasUnsavedWork ||
     pendingDeletes.comboCount > 0;
@@ -119,12 +121,14 @@ export default function QuizManagePage() {
         moduleId={moduleId}
         questionCount={questions.length}
         isPublished={isPublished}
+        isArchived={isArchived}
       />
 
       <QuizManageActionStrip
         courseId={courseId}
         quizId={quizId}
         isPublished={isPublished}
+        isArchived={isArchived}
         canDelete={canDelete}
         publishDisabled={publishDisabled}
         data={data}
@@ -137,6 +141,7 @@ export default function QuizManagePage() {
         quizId={quizId}
         quiz={quiz}
         isPublished={isPublished}
+        isArchived={isArchived}
         navigate={navigate}
         data={data}
         state={state}

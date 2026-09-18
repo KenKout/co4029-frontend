@@ -20,6 +20,7 @@ export function QuizPageActions({
   courseId,
   quizId,
   isPublished,
+  isArchived,
   canDelete,
   actionsStuck,
   publishDisabled,
@@ -32,6 +33,7 @@ export function QuizPageActions({
   courseId: string;
   quizId: string;
   isPublished: boolean;
+  isArchived: boolean;
   canDelete: boolean;
   actionsStuck: boolean;
   publishDisabled: boolean;
@@ -53,7 +55,7 @@ export function QuizPageActions({
       {/* Results only make sense once the quiz is published — a draft
           being configured has no attempts yet, so the button is hidden
           during configuration and appears after publish. */}
-      {isPublished && (
+      {(isPublished || isArchived) && (
         <Link
           to="/teacher/courses/$courseId/quizzes/$quizId/results"
           params={{ courseId, quizId }}
@@ -76,14 +78,16 @@ export function QuizPageActions({
           the publish dialog). The tab intentionally does NOT link to
           the live student route (/courses/$slug/quiz/$quizId) — that
           serves only PUBLISHED quizzes, so previewing a draft 404s. */}
-      <QuizPublishButton
-        isPublished={isPublished}
-        actionsStuck={actionsStuck}
-        publishDisabled={publishDisabled}
-        publishPending={publishPending}
-        questionCount={questionCount}
-        onClick={onPublish}
-      />
+      {!isArchived && (
+        <QuizPublishButton
+          isPublished={isPublished}
+          actionsStuck={actionsStuck}
+          publishDisabled={publishDisabled}
+          publishPending={publishPending}
+          questionCount={questionCount}
+          onClick={onPublish}
+        />
+      )}
       {/* A published quiz may still be deleted while its course or module is
           a draft: learners cannot reach it yet. Once all parent levels are
           live, keep the quiz as assessment evidence even after archiving. */}

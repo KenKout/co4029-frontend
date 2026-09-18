@@ -14,6 +14,7 @@ export function QuizManageActionStrip({
   courseId,
   quizId,
   isPublished,
+  isArchived,
   canDelete,
   publishDisabled,
   data,
@@ -23,6 +24,7 @@ export function QuizManageActionStrip({
   courseId: string;
   quizId: string;
   isPublished: boolean;
+  isArchived: boolean;
   canDelete: boolean;
   publishDisabled: boolean;
   data: QuizManageDataController;
@@ -54,7 +56,7 @@ export function QuizManageActionStrip({
           />
 
           <div className="flex items-center gap-2">
-            {!isPublished && state.hasUnsavedWork && (
+            {!isPublished && !isArchived && state.hasUnsavedWork && (
               <Tooltip content={pendingMessage} side="bottom">
                 <Button
                   type="button"
@@ -72,6 +74,7 @@ export function QuizManageActionStrip({
               courseId={courseId}
               quizId={quizId}
               isPublished={isPublished}
+              isArchived={isArchived}
               canDelete={canDelete}
               actionsStuck={actionsStuck}
               publishDisabled={publishDisabled}

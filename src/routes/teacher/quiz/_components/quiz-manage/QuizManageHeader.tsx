@@ -27,6 +27,7 @@ export function QuizManageHeader({
   moduleId,
   questionCount,
   isPublished,
+  isArchived,
 }: {
   course: QuizManageDataController["course"];
   courseModule: LoadedModule;
@@ -35,6 +36,7 @@ export function QuizManageHeader({
   moduleId: string;
   questionCount: number;
   isPublished: boolean;
+  isArchived: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -93,6 +95,11 @@ export function QuizManageHeader({
                   <CheckCircle2 className="h-3 w-3" />
                   {t("teacher_quiz_manage.status.published")}
                 </Badge>
+              ) : isArchived ? (
+                <Badge className="border-0 bg-slate-100 text-slate-700 text-[11px] font-bold gap-1.5 rounded-full px-2.5 py-1">
+                  <LockIcon className="h-3 w-3" />
+                  {t("teacher_quiz_manage.status.archived", "Archived")}
+                </Badge>
               ) : (
                 <Badge className="border-0 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full px-2.5 py-1">
                   {t("teacher_quiz_manage.status.draft")}
@@ -119,7 +126,18 @@ export function QuizManageHeader({
           <span>
             {t(
               "teacher_quiz_manage.published_readonly_banner",
-              "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else.",
+              "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders.",
+            )}
+          </span>
+        </div>
+      )}
+      {isArchived && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <LockIcon className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            {t(
+              "teacher_quiz_manage.archived_readonly_banner",
+              "This quiz is archived and read-only. Historical attempts and results remain available.",
             )}
           </span>
         </div>

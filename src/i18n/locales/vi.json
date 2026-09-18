@@ -4730,6 +4730,7 @@
     },
     "status": {
       "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ",
       "draft": "Bản nháp"
     },
     "header": {
@@ -4826,6 +4827,7 @@
     "generate_modal": {
       "title": "Tạo câu hỏi bằng AI",
       "description": "Sinh câu hỏi từ tài liệu bài học đã được xử lý.",
+      "draft_only": "Chỉ có thể tạo câu hỏi khi bài kiểm tra còn là bản nháp. Không thể thay thế câu hỏi lịch sử và dữ liệu học tập.",
       "count_label": "Số lượng câu hỏi",
       "focus_label": "Chủ đề tập trung (tuỳ chọn)",
       "focus_placeholder": "Ngăn cách bằng dấu phẩy",
@@ -5148,7 +5150,8 @@
       "type_ordering": "Sắp xếp",
       "type_fill_blank": "Điền vào chỗ trống"
     },
-    "published_readonly_banner": "Bài kiểm tra này đã được xuất bản. Câu hỏi và các cài đặt ảnh hưởng đến chấm điểm, thời gian hoặc cách hiển thị bị đóng băng để không làm gián đoạn học viên đang làm bài. Bạn vẫn có thể sửa tiêu đề, mô tả, lịch trình và nhắc nhở. Hãy lưu trữ (archive) bài kiểm tra trước nếu muốn thay đổi những mục khác.",
+    "published_readonly_banner": "Bài kiểm tra này đã được xuất bản. Câu hỏi và các cài đặt ảnh hưởng đến chấm điểm, thời gian hoặc cách hiển thị bị đóng băng để không làm gián đoạn học viên đang làm bài. Bạn vẫn có thể sửa tiêu đề, mô tả, lịch trình và nhắc nhở.",
+    "archived_readonly_banner": "Bài kiểm tra này đã được lưu trữ và chỉ có thể xem. Các lượt làm và kết quả lịch sử vẫn được giữ lại.",
     "confirm_bulk_delete": {
       "title": "Xoá {{count}} câu hỏi?",
       "body": "Các câu hỏi đã chọn sẽ bị xoá khỏi bài kiểm tra này. Bạn có vài giây để hoàn tác trước khi lưu.",

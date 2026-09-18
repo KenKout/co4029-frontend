@@ -15,7 +15,7 @@
 
 import { Link, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, LockIcon, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -130,12 +130,24 @@ export default function QuizGeneratePage() {
         {/* The panel keeps all generation logic and shows live run progress
             in place. No onRunStarted here — the teacher stays on this page to
             watch progress, then returns via the breadcrumb / back button. */}
-        <QuizGenerationPanel
-          quizId={quizId}
-          moduleId={moduleId}
-          courseId={courseId}
-          hasExistingQuestions={questions.length > 0}
-        />
+        {quiz.status === "draft" ? (
+          <QuizGenerationPanel
+            quizId={quizId}
+            moduleId={moduleId}
+            courseId={courseId}
+            hasExistingQuestions={questions.length > 0}
+          />
+        ) : (
+          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <LockIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              {t(
+                "teacher_quiz_manage.generate_modal.draft_only",
+                "Generation is available only while the quiz is a draft. Historical questions and learner evidence cannot be replaced.",
+              )}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

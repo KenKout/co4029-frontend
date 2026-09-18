@@ -4908,6 +4908,7 @@
     },
     "status": {
       "published": "Published",
+      "archived": "Archived",
       "draft": "Draft"
     },
     "header": {
@@ -5004,6 +5005,7 @@
     "generate_modal": {
       "title": "Generate questions with AI",
       "description": "Generate questions from processed lesson materials.",
+      "draft_only": "Generation is available only while the quiz is a draft. Historical questions and learner evidence cannot be replaced.",
       "count_label": "Number of questions",
       "focus_label": "Focus topics (optional)",
       "focus_placeholder": "Separate with commas",
@@ -5326,7 +5328,8 @@
       "type_ordering": "Ordering",
       "type_fill_blank": "Fill in the blank"
     },
-    "published_readonly_banner": "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders. Archive the quiz first to change anything else.",
+    "published_readonly_banner": "This quiz is published. Questions and any settings that affect scoring, timing, or presentation are frozen so students mid-attempt aren't disrupted. You can still edit the title, description, schedule, and reminders.",
+    "archived_readonly_banner": "This quiz is archived and read-only. Historical attempts and results remain available.",
     "confirm_bulk_delete": {
       "title": "Delete {{count}} questions?",
       "body": "The selected questions will be removed from this quiz. You'll have a few seconds to undo before it's saved.",

@@ -25,6 +25,7 @@ export function QuizManageTabPanels({
   quizId,
   quiz,
   isPublished,
+  isArchived,
   navigate,
   data,
   state,
@@ -34,6 +35,7 @@ export function QuizManageTabPanels({
   quizId: string;
   quiz: LoadedQuiz;
   isPublished: boolean;
+  isArchived: boolean;
   navigate: ReturnType<typeof useNavigate>;
   data: QuizManageDataController;
   state: QuizManageStateController;
@@ -44,14 +46,14 @@ export function QuizManageTabPanels({
   const savedDraft = useMemo(() => draftFromQuiz(quiz), [quiz]);
   return (
     <>
-      {/* When published the quiz is frozen (backend hard-blocks with 409). A
+      {/* Published and archived quizzes are frozen (backend hard-blocks with 409). A
           native <fieldset disabled> on the editable tabs disables every input,
           select, textarea and button inside in one shot — no need to thread a
           readOnly flag through every nested control. border-0 p-0 m-0 min-w-0
           neutralize the default fieldset chrome so layout is unchanged. */}
       {tab === "questions" && (
         <fieldset
-          disabled={isPublished}
+          disabled={isPublished || isArchived}
           className="border-0 p-0 m-0 min-w-0 disabled:opacity-70"
         >
           <QuestionsTab
@@ -76,7 +78,7 @@ export function QuizManageTabPanels({
             onOpenBank={() => state.setShowBankModal(true)}
             onOpenImportExport={() => state.setShowImportExport(true)}
             onQueueDelete={pendingDeletes.queueDelete}
-            published={isPublished}
+            published={isPublished || isArchived}
             onDirtyCountChange={state.setDirtyQuestionCount}
           />
         </fieldset>
@@ -87,22 +89,27 @@ export function QuizManageTabPanels({
         // (title/description/schedule/reminders) stay editable; the rest is
         // locked per-section inside SettingsTab. Mirrors the backend
         // whitelist in authoring.py (_PUBLISHED_EDITABLE_FIELDS).
-        <SettingsTab
-          key={quizId}
-          quizId={quizId}
-          courseId={courseId}
-          onFeedbackDirtyChange={state.setFeedbackDirty}
-          onOverrideDirtyChange={state.setOverrideDirty}
-          onBusyChange={state.setSettingsBusy}
-          draft={draft}
-          savedDraft={savedDraft}
-          setDraft={setDraft}
-          onSubmit={actions.handleSaveSettings}
-          saving={data.patchQuiz.isPending}
-          locked={isPublished}
-          dirty={state.settingsDirty}
-          onReset={() => setDraft(savedDraft)}
-        />
+        <fieldset
+          disabled={isArchived}
+          className="border-0 p-0 m-0 min-w-0 disabled:opacity-70"
+        >
+          <SettingsTab
+            key={quizId}
+            quizId={quizId}
+            courseId={courseId}
+            onFeedbackDirtyChange={state.setFeedbackDirty}
+            onOverrideDirtyChange={state.setOverrideDirty}
+            onBusyChange={state.setSettingsBusy}
+            draft={draft}
+            savedDraft={savedDraft}
+            setDraft={setDraft}
+            onSubmit={actions.handleSaveSettings}
+            saving={data.patchQuiz.isPending}
+            locked={isPublished || isArchived}
+            dirty={state.settingsDirty}
+            onReset={() => setDraft(savedDraft)}
+          />
+        </fieldset>
       )}
 
       {tab === "preview" && (
