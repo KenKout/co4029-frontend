@@ -6,6 +6,7 @@ import { InfiniteList } from "@/components/ui/InfiniteList";
 import type { Course } from "@/lib/api/types";
 import { CourseCard, CourseSkeletonCard } from "./CourseCard";
 import { CourseListRow } from "./CourseListRow";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 
 /** The course list failed to load. */
 export function CoursesLoadError({ error }: { error: unknown }) {
@@ -15,9 +16,7 @@ export function CoursesLoadError({ error }: { error: unknown }) {
       icon={AlertCircle}
       title={t("courses_list.load_failed_title")}
       description={
-        error instanceof Error
-          ? error.message
-          : t("courses_list.load_failed_body")
+        getApiErrorMessage(error, t("courses_list.load_failed_body"))
       }
       cta={
         <Button

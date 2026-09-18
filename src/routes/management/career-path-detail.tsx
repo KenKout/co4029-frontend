@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,9 +28,15 @@ import { TabBar } from "@/routes/management/_components/career-path-detail/TabBa
 import { usePathTabCounts } from "@/routes/management/_components/career-path-detail/use-tab-counts";
 import { VersionPanel } from "@/routes/management/_components/career-path-detail/VersionPanel";
 import type { TabKey } from "@/routes/management/_components/career-path-detail/types";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 
 function slugify(value: string) {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
@@ -49,30 +56,56 @@ function useStageScroll(tab: TabKey, stageId?: string) {
 }
 
 export default function ManagementCareerPathDetailPage() {
-  const { id } = useParams({ strict: false }) as { id: string };
+  const { id } = useParams({ strict: false });
+  if (!id) return null;
   if (id === "new") return <NewCareerPathWorkspace />;
   return <ExistingCareerPathWorkspace id={id} />;
 }
 
 function ExistingCareerPathWorkspace({ id }: { id: string }) {
+  const { t } = useTranslation();
   const permissions = usePermissions();
   const canRead = permissions.hasAny("course.read", "system.administer");
-  const canManage = permissions.hasAny("course.create", "course.update", "system.administer");
-  const path = useManagedCareerPath(!permissions.isLoading && canRead ? id : undefined);
+  const canManage = permissions.hasAny(
+    "course.create",
+    "course.update",
+    "system.administer",
+  );
+  const path = useManagedCareerPath(
+    !permissions.isLoading && canRead ? id : undefined,
+  );
   const tabCounts = usePathTabCounts(id);
   const versions = usePathVersions(id, canRead);
-  const search = useSearch({ strict: false }) as { tab?: TabKey; stage?: string };
-  const [tab, setTab] = useState<TabKey>(search.tab ?? "general");
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  const search = useSearch({ strict: false });
+  const requestedTab = search.tab;
+  const [tab, setTab] = useState<TabKey>(
+    requestedTab === "programs" ||
+      requestedTab === "courses" ||
+      requestedTab === "students"
+      ? requestedTab
+      : "general",
+  );
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
+    null,
+  );
   const readOnly = selectedVersionId !== null;
-  const hasDraft = (versions.data ?? []).some((version) => version.status === "draft");
+  const hasDraft = (versions.data ?? []).some(
+    (version) => version.status === "draft",
+  );
   const editable = canManage && hasDraft && !readOnly;
 
   useStageScroll(tab, search.stage);
 
   if (!permissions.isLoading && !canRead) return <PermissionDenied />;
-  if (permissions.isLoading || path.isLoading) return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
-  if (path.isError || !path.data) return <LoadErrorBox message="Could not load the Career Path." />;
+  if (permissions.isLoading || path.isLoading)
+    return <PageSkeleton rows={3} rounded="rounded-lg" className="pb-12" />;
+  if (path.isError || !path.data) {
+    return (
+      <LoadErrorBox
+        message={t("management_career_path_detail.errors.load_failed")}
+      />
+    );
+  }
 
   return (
     <WorkspaceShell
@@ -117,6 +150,8 @@ function WorkspaceShell({
   selectedVersionId: string | null;
   onSelectVersion: (id: string | null) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6 pb-16">
       <PathHeaderBar
@@ -127,13 +162,15 @@ function WorkspaceShell({
       />
       {readOnly && (
         <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Viewing a frozen version. Select the draft/current version to continue editing.
+          {t("management_career_path_detail.versions.readonly_notice")}
         </div>
       )}
       <div className="grid items-start gap-6 lg:grid-cols-10">
         <main className="space-y-5 lg:col-span-7">
           <TabBar tab={tab} onSelect={onSelectTab} counts={tabCounts} />
-          {editable && data.status === "published" && <PathImpactBanner id={id} />}
+          {editable && data.status === "published" && (
+            <PathImpactBanner id={id} />
+          )}
           <TabContent
             tab={tab}
             id={id}
@@ -204,6 +241,7 @@ function TabContent({
 }
 
 function NewCareerPathWorkspace() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const permissions = usePermissions();
   const create = useCreateCareerPath();
@@ -215,18 +253,24 @@ function NewCareerPathWorkspace() {
   const [slugTouched, setSlugTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!permissions.isLoading && !permissions.hasAny("course.create", "course.update")) return <PermissionDenied />;
+  if (
+    !permissions.isLoading &&
+    !permissions.hasAny("course.create", "course.update")
+  )
+    return <PermissionDenied />;
 
   async function createDraft() {
     if (!name.trim() || !slug.trim()) {
-      toast.error("Name and slug are required");
+      toast.error(t("management_career_path_detail.new_path.required_fields"));
       return;
     }
     const accepted = await confirm({
-      title: "Create Career Path draft?",
-      description: "A draft v1 will be created with the information in General.",
-      confirmLabel: "Create draft",
-      cancelLabel: "Cancel",
+      title: t("management_career_path_detail.new_path.confirm_title"),
+      description: t(
+        "management_career_path_detail.new_path.confirm_description",
+      ),
+      confirmLabel: t("management_career_path_detail.actions.create_draft"),
+      cancelLabel: t("management_career_path_detail.actions.cancel"),
       confirmVariant: "default",
     });
     if (!accepted) return;
@@ -242,16 +286,31 @@ function NewCareerPathWorkspace() {
           await uploadCareerPathThumbnail(path.id, thumbnail);
         } catch (error) {
           toast.error(
-            error instanceof Error
-              ? `Career Path was created, but its thumbnail could not be uploaded: ${error.message}`
-              : "Career Path was created, but its thumbnail could not be uploaded",
+            t(
+              "management_career_path_detail.new_path.thumbnail_upload_failed",
+              {
+                reason: getApiErrorMessage(
+                  error,
+                  t("management_career_path_detail.new_path.upload_failed"),
+                ),
+              },
+            ),
           );
         }
       }
-      toast.success("Career Path draft created");
-      void navigate({ to: "/management/career-paths/$id", params: { id: path.id }, replace: true });
+      toast.success(t("management_career_path_detail.new_path.created"));
+      void navigate({
+        to: "/management/career-paths/$id",
+        params: { id: path.id },
+        replace: true,
+      });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not create the Career Path");
+      toast.error(
+        getApiErrorMessage(
+          error,
+          t("management_career_path_detail.new_path.create_failed"),
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -262,11 +321,22 @@ function NewCareerPathWorkspace() {
       {dialog}
       <header className="flex flex-wrap items-center justify-between gap-4 pt-4">
         <div className="min-w-0">
-          <h1 className="truncate font-headline text-2xl font-bold text-m3-on-surface">{name || "New Career Path"}</h1>
-          <p className="mt-0.5 truncate font-mono text-xs text-m3-on-surface-variant">{slug || "career-path-slug"}</p>
+          <h1 className="truncate font-headline text-2xl font-bold text-m3-on-surface">
+            {name || t("management_career_path_detail.new_path.title")}
+          </h1>
+          <p className="mt-0.5 truncate font-mono text-xs text-m3-on-surface-variant">
+            {slug ||
+              t("management_career_path_detail.new_path.slug_placeholder")}
+          </p>
         </div>
-        <Button type="button" className="gap-2" disabled={isSubmitting} onClick={() => void createDraft()}>
-          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />} Create draft
+        <Button
+          type="button"
+          className="gap-2"
+          disabled={isSubmitting}
+          onClick={() => void createDraft()}
+        >
+          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}{" "}
+          {t("management_career_path_detail.actions.create_draft")}
         </Button>
       </header>
       <div className="grid items-start gap-6 lg:grid-cols-10">
@@ -274,10 +344,40 @@ function NewCareerPathWorkspace() {
           <TabBar tab="general" onSelect={() => undefined} />
           <section className="space-y-4 rounded-xl border border-m3-outline-variant/40 bg-card p-5">
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Name <span className="text-red-600">*</span><Input autoFocus value={name} onChange={(event) => { const value = event.target.value; setName(value); if (!slugTouched) setSlug(slugify(value)); }} /></label>
-              <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input className="font-mono" value={slug} onChange={(event) => { setSlugTouched(true); setSlug(slugify(event.target.value)); }} /></label>
+              <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                {t("management_career_path_detail.fields.name")}{" "}
+                <span className="text-red-600">*</span>
+                <Input
+                  autoFocus
+                  value={name}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setName(value);
+                    if (!slugTouched) setSlug(slugify(value));
+                  }}
+                />
+              </label>
+              <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+                {t("management_career_path_detail.fields.slug")}{" "}
+                <span className="text-red-600">*</span>
+                <Input
+                  className="font-mono"
+                  value={slug}
+                  onChange={(event) => {
+                    setSlugTouched(true);
+                    setSlug(slugify(event.target.value));
+                  }}
+                />
+              </label>
             </div>
-            <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+            <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("management_career_path_detail.fields.description")}
+              <Textarea
+                rows={5}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </label>
             <CareerPathThumbnailField
               file={thumbnail}
               onChange={setThumbnail}
@@ -285,7 +385,9 @@ function NewCareerPathWorkspace() {
             />
           </section>
         </main>
-        <aside className="rounded-xl border border-dashed border-m3-outline-variant p-5 text-sm text-m3-on-surface-variant lg:col-span-3">Version history becomes available after the draft is created.</aside>
+        <aside className="rounded-xl border border-dashed border-m3-outline-variant p-5 text-sm text-m3-on-surface-variant lg:col-span-3">
+          {t("management_career_path_detail.new_path.version_history_hint")}
+        </aside>
       </div>
     </div>
   );

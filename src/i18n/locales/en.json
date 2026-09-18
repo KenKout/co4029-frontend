@@ -3833,6 +3833,55 @@
       "behavior": "Reaching {{threshold}} points: a warning is recorded and the attempt is flagged for teacher review — the interview continues."
     }
   },
+  "management_learning_program_new": {
+    "title": "New Learning Program",
+    "subtitle": "Create the program identity and choose published Career Paths by name.",
+    "version_history_hint": "Version history and publishing controls become available after draft creation.",
+    "actions": {
+      "create_draft": "Create draft",
+      "cancel": "Cancel"
+    },
+    "fields": {
+      "name": "Program name",
+      "slug": "Slug",
+      "faculty": "Faculty",
+      "select_faculty": "Select faculty",
+      "switches": "Path changes allowed",
+      "switches_hint": "How many times a student may switch Career Path in this program. Each switch still needs Faculty Dean approval. 0 locks the choice permanently.",
+      "path_limit": "Career paths per student",
+      "path_limit_hint": "Students must complete every selected path. Leave blank for no program limit (max {{ceiling}}).",
+      "description": "Description"
+    },
+    "paths": {
+      "title": "Career Paths",
+      "description": "Choose by name; exact published versions are pinned on creation.",
+      "add": "Add paths",
+      "default": "Default",
+      "set_default": "Set as default",
+      "remove_aria": "Remove {{name}}"
+    },
+    "picker": {
+      "title": "Add Career Paths",
+      "search": "Search by name or slug",
+      "empty": "No published Career Path found",
+      "added": "Added"
+    },
+    "confirm": {
+      "title": "Create Learning Program draft?",
+      "no_switches": "The selected Career Paths will be pinned to draft v1. Students will not be able to request a path change.",
+      "one_switch": "The selected Career Paths will be pinned to draft v1. Students may request up to {{count}} path change, which needs Faculty Dean approval.",
+      "many_switches": "The selected Career Paths will be pinned to draft v1. Students may request up to {{count}} path changes, each needing Faculty Dean approval."
+    },
+    "errors": {
+      "required_fields": "Program name, slug and faculty are required",
+      "switches_invalid": "Path changes allowed must be a whole number between 0 and 100",
+      "path_limit_invalid": "Career paths per program must be blank, or a whole number between 1 and {{ceiling}}",
+      "create_failed": "Could not create the program"
+    },
+    "toast": {
+      "created": "Learning Program draft created"
+    }
+  },
   "management_learning_program_detail": {
     "back": "Learning Programs",
     "not_found": "Learning Program not found.",
@@ -4201,13 +4250,22 @@
       "body": "Publishing this draft will not move them: they finish on the version they started. Your changes apply to students who enrol after it is published."
     },
     "versions": {
+      "title": "Versions",
+      "subtitle": "Select a published version to inspect it read-only.",
+      "readonly_notice": "Viewing a frozen version. Select the draft/current version to continue editing.",
       "fork": "New version",
+      "fork_title": "Create a new version?",
       "fork_confirm": "Create version",
+      "fork_description": "The latest published version will be copied into a new editable draft.",
       "confirm_hint": "Copies v{{version}} (published) into a new draft — edits land on the draft; students stay on the version they started.",
       "empty": "No versions yet — publish to create v1.",
       "editing_draft": "Editing v{{version}} (draft) — publish to freeze it; students stay on the version they started.",
       "frozen_hint": "Published versions are frozen — create a new version to edit.",
       "fork_failed": "Couldn't create a new version.",
+      "created": "New draft version created",
+      "aria_label": "Version v{{version}} {{status}}",
+      "not_published": "Not published",
+      "published_by": "by {{name}}",
       "status": {
         "draft": "draft",
         "published": "published"
@@ -4245,6 +4303,8 @@
     "actions": {
       "publish": "Publish",
       "archive": "Archive",
+      "create_draft": "Create draft",
+      "cancel": "Cancel",
       "add": "Add",
       "move_up": "Move up",
       "move_down": "Move down",
@@ -4256,6 +4316,7 @@
     },
     "fields": {
       "name": "Name",
+      "slug": "Slug",
       "description": "Description",
       "course_uuid": "Course UUID *",
       "position": "Position",
@@ -4298,6 +4359,18 @@
       "no_courses": "No courses in the path yet.",
       "no_students": "No students registered yet.",
       "no_student_path_progress": "No students enrolled in the path."
+    },
+    "new_path": {
+      "title": "New Career Path",
+      "slug_placeholder": "career-path-slug",
+      "required_fields": "Name and slug are required",
+      "confirm_title": "Create Career Path draft?",
+      "confirm_description": "A draft v1 will be created with the information in General.",
+      "created": "Career Path draft created",
+      "create_failed": "Could not create the Career Path",
+      "thumbnail_upload_failed": "Career Path was created, but its thumbnail could not be uploaded: {{reason}}",
+      "upload_failed": "the upload failed",
+      "version_history_hint": "Version history becomes available after the draft is created."
     },
     "hints": {
       "reorder_dirty": "Order changed. Save to apply."

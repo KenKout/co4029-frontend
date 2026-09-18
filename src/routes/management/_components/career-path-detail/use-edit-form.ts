@@ -6,6 +6,7 @@ import {
   useUploadCareerPathThumbnail,
 } from "@/lib/api/hooks/career-paths";
 import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 
 export interface EditFormInitialValues {
   id: string;
@@ -75,9 +76,10 @@ export function useEditForm(
       toast.success(t("management_career_path_detail.toasts.saved_changes"));
     } catch (error) {
       toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : t("management_career_path_detail.errors.save_failed"),
+        getApiErrorMessage(
+          error,
+          t("management_career_path_detail.errors.save_failed"),
+        ),
       );
     }
   }

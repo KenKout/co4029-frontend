@@ -1,24 +1,41 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus, Star, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { EntityMultiSelectDialog, type SelectableEntity } from "@/components/ui/entity-multi-select-dialog";
+import {
+  EntityMultiSelectDialog,
+  type SelectableEntity,
+} from "@/components/ui/entity-multi-select-dialog";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/ui/use-confirm";
-import { useCreateLearningProgram, useLearningProgramOptions } from "@/lib/api/hooks/learning-programs";
+import {
+  useCreateLearningProgram,
+  useLearningProgramOptions,
+} from "@/lib/api/hooks/learning-programs";
 import { parseCareerPathLimit } from "./_components/career-path-limit";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 
 function slugify(value: string) {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
+// The creation workflow intentionally keeps its interdependent draft fields,
+// validation, confirmation, and picker state together.
+// eslint-disable-next-line max-lines-per-function
 export default function ManagementLearningProgramNewPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const options = useLearningProgramOptions();
   const create = useCreateLearningProgram();
@@ -28,12 +45,7 @@ export default function ManagementLearningProgramNewPage() {
   const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [facultyId, setFacultyId] = useState("");
-  // Path-switch budget for this program. Defaults to the backend's own default
-  // (3) so the form states the policy instead of leaving it invisible — every
-  // program created before this field existed silently got 3.
   const [maxPathSwitches, setMaxPathSwitches] = useState("3");
-  // Blank by default: a new program imposes no cap of its own unless its
-  // manager asks for one. This used to default to "1".
   const [maxCareerPaths, setMaxCareerPaths] = useState("");
   const [selectedPathIds, setSelectedPathIds] = useState<string[]>([]);
   const [defaultPathId, setDefaultPathId] = useState<string | null>(null);
@@ -41,23 +53,38 @@ export default function ManagementLearningProgramNewPage() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    if (!facultyId && options.data?.default_faculty_id) setFacultyId(options.data.default_faculty_id);
+    if (!facultyId && options.data?.default_faculty_id)
+      setFacultyId(options.data.default_faculty_id);
   }, [facultyId, options.data?.default_faculty_id]);
 
   const candidates: SelectableEntity[] = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return (options.data?.career_paths ?? [])
-      .filter((path) => !needle || path.name.toLowerCase().includes(needle) || path.slug?.toLowerCase().includes(needle))
-      .map((path) => ({ id: path.id, primaryLabel: path.name, secondaryLabel: path.slug, selectable: path.selectable, notSelectableReason: path.not_selectable_reason }));
+      .filter(
+        (path) =>
+          !needle ||
+          path.name.toLowerCase().includes(needle) ||
+          path.slug?.toLowerCase().includes(needle),
+      )
+      .map((path) => ({
+        id: path.id,
+        primaryLabel: path.name,
+        secondaryLabel: path.slug,
+        selectable: path.selectable,
+        notSelectableReason: path.not_selectable_reason,
+      }));
   }, [options.data?.career_paths, query]);
-  const selectedPaths = (options.data?.career_paths ?? []).filter((path) => selectedPathIds.includes(path.id));
-  const maxCareerPathsCeiling = options.data?.max_career_paths_per_program ?? 10;
+  const selectedPaths = (options.data?.career_paths ?? []).filter((path) =>
+    selectedPathIds.includes(path.id),
+  );
+  const maxCareerPathsCeiling =
+    options.data?.max_career_paths_per_program ?? 10;
 
   if (options.isLoading) return <PageSkeleton rows={4} />;
 
   async function submit() {
     if (!name.trim() || !slug.trim() || !facultyId) {
-      toast.error("Program name, slug and faculty are required");
+      toast.error(t("management_learning_program_new.errors.required_fields"));
       return;
     }
     // Validate here rather than relying on the 422: the backend bound is
@@ -65,23 +92,33 @@ export default function ManagementLearningProgramNewPage() {
     // (a program nobody can ever switch out of).
     const switches = Number.parseInt(maxPathSwitches, 10);
     if (!Number.isInteger(switches) || switches < 0 || switches > 100) {
-      toast.error("Path changes allowed must be a whole number between 0 and 100");
+      toast.error(t("management_learning_program_new.errors.switches_invalid"));
       return;
     }
-    const careerPathLimit = parseCareerPathLimit(maxCareerPaths, maxCareerPathsCeiling);
+    const careerPathLimit = parseCareerPathLimit(
+      maxCareerPaths,
+      maxCareerPathsCeiling,
+    );
     if (!careerPathLimit.ok) {
-      toast.error(`Career paths per program must be blank, or a whole number between 1 and ${maxCareerPathsCeiling}`);
+      toast.error(
+        t("management_learning_program_new.errors.path_limit_invalid", {
+          ceiling: maxCareerPathsCeiling,
+        }),
+      );
       return;
     }
     const accepted = await confirm({
-      title: "Create Learning Program draft?",
-      description:
-        "The selected Career Paths will be pinned to draft v1. " +
-        (switches === 0
-          ? "Students will NOT be able to request a path change."
-          : `Students may request up to ${switches} path change${switches === 1 ? "" : "s"}, each needing Faculty Dean approval.`),
-      confirmLabel: "Create draft",
-      cancelLabel: "Cancel",
+      title: t("management_learning_program_new.confirm.title"),
+      description: t(
+        switches === 0
+          ? "management_learning_program_new.confirm.no_switches"
+          : switches === 1
+            ? "management_learning_program_new.confirm.one_switch"
+            : "management_learning_program_new.confirm.many_switches",
+        { count: switches },
+      ),
+      confirmLabel: t("management_learning_program_new.actions.create_draft"),
+      cancelLabel: t("management_learning_program_new.actions.cancel"),
       confirmVariant: "default",
     });
     if (!accepted) return;
@@ -96,26 +133,80 @@ export default function ManagementLearningProgramNewPage() {
         career_path_ids: selectedPathIds,
         default_career_path_id: defaultPathId,
       });
-      toast.success("Learning Program draft created");
-      void navigate({ to: "/management/learning-programs/$id", params: { id: program.id }, replace: true });
+      toast.success(t("management_learning_program_new.toast.created"));
+      void navigate({
+        to: "/management/learning-programs/$id",
+        params: { id: program.id },
+        replace: true,
+      });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not create the program");
+      toast.error(
+        getApiErrorMessage(
+          error,
+          t("management_learning_program_new.errors.create_failed"),
+        ),
+      );
     }
   }
 
   return (
     <div className="space-y-6 pb-16">
       {dialog}
-      <PageHeader title="New Learning Program" subtitle="Create the program identity and choose published Career Paths by name." action={<Button onClick={() => void submit()} disabled={create.isPending}>Create draft</Button>} />
+      <PageHeader
+        title={t("management_learning_program_new.title")}
+        subtitle={t("management_learning_program_new.subtitle")}
+        action={
+          <Button onClick={() => void submit()} disabled={create.isPending}>
+            {t("management_learning_program_new.actions.create_draft")}
+          </Button>
+        }
+      />
       <div className="grid gap-6 lg:grid-cols-10">
         <main className="space-y-5 rounded-xl border border-m3-outline-variant/40 bg-card p-5 lg:col-span-7">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Program name <span className="text-red-600">*</span><Input autoFocus value={name} onChange={(event) => { const value = event.target.value; setName(value); if (!slugTouched) setSlug(slugify(value)); }} /></label>
-            <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Slug <span className="text-red-600">*</span><Input className="font-mono" value={slug} onChange={(event) => { setSlugTouched(true); setSlug(slugify(event.target.value)); }} /></label>
+            <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("management_learning_program_new.fields.name")}{" "}
+              <span className="text-red-600">*</span>
+              <Input
+                autoFocus
+                value={name}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setName(value);
+                  if (!slugTouched) setSlug(slugify(value));
+                }}
+              />
+            </label>
+            <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+              {t("management_learning_program_new.fields.slug")}{" "}
+              <span className="text-red-600">*</span>
+              <Input
+                className="font-mono"
+                value={slug}
+                onChange={(event) => {
+                  setSlugTouched(true);
+                  setSlug(slugify(event.target.value));
+                }}
+              />
+            </label>
           </div>
-          <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Faculty <span className="text-red-600">*</span><Select value={facultyId} onValueChange={setFacultyId} placeholder="Select faculty" options={(options.data?.faculties ?? []).map((faculty) => ({ value: faculty.id, label: faculty.name }))} /></label>
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Path changes allowed
+            {t("management_learning_program_new.fields.faculty")}{" "}
+            <span className="text-red-600">*</span>
+            <Select
+              value={facultyId}
+              onValueChange={setFacultyId}
+              placeholder={t(
+                "management_learning_program_new.fields.select_faculty",
+              )}
+              options={(options.data?.faculties ?? []).map((faculty) => ({
+                value: faculty.id,
+                label: faculty.name,
+              }))}
+            />
+          </label>
+          <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+            {t("management_learning_program_new.fields.switches")}
             <Input
               type="number"
               min={0}
@@ -124,25 +215,142 @@ export default function ManagementLearningProgramNewPage() {
               onChange={(event) => setMaxPathSwitches(event.target.value)}
             />
             <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">
-              How many times a student may switch Career Path in this program.
-              Each switch still needs Faculty Dean approval. 0 locks the choice
-              permanently.
+              {t("management_learning_program_new.fields.switches_hint")}
             </span>
           </label>
           <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Career paths per student
-            <Input type="number" min={1} max={maxCareerPathsCeiling} value={maxCareerPaths} onChange={(event) => setMaxCareerPaths(event.target.value)} />
-            <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">Students must complete every selected path. Leave blank for no program limit (max {maxCareerPathsCeiling}).</span>
+            {t("management_learning_program_new.fields.path_limit")}
+            <Input
+              type="number"
+              min={1}
+              max={maxCareerPathsCeiling}
+              value={maxCareerPaths}
+              onChange={(event) => setMaxCareerPaths(event.target.value)}
+            />
+            <span className="block text-[11px] font-normal normal-case tracking-normal text-m3-on-surface-variant">
+              {t("management_learning_program_new.fields.path_limit_hint", {
+                ceiling: maxCareerPathsCeiling,
+              })}
+            </span>
           </label>
-          <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">Description<Textarea rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+          <label className="block space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
+            {t("management_learning_program_new.fields.description")}
+            <Textarea
+              rows={4}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+            />
+          </label>
           <section className="space-y-3 border-t border-m3-outline-variant/30 pt-5">
-            <div className="flex items-center justify-between gap-3"><div><h2 className="font-headline font-bold">Career Paths</h2><p className="text-xs text-m3-on-surface-variant">Choose by name; exact published versions are pinned on creation.</p></div><Button type="button" variant="outline" className="gap-2" onClick={() => setPickerOpen(true)}><Plus className="h-4 w-4" /> Add paths</Button></div>
-            <div className="space-y-2">{selectedPaths.map((path) => { const isDefault = path.id === defaultPathId; return <div key={path.id} className="flex items-center justify-between gap-3 rounded-lg bg-m3-surface-container p-3"><div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate text-sm font-semibold">{path.name}</p>{isDefault && <Badge><Star className="h-3 w-3" /> Default</Badge>}</div><p className="font-mono text-xs text-m3-on-surface-variant">{path.slug}</p></div><div className="flex shrink-0 items-center gap-1">{!isDefault && <Button type="button" variant="outline" size="sm" onClick={() => setDefaultPathId(path.id)}>Set as default</Button>}<Button type="button" variant="ghost" size="icon" aria-label={`Remove ${path.name}`} onClick={() => { const remaining = selectedPathIds.filter((id) => id !== path.id); setSelectedPathIds(remaining); if (isDefault) setDefaultPathId(remaining[0] ?? null); }}><X className="h-4 w-4" /></Button></div></div>; })}</div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="font-headline font-bold">
+                  {t("management_learning_program_new.paths.title")}
+                </h2>
+                <p className="text-xs text-m3-on-surface-variant">
+                  {t("management_learning_program_new.paths.description")}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={() => setPickerOpen(true)}
+              >
+                <Plus className="h-4 w-4" />{" "}
+                {t("management_learning_program_new.paths.add")}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {selectedPaths.map((path) => {
+                const isDefault = path.id === defaultPathId;
+                return (
+                  <div
+                    key={path.id}
+                    className="flex items-center justify-between gap-3 rounded-lg bg-m3-surface-container p-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-semibold">
+                          {path.name}
+                        </p>
+                        {isDefault && (
+                          <Badge>
+                            <Star className="h-3 w-3" />{" "}
+                            {t("management_learning_program_new.paths.default")}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="font-mono text-xs text-m3-on-surface-variant">
+                        {path.slug}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {!isDefault && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDefaultPathId(path.id)}
+                        >
+                          {t(
+                            "management_learning_program_new.paths.set_default",
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t(
+                          "management_learning_program_new.paths.remove_aria",
+                          { name: path.name },
+                        )}
+                        onClick={() => {
+                          const remaining = selectedPathIds.filter(
+                            (id) => id !== path.id,
+                          );
+                          setSelectedPathIds(remaining);
+                          if (isDefault) setDefaultPathId(remaining[0] ?? null);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </section>
         </main>
-        <aside className="rounded-xl border border-dashed border-m3-outline-variant p-5 text-sm text-m3-on-surface-variant lg:col-span-3">Version history and publishing controls become available after draft creation.</aside>
+        <aside className="rounded-xl border border-dashed border-m3-outline-variant p-5 text-sm text-m3-on-surface-variant lg:col-span-3">
+          {t("management_learning_program_new.version_history_hint")}
+        </aside>
       </div>
-      {pickerOpen && <EntityMultiSelectDialog title="Add Career Paths" searchPlaceholder="Search by name or slug" items={candidates} alreadySelectedIds={new Set(selectedPathIds)} isLoading={false} query={query} onQueryChange={setQuery} onConfirm={(rows) => { const addedIds = rows.map((row) => row.id); setSelectedPathIds((ids) => [...new Set([...ids, ...addedIds])]); setDefaultPathId((current) => current ?? addedIds[0] ?? null); setPickerOpen(false); setQuery(""); }} onClose={() => { setPickerOpen(false); setQuery(""); }} emptyText="No published Career Path found" alreadyAddedLabel="Added" />}
+      {pickerOpen && (
+        <EntityMultiSelectDialog
+          title={t("management_learning_program_new.picker.title")}
+          searchPlaceholder={t("management_learning_program_new.picker.search")}
+          items={candidates}
+          alreadySelectedIds={new Set(selectedPathIds)}
+          isLoading={false}
+          query={query}
+          onQueryChange={setQuery}
+          onConfirm={(rows) => {
+            const addedIds = rows.map((row) => row.id);
+            setSelectedPathIds((ids) => [...new Set([...ids, ...addedIds])]);
+            setDefaultPathId((current) => current ?? addedIds[0] ?? null);
+            setPickerOpen(false);
+            setQuery("");
+          }}
+          onClose={() => {
+            setPickerOpen(false);
+            setQuery("");
+          }}
+          emptyText={t("management_learning_program_new.picker.empty")}
+          alreadyAddedLabel={t("management_learning_program_new.picker.added")}
+        />
+      )}
     </div>
   );
 }

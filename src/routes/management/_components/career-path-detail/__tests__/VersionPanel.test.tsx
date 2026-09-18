@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import i18n from "@/i18n";
 import { VersionPanel } from "../VersionPanel";
 
 const forkFn = vi.fn();
@@ -42,8 +43,24 @@ describe("VersionPanel", () => {
       },
     ];
     render(<VersionPanel id="p" canManage pathPublished />);
-    expect(screen.getByRole("button", { name: "Version v1 published" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Version v2 draft" }).getAttribute("aria-pressed")).toBe("true");
+    expect(
+      screen.getByRole("button", {
+        name: i18n.t("management_career_path_detail.versions.aria_label", {
+          version: 1,
+          status: i18n.t("management_career_path_detail.status.published"),
+        }),
+      }),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", {
+          name: i18n.t("management_career_path_detail.versions.aria_label", {
+            version: 2,
+            status: i18n.t("management_career_path_detail.status.draft"),
+          }),
+        })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
     expect(screen.queryByTestId("version-fork-button")).toBeNull();
   });
 
@@ -64,7 +81,11 @@ describe("VersionPanel", () => {
     fireEvent.click(fork);
     expect(forkFn).not.toHaveBeenCalled();
     expect(screen.getByRole("alertdialog")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Create version" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: i18n.t("management_career_path_detail.versions.fork_confirm"),
+      }),
+    );
     await waitFor(() => expect(forkFn).toHaveBeenCalledTimes(1));
   });
 
@@ -80,7 +101,11 @@ describe("VersionPanel", () => {
     ];
     render(<VersionPanel id="p" canManage pathPublished />);
     fireEvent.click(screen.getByTestId("version-fork-button"));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: i18n.t("management_career_path_detail.actions.cancel"),
+      }),
+    );
     expect(forkFn).not.toHaveBeenCalled();
     expect(screen.queryByTestId("version-fork-button")).toBeTruthy();
   });
@@ -113,7 +138,14 @@ describe("VersionPanel", () => {
       <VersionPanel id="p" canManage pathPublished={false} />,
     );
     // Still renders the pill, but no fork button (nothing published to fork).
-    expect(screen.getByRole("button", { name: "Version v1 draft" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: i18n.t("management_career_path_detail.versions.aria_label", {
+          version: 1,
+          status: i18n.t("management_career_path_detail.status.draft"),
+        }),
+      }),
+    ).toBeTruthy();
     expect(screen.queryByTestId("version-fork-button")).toBeNull();
     expect(container.querySelectorAll("button")).toHaveLength(1);
   });

@@ -3654,6 +3654,55 @@
       "behavior": "Đạt {{threshold}} điểm: ghi nhận một cảnh báo và đánh dấu lượt làm bài để giáo viên xem lại — buổi phỏng vấn vẫn tiếp tục."
     }
   },
+  "management_learning_program_new": {
+    "title": "Chương trình học mới",
+    "subtitle": "Tạo thông tin chương trình và chọn các lộ trình nghề nghiệp đã xuất bản theo tên.",
+    "version_history_hint": "Lịch sử phiên bản và các thao tác xuất bản sẽ có sau khi tạo bản nháp.",
+    "actions": {
+      "create_draft": "Tạo bản nháp",
+      "cancel": "Hủy"
+    },
+    "fields": {
+      "name": "Tên chương trình",
+      "slug": "Slug",
+      "faculty": "Khoa",
+      "select_faculty": "Chọn khoa",
+      "switches": "Số lần được đổi lộ trình",
+      "switches_hint": "Số lần sinh viên có thể đổi lộ trình nghề nghiệp trong chương trình này. Mỗi lần đổi vẫn cần Trưởng khoa phê duyệt. Nhập 0 để khóa lựa chọn vĩnh viễn.",
+      "path_limit": "Số lộ trình mỗi sinh viên",
+      "path_limit_hint": "Sinh viên phải hoàn thành mọi lộ trình đã chọn. Để trống nếu chương trình không giới hạn (tối đa {{ceiling}}).",
+      "description": "Mô tả"
+    },
+    "paths": {
+      "title": "Lộ trình nghề nghiệp",
+      "description": "Chọn theo tên; phiên bản đã xuất bản chính xác sẽ được ghim khi tạo chương trình.",
+      "add": "Thêm lộ trình",
+      "default": "Mặc định",
+      "set_default": "Đặt làm mặc định",
+      "remove_aria": "Gỡ {{name}}"
+    },
+    "picker": {
+      "title": "Thêm lộ trình nghề nghiệp",
+      "search": "Tìm theo tên hoặc slug",
+      "empty": "Không tìm thấy lộ trình nghề nghiệp đã xuất bản",
+      "added": "Đã thêm"
+    },
+    "confirm": {
+      "title": "Tạo bản nháp chương trình học?",
+      "no_switches": "Các lộ trình nghề nghiệp đã chọn sẽ được ghim vào bản nháp v1. Sinh viên sẽ không thể yêu cầu đổi lộ trình.",
+      "one_switch": "Các lộ trình nghề nghiệp đã chọn sẽ được ghim vào bản nháp v1. Sinh viên có thể yêu cầu đổi lộ trình tối đa {{count}} lần và cần Trưởng khoa phê duyệt.",
+      "many_switches": "Các lộ trình nghề nghiệp đã chọn sẽ được ghim vào bản nháp v1. Sinh viên có thể yêu cầu đổi lộ trình tối đa {{count}} lần; mỗi lần đều cần Trưởng khoa phê duyệt."
+    },
+    "errors": {
+      "required_fields": "Tên chương trình, slug và khoa là bắt buộc",
+      "switches_invalid": "Số lần được đổi lộ trình phải là số nguyên từ 0 đến 100",
+      "path_limit_invalid": "Số lộ trình mỗi chương trình phải để trống hoặc là số nguyên từ 1 đến {{ceiling}}",
+      "create_failed": "Không thể tạo chương trình"
+    },
+    "toast": {
+      "created": "Đã tạo bản nháp chương trình học"
+    }
+  },
   "management_learning_program_detail": {
     "back": "Chương trình học",
     "not_found": "Không tìm thấy chương trình học.",
@@ -4022,13 +4071,22 @@
       "body": "Việc phát hành bản nháp này sẽ không chuyển họ sang lộ trình mới: họ hoàn thành trên phiên bản đã bắt đầu. Thay đổi của bạn chỉ áp dụng cho học viên ghi danh sau khi phát hành."
     },
     "versions": {
+      "title": "Phiên bản",
+      "subtitle": "Chọn một phiên bản đã xuất bản để xem ở chế độ chỉ đọc.",
+      "readonly_notice": "Bạn đang xem một phiên bản đã đóng băng. Chọn bản nháp/phiên bản hiện tại để tiếp tục chỉnh sửa.",
       "fork": "Bản mới",
+      "fork_title": "Tạo phiên bản mới?",
       "fork_confirm": "Tạo bản mới",
+      "fork_description": "Phiên bản đã xuất bản mới nhất sẽ được sao chép thành một bản nháp có thể chỉnh sửa.",
       "confirm_hint": "Sao chép v{{version}} (đã publish) thành bản nháp mới — chỉnh sửa sẽ nằm trên bản nháp; học viên hiện tại vẫn đi bản cũ.",
       "empty": "Chưa có phiên bản — publish để tạo v1.",
       "editing_draft": "Đang chỉnh sửa v{{version}} (bản nháp) — publish để đóng băng; học viên vẫn đi đúng phiên bản họ đã bắt đầu.",
       "frozen_hint": "Phiên bản đã publish bị đóng băng — tạo bản mới để chỉnh sửa.",
       "fork_failed": "Không thể tạo phiên bản mới.",
+      "created": "Đã tạo phiên bản nháp mới",
+      "aria_label": "Phiên bản v{{version}} {{status}}",
+      "not_published": "Chưa xuất bản",
+      "published_by": "bởi {{name}}",
       "status": {
         "draft": "nháp",
         "published": "đã publish"
@@ -4066,6 +4124,8 @@
     "actions": {
       "publish": "Xuất bản",
       "archive": "Lưu trữ",
+      "create_draft": "Tạo bản nháp",
+      "cancel": "Hủy",
       "add": "Thêm",
       "move_up": "Chuyển lên",
       "move_down": "Chuyển xuống",
@@ -4077,6 +4137,7 @@
     },
     "fields": {
       "name": "Tên",
+      "slug": "Slug",
       "description": "Mô tả",
       "course_uuid": "UUID khóa học *",
       "position": "Vị trí",
@@ -4119,6 +4180,18 @@
       "no_courses": "Chưa có khóa học nào trong lộ trình.",
       "no_students": "Chưa có sinh viên nào đăng ký.",
       "no_student_path_progress": "Chưa có sinh viên nào đăng ký lộ trình."
+    },
+    "new_path": {
+      "title": "Lộ trình nghề nghiệp mới",
+      "slug_placeholder": "slug-lo-trinh",
+      "required_fields": "Tên và slug là bắt buộc",
+      "confirm_title": "Tạo bản nháp lộ trình nghề nghiệp?",
+      "confirm_description": "Bản nháp v1 sẽ được tạo từ thông tin trong mục Chung.",
+      "created": "Đã tạo bản nháp lộ trình nghề nghiệp",
+      "create_failed": "Không thể tạo lộ trình nghề nghiệp",
+      "thumbnail_upload_failed": "Đã tạo lộ trình nghề nghiệp nhưng không thể tải ảnh đại diện lên: {{reason}}",
+      "upload_failed": "tải lên thất bại",
+      "version_history_hint": "Lịch sử phiên bản sẽ có sau khi tạo bản nháp."
     },
     "hints": {
       "reorder_dirty": "Thứ tự đã thay đổi. Lưu để áp dụng."

@@ -24,6 +24,7 @@ import { CourseCard } from "@/routes/courses/_components/course-detail/CourseCar
 import { useCourseStartEligibility } from "@/routes/courses/_components/course-detail/use-course-start-eligibility";
 import { InstructorCard } from "@/routes/courses/_components/course-detail/InstructorCard";
 import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 
 /**
  * Public course landing page:
@@ -66,11 +67,7 @@ export default function CourseDetailPage() {
         void navigate({ to: "/courses/$slug/learn", params: { slug } });
       },
       onError: (error) => {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Could not start this course",
-        );
+        toast.error(getApiErrorMessage(error, "Could not start this course"));
       },
     });
   }

@@ -23,6 +23,7 @@ import {
 import type { CareerPathPublic, MyCareerEnrollmentRead } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 
 export type CareerPathScope = "all" | "mine";
 
@@ -199,9 +200,8 @@ function PathCatalogContent({
         icon={AlertCircle}
         title={t("career_paths_page.load_failed_title")}
         description={
-          error instanceof Error
-            ? error.message
-            : t("career_paths_page.load_failed_body")
+          // `error.message` on an ApiError is the raw `API 500: {...}` body.
+          getApiErrorMessage(error, t("career_paths_page.load_failed_body"))
         }
         cta={
           <Button
