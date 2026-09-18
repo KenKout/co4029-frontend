@@ -4173,7 +4173,7 @@
       "withdrawn": "Withdrawn",
       "cancelled": "Cancelled"
     },
-    "program_summary": "Program version {{version}} · {{selected}}/{{pathMax}} paths selected · {{used}}/{{max}} path changes used",
+    "program_summary": "Program version {{version}} · {{selected}}/{{pathMax}} paths selected · {{remaining}} of {{max}} path changes left",
     "selected_paths": "Selected paths",
     "path_completed": "Path completed",
     "course_progress": "{{completed}}/{{total}} courses",
@@ -4184,7 +4184,8 @@
     },
     "explore_paths": {
       "title": "Explore other paths",
-      "description": "Browse paths to add another while slots remain, or request an approved replacement when full."
+      "description_has_room": "Browse paths and add another to this program. Adding is immediate and costs no path change.",
+      "description_full": "This program is full. To take a different path you can request a replacement, which needs Faculty Dean approval and uses one path change."
     },
     "transition_history": "Transition history",
     "switched_away": "Switched away",
@@ -4243,9 +4244,10 @@
       "submitted": "Drop request submitted — waiting for your Faculty Dean's approval",
       "failed": "Could not submit the drop request",
       "reason_label": "Reason for dropping",
-      "reason_placeholder": "Tell your Faculty Dean why you want to drop this path…"
+      "reason_placeholder": "Tell your Faculty Dean why you want to drop this path…",
+      "cost": "Needs Dean approval · uses 1 of your {{remaining}} remaining path changes"
     },
-    "program_summary_uncapped": "Program version {{version}} · {{selected}} paths selected · {{used}}/{{max}} path changes used",
+    "program_summary_uncapped": "Program version {{version}} · {{selected}} paths selected · {{remaining}} of {{max}} path changes left",
     "path_budget": {
       "label": "Career paths in progress",
       "value": "{{used}} of {{limit}} across all your programs",

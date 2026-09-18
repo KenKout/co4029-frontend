@@ -3995,7 +3995,7 @@
       "withdrawn": "Đã rút",
       "cancelled": "Đã hủy"
     },
-    "program_summary": "Phiên bản {{version}} · đã chọn {{selected}}/{{pathMax}} lộ trình · đã dùng {{used}}/{{max}} lần đổi",
+    "program_summary": "Phiên bản chương trình {{version}} · Đã chọn {{selected}}/{{pathMax}} lộ trình · Còn {{remaining}}/{{max}} lượt đổi lộ trình",
     "selected_paths": "Các lộ trình đã chọn",
     "path_completed": "Đã hoàn thành lộ trình",
     "course_progress": "{{completed}}/{{total}} khóa học",
@@ -4005,8 +4005,9 @@
       "description": "Mở lộ trình để xem roadmap. Có thể thêm lộ trình không cần phê duyệt khi vẫn còn chỗ."
     },
     "explore_paths": {
-      "title": "Khám phá các lộ trình khác",
-      "description": "Thêm lộ trình khi còn chỗ, hoặc gửi yêu cầu thay thế cần Trưởng khoa phê duyệt khi đã đủ giới hạn."
+      "title": "Khám phá lộ trình khác",
+      "description_has_room": "Duyệt và thêm một lộ trình nữa vào chương trình này. Thêm có hiệu lực ngay và không tốn lượt đổi lộ trình.",
+      "description_full": "Chương trình này đã đủ lộ trình. Để học lộ trình khác, bạn có thể yêu cầu thay thế — cần Trưởng khoa duyệt và tốn một lượt đổi lộ trình."
     },
     "transition_history": "Lịch sử chuyển lộ trình",
     "switched_away": "Đã chuyển khỏi lộ trình",
@@ -4065,9 +4066,10 @@
       "submitted": "Đã gửi đề nghị bỏ lộ trình — đang chờ Trưởng khoa phê duyệt",
       "failed": "Không thể gửi đề nghị bỏ lộ trình",
       "reason_label": "Lý do bỏ lộ trình",
-      "reason_placeholder": "Cho Trưởng khoa biết vì sao bạn muốn bỏ lộ trình này…"
+      "reason_placeholder": "Cho Trưởng khoa biết vì sao bạn muốn bỏ lộ trình này…",
+      "cost": "Cần Trưởng khoa duyệt · dùng 1 trong {{remaining}} lượt đổi còn lại"
     },
-    "program_summary_uncapped": "Phiên bản chương trình {{version}} · Đã chọn {{selected}} lộ trình · Đã dùng {{used}}/{{max}} lần đổi lộ trình",
+    "program_summary_uncapped": "Phiên bản chương trình {{version}} · Đã chọn {{selected}} lộ trình · Còn {{remaining}}/{{max}} lượt đổi lộ trình",
     "path_budget": {
       "label": "Lộ trình đang học",
       "value": "{{used}} trên {{limit}} trong tất cả chương trình của bạn",

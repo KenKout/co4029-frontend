@@ -199,7 +199,9 @@ function ProgramCard({
                 version: enrollment.program_version_no,
                 selected: enrollment.selected_path_count,
                 pathMax: enrollment.max_career_paths,
-                used: enrollment.approved_switch_count,
+                remaining:
+                  enrollment.max_path_switches -
+                  enrollment.approved_switch_count,
                 max: enrollment.max_path_switches,
               },
             )}
@@ -272,7 +274,12 @@ function ProgramCard({
                 {t("my_learning_programs.explore_paths.title")}
               </p>
               <p className="mt-0.5 text-xs text-m3-on-surface-variant">
-                {t("my_learning_programs.explore_paths.description")}
+                {t(
+                  enrollment.max_career_paths === null ||
+                    enrollment.selected_path_count < enrollment.max_career_paths
+                    ? "my_learning_programs.explore_paths.description_has_room"
+                    : "my_learning_programs.explore_paths.description_full",
+                )}
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-m3-primary" />

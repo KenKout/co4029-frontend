@@ -74,15 +74,27 @@ export function DropPathRequest({
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1.5"
-        onClick={() => setOpen(true)}
-      >
-        <MinusCircle className="h-3.5 w-3.5" />
-        {t("my_learning_programs.drop_path.action")}
-      </Button>
+      {/* The price sits next to the control, not only inside the dialog it
+          opens. On its own the button reads like "remove": a neutral outline
+          beside a progress bar, identical on every path. What it actually
+          does is file a request with a Faculty Dean and spend one of a finite,
+          never-refunded allowance -- and it costs the same on a path at 0% as
+          on one nearly finished, which is exactly when a student would want
+          to know. */}
+      <div className="flex flex-col items-end gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => setOpen(true)}
+        >
+          <MinusCircle className="h-3.5 w-3.5" />
+          {t("my_learning_programs.drop_path.action")}
+        </Button>
+        <span className="text-[11px] text-m3-on-surface-variant">
+          {t("my_learning_programs.drop_path.cost", { remaining })}
+        </span>
+      </div>
 
       <PromptDialog
         open={open}
