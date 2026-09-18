@@ -1,7 +1,14 @@
-import { CheckCircle2, Mail, ShieldOff, UserCircle } from "lucide-react";
+import { CheckCircle2, Mail, ShieldOff } from "lucide-react";
 
 import { UserStatusBadgeMd as StatusBadge } from "@/components/ui/status-badges";
 import { Button } from "@/components/ui/button";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  avatarColor,
+  avatarInitials,
+} from "@/components/ui/avatar";
 
 import type { AdminUserRecord } from "./types";
 import type { UserDetailController } from "./use-admin-user-detail";
@@ -27,9 +34,14 @@ export function UserDetailHeader({
   return (
     <div className="bg-surface-elev border border-border rounded-xl p-6">
       <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-full bg-m3-primary-fixed flex items-center justify-center shrink-0">
-          <UserCircle className="h-7 w-7 text-m3-primary" />
-        </div>
+        <Avatar size="lg" className={avatarColor(user.id)}>
+          {user.profile?.avatar_url ? (
+            <AvatarImage src={user.profile.avatar_url} alt={displayName} />
+          ) : null}
+          <AvatarFallback>
+            {avatarInitials(displayName, { uppercase: true })}
+          </AvatarFallback>
+        </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-headline font-bold text-text-strong">

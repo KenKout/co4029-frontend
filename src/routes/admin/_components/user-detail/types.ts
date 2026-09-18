@@ -13,7 +13,13 @@ export type TFn = (key: string, opts?: Record<string, unknown>) => string;
 
 export type AdminUserDetailData = NonNullable<UserDetailController["data"]>;
 
-export type AdminUserRecord = NonNullable<AdminUserDetailData["user"]> & {
+type AdminUserBase = NonNullable<AdminUserDetailData["user"]>;
+type AdminUserProfile = NonNullable<AdminUserBase["profile"]> & {
+  avatar_url?: string | null;
+};
+
+export type AdminUserRecord = Omit<AdminUserBase, "profile"> & {
+  profile: AdminUserProfile | null;
   student_code?: string | null;
   employee_code?: string | null;
 };
