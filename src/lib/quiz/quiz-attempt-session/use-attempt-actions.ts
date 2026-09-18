@@ -65,6 +65,9 @@ async function persistAnswerToServer(args: {
   submitAnswer: SubmitAnswerMutation;
   state: AttemptSessionState;
   t: TFunction;
+  writesEnabled: boolean;
+  writesEnabledRef: React.MutableRefObject<boolean>;
+  onSessionConflict: (reason: string, attemptId?: string) => void;
 }): Promise<boolean> {
   const {
     questionIdx,
@@ -76,10 +79,13 @@ async function persistAnswerToServer(args: {
     submitAnswer,
     state,
     t,
+    writesEnabled,
+    writesEnabledRef,
+    onSessionConflict,
   } = args;
   const question = displayQuestions[questionIdx];
   const status = statuses[questionIdx];
-  if (!question || !status || !activeAttemptId) return false;
+  if (!writesEnabled || !question || !status || !activeAttemptId) return false;
   if (!hasAnswer(status)) return false;
   if (status.savedToServer) return true;
   // Accumulated ATTENTION time (see use-question-focus-time.ts). `null`
@@ -106,7 +112,15 @@ async function persistAnswerToServer(args: {
     }
     return true;
   } catch (err) {
-    reportPersistFailure({ t, state, questionId: question.id, err });
+    if (writesEnabledRef.current) {
+      reportPersistFailure({
+        t,
+        state,
+        questionId: question.id,
+        err,
+        onSessionConflict,
+      });
+    }
     return false;
   }
 }
@@ -136,6 +150,7 @@ export function useAttemptActions(args: {
   stopCamera: () => void;
   requireCamera: boolean;
   onSessionConflict: (reason: string, attemptId?: string) => void;
+  writesEnabled: boolean;
   /**
    * Request the mandatory fullscreen gate. Must be called from the start
    * click itself — browsers grant `requestFullscreen()` only under a user
@@ -160,6 +175,7 @@ export function useAttemptActions(args: {
     stopCamera,
     requireCamera,
     onSessionConflict,
+    writesEnabled,
   } = args;
   const { activeIdx, activeAttemptId, statuses } = state;
   const { passwordInput } = passwordGate;
@@ -167,6 +183,8 @@ export function useAttemptActions(args: {
   // Latest statuses for the post-await snapshot check in `persistAnswer`.
   const statusesRef = useRef(statuses);
   statusesRef.current = statuses;
+  const writesEnabledRef = useRef(writesEnabled);
+  writesEnabledRef.current = writesEnabled;
   const ctx: AttemptActionsContext = {
     t,
     state,
@@ -230,8 +248,20 @@ export function useAttemptActions(args: {
         submitAnswer,
         state,
         t,
+        writesEnabled,
+        writesEnabledRef,
+        onSessionConflict,
       }),
-    [displayQuestions, statuses, activeAttemptId, focusTime, submitAnswer, t],
+    [
+      displayQuestions,
+      statuses,
+      activeAttemptId,
+      focusTime,
+      submitAnswer,
+      t,
+      writesEnabled,
+      onSessionConflict,
+    ],
   );
 
   const handleSaveOnly = useCallback(async () => {
@@ -257,7 +287,7 @@ export function useAttemptActions(args: {
 
   const handleFinalSubmit = useCallback(
     async (trigger: "manual" | "timeout") => {
-      if (!sessionReady || !activeAttemptId) return;
+      if (!writesEnabled || !sessionReady || !activeAttemptId) return;
       if (submitAttempt.isPending) return;
 
       for (let i = 0; i < displayQuestions.length; i += 1) {
@@ -290,6 +320,7 @@ export function useAttemptActions(args: {
       statuses,
       persistAnswer,
       t,
+      writesEnabled,
     ],
   );
 

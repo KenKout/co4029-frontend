@@ -70,6 +70,15 @@ export function useQuizAttemptSession(quizId: string) {
     resumeRequested ? resumableAttemptId : null,
   );
 
+  // A failed resume must return the CTA to an actionable state. Otherwise the
+  // dialog keeps receiving `resumeRequested=true` forever after a 409/404 or a
+  // transient network failure, which looks like an infinite loading spinner.
+  useEffect(() => {
+    if (resumeRequested && attemptProgress.isError) {
+      setResumeRequested(false);
+    }
+  }, [attemptProgress.isError, resumeRequested]);
+
   const state = useAttemptSessionState();
   const { taking, activeAttemptId, activeIdx, submittedSummary } = state;
   const camera = useQuizCamera(
@@ -108,8 +117,10 @@ export function useQuizAttemptSession(quizId: string) {
   // a take is live (an attempt exists and we're in taking mode). Passing null
   // outside an active take detaches the listeners. Fire-and-forget; never
   // blocks UI.
+  const writesEnabled =
+    tabGuard.isOwner && !tabGuard.blocked && !tabGuard.surrendered;
   const integrity = useQuizIntegrityReporter(
-    taking && activeAttemptId ? activeAttemptId : null,
+    writesEnabled && taking && activeAttemptId ? activeAttemptId : null,
   );
 
   // Fullscreen is MANDATORY for every quiz attempt, matching the interview.
@@ -187,6 +198,7 @@ export function useQuizAttemptSession(quizId: string) {
     stopCamera: camera.stop,
     requireCamera: Boolean(quiz?.require_camera),
     onSessionConflict: handleSessionConflict,
+    writesEnabled,
   });
 
   const requestResume = useCallback(async () => {
@@ -198,6 +210,7 @@ export function useQuizAttemptSession(quizId: string) {
       setSessionConflict(null);
       setResumeRequested(true);
     } catch (error) {
+      setResumeRequested(false);
       if (error instanceof ApiError && (error.status === 409 || error.status === 503)) {
         setSessionConflict(
           error.status === 503
@@ -217,6 +230,7 @@ export function useQuizAttemptSession(quizId: string) {
       setSessionConflict(null);
       setResumeRequested(true);
     } catch (error) {
+      setResumeRequested(false);
       if (error instanceof ApiError && error.status === 503) {
         setSessionConflict("quiz_session_guard_unavailable");
       }
@@ -310,5 +324,6 @@ export function useQuizAttemptSession(quizId: string) {
     camera,
     tabGuard,
     sessionConflict,
+    writesEnabled,
   };
 }

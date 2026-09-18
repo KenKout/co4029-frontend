@@ -1,8 +1,11 @@
 import type { TFunction } from "i18next";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
-import { isApiErrorCode } from "@/lib/api/error-codes";
-import { extractRetryAt } from "@/lib/quiz/quiz-session-helpers";
+import { getApiErrorMessage, isApiErrorCode } from "@/lib/api/error-codes";
+import {
+  extractDetailString,
+  extractRetryAt,
+} from "@/lib/quiz/quiz-session-helpers";
 import type { AttemptSessionState } from "./use-attempt-session-state";
 
 /**
@@ -15,8 +18,9 @@ export function reportPersistFailure(args: {
   state: AttemptSessionState;
   questionId: string;
   err: unknown;
+  onSessionConflict?: (reason: string) => void;
 }) {
-  const { t, state, questionId, err } = args;
+  const { t, state, questionId, err, onSessionConflict } = args;
   if (isApiErrorCode(err, "card_cooldown_active")) {
     const retryAt = extractRetryAt(err);
     if (retryAt) {
@@ -32,9 +36,20 @@ export function reportPersistFailure(args: {
     toast.error(t("course_quiz.errors.rate_limited"));
     return;
   }
-  toast.error(
-    (err as Error).message || t("course_quiz.errors.save_answer_failed"),
-  );
+  const conflictReason =
+    err instanceof ApiError
+      ? err.code ?? extractDetailString(err, "reason")
+      : null;
+  if (
+    err instanceof ApiError &&
+    err.status === 409 &&
+    (conflictReason === "quiz_session_replaced" ||
+      conflictReason === "attempt_not_in_progress")
+  ) {
+    onSessionConflict?.(conflictReason);
+    return;
+  }
+  toast.error(getApiErrorMessage(err, t("course_quiz.errors.save_answer_failed")));
 }
 
 /** Mark a question as saved and drop any cooldown we were showing for it. */
