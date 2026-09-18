@@ -37,7 +37,11 @@ export function CareerPathHeader({
                   ),
                   to: "/me/learning-programs",
                 },
-                { label: program.program_name },
+                {
+                  label: program.program_name,
+                  to: "/catalog/career-paths",
+                  search: { enrollment: programEnrollmentId },
+                },
                 { label: data.name },
               ]
             : [

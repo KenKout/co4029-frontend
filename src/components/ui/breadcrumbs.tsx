@@ -7,6 +7,7 @@ export type BreadcrumbItem = {
   label: string;
   to?: string;
   params?: Record<string, string>;
+  search?: Record<string, string | number | boolean | undefined>;
 };
 
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
@@ -32,6 +33,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
               <Link
                 to={item.to}
                 params={item.params ?? {}}
+                search={item.search}
                 className="rounded-md px-1 hover:text-m3-primary focus-visible:outline-2 focus-visible:outline-m3-primary transition-colors"
               >
                 {item.label}

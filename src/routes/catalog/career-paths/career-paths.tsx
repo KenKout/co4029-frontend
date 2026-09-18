@@ -397,7 +397,6 @@ function CareerPathsHeader({
                 to: "/me/learning-programs",
               },
               { label: program.program_name },
-              { label: t("career_paths_page.program_context.explore_paths") },
             ]}
           />
         ) : null}
