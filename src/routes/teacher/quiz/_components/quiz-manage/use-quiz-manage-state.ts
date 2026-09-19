@@ -52,6 +52,9 @@ function loadInitialTab(quizId: string, requestedTab?: string): TabKey {
  * Extracted from quiz-manage.tsx verbatim — the hook call order below is the
  * order the page used, so React's hook sequence is unchanged.
  */
+// Dialog flags belong beside the other page-local state so every lifecycle
+// action participates in the same navigation/dirty-state coordinator.
+// eslint-disable-next-line max-lines-per-function
 export function useQuizManageState({
   quizId,
   quiz,
@@ -78,6 +81,7 @@ export function useQuizManageState({
     }
   }, [quizId, tab]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [draft, setDraft] = useState<SettingsDraft | null>(null);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -200,6 +204,8 @@ export function useQuizManageState({
     setTab,
     confirmDelete,
     setConfirmDelete,
+    confirmArchive,
+    setConfirmArchive,
     confirmPublish,
     setConfirmPublish,
     draft,

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { BarChart3, Trash2 } from "lucide-react";
+import { Archive, BarChart3, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,9 +25,11 @@ export function QuizPageActions({
   actionsStuck,
   publishDisabled,
   publishPending,
+  archivePending,
   deletePending,
   questionCount,
   onPublish,
+  onArchive,
   onDelete,
 }: {
   courseId: string;
@@ -38,9 +40,11 @@ export function QuizPageActions({
   actionsStuck: boolean;
   publishDisabled: boolean;
   publishPending: boolean;
+  archivePending: boolean;
   deletePending: boolean;
   questionCount: number;
   onPublish: () => void;
+  onArchive: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
@@ -87,6 +91,19 @@ export function QuizPageActions({
           questionCount={questionCount}
           onClick={onPublish}
         />
+      )}
+      {isPublished && (
+        <Button
+          type="button"
+          variant="outline"
+          className="gap-2 border-amber-300 text-amber-800 hover:bg-amber-50 hover:text-amber-900"
+          onClick={onArchive}
+          disabled={archivePending}
+          title={t("teacher_quiz_manage.actions.archive_quiz_tooltip")}
+        >
+          <Archive className="h-4 w-4" />
+          {!actionsStuck && t("teacher_quiz_manage.actions.archive")}
+        </Button>
       )}
       {/* A published quiz may still be deleted while its course or module is
           a draft: learners cannot reach it yet. Once all parent levels are

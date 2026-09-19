@@ -845,6 +845,10 @@
     "rename_module": "Rename module",
     "reorder_failed": "Reorder failed",
     "module_status_set": "Module {{status}}",
+    "archive": "Archive",
+    "module_archived": "Module archived",
+    "archive_module_title": "Archive this module?",
+    "archive_module_body": "The module will be hidden from students and no new attempts can start. In-progress attempts can still be completed, and historical progress is preserved. This cannot be undone.",
     "mark_module_as": "Click to mark as {{status}}",
     "curriculum_fallback_title": "Curriculum Structure",
     "module_count": "{{count}} module",
@@ -4861,6 +4865,8 @@
       "delete_failed": "Failed to delete quiz",
       "published": "Quiz published",
       "publish_failed": "Failed to publish quiz",
+      "archived": "Quiz archived",
+      "archive_failed": "Failed to archive quiz",
       "publish_pending_review": "Some questions are still pending review. Approve all questions before publishing.",
       "question_added": "Question added",
       "add_question_failed": "Failed to add question",
@@ -4896,6 +4902,8 @@
       "publish_needs_question": "Add at least one question before publishing",
       "publish_quiz_tooltip": "Publish this quiz",
       "publish": "Publish",
+      "archive": "Archive",
+      "archive_quiz_tooltip": "Withdraw this quiz from new attempts",
       "delete_quiz_tooltip": "Delete quiz, questions, attempts, and module item",
       "add_question": "Add question",
       "view_results": "Results",
@@ -4917,6 +4925,10 @@
     "confirm_delete": {
       "title": "Delete this quiz?",
       "body": "This permanently deletes the quiz, its questions, attempts, and module entry. This cannot be undone."
+    },
+    "confirm_archive": {
+      "title": "Archive this quiz?",
+      "body": "Students will not be able to start a new attempt. Attempts already in progress can still be resumed and submitted, and all historical results will be preserved. This cannot be undone."
     },
     "confirm_publish": {
       "title": "Publish this quiz?",

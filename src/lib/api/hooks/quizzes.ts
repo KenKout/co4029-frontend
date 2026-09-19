@@ -52,6 +52,7 @@ export {
 } from "./quizzes/teacher-attempts";
 
 export {
+  useArchiveQuiz,
   useCreateQuiz,
   useDeleteQuiz,
   usePatchQuiz,

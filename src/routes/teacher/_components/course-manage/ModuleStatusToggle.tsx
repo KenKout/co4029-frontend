@@ -20,7 +20,8 @@ export function ModuleStatusToggle({
   t: TranslateFn;
 }) {
   return (
-    <Button variant="ghost"
+    <Button
+      variant="ghost"
       type="button"
       title={t("teacher_common.mark_module_as", {
         status: t(
@@ -28,12 +29,14 @@ export function ModuleStatusToggle({
         ),
       })}
       onClick={onToggleStatus}
-      disabled={updateModule.isPending}
+      disabled={updateModule.isPending || module.status === "archived"}
       className={cn(
         "text-[10px] font-bold px-2 py-0.5 rounded-full border-0 transition-colors cursor-pointer h-auto whitespace-normal",
         module.status === "published"
           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-          : "bg-amber-50 text-amber-700 hover:bg-amber-100",
+          : module.status === "archived"
+            ? "bg-slate-100 text-slate-600 cursor-not-allowed"
+            : "bg-amber-50 text-amber-700 hover:bg-amber-100",
       )}
     >
       {updateModule.isPending

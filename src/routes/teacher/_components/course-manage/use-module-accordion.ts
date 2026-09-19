@@ -21,12 +21,16 @@ import type { TranslateFn } from "./types";
  * `useQueryClient`, `useState` ×4) so the card's hook slots are unchanged, and
  * every expression is carried over character-for-character.
  */
+// Status withdrawal adds one confirmation transaction to this cohesive card
+// controller; splitting it would duplicate the mutation/error handling state.
+// eslint-disable-next-line max-lines-per-function
 export function useModuleAccordion(options: {
   module: CourseContentModule;
   courseId: string;
+  courseStatus: string;
   t: TranslateFn;
 }) {
-  const { module, courseId, t } = options;
+  const { module, courseId, courseStatus, t } = options;
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(module.title);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +60,7 @@ export function useModuleAccordion(options: {
   // edit / edit-link / publish controls in the header stay clickable.
   const [moduleDragEnabled, setModuleDragEnabled] = useState(false);
   const [publishingAll, setPublishingAll] = useState(false);
+  const [archiveConfirm, setArchiveConfirm] = useState(false);
 
   const stats = computeModuleItemStats(module);
   const { allItemsSorted, draftItems } = stats;
@@ -102,6 +107,11 @@ export function useModuleAccordion(options: {
 
   function toggleStatus(e: React.MouseEvent) {
     e.stopPropagation();
+    if (module.status === "archived") return;
+    if (module.status === "published" && courseStatus === "published") {
+      setArchiveConfirm(true);
+      return;
+    }
     const next = module.status === "published" ? "draft" : "published";
     updateModule.mutate(
       { status: next },
@@ -112,6 +122,19 @@ export function useModuleAccordion(options: {
               status: t(`teacher_dashboard.status.${next}`),
             }),
           ),
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
+  }
+
+  function archiveModule() {
+    updateModule.mutate(
+      { status: "archived" },
+      {
+        onSuccess: () => {
+          setArchiveConfirm(false);
+          toast.success(t("teacher_common.module_archived", "Module archived"));
+        },
         onError: (err) => toast.error((err as Error).message),
       },
     );
@@ -156,6 +179,9 @@ export function useModuleAccordion(options: {
     moduleDragEnabled,
     setModuleDragEnabled,
     publishingAll,
+    archiveConfirm,
+    setArchiveConfirm,
+    archiveModule,
     handleDuplicateModule,
     handleDrop,
     startEditTitle,

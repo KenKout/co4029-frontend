@@ -79,6 +79,7 @@ export function QuizManageActionStrip({
               actionsStuck={actionsStuck}
               publishDisabled={publishDisabled}
               publishPending={data.publishQuiz.isPending}
+              archivePending={data.archiveQuiz.isPending}
               deletePending={
                 data.deleteQuiz.isPending ||
                 state.settingsBusy ||
@@ -86,6 +87,7 @@ export function QuizManageActionStrip({
               }
               questionCount={data.questions.length}
               onPublish={() => state.setConfirmPublish(true)}
+              onArchive={() => state.setConfirmArchive(true)}
               onDelete={() => state.setConfirmDelete(true)}
             />
           </div>

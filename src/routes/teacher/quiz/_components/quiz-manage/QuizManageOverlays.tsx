@@ -4,6 +4,7 @@ import { navigateToQuizSetting } from "@/routes/teacher/_components/quiz-manage/
 import { QuestionBankModal } from "@/routes/teacher/_components/question-bank-modal";
 
 import { ConfirmDeleteQuizDialog } from "./ConfirmDeleteQuizDialog";
+import { ConfirmArchiveQuizDialog } from "./ConfirmArchiveQuizDialog";
 import { ConfirmPublishQuizDialog } from "./ConfirmPublishQuizDialog";
 import type { QuizManageActions } from "./actions";
 import type {
@@ -63,6 +64,13 @@ export function QuizManageOverlays({
           onConfirm={actions.handleDelete}
         />
       )}
+
+      <ConfirmArchiveQuizDialog
+        open={state.confirmArchive}
+        pending={data.archiveQuiz.isPending}
+        onCancel={() => state.setConfirmArchive(false)}
+        onConfirm={() => void actions.handleArchive()}
+      />
 
       {state.confirmPublish && (
         <ConfirmPublishQuizDialog

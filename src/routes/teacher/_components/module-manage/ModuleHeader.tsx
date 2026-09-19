@@ -69,7 +69,11 @@ export function ModuleHeader({
           />
         </div>
 
-        <ModulePublishButton module={module} updateModule={updateModule} />
+        <ModulePublishButton
+          module={module}
+          courseStatus={course?.status ?? "draft"}
+          updateModule={updateModule}
+        />
       </div>
     </>
   );

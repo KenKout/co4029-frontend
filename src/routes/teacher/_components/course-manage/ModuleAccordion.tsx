@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { CourseContentModule } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ModuleAccordionHeader } from "./ModuleAccordionHeader";
 import { ModuleItemsList } from "./ModuleItemsList";
 import { useModuleAccordion } from "./use-module-accordion";
@@ -20,6 +21,7 @@ import { useModuleAccordion } from "./use-module-accordion";
 export function ModuleAccordion({
   module,
   courseId,
+  courseStatus,
   index,
   open,
   onToggle,
@@ -33,6 +35,7 @@ export function ModuleAccordion({
 }: {
   module: CourseContentModule;
   courseId: string;
+  courseStatus: string;
   /** 0-based order in the course, rendered as the module's number badge. */
   index: number;
   open: boolean;
@@ -47,56 +50,72 @@ export function ModuleAccordion({
   onDragEnd: () => void;
 }) {
   const { t } = useTranslation();
-  const ctl = useModuleAccordion({ module, courseId, t });
+  const ctl = useModuleAccordion({ module, courseId, courseStatus, t });
   const { moduleDragEnabled, setModuleDragEnabled } = ctl;
 
   return (
-    <div
-      ref={(el) => registerRef(module.id, el)}
-      id={`module-${module.id}`}
-      draggable={moduleDragEnabled}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDragEnd={() => {
-        setModuleDragEnabled(false);
-        onDragEnd();
-      }}
-      className={cn(
-        "flex flex-col rounded-xl border-l-4 overflow-hidden scroll-mt-24 transition-all",
-        isDragging ? "opacity-40" : "",
-        isDragOver ? "ring-2 ring-m3-primary/40 shadow-sm" : "",
-        open ? "border-m3-primary" : "border-m3-outline-variant",
-      )}
-    >
-      {/* Header row */}
-      <ModuleAccordionHeader
-        module={module}
-        courseId={courseId}
-        index={index}
-        open={open}
-        onToggle={onToggle}
-        ctl={ctl}
-        t={t}
-      />
-
+    <>
       <div
+        ref={(el) => registerRef(module.id, el)}
+        id={`module-${module.id}`}
+        draggable={moduleDragEnabled}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onDragEnd={() => {
+          setModuleDragEnabled(false);
+          onDragEnd();
+        }}
         className={cn(
-          "grid transition-[grid-template-rows] duration-300 ease-in-out",
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          "flex flex-col rounded-xl border-l-4 overflow-hidden scroll-mt-24 transition-all",
+          isDragging ? "opacity-40" : "",
+          isDragOver ? "ring-2 ring-m3-primary/40 shadow-sm" : "",
+          open ? "border-m3-primary" : "border-m3-outline-variant",
         )}
       >
-        <div className="overflow-hidden min-h-0">
-          <div className="border-t border-m3-outline-variant bg-card">
-            <ModuleItemsList
-              module={module}
-              courseId={courseId}
-              ctl={ctl}
-              t={t}
-            />
+        {/* Header row */}
+        <ModuleAccordionHeader
+          module={module}
+          courseId={courseId}
+          index={index}
+          open={open}
+          onToggle={onToggle}
+          ctl={ctl}
+          t={t}
+        />
+
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] duration-300 ease-in-out",
+            open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          )}
+        >
+          <div className="overflow-hidden min-h-0">
+            <div className="border-t border-m3-outline-variant bg-card">
+              <ModuleItemsList
+                module={module}
+                courseId={courseId}
+                ctl={ctl}
+                t={t}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <ConfirmDialog
+        open={ctl.archiveConfirm}
+        onOpenChange={ctl.setArchiveConfirm}
+        title={t("teacher_common.archive_module_title", "Archive this module?")}
+        description={t(
+          "teacher_common.archive_module_body",
+          "The module will be hidden from students and no new attempts can start. In-progress attempts can still be completed, and historical progress is preserved. This cannot be undone.",
+        )}
+        confirmLabel={t("teacher_common.archive", "Archive")}
+        cancelLabel={t("common.cancel")}
+        confirmVariant="destructive"
+        isPending={ctl.updateModule.isPending}
+        onConfirm={ctl.archiveModule}
+      />
+    </>
   );
 }

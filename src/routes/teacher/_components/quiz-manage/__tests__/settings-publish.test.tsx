@@ -7,6 +7,7 @@ import { quizFixture } from "./settings-fixture";
 
 const mocks = vi.hoisted(() => ({
   publish: vi.fn(),
+  archive: vi.fn(),
   approved: true,
   quizStatus: "draft",
   publishedAt: null as string | null,
@@ -51,6 +52,7 @@ vi.mock(
       ],
       courseModule: { id: "module-1", status: mocks.moduleStatus },
       publishQuiz: { isPending: false, mutateAsync: mocks.publish },
+      archiveQuiz: { isPending: false, mutateAsync: mocks.archive },
       patchQuiz: { isPending: false },
       deleteQuiz: { isPending: false },
       pendingDeletes: { comboCount: 0 },
@@ -87,6 +89,7 @@ vi.mock(
 );
 beforeEach(() => {
   mocks.publish.mockReset().mockResolvedValue({});
+  mocks.archive.mockReset().mockResolvedValue({});
   mocks.approved = true;
   mocks.quizStatus = "draft";
   mocks.publishedAt = null;
@@ -95,6 +98,29 @@ beforeEach(() => {
 });
 
 describe("quiz publish safety", () => {
+  it("archives a published quiz only after confirmation", async () => {
+    mocks.quizStatus = "published";
+    mocks.publishedAt = "2026-09-19T00:00:00Z";
+    mocks.courseStatus = "published";
+    mocks.moduleStatus = "published";
+    const user = userEvent.setup();
+    render(<QuizManagePage />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "teacher_quiz_manage.actions.archive",
+      }),
+    );
+    const dialog = screen.getByRole("alertdialog");
+    expect(mocks.archive).not.toHaveBeenCalled();
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "teacher_quiz_manage.actions.archive",
+      }),
+    );
+    expect(mocks.archive).toHaveBeenCalledTimes(1);
+  });
+
   it.each(["feedback", "exception", "question", "settings"])(
     "blocks publish while %s has unsaved work",
     async (source) => {

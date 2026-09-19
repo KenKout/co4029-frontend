@@ -21,6 +21,7 @@ export function ModuleList({
   const { t } = useTranslation();
   const {
     modules,
+    courseStatus,
     courseId,
     openMap,
     toggleModule,
@@ -40,6 +41,7 @@ export function ModuleList({
           key={module.id}
           module={module}
           courseId={courseId}
+          courseStatus={courseStatus}
           index={idx}
           open={!!openMap[module.id]}
           onToggle={() => toggleModule(module.id)}

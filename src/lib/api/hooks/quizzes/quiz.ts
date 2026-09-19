@@ -114,6 +114,28 @@ export function usePublishQuiz(quizId: string | null | undefined) {
   });
 }
 
+export function useArchiveQuiz(quizId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiPost<QuizAuthoring>(`/teacher/quizzes/${quizId}/archive`),
+    onSuccess: (quiz) => {
+      void qc.invalidateQueries({
+        queryKey: queryKeys.quizzes.authoring(quiz.id),
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.courses.content(quiz.course_id),
+      });
+      void qc.invalidateQueries({
+        queryKey: ["teacher", "courses", quiz.course_id, "content"],
+      });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.quizzes.detail(quiz.id),
+      });
+    },
+  });
+}
+
 export function useDeleteQuiz(quizId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({

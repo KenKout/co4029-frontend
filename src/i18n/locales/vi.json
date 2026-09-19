@@ -776,6 +776,10 @@
     "rename_module": "Đổi tên chương",
     "reorder_failed": "Sắp xếp lại thất bại",
     "module_status_set": "Chương đã {{status}}",
+    "archive": "Lưu trữ",
+    "module_archived": "Đã lưu trữ chương",
+    "archive_module_title": "Lưu trữ chương này?",
+    "archive_module_body": "Chương sẽ bị ẩn khỏi học viên và không thể bắt đầu lượt làm mới. Các lượt đang thực hiện vẫn có thể hoàn tất và tiến độ lịch sử được giữ lại. Không thể hoàn tác thao tác này.",
     "mark_module_as": "Nhấn để đánh dấu là {{status}}",
     "curriculum_fallback_title": "Cấu trúc chương trình",
     "module_count": "{{count}} chương",
@@ -4683,6 +4687,8 @@
       "delete_failed": "Không thể xoá bài kiểm tra",
       "published": "Đã xuất bản bài kiểm tra",
       "publish_failed": "Không thể xuất bản bài kiểm tra",
+      "archived": "Đã lưu trữ bài kiểm tra",
+      "archive_failed": "Không thể lưu trữ bài kiểm tra",
       "publish_pending_review": "Một số câu hỏi vẫn đang chờ duyệt. Hãy duyệt tất cả câu hỏi trước khi xuất bản.",
       "question_added": "Đã thêm câu hỏi",
       "add_question_failed": "Không thể thêm câu hỏi",
@@ -4718,6 +4724,8 @@
       "publish_needs_question": "Cần thêm ít nhất một câu hỏi trước khi xuất bản",
       "publish_quiz_tooltip": "Xuất bản bài kiểm tra này",
       "publish": "Xuất bản",
+      "archive": "Lưu trữ",
+      "archive_quiz_tooltip": "Ngừng cho phép bắt đầu lượt làm mới",
       "delete_quiz_tooltip": "Xoá bài kiểm tra, câu hỏi, lượt làm bài và mục module",
       "add_question": "Thêm câu hỏi",
       "view_results": "Kết quả",
@@ -4739,6 +4747,10 @@
     "confirm_delete": {
       "title": "Xoá bài kiểm tra này?",
       "body": "Hành động này sẽ xoá vĩnh viễn bài kiểm tra này, các câu hỏi, lượt làm bài và mục module liên quan. Không thể hoàn tác."
+    },
+    "confirm_archive": {
+      "title": "Lưu trữ bài kiểm tra này?",
+      "body": "Học viên sẽ không thể bắt đầu lượt làm mới. Các lượt đang thực hiện vẫn có thể tiếp tục và nộp bài; toàn bộ kết quả lịch sử được giữ lại. Không thể hoàn tác thao tác này."
     },
     "confirm_publish": {
       "title": "Xuất bản bài kiểm tra này?",

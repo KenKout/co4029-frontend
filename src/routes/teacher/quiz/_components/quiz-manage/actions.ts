@@ -40,7 +40,7 @@ export function createQuizManageActions({
   data,
   state,
 }: QuizManageActionDeps) {
-  const { deleteQuiz, publishQuiz, patchQuiz, addQuestion } = data;
+  const { deleteQuiz, archiveQuiz, publishQuiz, patchQuiz, addQuestion } = data;
 
   function returnToCourse() {
     void navigate({
@@ -99,6 +99,20 @@ export function createQuizManageActions({
     }
   }
 
+  async function handleArchive() {
+    try {
+      await archiveQuiz.mutateAsync();
+      toast.success(t("teacher_quiz_manage.toasts.archived"));
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error).message ||
+          t("teacher_quiz_manage.toasts.archive_failed"),
+      );
+    } finally {
+      state.setConfirmArchive(false);
+    }
+  }
+
   async function handleAddQuestion(questionType = "multiple_choice") {
     const payload = buildNewQuestionPayload(questionType, t);
     try {
@@ -126,7 +140,11 @@ export function createQuizManageActions({
     }
     try {
       const saved = await patchQuiz.mutateAsync(settingsPatchFromDraft(draft));
-      state.setDraft((current) => JSON.stringify(current) === JSON.stringify(draft) ? draftFromQuiz(saved) : current);
+      state.setDraft((current) =>
+        JSON.stringify(current) === JSON.stringify(draft)
+          ? draftFromQuiz(saved)
+          : current,
+      );
       toast.success(t("teacher_quiz_manage.toasts.settings_saved"));
     } catch (err: unknown) {
       toast.error(
@@ -138,6 +156,7 @@ export function createQuizManageActions({
 
   return {
     handleDelete,
+    handleArchive,
     handlePublish,
     handleAddQuestion,
     handleSaveSettings,

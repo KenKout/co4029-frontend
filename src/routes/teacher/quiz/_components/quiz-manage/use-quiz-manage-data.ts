@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import {
   useAddQuizQuestion,
+  useArchiveQuiz,
   useDeleteQuiz,
   usePatchQuiz,
   usePendingQuestionDeletes,
@@ -47,6 +48,7 @@ export function useQuizManageData(courseId: string, quizId: string) {
   );
 
   const deleteQuiz = useDeleteQuiz(quizId);
+  const archiveQuiz = useArchiveQuiz(quizId);
   const publishQuiz = usePublishQuiz(quizId);
   const patchQuiz = usePatchQuiz(quizId);
   const addQuestion = useAddQuizQuestion(quizId);
@@ -62,6 +64,7 @@ export function useQuizManageData(courseId: string, quizId: string) {
     courseModule,
     pendingDeletes,
     deleteQuiz,
+    archiveQuiz,
     publishQuiz,
     patchQuiz,
     addQuestion,

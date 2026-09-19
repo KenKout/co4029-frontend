@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import {
   useReorderModules,
+  useTeacherCourseById,
   useTeacherCourseContent,
 } from "@/lib/api/hooks/teacher-courses";
 import type { CourseContentModule } from "@/lib/api/types/common";
@@ -22,6 +23,7 @@ export interface CourseManageController {
   courseId: string;
   isLoading: boolean;
   modules: CourseContentModule[];
+  courseStatus: string;
   addingModule: boolean;
   setAddingModule: (value: boolean) => void;
   openMap: Record<string, boolean>;
@@ -39,7 +41,10 @@ export interface CourseManageController {
 export function useCourseManageController(): CourseManageController {
   const { t } = useTranslation();
   const { courseId } = useParams({ strict: false }) as { courseId: string };
-  const { data: content, isLoading } = useTeacherCourseContent(courseId);
+  const { data: content, isLoading: contentLoading } =
+    useTeacherCourseContent(courseId);
+  const { data: course, isLoading: courseLoading } =
+    useTeacherCourseById(courseId);
   const [addingModule, setAddingModule] = useState(false);
 
   const modules = content?.modules ?? [];
@@ -115,8 +120,9 @@ export function useCourseManageController(): CourseManageController {
 
   return {
     courseId,
-    isLoading,
+    isLoading: contentLoading || courseLoading,
     modules,
+    courseStatus: course?.status ?? "draft",
     addingModule,
     setAddingModule,
     openMap,
