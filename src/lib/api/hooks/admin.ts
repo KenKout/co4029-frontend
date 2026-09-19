@@ -677,32 +677,6 @@ export function useRevokePermissionGrant(userId: string) {
   });
 }
 
-export function useOrgMemberships(orgId: string) {
-  return useQuery({
-    queryKey: queryKeys.admin.orgMemberships(orgId),
-    queryFn: () =>
-      apiFetch<MembershipRead[]>(`/admin/organizations/${orgId}/memberships`),
-    enabled: Boolean(orgId),
-    staleTime: 1000 * 30,
-  });
-}
-
-export function useAddOrgMember(orgId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: MembershipCreate) =>
-      apiPost<MembershipRead>(
-        `/admin/organizations/${orgId}/memberships`,
-        payload,
-      ),
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey: queryKeys.admin.orgMemberships(orgId),
-      });
-    },
-  });
-}
-
 /** FR-6.7 — role-assignment changes within `[since, until)`. */
 export function useAuditRoleChanges(sinceIso: string, untilIso?: string) {
   return useQuery({

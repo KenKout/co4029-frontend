@@ -141,8 +141,6 @@ export const queryKeys = {
       ["admin", "users", userId, "assignments"] as const,
     userGrants: (userId: string) =>
       ["admin", "users", userId, "grants"] as const,
-    orgMemberships: (orgId: string) =>
-      ["admin", "organizations", orgId, "memberships"] as const,
     auditRoleChanges: (since: string, until?: string) =>
       ["admin", "audit", "role-changes", since, until ?? ""] as const,
     auditHttp: (

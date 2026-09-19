@@ -124,11 +124,20 @@ export function useCareerPath(slug: string | undefined) {
   });
 }
 
-export function useMyCareerEnrollments() {
+/**
+ * The caller's career-path enrollments.
+ *
+ * `enabled` exists for the course-detail page, which only needs this to work
+ * out whether an un-enrolled student could lazily start the course from a
+ * path they are already on. Once they ARE enrolled that question is moot, so
+ * the request was firing on every course page and being thrown away.
+ */
+export function useMyCareerEnrollments(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.careerPaths.myEnrollments(),
     queryFn: () => apiFetch<MyCareerEnrollmentRead[]>("/me/career-enrollments"),
     staleTime: 1000 * 60 * 2,
+    enabled: options?.enabled ?? true,
   });
 }
 

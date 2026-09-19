@@ -3540,6 +3540,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/courses/{course_id}/quiz-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List My Quiz Progress
+         * @description Per-quiz completion state for the calling student in a course.
+         */
+        get: operations["list_my_quiz_progress_api_v1_courses__course_id__quiz_progress_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/quizzes/{quiz_id}": {
         parameters: {
             query?: never;
@@ -3856,36 +3876,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/courses/{course_id}/quiz-progress": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List My Quiz Progress
-         * @description Per-quiz completion state for the calling student in a course.
-         *
-         *     Feeds the course-learn screen's curriculum (auto-collapse + next-item
-         *     highlight): a quiz is completed when the student passed it (headline
-         *     grade-of-record vs ``passing_score_percent``) OR failed with every
-         *     allowed attempt consumed and no attempt still in flight. See
-         *     :class:`QuizProgressRead` for the field semantics.
-         *
-         *     Gated by :func:`can_view_course_content` — the same org/enrollment
-         *     perimeter the other by-id learner reads use — so a cross-tenant caller
-         *     gets 404 with no existence leak.
-         */
-        get: operations["list_my_quiz_progress_api_v1_courses__course_id__quiz_progress_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/teacher/courses/{course_id}/quiz-question-bank": {
         parameters: {
             query?: never;
@@ -4148,6 +4138,30 @@ export interface paths {
         put?: never;
         /** Publish Quiz */
         post: operations["publish_quiz_api_v1_teacher_quizzes__quiz_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teacher/quizzes/{quiz_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive Quiz
+         * @description Withdraw a quiz from new learner access without deleting evidence.
+         *
+         *     Existing in-progress attempts remain resumable and submittable through the
+         *     attempt endpoints, which intentionally load their persisted attempt
+         *     snapshot rather than requiring the quiz to remain published.
+         */
+        post: operations["archive_quiz_api_v1_teacher_quizzes__quiz_id__archive_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4581,6 +4595,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teacher/quizzes/{quiz_id}/gradebook/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Quiz Gradebook
+         * @description Export the complete gradebook from the backend dataset.
+         */
+        get: operations["export_quiz_gradebook_api_v1_teacher_quizzes__quiz_id__gradebook_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teacher/quizzes/{quiz_id}/reports/responses": {
         parameters: {
             query?: never;
@@ -4953,6 +4987,15 @@ export interface paths {
          *     response only. The interview continues either way — browser signals are
          *     review/deterrence evidence, never a termination trigger, and never
          *     tamper-proof proof of misconduct.
+         *
+         *     Concurrency: two batches may overlap. The read-add-commit shape this
+         *     endpoint used before lost updates (both read the same base score; the
+         *     later commit decided) and surfaced duplicate ``client_event_id`` retries
+         *     as unique-violation 500s. Now ``queries.integrity_events.record_batch``
+         *     bulk-inserts with ``ON CONFLICT DO NOTHING RETURNING``, applies the score
+         *     ADDITIVELY in SQL from the rows this request actually inserted, and fires
+         *     the one-shot warning through a conditional UPDATE whose WHERE only one
+         *     racing request can match.
          */
         post: operations["record_integrity_events_api_v1_interview_sessions__session_id__integrity_events_post"];
         delete?: never;
@@ -16094,11 +16137,8 @@ export interface components {
              * @default 3
              */
             max_path_switches: number;
-            /**
-             * Max Career Paths Per Enrollment
-             * @default 1
-             */
-            max_career_paths_per_enrollment: number;
+            /** Max Career Paths Per Enrollment */
+            max_career_paths_per_enrollment?: number | null;
             /** Career Path Ids */
             career_path_ids?: string[];
             /** Default Career Path Id */
@@ -16196,11 +16236,8 @@ export interface components {
              * @default 0
              */
             approved_switch_count: number;
-            /**
-             * Max Career Paths
-             * @default 1
-             */
-            max_career_paths: number;
+            /** Max Career Paths */
+            max_career_paths?: number | null;
             /**
              * Selected Path Count
              * @default 0
@@ -16462,7 +16499,7 @@ export interface components {
             /** Max Path Switches */
             max_path_switches: number;
             /** Max Career Paths Per Enrollment */
-            max_career_paths_per_enrollment: number;
+            max_career_paths_per_enrollment: number | null;
             /** Published At */
             published_at: string | null;
             /** Published By */
@@ -17144,6 +17181,11 @@ export interface components {
              * @default false
              */
             reminders_enabled: boolean;
+            /**
+             * Feeds Spaced Repetition
+             * @default true
+             */
+            feeds_spaced_repetition: boolean;
             /** Generation Instructions */
             generation_instructions?: string | null;
             /** Generation Run Id */
@@ -18328,6 +18370,13 @@ export interface components {
             quiz_id: string;
             /** Quiz Title */
             quiz_title: string;
+            /**
+             * Module Id
+             * Format: uuid
+             */
+            module_id: string;
+            /** Module Title */
+            module_title?: string | null;
             /** Passing Score Percent */
             passing_score_percent: string;
             /**
@@ -18746,11 +18795,8 @@ export interface components {
             q: number;
             /** Passing */
             passing: boolean;
-            /**
-             * Due At
-             * Format: date-time
-             */
-            due_at: string;
+            /** Due At */
+            due_at: string | null;
             /** Interval Days */
             interval_days: number;
             /** Remaining Due */
@@ -26940,6 +26986,37 @@ export interface operations {
             };
         };
     };
+    list_my_quiz_progress_api_v1_courses__course_id__quiz_progress_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizProgressRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_published_quiz_api_v1_quizzes__quiz_id__get: {
         parameters: {
             query?: never;
@@ -27334,37 +27411,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuizAttemptRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_my_quiz_progress_api_v1_courses__course_id__quiz_progress_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                course_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QuizProgressRead"][];
                 };
             };
             /** @description Validation Error */
@@ -27923,6 +27969,37 @@ export interface operations {
         };
     };
     publish_quiz_api_v1_teacher_quizzes__quiz_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quiz_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizAuthoring"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_quiz_api_v1_teacher_quizzes__quiz_id__archive_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -28749,6 +28826,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuizGradeRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_quiz_gradebook_api_v1_teacher_quizzes__quiz_id__gradebook_export_get: {
+        parameters: {
+            query?: {
+                format?: string;
+            };
+            header?: never;
+            path: {
+                quiz_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

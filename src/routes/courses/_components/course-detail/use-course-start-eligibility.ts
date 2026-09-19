@@ -33,7 +33,11 @@ export function useCourseStartEligibility(
   courseId: string | undefined,
   enrolled: boolean,
 ) {
-  const enrollments = useMyCareerEnrollments();
+  // Same gate as the progress fan-out below: an enrolled student cannot
+  // lazily start the course, so neither query has anything to answer.
+  const enrollments = useMyCareerEnrollments({
+    enabled: Boolean(courseId) && !enrolled,
+  });
   const activePathIds = useMemo(
     () =>
       (enrollments.data ?? [])
@@ -67,6 +71,7 @@ export function useCourseStartEligibility(
     eligiblePathId,
     isLoading:
       !enrolled &&
-      (enrollments.isLoading || progressQueries.some((query) => query.isLoading)),
+      (enrollments.isLoading ||
+        progressQueries.some((query) => query.isLoading)),
   };
 }

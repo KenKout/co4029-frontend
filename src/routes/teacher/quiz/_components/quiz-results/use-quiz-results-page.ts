@@ -5,15 +5,11 @@ import { toast } from "sonner";
 
 import {
   downloadQuizReport,
-  useQuizAuthoring,
   useQuizResults,
   useResponsesReport,
   useStatisticsReport,
 } from "@/lib/api/hooks/quizzes";
-import {
-  useTeacherCourseById,
-  useTeacherCourseContent,
-} from "@/lib/api/hooks/teacher-courses";
+import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 
 import type { HeadlineMetric, ResultsTab } from "./types";
 
@@ -33,13 +29,15 @@ export function useQuizResultsPage() {
 
   const { data: course } = useTeacherCourseById(courseId);
   const { data: results, isLoading, isError } = useQuizResults(quizId);
-  // Sourced only for the breadcrumb, so its Module → Quiz depth matches the
-  // quiz editor's trail (Teaching → Course → Module → Quiz → Results).
-  const { data: authoring } = useQuizAuthoring(quizId);
-  const { data: content } = useTeacherCourseContent(courseId);
-  const courseModule = content?.modules.find(
-    (entry) => entry.id === authoring?.quiz?.module_id,
-  );
+  // The breadcrumb's Module crumb rides on the results payload. It used to
+  // cost two more requests — the whole quiz authoring record for one field
+  // (`module_id`) and the whole course content tree to turn it into a title.
+  // Omitted while results load, and when the module has been soft-deleted
+  // and can no longer be named.
+  const courseModule =
+    results?.module_id && results.module_title
+      ? { id: results.module_id, title: results.module_title }
+      : undefined;
 
   const [tab, setTab] = useState<ResultsTab>("students");
   const [headlineMetric, setHeadlineMetric] = useState<HeadlineMetric>("best");
@@ -55,7 +53,8 @@ export function useQuizResultsPage() {
   );
 
   async function handleDownload(format: "csv" | "xlsx") {
-    if (tab !== "responses" && tab !== "statistics" && tab !== "gradebook") return;
+    if (tab !== "responses" && tab !== "statistics" && tab !== "gradebook")
+      return;
     setDownloading(true);
     try {
       await downloadQuizReport(quizId, tab, format);

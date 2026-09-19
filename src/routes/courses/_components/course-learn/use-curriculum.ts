@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import { useMyInterviewSessions } from "@/lib/api/hooks/interviews";
 import { queryKeys } from "@/lib/api/query-keys";
@@ -26,23 +26,17 @@ import type { FlatItem, Translate } from "./types";
 export function useModuleItemsMap(
   modules: ModulePublic[],
 ): Record<string, ModuleItemPublic[] | undefined> {
-  const moduleIds = useMemo(() => modules.map((m) => m.id), [modules]);
-
-  const results = useQueries({
-    queries: moduleIds.map((moduleId) => ({
-      queryKey: queryKeys.courses.moduleItems(moduleId),
-      queryFn: () => apiFetch<ModuleItemPublic[]>(`/modules/${moduleId}/items`),
-      enabled: !!moduleId,
-    })),
-  });
-
+  // Derived, not fetched. `GET /courses/{id}/content` already returns each
+  // module with its `items` composed server-side; this used to issue one
+  // `GET /modules/{id}/items` per module on top of it, in a wave that could
+  // only start once the content call had resolved.
   return useMemo(() => {
     const next: Record<string, ModuleItemPublic[] | undefined> = {};
-    moduleIds.forEach((id, idx) => {
-      next[id] = results[idx]?.data;
-    });
+    for (const module of modules) {
+      next[module.id] = module.items ?? [];
+    }
     return next;
-  }, [moduleIds, results]);
+  }, [modules]);
 }
 
 /**
