@@ -60,7 +60,7 @@ export function useStatisticsReport(quizId: string | null | undefined) {
  */
 export async function downloadQuizReport(
   quizId: string,
-  report: "responses" | "statistics",
+  report: "responses" | "statistics" | "gradebook",
   format: "csv" | "xlsx",
 ): Promise<void> {
   const res = await apiGetResponse(
