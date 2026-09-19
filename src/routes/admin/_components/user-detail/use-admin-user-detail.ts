@@ -79,7 +79,12 @@ export function useAdminUserDetail() {
   };
 
   const data = detail.data;
-  const user = data?.user;
+  // OpenAPI keeps `profile` optional because older identity responses may omit
+  // it. Normalize that transport shape once so every detail component can
+  // safely consume the explicit `profile | null` UI contract.
+  const user = data?.user
+    ? { ...data.user, profile: data.user.profile ?? null }
+    : undefined;
   const displayName = userDisplayName(user);
   const isDisabled = isUserDisabled(user);
 

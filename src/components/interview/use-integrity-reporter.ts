@@ -14,7 +14,10 @@
  */
 import { useCallback, useEffect, useRef } from "react";
 import { useReportIntegrityEvents } from "@/lib/api/hooks/interviews";
-import type { IntegrityEvent } from "@/lib/api/types";
+import type {
+  IntegrityEvent,
+  IntegrityEventsResponse,
+} from "@/lib/api/types";
 import { currentFullscreenElement } from "@/lib/hooks/useAssessmentFullscreen";
 
 const BATCH_DELAY_MS = 2000; // debounce window before sending
@@ -43,7 +46,11 @@ function newClientEventId(): string {
  * single-flight via `flushingRef`.
  */
 function drainIntegrityQueue(io: {
-  report: { mutateAsync: (body: { events: IntegrityEvent[] }) => Promise<IntegrityReportResult> };
+  report: {
+    mutateAsync: (body: {
+      events: IntegrityEvent[];
+    }) => Promise<IntegrityEventsResponse>;
+  };
   pendingRef: React.RefObject<IntegrityEvent[]>;
   flushingRef: React.RefObject<boolean>;
   onThreshold: ((score: number, threshold: number) => void) | undefined;
