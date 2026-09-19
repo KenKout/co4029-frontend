@@ -35,6 +35,10 @@ export interface StatisticsReportRead {
   rows: StatisticsReportRow[];
 }
 
+// Keep the tab queries lazy, but do not turn a quick tab switch into a second
+// request for the same report. The active tab still controls `enabled` below.
+const REPORT_DEDUP_MS = 1000 * 60;
+
 export function useResponsesReport(quizId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.quizzes.responsesReport(quizId ?? ""),
@@ -43,6 +47,7 @@ export function useResponsesReport(quizId: string | null | undefined) {
         `/teacher/quizzes/${quizId}/reports/responses`,
       ),
     enabled: !!quizId,
+    staleTime: REPORT_DEDUP_MS,
   });
 }
 
@@ -54,6 +59,7 @@ export function useStatisticsReport(quizId: string | null | undefined) {
         `/teacher/quizzes/${quizId}/reports/statistics`,
       ),
     enabled: !!quizId,
+    staleTime: REPORT_DEDUP_MS,
   });
 }
 

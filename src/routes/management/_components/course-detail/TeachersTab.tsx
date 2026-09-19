@@ -44,8 +44,9 @@ function EmptyTeachers({ canAssign }: { canAssign: boolean }) {
 function useTeacherStaffing(
   courseId: string,
   teachers: TeacherAssignmentRead[] | null | undefined,
+  enabled: boolean,
 ) {
-  const readiness = useCourseReadiness(courseId);
+  const readiness = useCourseReadiness(courseId, enabled);
   const allTeachers = teachers ?? [];
   return {
     readiness,
@@ -239,7 +240,7 @@ export function DeptTeachersTab({
     minTeachers,
     maxTeachers,
     hasStaffingData,
-  } = useTeacherStaffing(courseId, teachers.data);
+  } = useTeacherStaffing(courseId, teachers.data, active);
 
   const hasTeachers = (teachers.data ?? []).length > 0;
 

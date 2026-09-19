@@ -41,7 +41,7 @@ export function ResultsTabPanels({
   } = controller;
   if (!results) return null;
   return (
-    <>
+    <div className="min-h-[24rem]">
       {tab === "students" && (
         <PerStudentTable
           rows={results.per_student}
@@ -91,6 +91,6 @@ export function ResultsTabPanels({
         />
       )}
       {tab === "audit" && <AuditEventsTab quizId={quizId} />}
-    </>
+    </div>
   );
 }
