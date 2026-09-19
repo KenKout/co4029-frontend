@@ -1,6 +1,5 @@
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
-import { CurriculumHeader } from "./CurriculumHeader";
 import { ModuleList } from "./ModuleList";
 import { ModuleQuickNav } from "./ModuleQuickNav";
 import type { CourseManageController } from "./use-course-manage-controller";
@@ -18,8 +17,6 @@ export function CurriculumSection({
   const { isLoading, modules } = controller;
   return (
     <section className="space-y-3">
-      <CurriculumHeader controller={controller} />
-
       {isLoading ? (
         <PageSkeleton rows={2} />
       ) : (

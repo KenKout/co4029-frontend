@@ -20,12 +20,30 @@ export function ModuleQuickNav({
   controller: CourseManageController;
 }) {
   const { t } = useTranslation();
-  const { modules, scrollToModule } = controller;
+  const { modules, scrollToModule, setAllModules } = controller;
   return (
     <nav className="flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-m3-outline-variant/40 pb-2">
       <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant/70">
         {t("teacher_common.jump_to")}
       </span>
+      <div className="flex shrink-0 items-center gap-1 border-r border-m3-outline-variant/40 pr-2">
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => setAllModules(true)}
+          className="h-auto whitespace-normal px-2 py-1 text-xs font-medium text-m3-on-surface-variant transition-colors hover:text-m3-primary"
+        >
+          {t("teacher_common.expand_all")}
+        </Button>
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => setAllModules(false)}
+          className="h-auto whitespace-normal px-2 py-1 text-xs font-medium text-m3-on-surface-variant transition-colors hover:text-m3-primary"
+        >
+          {t("teacher_common.collapse_all")}
+        </Button>
+      </div>
       {modules.map((module) => {
         const { items, pub, done } = modulePublishProgress(module);
         return (
