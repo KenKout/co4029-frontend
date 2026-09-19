@@ -305,6 +305,16 @@ function CourseLearnLoaded({
 
         <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-4 sm:gap-6">
+            {!showHome && activeEntry && (
+              <LessonHeadingBlock
+                title={activeTitle}
+                moduleTitle={activeEntry.moduleTitle}
+                activeLessonId={activeLessonId}
+                courseId={course.id}
+                lessonStatusMap={lessonStatusMap}
+              />
+            )}
+
             <LessonMainPane
               showHome={showHome}
               lessonUnavailable={lessonUnavailable}
@@ -321,16 +331,6 @@ function CourseLearnLoaded({
                 resumeStarted: completedCount > 0,
               }}
             />
-
-            {!showHome && activeEntry && (
-              <LessonHeadingBlock
-                title={activeTitle}
-                moduleTitle={activeEntry.moduleTitle}
-                activeLessonId={activeLessonId}
-                courseId={course.id}
-                lessonStatusMap={lessonStatusMap}
-              />
-            )}
 
             {!showHome && instructors.length > 0 && (
               <InstructorBlock instructors={instructors} />

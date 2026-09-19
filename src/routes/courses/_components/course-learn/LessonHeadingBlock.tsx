@@ -26,7 +26,7 @@ export function LessonHeadingBlock({
       <h1 className="break-words font-headline text-2xl font-extrabold leading-tight tracking-tight text-m3-primary sm:text-4xl">
         {title}
       </h1>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-xs text-m3-on-surface-variant">
           {moduleTitle}
         </span>
@@ -67,8 +67,9 @@ function MarkCompleteButton({
       variant={isCompleted ? "outline" : "default"}
       disabled={pending}
       onClick={handleClick}
+      aria-pressed={isCompleted}
       className={cn(
-        "rounded-xl gap-2 text-xs font-bold",
+        "h-10 w-full rounded-xl gap-2 px-4 text-sm font-bold sm:h-9 sm:w-auto",
         isCompleted
           ? "border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
           : "gradient-primary text-white hover:opacity-95",
