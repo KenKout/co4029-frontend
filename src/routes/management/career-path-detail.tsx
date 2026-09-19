@@ -360,8 +360,7 @@ function NewCareerPathWorkspace() {
               <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
                 {t("management_career_path_detail.fields.slug")}{" "}
                 <span className="text-red-600">*</span>
-                <Input
-                  className="font-mono"
+                <Input mono
                   value={slug}
                   onChange={(event) => {
                     setSlugTouched(true);

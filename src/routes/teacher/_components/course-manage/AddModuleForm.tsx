@@ -39,13 +39,13 @@ export function AddModuleForm({
       onSubmit={handleSubmit}
       className="flex gap-2 p-4 bg-m3-surface-container rounded-xl"
     >
-      <Input
+      <Input size="md"
         autoFocus
         required
         placeholder={t("teacher_common.module_title_placeholder")}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="h-9 flex-1"
+        className="flex-1"
       />
       <Button type="submit" size="sm" disabled={createModule.isPending}>
         {createModule.isPending ? (

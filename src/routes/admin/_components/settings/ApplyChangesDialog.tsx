@@ -3,7 +3,7 @@ import { Globe, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { CheckboxField } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 
@@ -160,13 +160,13 @@ export function ApplyChangesDialog({
                   total: impacts[0]?.total_organizations ?? reachedOrgs,
                 })}
               </p>
-              <label className="mt-3 flex items-start gap-2 text-sm text-amber-900">
-                <Checkbox
-                  checked={acknowledged}
-                  onCheckedChange={(v) => setAcknowledged(Boolean(v))}
-                />
-                {t("admin_settings.apply.global_ack")}
-              </label>
+              <CheckboxField
+                checked={acknowledged}
+                onCheckedChange={(v) => setAcknowledged(Boolean(v))}
+                className="mt-3"
+                labelClassName="text-amber-900"
+                label={t("admin_settings.apply.global_ack")}
+              />
             </div>
           )}
 

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Field, LockableSection, SettingsSection } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
 import { hasMultipleAttempts } from "./settings-insights";
@@ -42,11 +43,8 @@ function SettingsScoringSectionComponent({
             </span>
           }
         >
-          {/* The kit has no Slider primitive yet. */}
-          {/* eslint-disable-next-line no-restricted-syntax */}
-          <input
+          <Slider
             aria-label={t("teacher_quiz_manage.settings.scoring.pass_score")}
-            type="range"
             min={0}
             max={100}
             step={5}
@@ -55,10 +53,9 @@ function SettingsScoringSectionComponent({
                 ? draft.passing_score_percent
                 : 0
             }
-            onChange={(e) =>
-              update("passing_score_percent", Number(e.target.value))
+            onValueChange={(percent) =>
+              update("passing_score_percent", percent)
             }
-            className="w-full h-2 rounded-full cursor-pointer accent-[var(--m3-primary)]"
           />
           <Input
             id="quiz-setting-passing-score"

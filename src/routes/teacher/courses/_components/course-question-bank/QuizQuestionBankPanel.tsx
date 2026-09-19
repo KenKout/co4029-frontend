@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Radio } from "@/components/ui/radio";
 import {
   useCreateCuratedQuizQuestion,
   useCuratedQuizQuestionBank,
@@ -243,13 +244,10 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
                   key={index}
                   className="flex items-center gap-2 rounded-lg border border-m3-outline-variant/20 p-2"
                 >
-                  {/* The kit has no Radio primitive yet; Checkbox hardcodes type="checkbox". */}
-                  {/* eslint-disable-next-line no-restricted-syntax */}
-                  <input
-                    type="radio"
+                  <Radio
                     name="bank-correct-option"
                     checked={correctIndex === index}
-                    onChange={() => setCorrectIndex(index)}
+                    onCheckedChange={() => setCorrectIndex(index)}
                   />
                   <Input
                     value={option}

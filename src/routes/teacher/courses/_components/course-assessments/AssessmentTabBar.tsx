@@ -35,11 +35,11 @@ export function AssessmentTabBar({
           setTitleFilter("all");
         }}
       />
-      <Input
+      <Input size="md"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={t("teacher_assessments.search_placeholder")}
-        className="max-w-xs h-9"
+        className="max-w-xs"
       />
     </div>
   );

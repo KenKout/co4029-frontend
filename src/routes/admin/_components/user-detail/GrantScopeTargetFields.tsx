@@ -73,12 +73,12 @@ export function GrantScopeTargetFields({
       {scopeKind === "course" ? (
         <label className="text-xs text-text-muted">
           {t("admin.users.roles.course_id")}
-          <Input
+          <Input mono
             type="text"
             size="sm"
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="mt-1 font-mono"
+            className="mt-1"
             required
           />
         </label>

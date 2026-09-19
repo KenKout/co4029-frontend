@@ -486,7 +486,7 @@ function EntityIdLookup({
   const { t } = useTranslation();
   return (
     <div className="flex items-center gap-2">
-      <Input
+      <Input mono size="md"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
@@ -495,7 +495,7 @@ function EntityIdLookup({
           }
         }}
         placeholder={t("admin.audit.data_changes.entity_id_placeholder")}
-        className="h-9 w-64 font-mono text-xs normal-case"
+        className="w-64 text-xs normal-case"
       />
       <Button
         type="button"

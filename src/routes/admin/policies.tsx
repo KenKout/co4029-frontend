@@ -98,14 +98,14 @@ function CreatePolicyDialog({ onClose }: { onClose: () => void }) {
             <span className="text-sm font-semibold text-text-strong">
               {t("admin.policies.fields.slug")}
             </span>
-            <Input
+            <Input mono
               value={slug}
               onChange={(e) => {
                 setSlugTouched(true);
                 setSlug(slugify(e.target.value));
               }}
               required
-              className="mt-1 font-mono"
+              className="mt-1"
             />
             <span className="mt-1 block text-xs text-text-muted">
               {t("admin.policies.slug_hint")}

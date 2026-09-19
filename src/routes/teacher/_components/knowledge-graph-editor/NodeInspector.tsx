@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import type { CuratedKGNode } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
 
 import { NODE_TYPES } from "./constants";
 import type { KnowledgeGraphEditorController } from "./use-knowledge-graph-editor";
@@ -30,7 +31,8 @@ export function NodeInspector({
         <h3 className="font-headline font-bold text-m3-on-surface">
           {t("teacher_kg_editor.node_detail")}
         </h3>
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           onClick={() => sel.setSelectedId(null)}
           aria-label={t("common.close")}
@@ -96,24 +98,17 @@ export function NodeInspector({
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             {t("teacher_kg_editor.field_weight")} ({selectedNode.weight})
           </label>
-          {/* The kit has no Slider primitive yet. */}
-          {/* eslint-disable-next-line no-restricted-syntax */}
-          <input
-            type="range"
+          <Slider
             min={1}
             max={100}
             value={selectedNode.weight}
-            onChange={(e) =>
-              updateNode(selectedNode.id, {
-                weight: Number(e.target.value),
-              })
-            }
-            className="w-full"
+            onValueChange={(weight) => updateNode(selectedNode.id, { weight })}
           />
         </div>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={() => makePrimary(selectedNode.id)}
             disabled={selectedNode.is_primary}
@@ -129,7 +124,8 @@ export function NodeInspector({
               ? t("teacher_kg_editor.is_primary")
               : t("teacher_kg_editor.make_primary")}
           </Button>
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={() => deleteNode(selectedNode.id)}
             className="flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 h-auto whitespace-normal"

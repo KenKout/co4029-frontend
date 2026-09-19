@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Clock, Lock, Send } from "lucide-react";
 
-import { Checkbox } from "@/components/ui/checkbox";
+import { CheckboxField } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { FLAG_KEYS, flags } from "./review-options-model";
 import type {
@@ -74,7 +74,8 @@ export function ReviewWindowCard({
               total: FLAG_KEYS.length,
             })}
           </span>
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={() => onSetWindow(flags(!allOn))}
             className="rounded-lg px-2 py-1 text-[11px] font-semibold text-m3-primary hover:bg-m3-primary/10 h-auto whitespace-normal"
@@ -92,20 +93,14 @@ export function ReviewWindowCard({
         {FLAG_KEYS.map((flag) => {
           const id = `review-${win}-${flag}`;
           return (
-            <label
+            <CheckboxField
               key={flag}
-              htmlFor={id}
-              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-m3-surface-container-high"
-            >
-              <Checkbox
-                id={id}
-                checked={windowFlags[flag]}
-                onCheckedChange={() => onToggle(flag)}
-              />
-              <span className="text-sm text-m3-on-surface">
-                {t(`teacher_quiz_manage.settings.review.flags.${flag}`)}
-              </span>
-            </label>
+              id={id}
+              checked={windowFlags[flag]}
+              onCheckedChange={() => onToggle(flag)}
+              className="rounded-lg px-2 py-1.5 hover:bg-m3-surface-container-high"
+              label={t(`teacher_quiz_manage.settings.review.flags.${flag}`)}
+            />
           );
         })}
       </div>

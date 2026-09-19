@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioField } from "@/components/ui/radio";
 import { cn } from "@/lib/utils";
 import type { PathChangeRejectionReasonCode } from "@/lib/api/types";
 
@@ -110,42 +111,31 @@ export function RejectPathChangeDialog({
               {REASONS.map((reason) => {
                 const selected = reasonCode === reason.code;
                 return (
-                  <label
+                  <RadioField
                     key={reason.code}
+                    name="path-change-reject-reason"
+                    value={reason.code}
+                    checked={selected}
+                    disabled={isPending}
+                    onCheckedChange={() => {
+                      setReasonCode(reason.code);
+                      if (reason.code !== "other") setOtherReason("");
+                    }}
                     className={cn(
-                      "flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 transition-colors",
+                      "rounded-lg border p-2.5 transition-colors",
                       selected
                         ? "border-m3-primary bg-m3-primary-fixed/40"
                         : "border-m3-outline-variant/40 hover:bg-m3-surface-container",
                     )}
-                  >
-                    {/* The kit has no Radio primitive yet; Checkbox hardcodes type="checkbox". */}
-                    {/* eslint-disable-next-line no-restricted-syntax */}
-                    <input
-                      type="radio"
-                      name="path-change-reject-reason"
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-m3-primary"
-                      value={reason.code}
-                      checked={selected}
-                      disabled={isPending}
-                      onChange={() => {
-                        setReasonCode(reason.code);
-                        if (reason.code !== "other") setOtherReason("");
-                      }}
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium text-text-strong">
-                        {t(
-                          `management_learning_program_detail.reject.reasons.${reason.code}.label`,
-                        )}
-                      </span>
-                      <span className="mt-0.5 block text-[11px] text-text-muted">
-                        {t(
-                          `management_learning_program_detail.reject.reasons.${reason.code}.hint`,
-                        )}
-                      </span>
-                    </span>
-                  </label>
+                    labelClassName="font-medium text-text-strong"
+                    descriptionClassName="text-[11px] text-text-muted"
+                    label={t(
+                      `management_learning_program_detail.reject.reasons.${reason.code}.label`,
+                    )}
+                    description={t(
+                      `management_learning_program_detail.reject.reasons.${reason.code}.hint`,
+                    )}
+                  />
                 );
               })}
             </div>

@@ -1,5 +1,8 @@
-import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DataTableToolbar,
+  type FilterDef,
+} from "@/components/ui/data-table-toolbar";
+import { CheckboxField } from "@/components/ui/checkbox";
 
 import type { AdminCoursesController } from "./use-admin-courses";
 
@@ -17,7 +20,14 @@ const COURSE_STATUSES = ["draft", "published", "archived"] as const;
  * as trailing content.
  */
 export function CoursesToolbar({ c }: { c: AdminCoursesController }) {
-  const { t, table, statusFilter, setStatusFilter, includeDeleted, setIncludeDeleted } = c;
+  const {
+    t,
+    table,
+    statusFilter,
+    setStatusFilter,
+    includeDeleted,
+    setIncludeDeleted,
+  } = c;
 
   const statusFilterDef: FilterDef = {
     id: STATUS_FILTER_ID,
@@ -46,13 +56,13 @@ export function CoursesToolbar({ c }: { c: AdminCoursesController }) {
         defaultValue: "Clear filters",
       })}
       trailing={
-        <label className="inline-flex items-center gap-2 text-sm text-text-strong select-none shrink-0 cursor-pointer">
-          <Checkbox
-            checked={includeDeleted}
-            onCheckedChange={setIncludeDeleted}
-          />
-          {t("admin.courses_list.include_deleted")}
-        </label>
+        <CheckboxField
+          checked={includeDeleted}
+          onCheckedChange={setIncludeDeleted}
+          className="shrink-0"
+          labelClassName="text-text-strong"
+          label={t("admin.courses_list.include_deleted")}
+        />
       }
     />
   );

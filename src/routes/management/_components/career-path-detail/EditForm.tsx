@@ -40,10 +40,9 @@ export function EditForm(props: EditFormInitialValues & { readOnly?: boolean }) 
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             Slug
           </label>
-          <Input
+          <Input mono
             value={form.slug}
             onChange={(e) => form.setSlug(e.target.value)}
-            className="font-mono"
             disabled={props.readOnly}
           />
         </div>

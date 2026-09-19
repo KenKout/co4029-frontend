@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input, type InputProps } from "@/components/ui/input";
@@ -8,13 +7,17 @@ import { Input, type InputProps } from "@/components/ui/input";
  * clear button). Consolidates the `<div className="relative"><Search absolute
  * left-3 .../><Input pl-9 .../></div>` block repeated across the list pages.
  *
+ * The magnifier and its padding now come from `Input`'s `startAdornment`
+ * rather than being positioned here: this component used to be a second,
+ * parallel implementation of the same wrapper, so the two drifted (the icon
+ * colour and the reserved padding no longer matched what `endAdornment`
+ * did). What is left is the part that is genuinely search-specific — which
+ * icon, and the clear button.
+ *
  * Per-page variation is preserved via props: the outer wrapper width
  * (`wrapperClassName`, e.g. "max-w-md flex-1"), the icon colour
  * (`iconClassName`), and any extra Input classes (`className`). All other
- * `Input` props (value/onChange/placeholder/onKeyDown/id/…) pass through.
- *
- * The left padding is fixed at `pl-9` to sit clear of the `left-3 h-4 w-4`
- * icon; pass `onClear` to render the trailing X (adds `pr-9`).
+ * `Input` props (value/onChange/placeholder/onKeyDown/id/size/…) pass through.
  */
 export function SearchInput({
   wrapperClassName,
@@ -23,7 +26,7 @@ export function SearchInput({
   onClear,
   clearLabel = "Clear search",
   ...inputProps
-}: Omit<InputProps, "type"> & {
+}: Omit<InputProps, "type" | "startAdornment"> & {
   wrapperClassName?: string;
   iconClassName?: string;
   /** When provided, shows a trailing clear button that calls this. */
@@ -31,21 +34,30 @@ export function SearchInput({
   clearLabel?: string;
 }) {
   const showClear = onClear !== undefined && !!inputProps.value;
+  const field = (
+    <Input
+      type="text"
+      data-shortcut="search"
+      startAdornment={
+        <Search className={cn("text-text-muted", iconClassName)} />
+      }
+      // `startAdornment` makes Input render its own relative wrapper, so when
+      // there is no clear button that wrapper is the only one needed.
+      wrapperClassName={onClear === undefined ? wrapperClassName : undefined}
+      className={cn(onClear && "pr-9", className)}
+      {...inputProps}
+    />
+  );
+
+  if (onClear === undefined) return field;
+
   return (
     <div className={cn("relative", wrapperClassName)}>
-      <Search
-        className={cn(
-          "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none text-text-muted",
-          iconClassName,
-        )}
-      />
-      <Input
-        type="text"
-        data-shortcut="search"
-        className={cn("pl-9", onClear && "pr-9", className)}
-        {...inputProps}
-      />
+      {field}
       {showClear && (
+        // Native <button>: this file is the design-system layer the system
+        // Button is built on, and an absolutely-positioned 14px affordance
+        // inside a field is not a Button-sized control.
         <button
           type="button"
           onClick={onClear}

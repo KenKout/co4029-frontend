@@ -325,13 +325,12 @@ export function CreateDialog({ onClose }: { onClose: () => void }) {
             {t("management_career_paths.create_dialog.slug")}{" "}
             <span className="text-red-600">*</span>
           </label>
-          <Input
+          <Input mono
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             placeholder={t(
               "management_career_paths.create_dialog.slug_placeholder",
             )}
-            className="font-mono"
             required
           />
           <p className="text-[11px] text-m3-on-surface-variant">

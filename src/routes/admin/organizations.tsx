@@ -71,14 +71,14 @@ function CreateOrgDialog({ onClose }: { onClose: () => void }) {
               {t("admin.organizations.fields.slug")}{" "}
               <span className="text-red-500">*</span>
             </span>
-            <Input
+            <Input mono
               type="text"
               required
               value={slug}
               onChange={(e) => setSlug(e.target.value.toLowerCase())}
               pattern="^[a-z0-9][a-z0-9-]*$"
               placeholder="hutech, hcmut..."
-              className="mt-1 font-mono"
+              className="mt-1"
             />
             <span className="text-xs text-text-muted mt-1 block">
               {t("admin.organizations.fields.slug_hint")}

@@ -4,7 +4,9 @@ import type { Dispatch, SetStateAction } from "react";
 import type { QuizQuestionAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import type { QuestionDraft } from "./types";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Radio } from "@/components/ui/radio";
 
 /**
  * The editable option list for multiple-choice / true-false questions.
@@ -29,63 +31,73 @@ export function QuestionCardOptionsEditor({
       <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
         {t("teacher_quiz_manage.editor.options_label")}
       </label>
-      {draft.options.map((option, idx) => (
-        <div
-          key={option.id}
-          className={cn(
-            "flex items-center gap-2 rounded-xl px-3 py-2",
-            option.is_correct
-              ? "border-2 border-emerald-300 bg-emerald-50/60"
-              : "border border-m3-outline-variant/20 bg-m3-surface-container-lowest",
-          )}
-        >
-          {/* Phase 7: honour the multi-select toggle. When multiple correct
+      {draft.options.map((option, idx) => {
+        const markCorrect = () =>
+          setDraft((current) => ({
+            ...current,
+            options: current.options.map((o, j) =>
+              allowMultiCorrect
+                ? j === idx
+                  ? { ...o, is_correct: !o.is_correct }
+                  : o
+                : { ...o, is_correct: j === idx },
+            ),
+          }));
+        const markCorrectLabel = t("teacher_quiz_manage.editor.mark_correct", {
+          key: option.option_key,
+        });
+        return (
+          <div
+            key={option.id}
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-3 py-2",
+              option.is_correct
+                ? "border-2 border-emerald-300 bg-emerald-50/60"
+                : "border border-m3-outline-variant/20 bg-m3-surface-container-lowest",
+            )}
+          >
+            {/* Phase 7: honour the multi-select toggle. When multiple correct
               answers are allowed the teacher needs checkboxes that toggle
               independently; a radio group would silently clear the others
               (and true_false is always single-answer). */}
-          {/* The type flips between checkbox and radio with allowMultiCorrect, so neither Checkbox (type is hardcoded) nor a Radio primitive fits. */}
-          {/* eslint-disable-next-line no-restricted-syntax */}
-          <input
-            type={allowMultiCorrect ? "checkbox" : "radio"}
-            name={allowMultiCorrect ? undefined : `correct-${question.id}`}
-            checked={option.is_correct}
-            aria-label={t("teacher_quiz_manage.editor.mark_correct", {
-              key: option.option_key,
-            })}
-            onChange={() =>
-              setDraft((current) => ({
-                ...current,
-                options: current.options.map((o, j) =>
-                  allowMultiCorrect
-                    ? j === idx
-                      ? { ...o, is_correct: !o.is_correct }
-                      : o
-                    : { ...o, is_correct: j === idx },
-                ),
-              }))
-            }
-            className="h-4 w-4"
-          />
-          <span className="font-bold text-m3-on-surface-variant text-sm">
-            {option.option_key}.
-          </span>
-          <Input
-            variant="bare"
-            type="text"
-            value={option.option_text}
-            onChange={(e) =>
-              setDraft((current) => ({
-                ...current,
-                options: current.options.map((o, j) =>
-                  j === idx ? { ...o, option_text: e.target.value } : o,
-                ),
-              }))
-            }
-            disabled={question.question_type === "true_false"}
-            className="flex-1 disabled:text-m3-on-surface-variant"
-          />
-        </div>
-      ))}
+            {/* A radio when only one answer may be correct, a checkbox when
+              several may: the control itself has to say which, because the
+              two have different keyboard and screen-reader semantics. */}
+            {allowMultiCorrect ? (
+              <Checkbox
+                checked={option.is_correct}
+                aria-label={markCorrectLabel}
+                onCheckedChange={markCorrect}
+              />
+            ) : (
+              <Radio
+                name={`correct-${question.id}`}
+                checked={option.is_correct}
+                aria-label={markCorrectLabel}
+                onCheckedChange={markCorrect}
+              />
+            )}
+            <span className="font-bold text-m3-on-surface-variant text-sm">
+              {option.option_key}.
+            </span>
+            <Input
+              variant="bare"
+              type="text"
+              value={option.option_text}
+              onChange={(e) =>
+                setDraft((current) => ({
+                  ...current,
+                  options: current.options.map((o, j) =>
+                    j === idx ? { ...o, option_text: e.target.value } : o,
+                  ),
+                }))
+              }
+              disabled={question.question_type === "true_false"}
+              className="flex-1 disabled:text-m3-on-surface-variant"
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }

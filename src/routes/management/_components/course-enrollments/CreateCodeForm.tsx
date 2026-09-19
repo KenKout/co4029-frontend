@@ -36,13 +36,12 @@ export function CreateCodeForm({
             {t("management_course_enrollments.codes.col_code")}{" "}
             <span className="text-red-600">*</span>
           </label>
-          <Input
+          <Input mono
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder={t(
               "management_course_enrollments.codes.code_placeholder",
             )}
-            className="font-mono"
             required
           />
         </div>

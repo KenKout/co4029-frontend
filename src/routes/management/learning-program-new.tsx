@@ -180,8 +180,7 @@ export default function ManagementLearningProgramNewPage() {
             <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
               {t("management_learning_program_new.fields.slug")}{" "}
               <span className="text-red-600">*</span>
-              <Input
-                className="font-mono"
+              <Input mono
                 value={slug}
                 onChange={(event) => {
                   setSlugTouched(true);

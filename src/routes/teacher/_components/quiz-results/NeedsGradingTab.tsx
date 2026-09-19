@@ -53,8 +53,8 @@ function GradeActionCell({ quizId, row }: { quizId: string; row: NeedsGradingRow
   }
   return (
     <div className="flex min-w-[360px] items-end gap-2">
-      <Input aria-label={t("teacher_quiz_results.grading.score_label")} type="number" min={0} step="0.25" value={score} onChange={(event) => setScore(event.target.value)} className="h-9 w-20" />
-      <Input aria-label={t("teacher_quiz_results.grading.feedback_label")} value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder={t("teacher_quiz_results.grading.feedback_placeholder")} className="h-9 min-w-0 flex-1" />
+      <Input size="md" aria-label={t("teacher_quiz_results.grading.score_label")} type="number" min={0} step="0.25" value={score} onChange={(event) => setScore(event.target.value)} className="w-20" />
+      <Input size="md" aria-label={t("teacher_quiz_results.grading.feedback_label")} value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder={t("teacher_quiz_results.grading.feedback_placeholder")} className="min-w-0 flex-1" />
       <Button size="sm" className="gap-1.5" disabled={grade.isPending} onClick={() => void handleGrade()}>
         {grade.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
         {t("teacher_quiz_results.grading.grade_action")}
