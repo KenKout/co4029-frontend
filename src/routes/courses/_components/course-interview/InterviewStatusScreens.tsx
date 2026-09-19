@@ -72,3 +72,41 @@ export function InterviewPollingScreen() {
     </div>
   );
 }
+
+export function InterviewRouteErrorScreen({
+  slug,
+  onRetry,
+}: {
+  slug: string;
+  onRetry: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-[70vh] flex items-center justify-center p-8">
+      <GlassCard className="p-10 text-center max-w-md">
+        <Bot className="h-10 w-10 text-m3-error mx-auto mb-4" />
+        <h2 className="font-headline font-bold text-xl text-m3-on-surface mb-2">
+          {t("course_interview.empty_states.load_failed_title")}
+        </h2>
+        <p className="text-sm text-m3-on-surface-variant mb-6">
+          {t("course_interview.empty_states.load_failed_body")}
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            className="rounded-xl font-bold"
+            onClick={onRetry}
+          >
+            {t("course_interview.actions.retry")}
+          </Button>
+          <Link to="/courses/$slug/learn" params={{ slug }}>
+            <Button className="gradient-primary text-white rounded-xl font-bold gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              {t("course_interview.actions.back_to_course")}
+            </Button>
+          </Link>
+        </div>
+      </GlassCard>
+    </div>
+  );
+}

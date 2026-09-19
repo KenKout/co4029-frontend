@@ -1,7 +1,11 @@
 import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
-import { useGapReport, useInterviewSession } from "@/lib/api/hooks/interviews";
+import {
+  isEvaluationUnresolved,
+  useGapReport,
+  useInterviewSession,
+} from "@/lib/api/hooks/interviews";
 import {
   GapReportCard,
   GapReportPendingCard,
@@ -51,8 +55,17 @@ export default function MyInterviewResultPage() {
       ? { slug: search.course, module: search.module }
       : null;
   const session = useInterviewSession(sessionId);
-  const { data: gapReport, isPending: gapReportPending } =
-    useGapReport(sessionId);
+  // Audit P1: an EXHAUSTED evaluation can never produce a gap report — the
+  // page must not poll it forever. Only poll while the evaluation is
+  // genuinely pending; once resolved (report out, or permanently exhausted)
+  // the query goes inert.
+  const evaluationPending = session.data
+    ? isEvaluationUnresolved(session.data)
+    : true;
+  const { data: gapReport, isPending: gapReportPending } = useGapReport(
+    sessionId,
+    { pollWhilePending: evaluationPending },
+  );
 
   const locale = resolveLocale(i18n.language);
 
