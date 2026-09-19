@@ -25,6 +25,17 @@ import { usePasswordGate } from "@/lib/quiz/quiz-attempt-session/use-password-ga
 import { useQuizCamera } from "@/lib/quiz/use-quiz-camera";
 import { useQuizAttemptTabGuard } from "@/lib/quiz/use-quiz-attempt-tab-guard";
 
+/** Use the server's canonical quiz id once the quiz payload has loaded.
+ * Legacy `/learn/$itemSlug` routes may initially pass a human-readable slug;
+ * using it as a browser lock can collide with the same slug in another course.
+ */
+export function resolveQuizAttemptTabGuardId(
+  routeQuizId: string,
+  canonicalQuizId: string | null | undefined,
+): string {
+  return canonicalQuizId ?? routeQuizId;
+}
+
 /**
  * Owns the entire quiz-taking attempt lifecycle for a given quiz: server data
  * (quiz / attempts / progress), local answer state, per-question focus timing,
@@ -91,7 +102,8 @@ export function useQuizAttemptSession(quizId: string) {
   const guardedAttemptId = submittedSummary
     ? null
     : (activeAttemptId ?? inProgressAttempt?.id ?? conflictAttemptId);
-  const tabGuard = useQuizAttemptTabGuard(quizId, guardedAttemptId);
+  const tabGuardQuizId = resolveQuizAttemptTabGuardId(quizId, quiz?.id);
+  const tabGuard = useQuizAttemptTabGuard(tabGuardQuizId, guardedAttemptId);
   const claimSession = useClaimQuizAttemptSession(resumableAttemptId);
   const takeoverSession = useTakeoverQuizAttemptSession(resumableAttemptId);
   const handleSessionConflict = useCallback(
