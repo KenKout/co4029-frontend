@@ -204,7 +204,7 @@ describe("handleRetry sequencing", () => {
     expect(ctx.startSession.mutateAsync).not.toHaveBeenCalled();
   });
 
-  it("clears the result only after the grant, then starts fresh", async () => {
+  it("clears the result only after the mutation accepted the new session", async () => {
     const order: string[] = [];
     const { ctx, enter } = makeCtx({
       startSession: {
@@ -224,8 +224,26 @@ describe("handleRetry sequencing", () => {
 
     await handleRetry(ctx);
 
-    expect(order).toEqual(["enter", "reset", "mutate"]);
+    // Audit P1: the reset rides on SUCCESS — a failed mutation must leave
+    // the results screen untouched.
+    expect(order).toEqual(["enter", "mutate", "reset"]);
     expect(ctx.setPhase).toHaveBeenCalledWith("questioning");
+  });
+
+  it("keeps the results screen when the retry mutation fails", async () => {
+    const { ctx, enter } = makeCtx({
+      startSession: {
+        mutateAsync: vi.fn(() => Promise.reject(new Error("boom"))),
+        isPending: false,
+      },
+    });
+    enter.mockImplementation(() => Promise.resolve(true));
+
+    await handleRetry(ctx);
+
+    expect(ctx.setFinishResult).not.toHaveBeenCalled();
+    expect(ctx.setSessionId).not.toHaveBeenCalled();
+    expect(ctx.setPhase).not.toHaveBeenCalledWith("prestart");
   });
 
   it("refuses a retry while the start mutation is already pending", async () => {

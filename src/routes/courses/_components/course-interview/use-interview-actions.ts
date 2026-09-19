@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { interviewActiveMarkerKey } from "./interview-session-keys";
 import { toast } from "sonner";
 
 import type { UseInterviewChatResult } from "@/components/interview/use-interview-chat";
@@ -209,6 +210,17 @@ export function useInterviewActions(base: InterviewBase) {
   function leaveInterviewOpen() {
     if (leaveBlocker.status !== "blocked") return;
     narration.cancel();
+    // Audit P1 (stale resume marker): an INTENTIONAL leave must not leave the
+    // "live attempt" marker behind — returning to this route in the same tab
+    // would otherwise pop the auto-resume dialog for an attempt the candidate
+    // deliberately walked away from. Only a genuine reload re-stamps it.
+    try {
+      window.sessionStorage.removeItem(
+        interviewActiveMarkerKey(ctxRef.current.configId),
+      );
+    } catch {
+      /* storage unavailable — best-effort */
+    }
     leaveBlocker.proceed();
   }
 

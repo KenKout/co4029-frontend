@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { interviewActiveMarkerKey } from "./interview-session-keys";
 
 import {
   useFinishInterview,
@@ -52,7 +53,7 @@ export function useInterviewServerSync(
   // manual resume (beginSessionAfterFullscreen). For an attempt whose graded
   // clock is already running, the dialog copy warns that the server timer
   // keeps running while the candidate decides.
-  const ACTIVE_MARKER_KEY = `abridge:iv-active:${configId}`;
+  const ACTIVE_MARKER_KEY = interviewActiveMarkerKey(configId);
   const autoResumeTriedRef = useRef(false);
   useEffect(() => {
     // Stamp / clear the "live attempt" marker as the session goes active/ends.
