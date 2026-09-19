@@ -14780,6 +14780,8 @@ export interface components {
             title: string;
             /** Position */
             position: number;
+            /** Estimated Minutes */
+            estimated_minutes?: number | null;
             /**
              * Items
              * @default []

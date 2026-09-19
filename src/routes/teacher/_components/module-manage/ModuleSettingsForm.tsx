@@ -1,6 +1,6 @@
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DurationField } from "@/components/ui/duration-field";
 import { Textarea } from "@/components/ui/textarea";
 import type { ModuleSettingsController } from "./use-module-settings";
 
@@ -44,11 +44,10 @@ export function ModuleSettingsForm({ ctl }: { ctl: ModuleSettingsController }) {
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           Required Duration (min)
         </label>
-        <Input
-          type="number"
-          min={0}
+        <DurationField
           value={estimatedMinutes}
-          onChange={(e) => setEstimatedMinutes(e.target.value)}
+          onChange={setEstimatedMinutes}
+          initialUnit="minutes"
           placeholder="e.g. 60"
         />
       </div>

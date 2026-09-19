@@ -12,7 +12,7 @@ import {
   Mic,
   Sparkles,
   HelpCircle,
-  // Lock,
+  Clock,
 } from "lucide-react";
 import type {
   InterviewProgressRead,
@@ -78,6 +78,7 @@ export function ModuleSection({
     modItems.length > 0
       ? Math.round((completedCount / modItems.length) * 100)
       : 0;
+  const moduleDuration = formatModuleDuration(mod.estimated_minutes);
   const derivedOpen = isActiveModule || !moduleComplete;
   const [open, setOpen] = useState(derivedOpen);
   const [lastDerived, setLastDerived] = useState(derivedOpen);
@@ -130,6 +131,12 @@ export function ModuleSection({
             >
               {modulePct}%
             </span>
+            {moduleDuration && (
+              <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-m3-on-surface-variant">
+                <Clock className="h-3 w-3" aria-hidden="true" />
+                {t("course_learn.module_duration", { duration: moduleDuration })}
+              </span>
+            )}
           </>
         ) : (
           <span className="text-[10px] font-bold text-m3-outline uppercase tracking-tight transition-colors group-hover:text-m3-primary">
@@ -163,6 +170,14 @@ export function ModuleSection({
       </div>
     </div>
   );
+}
+
+function formatModuleDuration(minutes: number | null | undefined): string | null {
+  if (!minutes || minutes < 0) return null;
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder === 0 ? `${hours}h` : `${hours}h ${remainder}m`;
 }
 
 /**

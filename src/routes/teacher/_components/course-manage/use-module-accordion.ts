@@ -67,6 +67,7 @@ export function useModuleAccordion(options: {
   // edit / edit-link / publish controls in the header stay clickable.
   const [moduleDragEnabled, setModuleDragEnabled] = useState(false);
   const [publishingAll, setPublishingAll] = useState(false);
+  const [publishAllConfirm, setPublishAllConfirm] = useState(false);
   const [statusConfirm, setStatusConfirm] = useState<"published" | "archived" | null>(null);
   const [duplicateConfirm, setDuplicateConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -167,8 +168,13 @@ export function useModuleAccordion(options: {
   // Publish-all (T#2): fire a publish for every draft item in this module in
   // parallel. Best-effort with a summary toast; the content query is
   // invalidated once at the end.
-  async function handlePublishAll(e: React.MouseEvent) {
+  function handlePublishAll(e: React.MouseEvent) {
     e.stopPropagation();
+    setPublishAllConfirm(true);
+  }
+
+  async function confirmPublishAll() {
+    setPublishAllConfirm(false);
     if (draftItems.length === 0 || publishingAll) return;
     setPublishingAll(true);
     const results = await Promise.allSettled(
@@ -181,6 +187,14 @@ export function useModuleAccordion(options: {
       queryKey: ["teacher", "courses", courseId, "content"],
     });
     if (failed > 0) {
+      const firstFailure = results.find(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      )?.reason;
+      toast.error(
+        firstFailure instanceof Error
+          ? firstFailure.message
+          : t("teacher_common.publish_failed", "Could not publish"),
+      );
       toast.warning(t("teacher_common.publish_all_partial", { ok, failed }));
     } else {
       toast.success(t("teacher_common.publish_all_done", { count: ok }));
@@ -203,6 +217,9 @@ export function useModuleAccordion(options: {
     moduleDragEnabled,
     setModuleDragEnabled,
     publishingAll,
+    publishAllConfirm,
+    setPublishAllConfirm,
+    confirmPublishAll,
     statusConfirm,
     setStatusConfirm,
     confirmStatusChange,

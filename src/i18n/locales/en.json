@@ -618,6 +618,7 @@
       "review": "Review course",
       "next_up": "Next up",
       "curriculum": "Curriculum",
+      "module_duration": "{{duration}} estimated",
       "show_more": "Show more",
       "show_less": "Show less"
     },
@@ -818,6 +819,9 @@
     "item_published": "\"{{title}}\" published.",
     "publish_progress": "{{published}} of {{total}} items published",
     "publish_all": "Publish all ({{count}})",
+    "publish_all_title": "Publish all draft items?",
+    "publish_all_body": "Every draft item in this module will be sent for publishing. Continue?",
+    "publish_all_confirm": "Publish all",
     "publish_all_done": "{{count}} item(s) published.",
     "publish_all_partial": "{{ok}} published, {{failed}} failed — try again.",
     "expand_all": "Expand all",

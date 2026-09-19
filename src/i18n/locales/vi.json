@@ -566,6 +566,7 @@
       "review": "Xem lại khóa học",
       "next_up": "Tiếp theo",
       "curriculum": "Nội dung khóa học",
+      "module_duration": "Ước tính {{duration}}",
       "show_more": "Xem thêm",
       "show_less": "Thu gọn"
     },
@@ -749,6 +750,9 @@
     "item_published": "Đã xuất bản \"{{title}}\".",
     "publish_progress": "{{published}}/{{total}} mục đã xuất bản",
     "publish_all": "Xuất bản tất cả ({{count}})",
+    "publish_all_title": "Xuất bản tất cả mục nháp?",
+    "publish_all_body": "Tất cả mục nháp trong chương này sẽ được gửi để xuất bản. Tiếp tục?",
+    "publish_all_confirm": "Xuất bản tất cả",
     "publish_all_done": "Đã xuất bản {{count}} mục.",
     "publish_all_partial": "Đã xuất bản {{ok}}, {{failed}} thất bại — thử lại.",
     "expand_all": "Mở tất cả",
