@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { FileText, Globe, Plus, Users, X } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  FileText,
+  Globe,
+  Plus,
+  ShieldCheck,
+  Users,
+  X,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -65,7 +74,7 @@ function CreatePolicyDialog({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <form
-        onSubmit={handleSubmit}
+        onSubmit={(event) => void handleSubmit(event)}
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
       >
@@ -206,6 +215,83 @@ function PolicyRow({ policy }: { policy: PolicyDetail }) {
   );
 }
 
+function PolicyInventoryPanel({ policies }: { policies: PolicyDetail[] }) {
+  const { t } = useTranslation();
+  const stats = policies.reduce(
+    (acc, policy) => {
+      const { published, draft } = displayVersion(policy);
+      acc.total += 1;
+      if (published) acc.published += 1;
+      if (draft) acc.drafts += 1;
+      if (policy.audience.length === 0) acc.public += 1;
+      else acc.restricted += 1;
+      return acc;
+    },
+    { total: 0, published: 0, drafts: 0, public: 0, restricted: 0 },
+  );
+
+  const tiles = [
+    {
+      label: t("admin.policies.inventory.total", { defaultValue: "Total policies" }),
+      value: stats.total,
+      icon: FileText,
+    },
+    {
+      label: t("admin.policies.inventory.published", { defaultValue: "Published" }),
+      value: stats.published,
+      icon: CheckCircle2,
+    },
+    {
+      label: t("admin.policies.inventory.drafts", { defaultValue: "Open drafts" }),
+      value: stats.drafts,
+      icon: Clock3,
+    },
+    {
+      label: t("admin.policies.inventory.audience", { defaultValue: "Public / restricted" }),
+      value: `${stats.public} / ${stats.restricted}`,
+      icon: ShieldCheck,
+    },
+  ];
+
+  return (
+    <aside className="space-y-4 rounded-xl border border-m3-outline-variant/20 bg-white p-4 shadow-sm lg:sticky lg:top-20">
+      <div>
+        <h2 className="font-headline text-base font-bold text-text-strong">
+          {t("admin.policies.inventory.title", { defaultValue: "Policy inventory" })}
+        </h2>
+        <p className="mt-1 text-xs leading-relaxed text-text-muted">
+          {t("admin.policies.inventory.subtitle", {
+            defaultValue: "At-a-glance coverage. Open a policy for its version history and editor.",
+          })}
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {tiles.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-lg bg-m3-surface-container-low p-3">
+            <Icon className="h-4 w-4 text-m3-primary" aria-hidden="true" />
+            <p className="mt-2 text-lg font-bold tabular-nums text-text-strong">{value}</p>
+            <p className="text-[11px] leading-snug text-text-muted">{label}</p>
+          </div>
+        ))}
+      </div>
+      <div className="space-y-2 border-t border-m3-outline-variant/20 pt-3 text-xs text-text-muted">
+        <p className="flex items-center gap-2">
+          <Globe className="h-3.5 w-3.5 shrink-0" />
+          {t("admin.policies.inventory.public_hint", {
+            defaultValue: "Public policies apply to every eligible reader.",
+          })}
+        </p>
+        <p className="flex items-center gap-2">
+          <Users className="h-3.5 w-3.5 shrink-0" />
+          {t("admin.policies.inventory.restricted_hint", {
+            defaultValue: "Restricted policies are limited by audience roles.",
+          })}
+        </p>
+      </div>
+    </aside>
+  );
+}
+
 export default function AdminPoliciesPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
@@ -246,10 +332,13 @@ export default function AdminPoliciesPage() {
           {t("admin.policies.empty_title")}
         </div>
       ) : (
-        <div className="space-y-3">
-          {data.map((p) => (
-            <PolicyRow key={p.id} policy={p} />
-          ))}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+          <div className="space-y-3">
+            {data.map((p) => (
+              <PolicyRow key={p.id} policy={p} />
+            ))}
+          </div>
+          <PolicyInventoryPanel policies={data} />
         </div>
       )}
 

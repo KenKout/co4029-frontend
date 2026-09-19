@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
+import { DurationField } from "@/components/ui/duration-field";
 import { Field, LockableSection, SettingsSection } from "./form-primitives";
 import { SettingsTimingSection } from "./SettingsTimingSection";
 import { settingsErrors } from "./settings-insights";
@@ -38,7 +39,7 @@ function SettingsScheduleSectionComponent({
           common left edge and column width. The inputs are w-full so each
           fills its cell uniformly (previously "due" was a fixed sm:w-72,
           which broke alignment with the open/close fields above it). */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Field
           label={t("teacher_quiz_manage.settings.schedule.open_label")}
           hint={t("teacher_quiz_manage.settings.schedule.open_hint")}
@@ -89,21 +90,16 @@ function SettingsScheduleSectionComponent({
             label={t("teacher_quiz_manage.settings.scoring.time_label")}
             hint={t("teacher_quiz_manage.settings.scoring.time_hint")}
           >
-            <Input
-              type="number"
-              min={1 / 60}
-              max={180}
-              step="any"
+            <DurationField
               value={draft.time_limit_minutes}
-              id="quiz-setting-time-limit"
-              aria-label={t("teacher_quiz_manage.settings.scoring.time_label")}
-              onChange={(e) => update("time_limit_minutes", e.target.value)}
+              initialUnit="minutes"
+              storageUnit="minutes"
               placeholder={t(
                 "teacher_quiz_manage.settings.scoring.time_placeholder",
               )}
-              endAdornment={t(
-                "teacher_quiz_manage.settings.assist.minute_unit",
-              )}
+              onChange={(value) => update("time_limit_minutes", value)}
+              id="quiz-setting-time-limit"
+              ariaLabel={t("teacher_quiz_manage.settings.scoring.time_label")}
             />
           </Field>
           <SettingsTimingSection draft={draft} update={update} />

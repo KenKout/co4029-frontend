@@ -29,8 +29,8 @@ function roundedDisplayValue(minutes: number, unit: DurationUnit): number {
   );
 }
 
-function preferredUnit(value: string): DurationUnit {
-  const minutes = Number(value);
+function preferredUnit(value: string, storageUnit: DurationUnit): DurationUnit {
+  const minutes = Number(value) * MINUTES_PER_UNIT[storageUnit];
   if (!Number.isFinite(minutes) || minutes < 60) return "minutes";
 
   const days = roundedDisplayValue(minutes, "days");
@@ -57,6 +57,9 @@ export function DurationField({
   placeholder,
   inputClassName,
   initialUnit,
+  storageUnit = "minutes",
+  id,
+  ariaLabel,
 }: {
   /** Stored duration in minutes ("" = unset). */
   value: string;
@@ -65,13 +68,18 @@ export function DurationField({
   placeholder?: string;
   inputClassName?: string;
   initialUnit?: DurationUnit;
+  /** Unit used by the persisted value. The selector remains user-facing. */
+  storageUnit?: DurationUnit;
+  id?: string;
+  ariaLabel?: string;
 }) {
   const { t } = useTranslation();
   const [unit, setUnit] = useState<DurationUnit>(
-    () => initialUnit ?? preferredUnit(value),
+    () => initialUnit ?? preferredUnit(value, storageUnit),
   );
 
-  const minutes = Number(value);
+  const storedFactor = MINUTES_PER_UNIT[storageUnit];
+  const minutes = Number(value) * storedFactor;
   const factor = MINUTES_PER_UNIT[unit];
   const displayValue =
     value === "" || !Number.isFinite(minutes)
@@ -82,12 +90,15 @@ export function DurationField({
     if (raw.trim() === "") return onChange("");
     const num = Number(raw);
     if (!Number.isFinite(num)) return;
-    onChange(String(Math.round(num * factor)));
+    const storedValue = (num * factor) / storedFactor;
+    onChange(String(Number(storedValue.toFixed(MAX_DISPLAY_DECIMALS))));
   }
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Input
+        id={id}
+        aria-label={ariaLabel}
         type="number"
         min="0"
         inputMode="decimal"

@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/components/ui/input";
+import { DurationField } from "@/components/ui/duration-field";
 import {
   Field,
   LockableSection,
@@ -59,14 +60,11 @@ function SettingsAttemptsSectionComponent({
               label={t("teacher_quiz_manage.settings.attempts.cooldown_label")}
               hint={t("teacher_quiz_manage.settings.attempts.cooldown_hint")}
             >
-              <Input
-                type="number"
-                min={0}
+              <DurationField
                 value={draft.cooldown_hours}
-                endAdornment={t(
-                  "teacher_quiz_manage.settings.assist.hour_unit",
-                )}
-                onChange={(e) => update("cooldown_hours", e.target.value)}
+                storageUnit="hours"
+                initialUnit="hours"
+                onChange={(value) => update("cooldown_hours", value)}
                 placeholder={t(
                   "teacher_quiz_manage.settings.attempts.cooldown_placeholder",
                 )}

@@ -49,6 +49,7 @@ export function PerStudentTable({
   const scoreFilter: FilterDef = {
     id: "score",
     label: t("teacher_quiz_results.filters.score"),
+    allLabel: t("teacher_quiz_results.filters.all"),
     options: [
       { value: "best", label: t("teacher_quiz_results.per_student.toggle_best") },
       { value: "latest", label: t("teacher_quiz_results.per_student.toggle_latest") },

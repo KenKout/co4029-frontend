@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { Input } from "@/components/ui/input";
+import { DurationField } from "@/components/ui/duration-field";
 import { Select } from "@/components/ui/select";
 import { Field, SettingsSection } from "./form-primitives";
 import type { SettingsDraft, SettingsUpdate } from "./types";
@@ -59,12 +59,11 @@ export function SettingsTimingSection({
             label={t("teacher_quiz_manage.settings.timing.grace_label")}
             hint={t("teacher_quiz_manage.settings.timing.grace_hint")}
           >
-            <Input
-              type="number"
-              min={1}
+            <DurationField
               value={draft.grace_period_seconds}
-              onChange={(e) => update("grace_period_seconds", e.target.value)}
-              className="w-full"
+              storageUnit="seconds"
+              initialUnit="seconds"
+              onChange={(value) => update("grace_period_seconds", value)}
             />
           </Field>
         )}

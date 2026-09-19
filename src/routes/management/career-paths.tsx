@@ -271,7 +271,7 @@ export function CreateDialog({ onClose }: { onClose: () => void }) {
         },
         onError: (err) =>
           toast.error(
-            (err as Error).message ||
+            (err instanceof Error ? err.message : undefined) ||
               t("management_career_paths.create_dialog.errors.create_failed"),
           ),
       },
@@ -442,6 +442,7 @@ export default function ManagementCareerPathsPage() {
       <PageHeader
         title={t("management_career_paths.title")}
         subtitle={t("management_career_paths.subtitle")}
+        icon={GraduationCap}
       />
 
       {list.isError ? (

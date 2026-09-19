@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,8 @@ interface PageHeaderProps {
   backLabel?: string;
   /** Optional right-aligned action slot (e.g. a primary button). */
   action?: React.ReactNode;
+  /** Optional semantic icon shown before the page title. */
+  icon?: LucideIcon;
   className?: string;
 }
 
@@ -43,6 +45,7 @@ export function PageHeader({
   onBack,
   backLabel,
   action,
+  icon: Icon,
   className,
 }: PageHeaderProps) {
   const backControl = onBack ? (
@@ -78,15 +81,20 @@ export function PageHeader({
     >
       <div className="flex items-start gap-3 min-w-0">
         {backControl}
-        <div className="min-w-0">
-          <h1 className="text-2xl font-headline font-bold text-m3-primary tracking-tight">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="text-sm text-m3-on-surface-variant mt-1">
-              {subtitle}
-            </p>
-          )}
+        <div className="flex min-w-0 items-start gap-2.5">
+          {Icon ? (
+            <Icon className="mt-0.5 h-6 w-6 shrink-0 text-m3-primary" aria-hidden="true" />
+          ) : null}
+          <div className="min-w-0">
+            <h1 className="text-2xl font-headline font-bold text-m3-primary tracking-tight">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="mt-1 text-sm text-m3-on-surface-variant">
+                {subtitle}
+              </p>
+            )}
+          </div>
         </div>
       </div>
       {action && <div className="shrink-0">{action}</div>}
