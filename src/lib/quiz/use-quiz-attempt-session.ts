@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import {
   useMyQuizAttempts,
   useQuizAttemptProgress,
@@ -64,7 +65,9 @@ export function useQuizAttemptSession(quizId: string) {
   // of the race — which is how a quiz accumulated empty in_progress duplicates.
   const [resumeRequested, setResumeRequested] = useState(false);
   const [sessionConflict, setSessionConflict] = useState<string | null>(null);
-  const [conflictAttemptId, setConflictAttemptId] = useState<string | null>(null);
+  const [conflictAttemptId, setConflictAttemptId] = useState<string | null>(
+    null,
+  );
   const resumableAttemptId = inProgressAttempt?.id ?? conflictAttemptId;
   const attemptProgress = useQuizAttemptProgress(
     resumeRequested ? resumableAttemptId : null,
@@ -87,7 +90,7 @@ export function useQuizAttemptSession(quizId: string) {
   );
   const guardedAttemptId = submittedSummary
     ? null
-    : activeAttemptId ?? inProgressAttempt?.id ?? conflictAttemptId;
+    : (activeAttemptId ?? inProgressAttempt?.id ?? conflictAttemptId);
   const tabGuard = useQuizAttemptTabGuard(quizId, guardedAttemptId);
   const claimSession = useClaimQuizAttemptSession(resumableAttemptId);
   const takeoverSession = useTakeoverQuizAttemptSession(resumableAttemptId);
@@ -211,11 +214,14 @@ export function useQuizAttemptSession(quizId: string) {
       setResumeRequested(true);
     } catch (error) {
       setResumeRequested(false);
-      if (error instanceof ApiError && (error.status === 409 || error.status === 503)) {
+      if (
+        error instanceof ApiError &&
+        (error.status === 409 || error.status === 503)
+      ) {
         setSessionConflict(
           error.status === 503
             ? "quiz_session_guard_unavailable"
-            : error.code ?? "attempt_active_elsewhere",
+            : (error.code ?? "attempt_active_elsewhere"),
         );
       }
     }
@@ -236,6 +242,25 @@ export function useQuizAttemptSession(quizId: string) {
       }
     }
   }, [camera, fullscreen, resumableAttemptId, takeoverSession]);
+
+  const continueInThisTab = useCallback(async () => {
+    try {
+      const transferred = await tabGuard.requestTransfer();
+      if (!transferred) {
+        toast.error(t("course_quiz.tab_guard.transfer_failed"));
+        return;
+      }
+      if (!resumableAttemptId) return;
+      await requestResume();
+    } catch (error) {
+      setResumeRequested(false);
+      if (error instanceof ApiError && error.status === 503) {
+        setSessionConflict("quiz_session_guard_unavailable");
+      } else {
+        toast.error(t("course_quiz.tab_guard.transfer_failed"));
+      }
+    }
+  }, [requestResume, resumableAttemptId, t, tabGuard]);
 
   const handleExit = useCallback(async () => {
     await actions.handleSaveOnly();
@@ -316,6 +341,7 @@ export function useQuizAttemptSession(quizId: string) {
     handleFinalSubmit: actions.handleFinalSubmit,
     requestResume,
     takeoverAndResume,
+    continueInThisTab,
     handleExit,
     resumeRequested,
     resuming,

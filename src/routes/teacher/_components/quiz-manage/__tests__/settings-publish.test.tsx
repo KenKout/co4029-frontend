@@ -169,7 +169,7 @@ describe("quiz publish safety", () => {
     expect(mocks.publish).toHaveBeenCalledOnce();
   });
 
-  it("only hides delete after the quiz has reached a published course and module", () => {
+  it("permanently hides delete once the quiz has been published", () => {
     const view = render(<QuizManagePage />);
     expect(screen.getByRole("button", { name: "common.delete" })).toBeVisible();
 
@@ -178,7 +178,7 @@ describe("quiz publish safety", () => {
     mocks.courseStatus = "published";
     mocks.moduleStatus = "draft";
     view.rerender(<QuizManagePage />);
-    expect(screen.getByRole("button", { name: "common.delete" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "common.delete" })).toBeNull();
 
     mocks.moduleStatus = "published";
     view.rerender(<QuizManagePage />);

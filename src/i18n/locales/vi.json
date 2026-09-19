@@ -3101,7 +3101,8 @@
       "description": "Quay lại tab đang làm bài hoặc chuyển bài quiz sang tab này.",
       "return_to_list": "Về danh sách quiz",
       "continue_here": "Tiếp tục ở tab này",
-      "transferring": "Đang chuyển…"
+      "transferring": "Đang chuyển…",
+      "transfer_failed": "Không thể chuyển bài quiz sang tab này. Vui lòng thử lại."
     },
     "session_replaced": {
       "title": "Phiên làm bài đã được chuyển",

@@ -3279,7 +3279,8 @@
       "description": "Return to the existing tab or move the quiz to this tab.",
       "return_to_list": "Return to quiz list",
       "continue_here": "Continue in this tab",
-      "transferring": "Transferring…"
+      "transferring": "Transferring…",
+      "transfer_failed": "Could not move the quiz to this tab. Please try again."
     },
     "session_replaced": {
       "title": "Quiz session moved",

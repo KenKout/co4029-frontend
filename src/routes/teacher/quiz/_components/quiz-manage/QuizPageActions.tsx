@@ -105,9 +105,8 @@ export function QuizPageActions({
           {!actionsStuck && t("teacher_quiz_manage.actions.archive")}
         </Button>
       )}
-      {/* A published quiz may still be deleted while its course or module is
-          a draft: learners cannot reach it yet. Once all parent levels are
-          live, keep the quiz as assessment evidence even after archiving. */}
+      {/* Delete is draft-only. Once published, archive is the terminal action
+          and assessment evidence remains even if a parent is withdrawn. */}
       {canDelete && (
         <Button
           type="button"

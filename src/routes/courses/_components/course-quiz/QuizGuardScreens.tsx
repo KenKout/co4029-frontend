@@ -20,7 +20,7 @@ export function getQuizBlockingStage({
     return <QuizSessionConflictScreen session={session} slug={slug} />;
   }
   if (session.tabGuard.blocked) {
-    return <QuizTabGuardScreen guard={session.tabGuard} slug={slug} />;
+    return <QuizTabGuardScreen session={session} slug={slug} />;
   }
   if (
     !session.submittedSummary &&
@@ -35,18 +35,22 @@ export function getQuizBlockingStage({
 }
 
 export function QuizTabGuardScreen({
-  guard,
+  session,
   slug,
 }: {
-  guard: QuizAttemptTabGuard;
+  session: QuizSession;
   slug: string;
 }) {
   const { t } = useTranslation();
+  const guard: QuizAttemptTabGuard = session.tabGuard;
   const replaced = guard.surrendered;
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-8">
       <GlassCard className="max-w-lg p-10 text-center space-y-4">
-        <LockKeyhole className="mx-auto h-10 w-10 text-violet-600" aria-hidden="true" />
+        <LockKeyhole
+          className="mx-auto h-10 w-10 text-violet-600"
+          aria-hidden="true"
+        />
         <h2 className="font-headline font-bold text-xl text-m3-on-surface">
           {t(
             replaced
@@ -69,7 +73,7 @@ export function QuizTabGuardScreen({
           </Link>
           {!replaced && (
             <Button
-              onClick={guard.requestTransfer}
+              onClick={() => void session.continueInThisTab()}
               disabled={guard.transferPending}
             >
               {guard.transferPending
@@ -111,7 +115,10 @@ export function QuizCameraRequiredScreen({
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-8">
       <GlassCard className="max-w-lg p-10 text-center space-y-4">
-        <Camera className="mx-auto h-10 w-10 text-violet-600" aria-hidden="true" />
+        <Camera
+          className="mx-auto h-10 w-10 text-violet-600"
+          aria-hidden="true"
+        />
         <h2 className="font-headline font-bold text-xl text-m3-on-surface">
           {t("course_quiz.camera.required_title")}
         </h2>
@@ -160,5 +167,7 @@ export function QuizCameraPreview({
 }: {
   camera: QuizCameraController;
 }) {
-  return camera.required && camera.active ? <CameraPreview stream={camera.stream} /> : null;
+  return camera.required && camera.active ? (
+    <CameraPreview stream={camera.stream} />
+  ) : null;
 }

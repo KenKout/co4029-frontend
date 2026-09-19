@@ -22,19 +22,12 @@ import { useStickyActions } from "./_components/quiz-manage/use-sticky-actions";
 function isQuizDeletable({
   quizStatus,
   publishedAt,
-  courseStatus,
-  moduleStatus,
 }: {
   quizStatus: string;
   publishedAt?: string | null;
-  courseStatus?: string | null;
-  moduleStatus?: string | null;
 }) {
   const hasBeenPublished = quizStatus === "published" || Boolean(publishedAt);
-  const parentsArePublished =
-    courseStatus === "published" && moduleStatus === "published";
-
-  return !hasBeenPublished || !parentsArePublished;
+  return !hasBeenPublished;
 }
 
 /**
@@ -83,8 +76,6 @@ export default function QuizManagePage() {
   const canDelete = isQuizDeletable({
     quizStatus: quiz.status,
     publishedAt: quiz.published_at,
-    courseStatus: data.course?.status,
-    moduleStatus: courseModule.status,
   });
   // Partial publish: students only ever see approved questions, so publish is
   // allowed as soon as at least ONE question is approved. Un-approved
