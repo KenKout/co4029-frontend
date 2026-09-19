@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Loader2, LayoutDashboard, Settings, User, LogOut } from "lucide-react";
 import type { TFunction } from "i18next";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AuthenticatedAvatarImage } from "@/components/auth/AuthenticatedAvatarImage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,9 +38,7 @@ export function TopNavUserMenu({
         aria-label="User menu"
       >
         <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm">
-          {user?.profile?.avatar_url && (
-            <AvatarImage src={user.profile.avatar_url} alt="" />
-          )}
+          <AuthenticatedAvatarImage alt={displayName} />
           <AvatarFallback className="bg-m3-primary text-white text-xs font-bold">
             {getAuthUserInitials(user)}
           </AvatarFallback>

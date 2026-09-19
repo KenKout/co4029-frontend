@@ -8,6 +8,10 @@ import { useMyCourseProgress } from "@/lib/api/hooks/progress";
 import { useCardsDue } from "@/lib/api/hooks/spaced-repetition";
 import type { Course } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import {
+  StudentPage,
+  StudentPageHeader,
+} from "@/components/layout/StudentPage";
 
 /** FR-6.1 / FR-4.8 — student progress overview (replaces the old stub). */
 export default function ProgressPage() {
@@ -19,16 +23,12 @@ export default function ProgressPage() {
   const dueLabel = cardsDue.hasNextPage ? `${dueCount}+` : String(dueCount);
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-      <div>
-        <h1 className="font-headline font-bold text-2xl text-m3-on-surface flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-m3-primary" />
-          {t("progress_page.title")}
-        </h1>
-        <p className="text-sm text-m3-on-surface-variant mt-1">
-          {t("progress_page.subtitle")}
-        </p>
-      </div>
+    <StudentPage>
+      <StudentPageHeader
+        icon={<BarChart3 className="h-7 w-7 sm:h-8 sm:w-8" />}
+        title={t("progress_page.title")}
+        subtitle={t("progress_page.subtitle")}
+      />
 
       <div className="rounded-xl bg-card ghost-border p-5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 sm:gap-6">
         <div className="flex items-center gap-3">
@@ -99,7 +99,7 @@ export default function ProgressPage() {
           ))
         )}
       </div>
-    </div>
+    </StudentPage>
   );
 }
 

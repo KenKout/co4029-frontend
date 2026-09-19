@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AuthenticatedAvatarImage } from "@/components/auth/AuthenticatedAvatarImage";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -61,10 +62,7 @@ function ProfileMenuNavItems() {
     "flex items-center rounded-md px-3 py-2 gap-3 cursor-pointer text-m3-on-surface hover:bg-primary-soft focus:bg-primary-soft focus:text-primary";
   return (
     <DropdownMenuGroup>
-      <DropdownMenuItem
-        className={itemClass}
-        render={<Link to="/dashboard" />}
-      >
+      <DropdownMenuItem className={itemClass} render={<Link to="/dashboard" />}>
         <LayoutDashboard className="h-4 w-4 text-m3-on-surface-variant" />
         <span className="text-sm font-medium">{t("nav.dashboard")}</span>
       </DropdownMenuItem>
@@ -74,7 +72,10 @@ function ProfileMenuNavItems() {
         <span className="text-sm font-medium">{t("nav.settings")}</span>
       </DropdownMenuItem>
 
-      <DropdownMenuItem className={itemClass} render={<Link to="/me/profile" />}>
+      <DropdownMenuItem
+        className={itemClass}
+        render={<Link to="/me/profile" />}
+      >
         <User className="h-4 w-4 text-m3-on-surface-variant" />
         <span className="text-sm font-medium">{t("nav.profile")}</span>
       </DropdownMenuItem>
@@ -109,7 +110,13 @@ interface ContentTopBarProps {
  *  dropdown. Just the nav items (icons + labels, active highlight) — no
  *  logout, no collapse toggle. Desktop uses the sidebar rail, so this
  *  trigger is hidden at md+. */
-function MobileNavMenu({ t, navGroups }: { t: TFunction; navGroups: NavGroup[] }) {
+function MobileNavMenu({
+  t,
+  navGroups,
+}: {
+  t: TFunction;
+  navGroups: NavGroup[];
+}) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const pathname = location.pathname;
@@ -153,9 +160,7 @@ function MobileNavMenu({ t, navGroups }: { t: TFunction; navGroups: NavGroup[] }
   );
 }
 
-export default function ContentTopBar({
-  navGroups = [],
-}: ContentTopBarProps) {
+export default function ContentTopBar({ navGroups = [] }: ContentTopBarProps) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -206,9 +211,7 @@ export default function ContentTopBar({
             aria-label="User menu"
           >
             <Avatar className="h-9 w-9 ring-2 ring-surface-elev shadow-sm">
-              {user?.profile?.avatar_url && (
-                <AvatarImage src={user.profile.avatar_url} alt="" />
-              )}
+              <AuthenticatedAvatarImage alt={displayName} />
               <AvatarFallback className="bg-primary text-white text-xs font-bold">
                 {getAuthUserInitials(user)}
               </AvatarFallback>

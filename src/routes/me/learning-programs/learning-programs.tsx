@@ -8,8 +8,11 @@ import {
   History,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import {
+  StudentPage,
+  StudentPageHeader,
+} from "@/components/layout/StudentPage";
 import {
   useCancelProgramPathChange,
   useMyLearningPrograms,
@@ -347,15 +350,16 @@ function StudentPathBudget({
 export default function LearningProgramsPage() {
   const { t } = useTranslation();
   const programs = useMyLearningPrograms();
-  if (programs.isLoading) return <PageSkeleton rows={3} />;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-16">
-      <PageHeader
+    <StudentPage>
+      <StudentPageHeader
         title={t("my_learning_programs.title")}
         subtitle={t("my_learning_programs.subtitle")}
       />
-      {programs.data?.length ? (
+      {programs.isLoading ? (
+        <PageSkeleton rows={3} />
+      ) : programs.data?.length ? (
         <div className="space-y-4">
           {/* Any enrollment carries the student-wide totals; they are the
               same on all of them. */}
@@ -371,6 +375,6 @@ export default function LearningProgramsPage() {
           description={t("my_learning_programs.empty.description")}
         />
       )}
-    </div>
+    </StudentPage>
   );
 }
