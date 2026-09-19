@@ -66,7 +66,13 @@ export function ResultsTabPanels({
           <ReportSpinner />
         ))}
       {tab === "grading" && <NeedsGradingTab quizId={quizId} />}
-      {tab === "gradebook" && <GradebookTab quizId={quizId} />}
+      {tab === "gradebook" && (
+        <GradebookTab
+          quizId={quizId}
+          downloading={controller.downloading}
+          onDownload={(format) => void controller.handleDownload(format)}
+        />
+      )}
       {tab === "audit" && <AuditEventsTab quizId={quizId} />}
     </>
   );

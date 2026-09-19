@@ -4448,7 +4448,9 @@
     "title": "Kết quả bài kiểm tra",
     "breadcrumb": "Kết quả",
     "actions": {
-      "back_to_editor": "Quay lại trình chỉnh sửa"
+      "back_to_editor": "Quay lại trình chỉnh sửa",
+      "expand_options": "Mở phân bố đáp án",
+      "collapse_options": "Thu gọn phân bố đáp án"
     },
     "empty": {
       "title": "Chưa có lượt làm nào",
@@ -4476,6 +4478,7 @@
       "pass_line": "Đạt"
     },
     "tabs": {
+      "aria_label": "Các phần kết quả bài kiểm tra",
       "by_student": "Theo học viên",
       "by_question": "Theo câu hỏi",
       "responses": "Câu trả lời",
@@ -4483,6 +4486,28 @@
       "grading": "Chấm tay",
       "gradebook": "Bảng điểm",
       "audit": "Nhật ký"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "status": "Trạng thái",
+      "ungraded": "Chưa chấm",
+      "difficulty": "Độ khó",
+      "hard": "Khó",
+      "medium": "Trung bình",
+      "easy": "Dễ",
+      "unanswered": "Chưa trả lời",
+      "result": "Kết quả",
+      "correct": "Đúng",
+      "incorrect": "Sai",
+      "quality": "Chất lượng",
+      "strong": "Tốt",
+      "weak": "Yếu",
+      "unavailable": "Không có dữ liệu",
+      "search_students": "Tìm theo tên, email hoặc mã học viên…",
+      "search_questions": "Tìm câu hỏi…",
+      "search_responses": "Tìm câu trả lời…",
+      "search_grading": "Tìm hàng chờ chấm…",
+      "search_audit": "Tìm sự kiện nhật ký…"
     },
     "per_student": {
       "col_student": "Học viên",
@@ -4524,6 +4549,7 @@
       }
     },
     "reports": {
+      "export_all": "Xuất toàn bộ bản ghi:",
       "download": "Tải xuống",
       "download_csv": "Bảng hiện tại → CSV",
       "download_xlsx": "Bảng hiện tại → XLSX",
@@ -4580,6 +4606,10 @@
       "save_failed": "Không thể lưu điểm."
     },
     "grading": {
+      "col_type": "Loại",
+      "col_question": "Câu hỏi",
+      "col_answer": "Câu trả lời",
+      "col_action": "Chấm",
       "empty": "Không có câu trả lời nào cần chấm tay.",
       "invalid_score": "Nhập điểm hợp lệ.",
       "graded": "Đã chấm điểm.",
@@ -4601,6 +4631,7 @@
       "failed": "Chưa đạt"
     },
     "audit": {
+      "event_filter": "Loại sự kiện",
       "empty": "Chưa có sự kiện nào.",
       "col_event": "Sự kiện",
       "col_when": "Thời điểm",

@@ -4626,7 +4626,9 @@
     "title": "Quiz results",
     "breadcrumb": "Results",
     "actions": {
-      "back_to_editor": "Back to editor"
+      "back_to_editor": "Back to editor",
+      "expand_options": "Expand answer distribution",
+      "collapse_options": "Collapse answer distribution"
     },
     "empty": {
       "title": "No attempts yet",
@@ -4654,6 +4656,7 @@
       "pass_line": "Pass"
     },
     "tabs": {
+      "aria_label": "Quiz results sections",
       "by_student": "By student",
       "by_question": "By question",
       "responses": "Responses",
@@ -4661,6 +4664,28 @@
       "grading": "Manual grading",
       "gradebook": "Gradebook",
       "audit": "Audit log"
+    },
+    "filters": {
+      "all": "All",
+      "status": "Status",
+      "ungraded": "Not graded",
+      "difficulty": "Difficulty",
+      "hard": "Hard",
+      "medium": "Medium",
+      "easy": "Easy",
+      "unanswered": "Unanswered",
+      "result": "Result",
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "quality": "Quality",
+      "strong": "Strong",
+      "weak": "Weak",
+      "unavailable": "Unavailable",
+      "search_students": "Search students by name, email, or ID…",
+      "search_questions": "Search questions…",
+      "search_responses": "Search responses…",
+      "search_grading": "Search grading queue…",
+      "search_audit": "Search audit events…"
     },
     "per_student": {
       "col_student": "Student",
@@ -4702,6 +4727,7 @@
       }
     },
     "reports": {
+      "export_all": "Export all records:",
       "download": "Download",
       "download_csv": "Current view → CSV",
       "download_xlsx": "Current view → XLSX",
@@ -4758,6 +4784,10 @@
       "save_failed": "Could not save grade."
     },
     "grading": {
+      "col_type": "Type",
+      "col_question": "Question",
+      "col_answer": "Answer",
+      "col_action": "Grade",
       "empty": "No answers awaiting manual grading.",
       "invalid_score": "Enter a valid score.",
       "graded": "Answer graded.",
@@ -4779,6 +4809,7 @@
       "failed": "Failed"
     },
     "audit": {
+      "event_filter": "Event type",
       "empty": "No audit events yet.",
       "col_event": "Event",
       "col_when": "When",

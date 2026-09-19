@@ -1,14 +1,10 @@
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Tabs, type TabDef } from "@/components/ui/tabs";
 
-import {
-  RESULTS_TABS,
-  TAB_BUTTON_ACTIVE,
-  TAB_BUTTON_BASE,
-  TAB_BUTTON_IDLE,
-} from "./constants";
+import { RESULTS_TABS } from "./constants";
+import type { ResultsTab } from "./types";
 import type { QuizResultsController } from "./use-quiz-results-page";
 
 function ReportDownloadActions({
@@ -19,7 +15,7 @@ function ReportDownloadActions({
   onDownload: (format: "csv" | "xlsx") => void;
 }) {
   return (
-    <div className="ml-auto flex items-center gap-1">
+    <div className="flex items-center gap-1">
       <Button
         variant="outline"
         size="sm"
@@ -44,32 +40,31 @@ function ReportDownloadActions({
   );
 }
 
-/** Seven-tab segmented bar, with the CSV / XLSX actions on report tabs. */
+/** Shared system tab component plus server-side report export actions. */
 export function ResultsTabBar({
   controller,
 }: {
   controller: QuizResultsController;
 }) {
   const { t, tab, setTab, downloading, handleDownload } = controller;
-  return (
-    <div className="bg-m3-surface-container-low rounded-xl p-1 inline-flex gap-1 border border-m3-outline-variant/20">
-      {RESULTS_TABS.map(({ id, icon: Icon, labelKey }) => (
-        <Button variant="ghost"
-          key={id}
-          type="button"
-          onClick={() => setTab(id)}
-          aria-pressed={tab === id}
-          className={cn(
-            TAB_BUTTON_BASE,
-            tab === id ? TAB_BUTTON_ACTIVE : TAB_BUTTON_IDLE,
-          )}
-        >
-          <Icon className="h-4 w-4" />
-          {t(labelKey)}
-        </Button>
-      ))}
+  const tabs: TabDef<ResultsTab>[] = RESULTS_TABS.map(({ id, icon, labelKey }) => ({
+    key: id,
+    icon,
+    label: t(labelKey),
+    labelHiddenOnMobile: true,
+  }));
+  const exportable = tab === "responses" || tab === "statistics";
 
-      {(tab === "responses" || tab === "statistics") && (
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Tabs
+        tabs={tabs}
+        value={tab}
+        onChange={setTab}
+        ariaLabel={t("teacher_quiz_results.tabs.aria_label")}
+        className="min-w-0 flex-1"
+      />
+      {exportable && (
         <ReportDownloadActions
           downloading={downloading}
           onDownload={(format) => void handleDownload(format)}

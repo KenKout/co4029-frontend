@@ -54,6 +54,8 @@ export function useGradeAnswer(quizId: string | null | undefined) {
 // --- Phase 9: gradebook -----------------------------------------------------
 export interface QuizGradeRow {
   student_id: string;
+  student_name: string | null;
+  student_email: string | null;
   grade_percent: number;
   grade_points: number;
   passed: boolean;

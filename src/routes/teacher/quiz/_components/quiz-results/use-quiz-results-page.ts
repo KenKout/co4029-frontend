@@ -55,7 +55,7 @@ export function useQuizResultsPage() {
   );
 
   async function handleDownload(format: "csv" | "xlsx") {
-    if (tab !== "responses" && tab !== "statistics") return;
+    if (tab !== "responses" && tab !== "statistics" && tab !== "gradebook") return;
     setDownloading(true);
     try {
       await downloadQuizReport(quizId, tab, format);

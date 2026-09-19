@@ -1,71 +1,40 @@
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 
-import { useQuizAuditEvents } from "@/lib/api/hooks/quizzes";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
+import { useQuizAuditEvents, type AuditEventRow } from "@/lib/api/hooks/quizzes";
 
-/**
- * Phase 13 — audit trail: an append-only, most-recent-first log of teacher /
- * student actions on a quiz (submit, regrade, manual-grade, override CRUD,
- * question edit, publish). Read-only.
- */
 export function AuditEventsTab({ quizId }: { quizId: string }) {
   const { t } = useTranslation();
   const { data: events, isLoading } = useQuizAuditEvents(quizId);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-m3-secondary" />
-      </div>
-    );
-  }
-
-  if (!events || events.length === 0) {
-    return (
-      <p className="text-sm text-m3-on-surface-variant py-8 text-center">
-        {t("teacher_quiz_results.audit.empty")}
-      </p>
-    );
-  }
-
+  const [search, setSearch] = useState("");
+  const [eventName, setEventName] = useState("all");
+  const eventOptions = useMemo(() => Array.from(new Set((events ?? []).map((event) => event.event_name))).sort(), [events]);
+  const eventFilter: FilterDef = {
+    id: "event",
+    label: t("teacher_quiz_results.audit.event_filter"),
+    options: [
+      { value: "all", label: t("teacher_quiz_results.filters.all") },
+      ...eventOptions.map((value) => ({ value, label: t(`teacher_quiz_results.audit.events.${value}`, { defaultValue: value }) })),
+    ],
+  };
+  const rows = useMemo(() => (events ?? []).filter((event) => {
+    const needle = search.trim().toLowerCase();
+    const matchesSearch = !needle || `${event.event_name} ${JSON.stringify(event.payload_json)}`.toLowerCase().includes(needle);
+    return matchesSearch && (eventName === "all" || event.event_name === eventName);
+  }), [events, search, eventName]);
+  const columns: DataTableColumn<AuditEventRow>[] = [
+    { id: "event", header: t("teacher_quiz_results.audit.col_event"), cell: (event) => <span className="inline-block rounded-md bg-m3-surface-container px-2 py-0.5 text-xs font-medium text-m3-on-surface">{t(`teacher_quiz_results.audit.events.${event.event_name}`, { defaultValue: event.event_name })}</span> },
+    { id: "when", header: t("teacher_quiz_results.audit.col_when"), sortable: true, sortValue: (event) => new Date(event.occurred_at), cell: (event) => <span className="whitespace-nowrap text-m3-on-surface-variant">{new Date(event.occurred_at).toLocaleString()}</span> },
+    { id: "details", header: t("teacher_quiz_results.audit.col_details"), cell: (event) => <span className="block max-w-xl truncate text-m3-on-surface-variant" title={JSON.stringify(event.payload_json)}>{Object.keys(event.payload_json).length > 0 ? JSON.stringify(event.payload_json) : "—"}</span> },
+  ];
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-m3-secondary" /></div>;
   return (
-    <div className="overflow-x-auto rounded-xl border border-m3-outline-variant/30">
-      <table className="w-full text-sm">
-        <thead className="bg-m3-surface-container-low text-m3-on-surface-variant">
-          <tr>
-            <th className="px-3 py-2 text-left font-semibold">
-              {t("teacher_quiz_results.audit.col_event")}
-            </th>
-            <th className="px-3 py-2 text-left font-semibold">
-              {t("teacher_quiz_results.audit.col_when")}
-            </th>
-            <th className="px-3 py-2 text-left font-semibold">
-              {t("teacher_quiz_results.audit.col_details")}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {events.map((ev) => (
-            <tr key={ev.id} className="border-t border-m3-outline-variant/20">
-              <td className="px-3 py-2">
-                <span className="inline-block rounded-md bg-m3-surface-container px-2 py-0.5 text-xs font-medium text-m3-on-surface">
-                  {t(`teacher_quiz_results.audit.events.${ev.event_name}`, {
-                    defaultValue: ev.event_name,
-                  })}
-                </span>
-              </td>
-              <td className="px-3 py-2 whitespace-nowrap text-m3-on-surface-variant">
-                {new Date(ev.occurred_at).toLocaleString()}
-              </td>
-              <td className="px-3 py-2 max-w-md truncate text-m3-on-surface-variant">
-                {Object.keys(ev.payload_json).length > 0
-                  ? JSON.stringify(ev.payload_json)
-                  : "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-3">
+      <DataTableToolbar search={search} onSearchChange={setSearch} searchPlaceholder={t("teacher_quiz_results.filters.search_audit")} filters={[eventFilter]} filterValues={{ event: eventName }} onFilterChange={(_, value) => setEventName(value ?? "all")} />
+      <DataTable columns={columns} data={rows} getRowId={(event) => event.id} emptyState={t("teacher_quiz_results.audit.empty")} pagination pageSize={10} pageSizeOptions={[10, 25, 50]} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
     </div>
   );
 }
