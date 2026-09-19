@@ -1,8 +1,5 @@
 import type { Notification, NotificationCategory } from "@/lib/api/types";
 
-/** Grouping modes for the inbox list. */
-export type NotificationGroupBy = "date" | "type";
-
 /** Read-status filter values (undefined = all). */
 export type NotificationStatusFilter = "unread" | "read" | undefined;
 
@@ -116,12 +113,6 @@ export const CATEGORY_ORDER: NotificationCategory[] = [
   "path_change_review",
 ];
 
-/** True when a group key is a category (type grouping) rather than a date
- *  bucket. Those labels live under `notifications.category.*`; date-bucket
- *  keys under `notifications.group_*`. */
-export function isCategoryKey(key: string): key is NotificationCategory {
-  return (CATEGORY_ORDER as readonly string[]).includes(key);
-}
 
 /**
  * Bucket a notification into a date group (local calendar days). `now` is
@@ -152,36 +143,10 @@ export interface NotificationGroup {
 }
 
 /**
- * Group a filtered list by date bucket or by category. Preserves the input
- * order (newest first, as the API returns) within each group.
+ * Group a filtered list by date bucket. Preserves the input order (newest
+ * first, as the API returns) within each group.
  */
-export function groupNotifications(
-  items: Notification[],
-  by: NotificationGroupBy,
-): NotificationGroup[] {
-  if (by === "type") {
-    const map = new Map<string, Notification[]>();
-    for (const n of items) {
-      const list = map.get(n.category) ?? [];
-      list.push(n);
-      map.set(n.category, list);
-    }
-    // Canonical category order; categories with no items are skipped.
-    const groups: NotificationGroup[] = [];
-    for (const cat of CATEGORY_ORDER) {
-      const list = map.get(cat);
-      if (list && list.length > 0) groups.push({ key: cat, items: list });
-    }
-    // Any category outside the canonical list (future backend additions) still
-    // shows, sorted after the known ones.
-    for (const [key, list] of map) {
-      if (!CATEGORY_ORDER.includes(key as NotificationCategory)) {
-        groups.push({ key, items: list });
-      }
-    }
-    return groups;
-  }
-
+export function groupNotifications(items: Notification[]): NotificationGroup[] {
   // Date grouping — fixed bucket order, newest first.
   const order: DateBucket[] = ["today", "yesterday", "this_week", "earlier"];
   const map = new Map<DateBucket, Notification[]>();

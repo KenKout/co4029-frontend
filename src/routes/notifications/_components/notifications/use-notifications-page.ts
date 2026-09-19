@@ -22,7 +22,6 @@ import {
   boundsFromCustomRange,
   filterNotifications,
   groupNotifications,
-  type NotificationGroupBy,
   type NotificationStatusFilter,
 } from "./helpers";
 
@@ -62,7 +61,6 @@ export function useNotificationsPage() {
   const [categoryFilter, setCategoryFilter] = useState<
     NotificationCategory | undefined
   >(undefined);
-  const [groupBy, setGroupBy] = useState<NotificationGroupBy>("date");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // A custom range resolves to explicit since/until ISO instants; presets go
@@ -88,8 +86,8 @@ export function useNotificationsPage() {
   );
 
   const groups = useMemo(
-    () => groupNotifications(visible, groupBy),
-    [visible, groupBy],
+    () => groupNotifications(visible),
+    [visible],
   );
 
   const readCount = useMemo(
@@ -160,8 +158,7 @@ export function useNotificationsPage() {
     setStatusFilter,
     categoryFilter,
     setCategoryFilter,
-    groupBy,
-    setGroupBy,
+
     resetFilters,
     // actions
     handleMarkRead,

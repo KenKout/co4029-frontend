@@ -7,7 +7,6 @@ import {
   dateBucketFor,
   filterNotifications,
   groupNotifications,
-  isCategoryKey,
   sinceFromTimeRange,
 } from "../helpers";
 
@@ -177,7 +176,7 @@ describe("groupNotifications", () => {
   ];
 
   it("groups by date in fixed bucket order, preserving input order within", () => {
-    const groups = groupNotifications(items, "date");
+    const groups = groupNotifications(items);
     expect(groups.map((g) => g.key)).toEqual(["today", "yesterday", "this_week", "earlier"]);
     // today: only a; yesterday: only b; this_week: c; earlier: d
     expect(groups[0].items.map((n) => n.id)).toEqual(["a"]);
@@ -186,16 +185,6 @@ describe("groupNotifications", () => {
     expect(groups[3].items.map((n) => n.id)).toEqual(["d"]);
   });
 
-  it("groups by type in canonical category order", () => {
-    const groups = groupNotifications(items, "type");
-    expect(groups.map((g) => g.key)).toEqual([
-      "lesson_unlock",
-      "system",
-      "quiz_generation",
-    ]);
-    // quiz_generation holds a then c (input order preserved)
-    expect(groups[2].items.map((n) => n.id)).toEqual(["a", "c"]);
-  });
 
   it("CATEGORY_ORDER covers every notification category literal", () => {
     const literals = [
@@ -213,11 +202,4 @@ describe("groupNotifications", () => {
     }
   });
 
-  it("isCategoryKey tells category groups apart from date buckets", () => {
-    expect(isCategoryKey("spaced_repetition")).toBe(true);
-    expect(isCategoryKey("quiz_generation")).toBe(true);
-    expect(isCategoryKey("today")).toBe(false);
-    expect(isCategoryKey("this_week")).toBe(false);
-    expect(isCategoryKey("nonsense_key")).toBe(false);
-  });
 });
