@@ -98,4 +98,39 @@ describe("useQuizAttemptTabGuard", () => {
     expect(transferError).toEqual(new Error("network unavailable"));
     await waitFor(() => expect(result.current.transferPending).toBe(false));
   });
+
+  it("reacquires the browser lock after the previous owner closes", async () => {
+    let available = false;
+    const request = vi.fn().mockImplementation(
+      async (
+        _name: string,
+        _options: LockOptions,
+        callback: (lock: Lock | null) => Promise<void>,
+      ) =>
+        callback(
+          available
+            ? { name: "quiz-attempt:quiz-1", mode: "exclusive" }
+            : null,
+        ),
+    );
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: { request },
+    });
+
+    const { useQuizAttemptTabGuard } = await import(
+      "@/lib/quiz/use-quiz-attempt-tab-guard"
+    );
+    const { result, unmount } = renderHook(() =>
+      useQuizAttemptTabGuard("quiz-1", "attempt-1"),
+    );
+
+    await waitFor(() => expect(result.current.blocked).toBe(true));
+    available = true;
+    await waitFor(() => expect(result.current.isOwner).toBe(true), {
+      timeout: 2_000,
+    });
+    expect(request.mock.calls.length).toBeGreaterThanOrEqual(2);
+    unmount();
+  });
 });
