@@ -40,10 +40,15 @@ export function useModuleItemRow(options: {
     item.interview_config_id ?? undefined,
   );
   const duplicateItem = useDuplicateModuleItem(courseId);
+  const [duplicateConfirm, setDuplicateConfirm] = useState(false);
 
   function handleDuplicateItem(e: React.MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
+    setDuplicateConfirm(true);
+  }
+
+  function confirmDuplicateItem() {
     duplicateItem.mutate(item.id, {
       onSuccess: () =>
         toast.success(
@@ -54,6 +59,7 @@ export function useModuleItemRow(options: {
           (err as Error).message ||
             t("teacher_common.duplicate_failed", "Could not duplicate"),
         ),
+      onSettled: () => setDuplicateConfirm(false),
     });
   }
 
@@ -82,6 +88,9 @@ export function useModuleItemRow(options: {
     dragEnabled,
     setDragEnabled,
     duplicateItem,
+    duplicateConfirm,
+    setDuplicateConfirm,
+    confirmDuplicateItem,
     publishing,
     handleDuplicateItem,
     handlePublish,

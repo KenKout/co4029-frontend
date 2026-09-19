@@ -1,4 +1,4 @@
-import { Check, Copy, Loader2, Pencil } from "lucide-react";
+import { Check, Copy, Loader2, Pencil, Trash2 } from "lucide-react";
 import type { ModuleAccordionController } from "./use-module-accordion";
 import type { TranslateFn } from "./types";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,18 @@ export function ModuleHeaderActions({
   duplicateModule,
   onStartEditTitle,
   onDuplicate,
+  onDelete,
+  deletePending,
+  canDelete,
   t,
 }: {
   editingTitle: boolean;
   duplicateModule: ModuleAccordionController["duplicateModule"];
   onStartEditTitle: (e: React.MouseEvent) => void;
   onDuplicate: (e: React.MouseEvent) => void;
+  onDelete: (e: React.MouseEvent) => void;
+  deletePending: boolean;
+  canDelete: boolean;
   t: TranslateFn;
 }) {
   return (
@@ -49,6 +55,23 @@ export function ModuleHeaderActions({
           <Copy className="h-3.5 w-3.5" />
         )}
       </Button>
+      {canDelete && (
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={onDelete}
+          disabled={deletePending}
+          className="shrink-0 p-1 rounded-lg text-m3-on-surface-variant hover:bg-red-50 hover:text-red-700 transition-colors disabled:opacity-50 h-auto whitespace-normal"
+          title={t("teacher_common.delete_module", "Delete draft module")}
+          aria-label={t("teacher_common.delete_module", "Delete draft module")}
+        >
+          {deletePending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Trash2 className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      )}
     </>
   );
 }

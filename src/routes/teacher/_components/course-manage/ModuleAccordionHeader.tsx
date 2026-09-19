@@ -46,6 +46,7 @@ export function ModuleAccordionHeader({
     setModuleDragEnabled,
     publishingAll,
     handleDuplicateModule,
+    deleteModule,
     startEditTitle,
     saveTitle,
     toggleStatus,
@@ -156,6 +157,12 @@ export function ModuleAccordionHeader({
         duplicateModule={duplicateModule}
         onStartEditTitle={startEditTitle}
         onDuplicate={handleDuplicateModule}
+        onDelete={(e) => {
+          e.stopPropagation();
+          ctl.setDeleteConfirm(true);
+        }}
+        deletePending={deleteModule.isPending}
+        canDelete={module.status === "draft"}
         t={t}
       />
 

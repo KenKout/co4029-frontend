@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { CourseContentItem } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -49,13 +50,17 @@ export function ModuleItemRow({
     dragEnabled,
     setDragEnabled,
     duplicateItem,
+    duplicateConfirm,
+    setDuplicateConfirm,
+    confirmDuplicateItem,
     publishing,
     handleDuplicateItem,
     handlePublish,
   } = useModuleItemRow({ item, courseId, title, t });
 
   return (
-    <div
+    <>
+      <div
       draggable={dragEnabled}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -131,5 +136,20 @@ export function ModuleItemRow({
         t={t}
       />
     </div>
+    <ConfirmDialog
+      open={duplicateConfirm}
+      onOpenChange={setDuplicateConfirm}
+      title={t("teacher_common.duplicate_item_title", "Duplicate this item?")}
+      description={t(
+        "teacher_common.duplicate_item_body",
+        "A new draft copy of this item will be created in the module. Continue?",
+      )}
+      confirmLabel={t("teacher_common.duplicate", "Duplicate")}
+      cancelLabel={t("common.cancel")}
+      confirmVariant="default"
+      onConfirm={confirmDuplicateItem}
+      isPending={duplicateItem.isPending}
+    />
+    </>
   );
 }

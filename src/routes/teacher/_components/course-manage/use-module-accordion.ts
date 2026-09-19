@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   useDuplicateModule,
+  useDeleteModule,
   useReorderModuleItems,
   useUpdateModule,
 } from "@/lib/api/hooks/teacher-courses";
@@ -37,14 +38,20 @@ export function useModuleAccordion(options: {
   const updateModule = useUpdateModule(module.id, courseId);
   const reorderItems = useReorderModuleItems(module.id, courseId);
   const duplicateModule = useDuplicateModule(courseId);
+  const deleteModule = useDeleteModule(courseId);
 
   function handleDuplicateModule(e: React.MouseEvent) {
     e.stopPropagation();
+    setDuplicateConfirm(true);
+  }
+
+  function confirmDuplicateModule() {
     duplicateModule.mutate(module.id, {
       onSuccess: () =>
         toast.success(
           t("teacher_common.module_duplicated", "Module duplicated as a draft"),
         ),
+      onSettled: () => setDuplicateConfirm(false),
       onError: (err: unknown) =>
         toast.error(
           (err as Error).message ||
@@ -60,7 +67,9 @@ export function useModuleAccordion(options: {
   // edit / edit-link / publish controls in the header stay clickable.
   const [moduleDragEnabled, setModuleDragEnabled] = useState(false);
   const [publishingAll, setPublishingAll] = useState(false);
-  const [archiveConfirm, setArchiveConfirm] = useState(false);
+  const [statusConfirm, setStatusConfirm] = useState<"published" | "archived" | null>(null);
+  const [duplicateConfirm, setDuplicateConfirm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   const stats = computeModuleItemStats(module);
   const { allItemsSorted, draftItems } = stats;
@@ -109,10 +118,18 @@ export function useModuleAccordion(options: {
     e.stopPropagation();
     if (module.status === "archived") return;
     if (module.status === "published" && courseStatus === "published") {
-      setArchiveConfirm(true);
+      setStatusConfirm("archived");
       return;
     }
     const next = module.status === "published" ? "draft" : "published";
+    if (next === "published") {
+      setStatusConfirm("published");
+      return;
+    }
+    updateModuleStatus(next);
+  }
+
+  function updateModuleStatus(next: "draft" | "published" | "archived") {
     updateModule.mutate(
       { status: next },
       {
@@ -127,17 +144,24 @@ export function useModuleAccordion(options: {
     );
   }
 
-  function archiveModule() {
-    updateModule.mutate(
-      { status: "archived" },
-      {
-        onSuccess: () => {
-          setArchiveConfirm(false);
-          toast.success(t("teacher_common.module_archived", "Module archived"));
-        },
-        onError: (err) => toast.error((err as Error).message),
-      },
-    );
+  function confirmStatusChange() {
+    if (!statusConfirm) return;
+    const next = statusConfirm;
+    setStatusConfirm(null);
+    updateModuleStatus(next);
+  }
+
+  function confirmDeleteModule() {
+    deleteModule.mutate(module.id, {
+      onSuccess: () =>
+        toast.success(t("teacher_common.module_deleted", "Module deleted")),
+      onError: (err: unknown) =>
+        toast.error(
+          (err as Error).message ||
+            t("teacher_common.delete_module_failed", "Could not delete module"),
+        ),
+      onSettled: () => setDeleteConfirm(false),
+    });
   }
 
   // Publish-all (T#2): fire a publish for every draft item in this module in
@@ -179,9 +203,16 @@ export function useModuleAccordion(options: {
     moduleDragEnabled,
     setModuleDragEnabled,
     publishingAll,
-    archiveConfirm,
-    setArchiveConfirm,
-    archiveModule,
+    statusConfirm,
+    setStatusConfirm,
+    confirmStatusChange,
+    duplicateConfirm,
+    setDuplicateConfirm,
+    confirmDuplicateModule,
+    deleteConfirm,
+    setDeleteConfirm,
+    deleteModule,
+    confirmDeleteModule,
     handleDuplicateModule,
     handleDrop,
     startEditTitle,

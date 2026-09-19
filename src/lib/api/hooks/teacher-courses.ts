@@ -902,6 +902,20 @@ export function useDeleteModuleItem(courseId: string) {
   });
 }
 
+export function useDeleteModule(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (moduleId: string) => apiDelete(`/teacher/modules/${moduleId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.courses.modules(courseId) });
+      qc.invalidateQueries({ queryKey: queryKeys.courses.content(courseId) });
+      qc.invalidateQueries({
+        queryKey: ["teacher", "courses", courseId, "content"],
+      });
+    },
+  });
+}
+
 export function useUpdateModuleItem(courseId: string) {
   const qc = useQueryClient();
   return useMutation({
