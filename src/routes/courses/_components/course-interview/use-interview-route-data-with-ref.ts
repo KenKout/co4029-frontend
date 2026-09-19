@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCourseBySlug } from "@/lib/api/hooks/courses";
@@ -12,12 +12,26 @@ export function useInterviewRouteDataWithRef(slug: string, configRef: string) {
   const { t, i18n } = useTranslation();
   const configId = configRef;
 
-  const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
-  const { data: takingPayload, isLoading: configLoading } = useInterviewForTaking(configId);
+  const { data: course, isLoading: courseLoading, error: courseError, refetch: refetchCourse } = useCourseBySlug(slug);
+  const { data: takingPayload, isLoading: configLoading, error: configError, refetch: refetchConfig } = useInterviewForTaking(configId);
   const config = takingPayload?.config;
 
   const startSession = useStartInterviewSession(configId);
   const { data: previousSessions, isLoading: previousSessionsLoading } = useMyInterviewSessions(configId);
+  // Same audit-P1 error branch as use-interview-route-data.ts: 404s are the
+  // legitimate missing screen, everything else is a recoverable transport
+  // error with a retry.
+  const hasStatus = (error: unknown, status: number): boolean =>
+    typeof error === "object" &&
+    error !== null &&
+    (error as { status?: unknown }).status === status;
+  const transportError = [courseError, configError].find(
+    (error) => Boolean(error) && !hasStatus(error, 404),
+  );
+  const refetchRouteData = useCallback(() => {
+    void refetchCourse();
+    void refetchConfig();
+  }, [refetchCourse, refetchConfig]);
   // Consent state mirrors use-interview-route-data.ts so the with-ref variant
   // (curriculum route) satisfies the shared InterviewBase contract.
   const [recordingConsentAccepted, setRecordingConsentAccepted] = useState(false);
@@ -55,6 +69,8 @@ export function useInterviewRouteDataWithRef(slug: string, configRef: string) {
     takingPayload,
     configLoading,
     config,
+    transportError,
+    refetchRouteData,
     startSession,
     previousSessionsLoading,
     resumableSession,
