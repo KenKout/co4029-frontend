@@ -4,10 +4,11 @@ import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { Input } from "@/components/ui/input";
 import { useGradeAnswer, useNeedsGrading, type NeedsGradingRow } from "@/lib/api/hooks/quizzes";
+import { QuizResultsDataTable } from "./QuizResultsDataTable";
 
 export function NeedsGradingTab({ quizId }: { quizId: string }) {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ export function NeedsGradingTab({ quizId }: { quizId: string }) {
   return (
     <div className="space-y-3">
       <DataTableToolbar search={search} onSearchChange={setSearch} searchPlaceholder={t("teacher_quiz_results.filters.search_grading")} />
-      <DataTable columns={columns} data={filtered} getRowId={(row) => row.answer_id} emptyState={t("teacher_quiz_results.grading.empty")} pagination pageSize={10} pageSizeOptions={[10, 25, 50]} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
+      <QuizResultsDataTable columns={columns} data={filtered} getRowId={(row) => row.answer_id} emptyState={t("teacher_quiz_results.grading.empty")} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
     </div>
   );
 }

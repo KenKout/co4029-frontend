@@ -3830,7 +3830,8 @@
       "end_interview": "End interview",
       "send_answer": "Send answer",
       "back_to_course": "Back to course",
-      "sending": "Sending..."
+      "sending": "Sending...",
+      "retry": "Retry"
     },
     "errors": {
       "rate_limited": "Too many requests, please try again later",
@@ -3847,7 +3848,9 @@
     },
     "empty_states": {
       "no_interview_found": "Interview not found",
-      "config_not_loadable": "This interview config can't be loaded for the course."
+      "config_not_loadable": "This interview config can't be loaded for the course.",
+      "load_failed_title": "Couldn't load the interview",
+      "load_failed_body": "A connection error occurred while loading the interview. Please try again."
     },
     "results": {
       "passed": "Passed",
@@ -4669,6 +4672,7 @@
     "filters": {
       "all": "All",
       "status": "Status",
+      "score": "Score",
       "ungraded": "Not graded",
       "difficulty": "Difficulty",
       "hard": "Hard",
@@ -4749,9 +4753,6 @@
         "facility": "Facility (% correct)",
         "discrimination": "Discrimination",
         "no_data": "—",
-        "legend_title": "About these metrics",
-        "legend_facility": "Facility = the share of students who answered correctly. Lower means harder.",
-        "legend_discrimination": "Discrimination = how well a question separates high scorers from low scorers (point-biserial, -1..+1). ≥0.3 is good; near 0 or negative is weak.",
         "empty": "Not enough attempts to compute statistics."
       }
     },

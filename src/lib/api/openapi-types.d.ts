@@ -17362,6 +17362,8 @@ export interface components {
             student_name?: string | null;
             /** Student Email */
             student_email?: string | null;
+            /** Student Avatar Url */
+            student_avatar_url?: string | null;
             /** Grade Percent */
             grade_percent: string;
             /** Grade Points */
@@ -17524,6 +17526,8 @@ export interface components {
             student_name: string | null;
             /** Student Email */
             student_email?: string | null;
+            /** Student Avatar Url */
+            student_avatar_url?: string | null;
             /** Best Score Percent */
             best_score_percent: string | null;
             /** Latest Score Percent */

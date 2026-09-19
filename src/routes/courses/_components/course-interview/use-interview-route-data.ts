@@ -26,10 +26,34 @@ export function useInterviewRouteData() {
   const configId = moduleId;
   const [recordingConsentAccepted, setRecordingConsentAccepted] = useState(false);
 
-  const { data: course, isLoading: courseLoading } = useCourseBySlug(slug);
-  const { data: takingPayload, isLoading: configLoading } =
-    useInterviewForTaking(configId);
-  const config = takingPayload?.config;
+  const courseQuery = useCourseBySlug(slug);
+  const configQuery = useInterviewForTaking(configId);
+  const course = courseQuery.data;
+  const takingPayload = configQuery.data;
+  const rawConfig = takingPayload?.config;
+
+  // Audit P1 (URL cross-course): the config id rides the URL verbatim, so a
+  // hand-edited link can pair Course A's slug with Course B's published
+  // config — starting B's assessment under A's context and invalidating A's
+  // progress cache on finish. A config that belongs to another course is
+  // treated exactly like a missing one: never surfaced, never startable.
+  const courseMismatch = Boolean(
+    course && rawConfig && rawConfig.course_id !== course.id,
+  );
+
+  // Audit P1 (transport vs missing): the route queries carry their error
+  // branch so the screen switch can show a recoverable error screen with
+  // retry instead of claiming "no interview found" on an offline/503 blip.
+  // 404s are NOT errors — a missing config is the legitimate missing screen.
+  const hasStatus = (error: unknown, status: number): boolean =>
+    typeof error === "object" &&
+    error !== null &&
+    (error as { status?: unknown }).status === status;
+  const transportError = [courseQuery.error, configQuery.error].find(
+    (error) => Boolean(error) && !hasStatus(error, 404),
+  );
+
+  const config = courseMismatch ? undefined : rawConfig;
 
   const startSession = useStartInterviewSession(configId);
   // Server-scoped to THIS config: the unscoped list is capped at 20 rows
@@ -82,10 +106,15 @@ export function useInterviewRouteData() {
     slug,
     configId,
     course,
-    courseLoading,
+    courseLoading: courseQuery.isLoading,
     takingPayload,
-    configLoading,
+    configLoading: configQuery.isLoading,
     config,
+    transportError,
+    refetchRouteData: useCallback(() => {
+      void courseQuery.refetch();
+      void configQuery.refetch();
+    }, [courseQuery, configQuery]),
     startSession,
     previousSessionsLoading,
     resumableSession,

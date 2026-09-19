@@ -149,7 +149,11 @@ export function useFinishInterview(
   });
 }
 
-export function useGapReport(sessionId: string | null | undefined) {
+export function useGapReport(
+  sessionId: string | null | undefined,
+  options?: { pollWhilePending?: boolean },
+) {
+  const pollWhilePending = options?.pollWhilePending ?? true;
   return useQuery({
     queryKey: queryKeys.interviews.gapReport(sessionId ?? ""),
     queryFn: () =>
@@ -158,10 +162,17 @@ export function useGapReport(sessionId: string | null | undefined) {
     // Post-session evaluation runs async in a worker (~1-2 min). Until it
     // finishes the report 404s — keep polling instead of giving up, and keep
     // retrying the 404 so a transient miss doesn't strand the result screen.
+    // Audit P1: when the caller knows evaluation is EXHAUSTED (or otherwise
+    // resolved), the report can never appear — stop all retry/poll traffic
+    // instead of hammering a 404 forever.
     retry: (failureCount, error) =>
-      error instanceof ApiError && error.status === 404 && failureCount < 60,
+      pollWhilePending &&
+      error instanceof ApiError &&
+      error.status === 404 &&
+      failureCount < 60,
     retryDelay: 3000,
     refetchInterval: (query) => {
+      if (!pollWhilePending) return false;
       if (query.state.data !== undefined) return false;
       return query.state.error instanceof ApiError && query.state.error.status === 404
         ? 3000
@@ -169,6 +180,8 @@ export function useGapReport(sessionId: string | null | undefined) {
     },
   });
 }
+
+export { isEvaluationUnresolved };
 
 export function useMyInterviewSessions(configId?: string) {
   return useQuery({

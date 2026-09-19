@@ -3644,7 +3644,8 @@
       "end_interview": "Kết thúc phỏng vấn",
       "send_answer": "Gửi câu trả lời",
       "back_to_course": "Quay lại khoá học",
-      "sending": "Đang gửi..."
+      "sending": "Đang gửi...",
+      "retry": "Thử lại"
     },
     "errors": {
       "rate_limited": "Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau",
@@ -3661,7 +3662,9 @@
     },
     "empty_states": {
       "no_interview_found": "Không tìm thấy phỏng vấn",
-      "config_not_loadable": "Cấu hình phỏng vấn này không tải được cho khoá học."
+      "config_not_loadable": "Cấu hình phỏng vấn này không tải được cho khoá học.",
+      "load_failed_title": "Không tải được phỏng vấn",
+      "load_failed_body": "Có lỗi kết nối khi tải bài phỏng vấn. Vui lòng thử lại."
     },
     "results": {
       "passed": "Đạt yêu cầu",
@@ -4491,6 +4494,7 @@
     "filters": {
       "all": "Tất cả",
       "status": "Trạng thái",
+      "score": "Điểm",
       "ungraded": "Chưa chấm",
       "difficulty": "Độ khó",
       "hard": "Khó",
@@ -4571,9 +4575,6 @@
         "facility": "Độ dễ (% đúng)",
         "discrimination": "Độ phân biệt",
         "no_data": "—",
-        "legend_title": "Về các chỉ số này",
-        "legend_facility": "Độ dễ = tỷ lệ học viên trả lời đúng. Thấp hơn nghĩa là khó hơn.",
-        "legend_discrimination": "Độ phân biệt = mức độ câu hỏi phân tách học viên giỏi với học viên yếu (point-biserial, -1..+1). ≥0.3 là tốt; gần 0 hoặc âm là yếu.",
         "empty": "Chưa đủ lượt làm để tính thống kê."
       }
     },

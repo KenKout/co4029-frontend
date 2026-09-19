@@ -9,6 +9,7 @@ import { InterviewResultsScreen } from "./_components/course-interview/Interview
 import {
   InterviewLoadingScreen,
   InterviewMissingConfigScreen,
+  InterviewRouteErrorScreen,
 } from "./_components/course-interview/InterviewStatusScreens";
 import { InterviewWorkspaceScreen } from "./_components/course-interview/InterviewWorkspaceScreen";
 import { useCourseInterview } from "./_components/course-interview/use-course-interview";
@@ -111,6 +112,19 @@ export function resolveInterviewScreen(args: {
   // ── Loading state ────────────────────────────────────────────────────────
   if (iv.courseLoading || iv.configLoading) {
     return <InterviewLoadingScreen />;
+  }
+
+  // Audit P1 (transport vs missing): an offline/503/timeout fetch is NOT a
+  // missing config. Offer a retry before ever claiming the interview does
+  // not exist — the missing screen stays reserved for confirmed 404s and
+  // the URL cross-course mismatch.
+  if (iv.transportError) {
+    return (
+      <InterviewRouteErrorScreen
+        slug={iv.slug}
+        onRetry={() => iv.refetchRouteData()}
+      />
+    );
   }
 
   if (!course || !config) {

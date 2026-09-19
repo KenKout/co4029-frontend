@@ -8,6 +8,7 @@ export interface ResponsesReportRow {
   student_id: string;
   student_name: string | null;
   student_email: string | null;
+  student_avatar_url: string | null;
   attempt_id: string;
   question_id: string;
   prompt_text: string;

@@ -1,14 +1,21 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, X } from "lucide-react";
 
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
+import { QuizResultsDataTable } from "./QuizResultsDataTable";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { cn } from "@/lib/utils";
 import type { ResponsesReportRead, ResponsesReportRow } from "@/lib/api/hooks/quizzes";
 
-export function ResponsesReport({ report }: { report: ResponsesReportRead }) {
+export function ResponsesReport({
+  report,
+  trailing,
+}: {
+  report: ResponsesReportRead;
+  trailing?: ReactNode;
+}) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [result, setResult] = useState("all");
@@ -28,7 +35,7 @@ export function ResponsesReport({ report }: { report: ResponsesReportRead }) {
     return matchesSearch && matchesResult;
   }), [report.rows, search, result]);
   const columns: DataTableColumn<ResponsesReportRow>[] = [
-    { id: "student", header: t("teacher_quiz_results.reports.responses.student"), cell: (row) => <UserEmailIdentity id={row.student_id} displayName={row.student_name ?? row.student_email ?? row.student_id} email={row.student_email} /> },
+    { id: "student", header: t("teacher_quiz_results.reports.responses.student"), cell: (row) => <UserEmailIdentity id={row.student_id} displayName={row.student_name ?? row.student_email ?? row.student_id} avatarUrl={row.student_avatar_url} email={row.student_email} /> },
     { id: "question", header: t("teacher_quiz_results.reports.responses.question"), cell: (row) => <span className="block max-w-xs truncate" title={row.prompt_text}>{row.prompt_text}</span> },
     { id: "answer", header: t("teacher_quiz_results.reports.responses.their_answer"), cell: (row) => <span className="block max-w-xs truncate" title={row.student_answer}>{row.student_answer || "—"}</span> },
     { id: "correct_answer", header: t("teacher_quiz_results.reports.responses.correct_answer"), cell: (row) => <span className="block max-w-xs truncate" title={row.correct_answer}>{row.correct_answer || "—"}</span> },
@@ -42,8 +49,8 @@ export function ResponsesReport({ report }: { report: ResponsesReportRead }) {
   ];
   return (
     <div className="space-y-3">
-      <DataTableToolbar search={search} onSearchChange={setSearch} searchPlaceholder={t("teacher_quiz_results.filters.search_responses")} filters={[resultFilter]} filterValues={{ result }} onFilterChange={(_, value) => setResult(value ?? "all")} />
-      <DataTable columns={columns} data={rows} getRowId={(row) => `${row.attempt_id}-${row.question_id}`} emptyState={t("teacher_quiz_results.reports.responses.empty")} pagination pageSize={10} pageSizeOptions={[10, 25, 50]} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
+      <DataTableToolbar search={search} onSearchChange={setSearch} searchPlaceholder={t("teacher_quiz_results.filters.search_responses")} filters={[resultFilter]} filterValues={{ result }} onFilterChange={(_, value) => setResult(value ?? "all")} trailing={trailing} />
+      <QuizResultsDataTable columns={columns} data={rows} getRowId={(row) => `${row.attempt_id}-${row.question_id}`} emptyState={t("teacher_quiz_results.reports.responses.empty")} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
     </div>
   );
 }

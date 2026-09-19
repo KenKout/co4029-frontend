@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
+import { QuizResultsDataTable } from "./QuizResultsDataTable";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import { fmtPercentScaled as fmtPercent } from "@/lib/format/number";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,13 @@ function discriminationClass(value: number | null): string {
   return "text-red-700";
 }
 
-export function StatisticsReport({ report }: { report: StatisticsReportRead }) {
+export function StatisticsReport({
+  report,
+  trailing,
+}: {
+  report: StatisticsReportRead;
+  trailing?: ReactNode;
+}) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [quality, setQuality] = useState("all");
@@ -44,9 +51,8 @@ export function StatisticsReport({ report }: { report: StatisticsReportRead }) {
   ];
   return (
     <div className="space-y-3">
-      <p className="text-xs text-m3-on-surface-variant">{t("teacher_quiz_results.reports.statistics.legend_title")}</p>
-      <DataTableToolbar search={search} onSearchChange={setSearch} searchPlaceholder={t("teacher_quiz_results.filters.search_questions")} filters={[qualityFilter]} filterValues={{ quality }} onFilterChange={(_, value) => setQuality(value ?? "all")} />
-      <DataTable columns={columns} data={rows} getRowId={(row) => row.question_id} emptyState={t("teacher_quiz_results.reports.statistics.empty")} pagination pageSize={10} pageSizeOptions={[10, 25, 50]} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
+      <DataTableToolbar search={search} onSearchChange={setSearch} searchPlaceholder={t("teacher_quiz_results.filters.search_questions")} filters={[qualityFilter]} filterValues={{ quality }} onFilterChange={(_, value) => setQuality(value ?? "all")} trailing={trailing} />
+      <QuizResultsDataTable columns={columns} data={rows} getRowId={(row) => row.question_id} emptyState={t("teacher_quiz_results.reports.statistics.empty")} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
     </div>
   );
 }

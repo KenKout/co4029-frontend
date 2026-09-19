@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { QuizResultsDataTable } from "./QuizResultsDataTable";
+import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { QuizPerStudentRow } from "@/lib/api/types";
 
@@ -46,6 +46,14 @@ export function PerStudentTable({
       { value: "ungraded", label: t("teacher_quiz_results.filters.ungraded") },
     ],
   };
+  const scoreFilter: FilterDef = {
+    id: "score",
+    label: t("teacher_quiz_results.filters.score"),
+    options: [
+      { value: "best", label: t("teacher_quiz_results.per_student.toggle_best") },
+      { value: "latest", label: t("teacher_quiz_results.per_student.toggle_latest") },
+    ],
+  };
   const filteredRows = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return rows.filter((row) => {
@@ -80,28 +88,25 @@ export function PerStudentTable({
         <UserEmailIdentity
           id={row.student_id}
           displayName={row.student_name ?? row.student_email ?? row.student_id}
+          avatarUrl={row.student_avatar_url}
           email={row.student_email}
         />
       ),
       cellClassName: "font-medium",
     },
     {
-      id: "best",
-      header: t("teacher_quiz_results.per_student.col_best"),
+      id: "score",
+      header: headlineMetric === "best"
+        ? t("teacher_quiz_results.per_student.toggle_best")
+        : t("teacher_quiz_results.per_student.toggle_latest"),
       align: "right",
       sortable: true,
-      sortValue: (row) => parseScore(row.best_score_percent) ?? -1,
-      cell: (row) => renderScoreCell(row.best_score_percent),
-      headerClassName: cn("text-right", headlineMetric === "best" && "font-semibold text-m3-on-surface"),
-    },
-    {
-      id: "latest",
-      header: t("teacher_quiz_results.per_student.col_latest"),
-      align: "right",
-      sortable: true,
-      sortValue: (row) => parseScore(row.latest_score_percent) ?? -1,
-      cell: (row) => renderScoreCell(row.latest_score_percent),
-      headerClassName: cn("text-right", headlineMetric === "latest" && "font-semibold text-m3-on-surface"),
+      sortValue: (row) => parseScore(
+        headlineMetric === "best" ? row.best_score_percent : row.latest_score_percent,
+      ) ?? -1,
+      cell: (row) => renderScoreCell(
+        headlineMetric === "best" ? row.best_score_percent : row.latest_score_percent,
+      ),
     },
     {
       id: "attempts",
@@ -137,31 +142,24 @@ export function PerStudentTable({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" type="button" onClick={() => onHeadlineMetricChange("best")} aria-pressed={headlineMetric === "best"}>
-          {t("teacher_quiz_results.per_student.toggle_best")}
-        </Button>
-        <Button variant="outline" type="button" onClick={() => onHeadlineMetricChange("latest")} aria-pressed={headlineMetric === "latest"}>
-          {t("teacher_quiz_results.per_student.toggle_latest")}
-        </Button>
-      </div>
+
       <DataTableToolbar
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_students")}
-        filters={[statusFilter]}
-        filterValues={{ status }}
-        onFilterChange={(_, value) => setStatus(value ?? "all")}
+        filters={[statusFilter, scoreFilter]}
+        filterValues={{ status, score: headlineMetric }}
+        onFilterChange={(id, value) => {
+          if (id === "score") onHeadlineMetricChange((value ?? "best") as HeadlineMetric);
+          else setStatus(value ?? "all");
+        }}
       />
-      <DataTable
+      <QuizResultsDataTable
         columns={columns}
         data={filteredRows}
         getRowId={(row) => row.student_id}
         onRowClick={onStudentClick ? (row) => onStudentClick(row.student_id) : undefined}
         emptyState={t("teacher_quiz_results.per_student.empty")}
-        pagination
-        pageSize={10}
-        pageSizeOptions={[10, 25, 50]}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
       />
