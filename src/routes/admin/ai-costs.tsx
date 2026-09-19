@@ -16,6 +16,7 @@ import {
 } from "@/lib/api/hooks/admin-costs";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { PermissionDenied } from "@/components/ui/permission-denied";
+import { Tabs } from "@/components/ui/tabs";
 import type { AiCostsByPipeline as AiCostsByPipelineRow } from "@/lib/api/types";
 import {
   RoleSection,
@@ -48,10 +49,9 @@ export default function AdminAiCostsPage() {
   // links so arriving from the dashboard keeps its span. Without that, an
   // operator who set the dashboard to 7d landed here on 30d and compared two
   // different spans of time without being told (PRD ADM-004).
-  const search = useSearch({ strict: false }) as {
-    status?: string;
-    period?: string;
-  };
+  const search: { status?: string; period?: string } = useSearch({
+    strict: false,
+  });
   const [range, setRange] = useState<AiCostsRange>(() => {
     const presets = rangePresets(new Date());
     switch (search.period) {
@@ -73,15 +73,9 @@ export default function AdminAiCostsPage() {
     status: search.status ?? null,
   });
   const [drilldown, setDrilldown] = useState<AiCostsByPipelineRow | null>(null);
-
-  // Whether the window matches a named preset the dashboard tiles can link
-  // with — surfaced on the trend/stat sections for the window label.
-  const summary = useAiCostsSummary(range, filters);
-  const byCategory = useAiCostsByCategory({ range, dimension, filters });
-  const byModel = useAiCostsByModel({ range, filters });
-  const byUser = useAiCostsByUser({ range, topN: 20 });
-  const byPipeline = useAiCostsByPipeline({ range });
-  const recent = useRecentAiCalls({ limit: 50 });
+  const [tab, setTab] = useState<"overview" | "breakdowns" | "activity">(
+    "overview",
+  );
 
   if (permissions.isLoading) {
     return (
@@ -112,41 +106,30 @@ export default function AdminAiCostsPage() {
 
       <FilterBar filters={filters} onChange={setFilters} range={range} />
 
-      <SummaryStatsSection summary={summary} range={range} />
-
-      <TrendSection summary={summary} range={range} />
-
-      <RoleSection summary={summary} />
-
-      <StageSection summary={summary} />
-
-      <CategorySection
-        byCategory={byCategory}
-        dimension={dimension}
-        onDimensionChange={setDimension}
+      <Tabs
+        tabs={(["overview", "breakdowns", "activity"] as const).map((key) => ({
+          key,
+          label: t(`admin.ai_costs.tabs.${key}`),
+        }))}
+        value={tab}
+        onChange={setTab}
+        variant="outlined"
+        ariaLabel={t("admin.ai_costs.title")}
       />
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-headline font-bold text-text-strong">
-          {t("admin.ai_costs.by_organization")}
-        </h2>
-        <OrganizationSpendTable range={range} />
-      </section>
-
-      <TopUsersSection byUser={byUser} />
-
-      <TopPipelinesSection byPipeline={byPipeline} onRowClick={setDrilldown} />
-
-      <ModelEfficiencySection byModel={byModel} />
-
-      <RecentCallsSection recent={recent} />
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-headline font-bold text-text-strong">
-          {t("admin.ai_costs.sections.pricing")}
-        </h2>
-        <PricingSection />
-      </section>
+      {tab === "overview" ? (
+        <AiCostsOverview range={range} filters={filters} />
+      ) : tab === "breakdowns" ? (
+        <AiCostsBreakdowns
+          range={range}
+          filters={filters}
+          dimension={dimension}
+          onDimensionChange={setDimension}
+          onPipelineClick={setDrilldown}
+        />
+      ) : (
+        <AiCostsActivity />
+      )}
 
       <PipelineDrilldownSheet
         pipeline={drilldown}
@@ -154,6 +137,81 @@ export default function AdminAiCostsPage() {
           if (!open) setDrilldown(null);
         }}
       />
+    </div>
+  );
+}
+
+function AiCostsOverview({
+  range,
+  filters,
+}: {
+  range: AiCostsRange;
+  filters: AiCostsFilters;
+}) {
+  const summary = useAiCostsSummary(range, filters);
+  return (
+    <div className="space-y-6">
+      <SummaryStatsSection summary={summary} range={range} />
+      <TrendSection summary={summary} range={range} />
+      <RoleSection summary={summary} />
+      <StageSection summary={summary} />
+    </div>
+  );
+}
+
+function AiCostsBreakdowns({
+  range,
+  filters,
+  dimension,
+  onDimensionChange,
+  onPipelineClick,
+}: {
+  range: AiCostsRange;
+  filters: AiCostsFilters;
+  dimension: AiCostsDimension;
+  onDimensionChange: (value: AiCostsDimension) => void;
+  onPipelineClick: (row: AiCostsByPipelineRow) => void;
+}) {
+  const { t } = useTranslation();
+  const byCategory = useAiCostsByCategory({ range, dimension, filters });
+  const byModel = useAiCostsByModel({ range, filters });
+  const byUser = useAiCostsByUser({ range, topN: 20 });
+  const byPipeline = useAiCostsByPipeline({ range });
+  return (
+    <div className="space-y-6">
+      <CategorySection
+        byCategory={byCategory}
+        dimension={dimension}
+        onDimensionChange={onDimensionChange}
+      />
+      <section className="space-y-3">
+        <h2 className="text-sm font-headline font-bold text-text-strong">
+          {t("admin.ai_costs.by_organization")}
+        </h2>
+        <OrganizationSpendTable range={range} />
+      </section>
+      <TopUsersSection byUser={byUser} />
+      <TopPipelinesSection
+        byPipeline={byPipeline}
+        onRowClick={onPipelineClick}
+      />
+      <ModelEfficiencySection byModel={byModel} />
+    </div>
+  );
+}
+
+function AiCostsActivity() {
+  const { t } = useTranslation();
+  const recent = useRecentAiCalls({ limit: 50 });
+  return (
+    <div className="space-y-6">
+      <RecentCallsSection recent={recent} />
+      <section className="space-y-3">
+        <h2 className="text-lg font-headline font-bold text-text-strong">
+          {t("admin.ai_costs.sections.pricing")}
+        </h2>
+        <PricingSection />
+      </section>
     </div>
   );
 }

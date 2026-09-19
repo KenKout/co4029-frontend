@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
@@ -109,9 +109,11 @@ function DetailChips({ detail }: { detail: Record<string, unknown> }) {
 export function AuthEventsTable({
   sinceIso,
   untilIso,
+  onCountChange,
 }: {
   sinceIso: string;
   untilIso?: string;
+  onCountChange?: (count: number) => void;
 }) {
   const { t } = useTranslation();
   const [eventType, setEventType] = useState<string | undefined>();
@@ -125,6 +127,9 @@ export function AuthEventsTable({
     isLoading,
     isError,
   } = useAuditAuthEvents(sinceIso, untilIso, eventType, userId);
+  useEffect(() => {
+    if (rows) onCountChange?.(rows.length);
+  }, [rows, onCountChange]);
 
   // Both identity columns resolve from one lookup — an admin acting on
   // someone else is the actor here and the subject elsewhere.

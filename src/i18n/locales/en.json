@@ -2316,6 +2316,11 @@
     "ai_costs": {
       "title": "AI costs",
       "subtitle": "Track token consumption and costs across AI pipelines.",
+      "tabs": {
+        "overview": "Overview",
+        "breakdowns": "Breakdowns",
+        "activity": "Activity & pricing"
+      },
       "summary_load_failed": "Couldn't load cost summary.",
       "users_load_failed": "Couldn't load users table.",
       "pipelines_load_failed": "Couldn't load pipelines table.",
@@ -2928,6 +2933,8 @@
       "fork_confirm_body": "The latest published text will be copied into a new editable draft.",
       "versions_current": "current",
       "no_published_version": "Never published",
+      "published_by": "Published by {{name}}",
+      "published_at": "Published {{value}}",
       "editor_title": "Draft",
       "editor_hint": "Markdown. Headings use ## — the reader page styles them as sections.",
       "changelog_hint": "Shown to admins in the version history, not to readers.",

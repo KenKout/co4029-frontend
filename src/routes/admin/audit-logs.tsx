@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ScrollText, ShieldCheck, UserRound } from "lucide-react";
@@ -75,6 +75,16 @@ export default function AdminAuditLogsPage() {
   const [tab, setTab] = useState<TabKey>(() =>
     isAuditTab(search.tab) ? search.tab : "auth_events",
   );
+  // Counts are populated only after a tab is visited. This preserves the
+  // page's lazy API behaviour instead of fetching all four feeds for badges.
+  const [tabCounts, setTabCounts] = useState<Partial<Record<TabKey, number>>>(
+    {},
+  );
+  const rememberTabCount = useCallback((key: TabKey, count: number) => {
+    setTabCounts((current) =>
+      current[key] === count ? current : { ...current, [key]: count },
+    );
+  }, []);
   // Date range over the audit trail, same picker as the dashboard: from/to are
   // calendar days (local), `to` is INCLUSIVE — the API upper bound becomes
   // to+1 day at local midnight, exactly like the dashboard window.
@@ -120,17 +130,26 @@ export default function AdminAuditLogsPage() {
         tabs={TAB_KEYS.map((key) => ({
           key,
           label: t(`admin.audit.tabs.${key}`),
+          count: tabCounts[key],
         }))}
         value={tab}
         onChange={selectTab}
-        variant="contained"
+        variant="outlined"
         ariaLabel={t("admin.audit.title")}
       />
 
       {tab === "auth_events" ? (
-        <AuthEventsTable sinceIso={sinceIso} untilIso={untilIso} />
+        <AuthEventsTable
+          sinceIso={sinceIso}
+          untilIso={untilIso}
+          onCountChange={(count) => rememberTabCount("auth_events", count)}
+        />
       ) : tab === "role_changes" ? (
-        <RoleChangesTable sinceIso={sinceIso} untilIso={untilIso} />
+        <RoleChangesTable
+          sinceIso={sinceIso}
+          untilIso={untilIso}
+          onCountChange={(count) => rememberTabCount("role_changes", count)}
+        />
       ) : tab === "http" ? (
         <HttpAuditTable
           sinceIso={sinceIso}
@@ -146,9 +165,14 @@ export default function AdminAuditLogsPage() {
               ? search.request_id
               : undefined
           }
+          onCountChange={(count) => rememberTabCount("http", count)}
         />
       ) : (
-        <DataChangesPanel sinceIso={sinceIso} untilIso={untilIso} />
+        <DataChangesPanel
+          sinceIso={sinceIso}
+          untilIso={untilIso}
+          onCountChange={(count) => rememberTabCount("data_changes", count)}
+        />
       )}
     </div>
   );
@@ -157,9 +181,11 @@ export default function AdminAuditLogsPage() {
 function RoleChangesTable({
   sinceIso,
   untilIso,
+  onCountChange,
 }: {
   sinceIso: string;
   untilIso?: string;
+  onCountChange: (count: number) => void;
 }) {
   const { t } = useTranslation();
   const {
@@ -167,6 +193,9 @@ function RoleChangesTable({
     isLoading,
     isError,
   } = useAuditRoleChanges(sinceIso, untilIso);
+  useEffect(() => {
+    if (rows) onCountChange(rows.length);
+  }, [rows, onCountChange]);
   const userIds = useMemo(
     () =>
       (rows ?? []).flatMap((r) =>
@@ -266,12 +295,16 @@ function RoleChangesTable({
   );
 }
 
+// The HTTP table keeps its filter state, query, identity resolution and column
+// definitions together; extracting only the count wiring would obscure that flow.
+// eslint-disable-next-line max-lines-per-function
 function HttpAuditTable({
   sinceIso,
   untilIso,
   initialPath,
   initialEvent,
   requestId,
+  onCountChange,
 }: {
   sinceIso: string;
   untilIso?: string;
@@ -279,6 +312,7 @@ function HttpAuditTable({
   initialPath?: string;
   initialEvent?: "login_failure" | "denied";
   requestId?: string;
+  onCountChange: (count: number) => void;
 }) {
   const { t } = useTranslation();
   const [pathFilter, setPathFilter] = useState(initialPath ?? "");
@@ -318,6 +352,9 @@ function HttpAuditTable({
     }
     return out;
   }, [rows, methodFilter, codeFilter]);
+  useEffect(() => {
+    if (rows) onCountChange(rows.length);
+  }, [rows, onCountChange]);
 
   const userIds = useMemo(
     () => (filtered ?? []).flatMap((r) => (r.user_id ? [r.user_id] : [])),
@@ -486,7 +523,9 @@ function EntityIdLookup({
   const { t } = useTranslation();
   return (
     <div className="flex items-center gap-2">
-      <Input mono size="md"
+      <Input
+        mono
+        size="md"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
@@ -515,9 +554,11 @@ function EntityIdLookup({
 function DataChangesPanel({
   sinceIso,
   untilIso,
+  onCountChange,
 }: {
   sinceIso: string;
   untilIso?: string;
+  onCountChange: (count: number) => void;
 }) {
   const { t } = useTranslation();
   const [table, setTable] = useState<DataChangeTable>("courses");
@@ -528,6 +569,9 @@ function DataChangesPanel({
     isLoading,
     isError,
   } = useAuditDataChangesList(table, sinceIso, untilIso);
+  useEffect(() => {
+    if (rows) onCountChange(rows.length);
+  }, [rows, onCountChange]);
 
   const trimmed = entityIdInput.trim();
   const isValidUuid = trimmed.length === 0 || UUID_RE.test(trimmed);

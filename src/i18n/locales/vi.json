@@ -2225,6 +2225,11 @@
     "ai_costs": {
       "title": "Chi phí AI",
       "subtitle": "Theo dõi mức tiêu thụ token và chi phí của các pipeline AI.",
+      "tabs": {
+        "overview": "Tổng quan",
+        "breakdowns": "Phân tích chi tiết",
+        "activity": "Hoạt động & đơn giá"
+      },
       "summary_load_failed": "Không thể tải tổng quan chi phí.",
       "users_load_failed": "Không thể tải bảng người dùng.",
       "pipelines_load_failed": "Không thể tải bảng pipeline.",
@@ -2837,6 +2842,8 @@
       "fork_confirm_body": "Nội dung bản đã xuất bản mới nhất sẽ được sao chép vào một bản nháp mới.",
       "versions_current": "hiện tại",
       "no_published_version": "Chưa từng xuất bản",
+      "published_by": "Xuất bản bởi {{name}}",
+      "published_at": "Xuất bản lúc {{value}}",
       "editor_title": "Bản nháp",
       "editor_hint": "Markdown. Tiêu đề mục dùng ## — trang người đọc sẽ định dạng thành từng phần.",
       "changelog_hint": "Chỉ hiển thị cho quản trị viên trong lịch sử phiên bản, không hiển thị cho người đọc.",
