@@ -142,9 +142,11 @@ export function useCourseSettingsDraft(options: {
       saved: savedCourseSettings(course),
       stagedThumbnail,
       scope,
+      autoFilledContactEmail: me?.primary_email,
     });
   }, [
     course,
+    me?.primary_email,
     stagedThumbnail,
     title,
     slug,

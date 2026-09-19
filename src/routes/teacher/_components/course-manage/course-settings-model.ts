@@ -137,18 +137,33 @@ export function isCourseSettingsDirty(args: {
   saved: CourseSettingsValues;
   stagedThumbnail: File | null;
   scope?: "teacher" | "manager";
+  autoFilledContactEmail?: string;
 }): boolean {
-  const { draft, saved, stagedThumbnail, scope = "manager" } = args;
+  const {
+    draft,
+    saved,
+    stagedThumbnail,
+    scope = "manager",
+    autoFilledContactEmail,
+  } = args;
   if (stagedThumbnail !== null) return true;
   const fields =
     scope === "teacher"
       ? COURSE_SETTINGS_FIELDS.filter((f) => TEACHER_SETTINGS_FIELDS.has(f))
       : COURSE_SETTINGS_FIELDS;
-  return fields.some((field) =>
-    TRIMMED_SETTINGS_FIELDS.has(field)
+  return fields.some((field) => {
+    if (
+      field === "contactEmail" &&
+      !saved.contactEmail &&
+      autoFilledContactEmail &&
+      draft.contactEmail.trim() === autoFilledContactEmail.trim()
+    ) {
+      return false;
+    }
+    return TRIMMED_SETTINGS_FIELDS.has(field)
       ? draft[field].trim() !== saved[field]
-      : draft[field] !== saved[field],
-  );
+      : draft[field] !== saved[field];
+  });
 }
 
 /**

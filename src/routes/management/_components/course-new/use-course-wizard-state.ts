@@ -84,6 +84,7 @@ export function useCourseWizardState(
 
   const bannerOpen = pendingDraft !== null;
   const restoredRef = useRef(restored);
+  const autosavePausedRef = useRef(false);
   restoredRef.current = restored;
 
   // Debounced autosave of everything typed so far. Suspended while the submit
@@ -91,7 +92,7 @@ export function useCourseWizardState(
   // race with this one — and while the restore banner is open, so an untouched
   // form cannot overwrite the very draft being offered.
   useEffect(() => {
-    if (runner.isRunning || bannerOpen) return;
+    if (runner.isRunning || bannerOpen || autosavePausedRef.current) return;
     const id = window.setTimeout(() => {
       const current = restoredRef.current;
       saveCourseDraft({
@@ -143,16 +144,26 @@ export function useCourseWizardState(
     values: CourseFormValues,
     thumbnail: File | null,
   ): Promise<void> {
+    autosavePausedRef.current = true;
     const current = restoredRef.current;
-    const result = await runner.run({
-      form: { ...values, slug: values.slug || slugify(values.title) },
-      thumbnail,
-      pathId: current?.pathId ?? pathId,
-      stageId: current?.stageId ?? stageId,
-      done: current?.done ?? [],
-      courseId: current?.courseId,
-    });
-    if (!result) return; // create failed; the runner already explained why
+    let result: Awaited<ReturnType<typeof runner.run>>;
+    try {
+      result = await runner.run({
+        form: { ...values, slug: values.slug || slugify(values.title) },
+        thumbnail,
+        pathId: current?.pathId ?? pathId,
+        stageId: current?.stageId ?? stageId,
+        done: current?.done ?? [],
+        courseId: current?.courseId,
+      });
+    } catch (error) {
+      autosavePausedRef.current = false;
+      throw error;
+    }
+    if (!result) {
+      autosavePausedRef.current = false;
+      return;
+    } // create failed; the runner already explained why
 
     if (result.failed.length > 0) {
       handlePartialSuccess(values, result.courseId, result.failed);

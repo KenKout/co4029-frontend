@@ -74,4 +74,20 @@ describe("course settings seeding", () => {
     const payload = buildManagerCourseUpdatePayload(savedCourseSettings(COURSE));
     expect("faculty_id" in payload).toBe(false);
   });
+
+  it("does not mark the account-email fallback as unsaved", () => {
+    const saved = savedCourseSettings({
+      ...COURSE,
+      contact_email: null,
+    });
+    expect(
+      isCourseSettingsDirty({
+        draft: { ...saved, contactEmail: "manager@example.com" },
+        saved,
+        stagedThumbnail: null,
+        scope: "manager",
+        autoFilledContactEmail: "manager@example.com",
+      }),
+    ).toBe(false);
+  });
 });
