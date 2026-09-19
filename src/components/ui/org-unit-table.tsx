@@ -1,6 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Building2 } from "lucide-react";
 import { useFormatDate } from "@/lib/format/date";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
@@ -87,8 +86,9 @@ export function OrgUnitTable({
         cell: (n) => (
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
-              <Building2 className="h-4 w-4 shrink-0 text-m3-primary" aria-hidden="true" />
-              <p className="truncate text-sm font-semibold text-text-strong">{n.name}</p>
+              <p className="truncate text-sm font-semibold text-text-strong">
+                {n.name}
+              </p>
               {nameAdornment?.(n)}
             </div>
             {n.code ? (
