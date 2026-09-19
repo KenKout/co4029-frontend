@@ -179,10 +179,13 @@ export function useCourseSettingsDraft(options: {
       setJustSaved(true);
       setLastSaved(new Date().toISOString());
       window.setTimeout(() => setJustSaved(false), 2500);
-      toast.success(t("common.saved", "Course settings saved"));
+      toast.success(
+        t("teacher_course_settings.saved", "Course settings saved"),
+      );
     } catch (err: unknown) {
       toast.error(
-        (err as Error).message || t("common.save_failed", "Save failed"),
+        (err as Error).message ||
+          t("teacher_course_settings.save_failed", "Save failed"),
       );
     }
   }

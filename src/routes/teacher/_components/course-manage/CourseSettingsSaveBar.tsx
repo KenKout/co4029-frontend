@@ -32,7 +32,7 @@ export function CourseSettingsSaveBar({
           className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-m3-on-surface-variant"
         >
           <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-          {t("common.save_status.saving", "Saving…")}
+          {t("teacher_course_settings.save_status.saving", "Saving…")}
         </span>
       ) : settingsDirty ? (
         <span
@@ -41,7 +41,7 @@ export function CourseSettingsSaveBar({
           className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700"
         >
           <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
-          {t("common.save_status.unsaved", "Unsaved changes")}
+          {t("teacher_course_settings.save_status.unsaved", "Unsaved changes")}
         </span>
       ) : justSaved ? (
         <span
@@ -50,12 +50,12 @@ export function CourseSettingsSaveBar({
           className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"
         >
           <Check className="h-3.5 w-3.5" aria-hidden />
-          {t("common.save_status.saved", "Saved")}
+          {t("teacher_course_settings.save_status.saved", "Saved")}
         </span>
       ) : lastSaved ? (
         <span className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
           <Clock className="h-3.5 w-3.5" aria-hidden />
-          {t("common.save_status.last_saved", {
+          {t("teacher_course_settings.save_status.last_saved", {
             when: new Date(lastSaved).toLocaleString(
               i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
               { dateStyle: "medium", timeStyle: "short" },
