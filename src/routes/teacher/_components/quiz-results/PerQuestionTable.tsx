@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, ChevronDown, ChevronRight } from "lucide-react";
 
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
+import { QuizResultsDataTable } from "./QuizResultsDataTable";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import { Button } from "@/components/ui/button";
 import type { QuizOptionDistribution, QuizQuestionBreakdown } from "@/lib/api/types";
@@ -136,14 +137,11 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
         filterValues={{ difficulty }}
         onFilterChange={(_, value) => setDifficulty(value ?? "all")}
       />
-      <DataTable
+      <QuizResultsDataTable
         columns={columns}
         data={filtered}
         getRowId={(row) => row.question_id}
         emptyState={t("teacher_quiz_results.per_question.empty")}
-        pagination
-        pageSize={10}
-        pageSizeOptions={[10, 25, 50]}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
       />

@@ -4669,6 +4669,7 @@
     "filters": {
       "all": "All",
       "status": "Status",
+      "score": "Score",
       "ungraded": "Not graded",
       "difficulty": "Difficulty",
       "hard": "Hard",
@@ -4749,9 +4750,6 @@
         "facility": "Facility (% correct)",
         "discrimination": "Discrimination",
         "no_data": "—",
-        "legend_title": "About these metrics",
-        "legend_facility": "Facility = the share of students who answered correctly. Lower means harder.",
-        "legend_discrimination": "Discrimination = how well a question separates high scorers from low scorers (point-biserial, -1..+1). ≥0.3 is good; near 0 or negative is weak.",
         "empty": "Not enough attempts to compute statistics."
       }
     },

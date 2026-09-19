@@ -4491,6 +4491,7 @@
     "filters": {
       "all": "Tất cả",
       "status": "Trạng thái",
+      "score": "Điểm",
       "ungraded": "Chưa chấm",
       "difficulty": "Độ khó",
       "hard": "Khó",
@@ -4571,9 +4572,6 @@
         "facility": "Độ dễ (% đúng)",
         "discrimination": "Độ phân biệt",
         "no_data": "—",
-        "legend_title": "Về các chỉ số này",
-        "legend_facility": "Độ dễ = tỷ lệ học viên trả lời đúng. Thấp hơn nghĩa là khó hơn.",
-        "legend_discrimination": "Độ phân biệt = mức độ câu hỏi phân tách học viên giỏi với học viên yếu (point-biserial, -1..+1). ≥0.3 là tốt; gần 0 hoặc âm là yếu.",
         "empty": "Chưa đủ lượt làm để tính thống kê."
       }
     },

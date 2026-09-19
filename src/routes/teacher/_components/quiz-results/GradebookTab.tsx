@@ -3,11 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Download, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { useQuizGradebook, type QuizGradeRow } from "@/lib/api/hooks/quizzes";
 import { cn } from "@/lib/utils";
+import { QuizResultsDataTable } from "./QuizResultsDataTable";
 
 export function GradebookTab({
   quizId,
@@ -42,7 +43,7 @@ export function GradebookTab({
     {
       id: "student",
       header: t("teacher_quiz_results.gradebook.col_student"),
-      cell: (row) => <UserEmailIdentity id={row.student_id} displayName={row.student_name ?? row.student_email ?? row.student_id} email={row.student_email} />,
+      cell: (row) => <UserEmailIdentity id={row.student_id} displayName={row.student_name ?? row.student_email ?? row.student_id} avatarUrl={row.student_avatar_url} email={row.student_email} />,
     },
     { id: "grade", header: t("teacher_quiz_results.gradebook.col_grade"), align: "right", sortable: true, sortValue: (row) => Number(row.grade_percent), cell: (row) => <span className="font-semibold tabular-nums">{Number(row.grade_percent).toFixed(1)}%</span> },
     { id: "passed", header: t("teacher_quiz_results.gradebook.col_passed"), align: "center", cell: (row) => <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-semibold", row.passed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{row.passed ? t("teacher_quiz_results.gradebook.passed") : t("teacher_quiz_results.gradebook.failed")}</span> },
@@ -68,7 +69,7 @@ export function GradebookTab({
           </div>
         }
       />
-      <DataTable columns={columns} data={rows} getRowId={(row) => row.student_id} emptyState={t("teacher_quiz_results.gradebook.empty")} pagination pageSize={10} pageSizeOptions={[10, 25, 50]} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
+      <QuizResultsDataTable columns={columns} data={rows} getRowId={(row) => row.student_id} emptyState={t("teacher_quiz_results.gradebook.empty")} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
     </div>
   );
 }

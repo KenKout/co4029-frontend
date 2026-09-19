@@ -56,6 +56,7 @@ export interface QuizGradeRow {
   student_id: string;
   student_name: string | null;
   student_email: string | null;
+  student_avatar_url: string | null;
   grade_percent: number;
   grade_points: number;
   passed: boolean;

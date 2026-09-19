@@ -7,6 +7,7 @@ import { PerQuestionTable } from "../../../_components/quiz-results/PerQuestionT
 import { PerStudentTable } from "../../../_components/quiz-results/PerStudentTable";
 import { ResponsesReport } from "../../../_components/quiz-results/ResponsesReport";
 import { StatisticsReport } from "../../../_components/quiz-results/StatisticsReport";
+import { ReportDownloadActions } from "../../../_components/quiz-results/ReportDownloadActions";
 import type { QuizResultsController } from "./use-quiz-results-page";
 
 function ReportSpinner() {
@@ -55,13 +56,29 @@ export function ResultsTabPanels({
       )}
       {tab === "responses" &&
         (responsesReport ? (
-          <ResponsesReport report={responsesReport} />
+          <ResponsesReport
+            report={responsesReport}
+            trailing={
+              <ReportDownloadActions
+                downloading={controller.downloading}
+                onDownload={(format) => void controller.handleDownload(format)}
+              />
+            }
+          />
         ) : (
           <ReportSpinner />
         ))}
       {tab === "statistics" &&
         (statisticsReport ? (
-          <StatisticsReport report={statisticsReport} />
+          <StatisticsReport
+            report={statisticsReport}
+            trailing={
+              <ReportDownloadActions
+                downloading={controller.downloading}
+                onDownload={(format) => void controller.handleDownload(format)}
+              />
+            }
+          />
         ) : (
           <ReportSpinner />
         ))}

@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
 import { useQuizAuditEvents, type AuditEventRow } from "@/lib/api/hooks/quizzes";
+import { QuizResultsDataTable } from "./QuizResultsDataTable";
 
 export function AuditEventsTab({ quizId }: { quizId: string }) {
   const { t } = useTranslation();
@@ -34,7 +35,7 @@ export function AuditEventsTab({ quizId }: { quizId: string }) {
   return (
     <div className="space-y-3">
       <DataTableToolbar search={search} onSearchChange={setSearch} searchPlaceholder={t("teacher_quiz_results.filters.search_audit")} filters={[eventFilter]} filterValues={{ event: eventName }} onFilterChange={(_, value) => setEventName(value ?? "all")} />
-      <DataTable columns={columns} data={rows} getRowId={(event) => event.id} emptyState={t("teacher_quiz_results.audit.empty")} pagination pageSize={10} pageSizeOptions={[10, 25, 50]} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
+      <QuizResultsDataTable columns={columns} data={rows} getRowId={(event) => event.id} emptyState={t("teacher_quiz_results.audit.empty")} bordered={false} containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card" />
     </div>
   );
 }
