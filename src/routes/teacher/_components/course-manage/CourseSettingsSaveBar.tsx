@@ -32,7 +32,7 @@ export function CourseSettingsSaveBar({
           className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-m3-on-surface-variant"
         >
           <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-          {t("common.save_status.saving")}
+          {t("common.save_status.saving", "Saving…")}
         </span>
       ) : settingsDirty ? (
         <span
@@ -41,7 +41,7 @@ export function CourseSettingsSaveBar({
           className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700"
         >
           <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
-          {t("common.save_status.unsaved")}
+          {t("common.save_status.unsaved", "Unsaved changes")}
         </span>
       ) : justSaved ? (
         <span
@@ -50,7 +50,7 @@ export function CourseSettingsSaveBar({
           className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"
         >
           <Check className="h-3.5 w-3.5" aria-hidden />
-          {t("common.save_status.saved")}
+          {t("common.save_status.saved", "Saved")}
         </span>
       ) : lastSaved ? (
         <span className="inline-flex items-center gap-1.5 text-[11px] text-m3-on-surface-variant">
@@ -60,6 +60,7 @@ export function CourseSettingsSaveBar({
               i18n.language?.startsWith("vi") ? "vi-VN" : "en-US",
               { dateStyle: "medium", timeStyle: "short" },
             ),
+            defaultValue: "Last saved {{when}}",
           })}
         </span>
       ) : null}
@@ -74,7 +75,7 @@ export function CourseSettingsSaveBar({
         ) : (
           <Save className="h-4 w-4" />
         )}
-        {t("common.save")}
+        {t("common.save", "Save")}
       </Button>
     </div>
   );
