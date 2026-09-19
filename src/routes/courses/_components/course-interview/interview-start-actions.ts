@@ -212,7 +212,16 @@ export async function beginSessionAfterFullscreen(
   try {
     const granted = await ctx.fullscreenGate.enter();
     if (!granted || !ctx.fullscreenGate.isFullscreenNow()) return;
-    await start();
+    try {
+      await start();
+    } catch (err) {
+      // Audit P1 (start-failure): a failed/aborted start must not leave the
+      // candidate chromeless at the lobby. Exit fullscreen INTENTIONALLY (so
+      // the exit is not logged as an integrity violation) and let the caller
+      // render its error surface in a normal window.
+      await ctx.fullscreenGate.exit(true);
+      throw err;
+    }
   } finally {
     ctx.startInFlightRef.current = false;
   }
@@ -241,21 +250,25 @@ export async function handleStart(ctx: InterviewActionsContext) {
 export async function handleRetry(ctx: InterviewActionsContext) {
   if (ctx.startSession.isPending) return;
   await beginSessionAfterCamera(ctx, async () => {
-    ctx.setFinishResult(null);
-    ctx.setPendingFinishResult(null);
-    ctx.setTranscript([]);
-    ctx.setCurrentQuestion(null);
-    ctx.setPendingFirstQuestion(null);
-    ctx.setPendingNextQuestion(null);
-    ctx.setSessionId(null);
-    ctx.setAnswerText("");
-    ctx.setPhase("prestart");
-    ctx.sessionStartedAtRef.current = null;
-    ctx.setAssessmentStartedAtMs(null);
-    ctx.setSessionDeadlineAt(null);
-    ctx.timeoutTriggeredRef.current = false;
+    // Audit P1 (retry wipes results): the reset now runs only after the
+    // backend accepted the new session — a failed mutation leaves the
+    // results screen (verdict, transcript, retake context) exactly as the
+    // candidate was looking at it.
     try {
       const payload = await ctx.startSession.mutateAsync(buildStartBody(ctx));
+      ctx.setFinishResult(null);
+      ctx.setPendingFinishResult(null);
+      ctx.setTranscript([]);
+      ctx.setCurrentQuestion(null);
+      ctx.setPendingFirstQuestion(null);
+      ctx.setPendingNextQuestion(null);
+      ctx.setSessionId(null);
+      ctx.setAnswerText("");
+      ctx.setPhase("prestart");
+      ctx.sessionStartedAtRef.current = null;
+      ctx.setAssessmentStartedAtMs(null);
+      ctx.setSessionDeadlineAt(null);
+      ctx.timeoutTriggeredRef.current = false;
       handleStartSuccess(ctx, payload);
     } catch (err) {
       reportStartError(ctx, err);

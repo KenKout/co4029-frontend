@@ -15,9 +15,6 @@ import {
   resolveAgentVoicePhase,
 } from "./agent-voice-presentation";
 import { useAgentFailure } from "./use-agent-failure";
-import {
-  LeaveBlockerDialog,
-} from "./InterviewSessionDialogs";
 import type {
   CourseInterviewController,
   InterviewConfig,
@@ -258,7 +255,6 @@ export function InterviewWorkspaceScreen({
         onConfirm={() => void iv.beginClosing("ended_early")}
         isPending={iv.finish.isPending}
       />
-      <LeaveBlockerDialog iv={iv} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { InterviewRoomProvider } from "@/components/interview/interview-room-pro
 import type { InterviewCourse, InterviewConfig } from "./_components/course-interview/use-course-interview";
 import { interviewRoomProps } from "./_components/course-interview/agent-voice-presentation";
 import { InterviewFullscreenGateScreen } from "./_components/course-interview/InterviewFullscreenGateScreen";
+import { LeaveBlockerDialog } from "./_components/course-interview/InterviewSessionDialogs";
 import { InterviewCameraGateScreen } from "./_components/course-interview/InterviewCameraGateScreen";
 import { cameraGateBlocks } from "./_components/course-interview/use-interview-camera-gate";
 import { InterviewLobbyScreen } from "./_components/course-interview/InterviewLobbyScreen";
@@ -156,5 +157,17 @@ export function resolveInterviewScreen(args: {
   }
 
   // ── Text mode chat UI ────────────────────────────────────────────────────
-  return <InterviewWorkspaceScreen iv={iv} course={course} config={config} />;
+  const screen = <InterviewWorkspaceScreen iv={iv} course={course} config={config} />;
+  // Audit P1 (navigation deadlock): the leave-blocker dialog used to live
+  // inside the workspace, which UNMOUNTS the moment fullscreen is lost (the
+  // gate screen replaces it) — Esc then Back left the router blocked with
+  // only a re-enter offer, the Leave/Stay resolver unreachable. The dialog
+  // now renders ABOVE the screen switch, over every screen including the
+  // fullscreen gate.
+  return (
+    <>
+      {screen}
+      <LeaveBlockerDialog iv={iv} />
+    </>
+  );
 }

@@ -113,8 +113,24 @@ export function useAssessmentFullscreen(
   }, []);
 
   const enter = useCallback(async () => {
-    // Already fullscreen: a granted gate is a granted gate, whoever opened it.
-    if (currentFullscreenElement()) return true;
+    // Audit P1 (exact element): only the DOCUMENT ROOT counts. Another
+    // element holding fullscreen (a video player, a previous assessment that
+    // never exited) is NOT a granted gate — the assessment would run inside
+    // someone else's fullscreen scope. Replace it: exit the foreign element,
+    // then request the root below.
+    const current = currentFullscreenElement();
+    if (current && current !== document.documentElement) {
+      try {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else {
+          const doc = document as FullscreenCapableDocument;
+          if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
+        }
+      } catch {
+        return false; // cannot take over the screen — refuse, do not fake it
+      }
+    }
+    if (currentFullscreenElement() === document.documentElement) return true;
     if (enterRequestRef.current) return enterRequestRef.current;
     const root = document.documentElement as FullscreenCapableElement | null;
     if (!root) return false;
