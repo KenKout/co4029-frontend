@@ -21,6 +21,7 @@ export function ModulePublishButton({
   updateModule: UpdateModuleMutation;
 }) {
   const [archiveConfirm, setArchiveConfirm] = useState(false);
+  const [publishConfirm, setPublishConfirm] = useState(false);
 
   function toggleStatus() {
     if (module.status === "archived") return;
@@ -29,6 +30,10 @@ export function ModulePublishButton({
       return;
     }
     const next = module.status === "published" ? "draft" : "published";
+    if (module.status !== "published") {
+      setPublishConfirm(true);
+      return;
+    }
     updateModule.mutate(
       { status: next },
       {
@@ -48,6 +53,19 @@ export function ModulePublishButton({
         onSuccess: () => {
           setArchiveConfirm(false);
           toast.success("Module archived");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      },
+    );
+  }
+
+  function publishModule() {
+    updateModule.mutate(
+      { status: "published" },
+      {
+        onSuccess: () => {
+          setPublishConfirm(false);
+          toast.success("Module published");
         },
         onError: (err) => toast.error((err as Error).message),
       },
@@ -93,6 +111,17 @@ export function ModulePublishButton({
             ? "Archived"
             : "Publish"}
       </Button>
+      <ConfirmDialog
+        open={publishConfirm}
+        onOpenChange={setPublishConfirm}
+        title="Publish this module?"
+        description="This will make the module visible to enrolled students. Continue?"
+        confirmLabel="Publish"
+        cancelLabel="Cancel"
+        confirmVariant="default"
+        isPending={updateModule.isPending}
+        onConfirm={publishModule}
+      />
       <ConfirmDialog
         open={archiveConfirm}
         onOpenChange={setArchiveConfirm}
