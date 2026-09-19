@@ -97,7 +97,7 @@ function MobileTakeBar({
       </div>
 
       {/* Row 2: Q counter · countdown */}
-      <div className="flex items-center gap-2 mt-1.5">
+      <div className="relative flex items-center gap-2 mt-1.5">
         <span className="font-headline font-bold text-sm text-m3-secondary tabular-nums">
           {String(activeIdx + 1).padStart(2, "0")}
           <span className="text-m3-outline-variant font-medium text-xs">
@@ -105,9 +105,10 @@ function MobileTakeBar({
             / {displayQuestions.length}
           </span>
         </span>
-        <span className="flex-1" />
         {isTimed ? (
-          <QuizTimerChip session={session} timeLimitSeconds={quiz.time_limit_seconds} />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <QuizTimerChip session={session} timeLimitSeconds={quiz.time_limit_seconds} />
+          </div>
         ) : (
           <span className="flex items-center gap-1.5 font-mono font-bold text-sm tabular-nums text-m3-on-surface-variant">
             <Clock className="h-3.5 w-3.5" />
@@ -139,7 +140,7 @@ function DesktopTakeBar({
 
   return (
     <div className="hidden lg:block sticky top-16 z-10 bg-m3-surface/95 backdrop-blur-md border-b border-m3-outline-variant/30 py-4 mb-6 px-4 sm:px-6 lg:px-10 -mx-4 sm:-mx-6 lg:-mx-10 -mt-6 shadow-sm">
-      <div className="w-full flex items-center justify-between flex-wrap gap-4">
+      <div className="relative w-full flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3 flex-wrap -ml-3">
           <ExitQuizButton session={session} quiz={quiz} slug={slug} />
           <span className="text-m3-on-surface-variant text-sm font-medium hidden sm:block">
@@ -169,6 +170,8 @@ function DesktopTakeBar({
               {formatTime(quizElapsed)}
             </span>
           </div>
+        </div>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <QuizTimerChip session={session} timeLimitSeconds={quiz.time_limit_seconds} />
         </div>
       </div>
