@@ -2108,7 +2108,7 @@
         "deleted": "Deleted"
       },
       "filter_status_all": "All statuses",
-      "lifecycle_note": "Delete and restore are still available here pending a decision on whether resource inventory should be read-only (D-05)."
+      "lifecycle_note": "Delete and restore are still available here pending a decision on whether resource inventory should be read-only."
     },
     "course_detail": {
       "title": "Course AI audit",

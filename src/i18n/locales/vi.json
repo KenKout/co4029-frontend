@@ -2017,7 +2017,7 @@
         "deleted": "Đã xóa"
       },
       "filter_status_all": "Tất cả trạng thái",
-      "lifecycle_note": "Chức năng xóa và khôi phục vẫn còn ở đây, chờ quyết định về việc kiểm kê tài nguyên có nên chỉ đọc hay không (D-05)."
+      "lifecycle_note": "Chức năng xóa và khôi phục vẫn còn ở đây, chờ quyết định về việc kiểm kê tài nguyên có nên chỉ đọc hay không."
     },
     "course_detail": {
       "title": "Audit AI khoá học",
