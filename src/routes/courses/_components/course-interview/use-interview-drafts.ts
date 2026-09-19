@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useBlocker } from "@tanstack/react-router";
 
 import { useDraftAutosave } from "@/lib/interview/use-draft-autosave";
+import { clearQuestionPacing } from "@/lib/interview/use-question-pacing";
 import type { useInterviewPhaseState } from "./use-interview-phase-state";
 import type { useInterviewTurnState } from "./use-interview-turn-state";
 
@@ -52,6 +53,19 @@ export function useInterviewDrafts(
     clearMatchingSent: clearSentRecordMatching,
     clearLive: clearLiveDraftOnly,
   } = draftAutosave;
+
+  // Audit P2 (terminal residue): once the server CONFIRMED a terminal result,
+  // the per-question draft copies and the pacing anchors for this session are
+  // dead weight (privacy + storage) — clear them exactly once. A recoverable
+  // failure never reaches phase 'results', so drafts survive failed submits.
+  const terminalCleanupDoneRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (phase !== "results" || !sessionId) return;
+    if (terminalCleanupDoneRef.current === sessionId) return;
+    terminalCleanupDoneRef.current = sessionId;
+    clearDraftAutosave();
+    clearQuestionPacing(sessionId);
+  }, [phase, sessionId, clearDraftAutosave]);
 
   // On (re)entering a question during active questioning, rehydrate any draft
   // persisted for THIS session+question. Runs only while the composer is live

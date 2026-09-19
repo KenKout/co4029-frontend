@@ -281,10 +281,10 @@ describe("useInterviewChat — pending is driven by control, not by send", () =>
     expect(outcome.preserveDraft).toBe(false);
   });
 
-  it("never resolves an unacked turn on its own", async () => {
-    // There is deliberately NO timeout: a slow LLM turn must not synthesise a
-    // phantom failure for a turn that is still being worked on. Only a refusal or
-    // a room drop can end this wait.
+  it("keeps waiting for an ack well past a slow LLM answer", async () => {
+    // The ACK deadline bounds the ACK only. The agent acks BEFORE answering,
+    // so even a very slow answer never trips it: 10 minutes after send, the
+    // ack has long arrived and the turn is settled normally.
     vi.useFakeTimers();
     const fake = makeFakeRoom();
     const { result } = renderHook(() => useInterviewChat(fake.room));
@@ -294,14 +294,15 @@ describe("useInterviewChat — pending is driven by control, not by send", () =>
       settled = true;
       return outcome;
     });
+    // Ack arrives 5s in — before any deadline concern.
+    await vi.advanceTimersByTimeAsync(5_000);
+    await fake.emitControl(control({ status: "accepted", state: null }));
     await vi.advanceTimersByTimeAsync(10 * 60_000);
-    expect(settled).toBe(false);
-    expect(result.current.pending).toBe(true);
+    expect(settled).toBe(true);
+    expect(result.current.pending).toBe(false);
 
     vi.useRealTimers();
-    await fake.emitControl(control({ status: "accepted", state: null }));
     await promise;
-    expect(settled).toBe(true);
   });
 
   it("ignores a routed `completed` that trails an already-settled turn", async () => {
@@ -733,5 +734,85 @@ describe("useInterviewChat — handler lifecycle", () => {
     const fake = makeFakeRoom();
     renderHook(() => useInterviewChat(fake.room, { enabled: false }));
     expect(fake.hasControlHandler()).toBe(false);
+  });
+});
+
+
+describe("useInterviewChat — ACK deadline", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("resolves a retryable AckTimeout failure when the ack never arrives", async () => {
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    const promise = startTurn(result, TURN);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fake.sendText).toHaveBeenCalled();
+
+    let outcome!: ChatTurnOutcome;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(20_000);
+      outcome = await promise;
+    });
+    expect(outcome.event.status).toBe("failed");
+    expect(outcome.event.errorClass).toBe("AckTimeout");
+    expect(outcome.preserveDraft).toBe(true);
+    expect(result.current.pending).toBe(false);
+  });
+
+  it("cancels the deadline once the ack arrives", async () => {
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    const promise = startTurn(result, TURN);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fake.sendText).toHaveBeenCalled();
+
+    await fake.emitControl(control({ seq: 1, turn_key: TURN.turnKey }));
+    let outcome!: ChatTurnOutcome;
+    await act(async () => {
+      outcome = await promise;
+    });
+    expect(outcome.event.status).toBe("completed");
+
+    // The deadline must not fire afterwards and invent a failure.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(40_000);
+    });
+    expect(outcome.event.status).toBe("completed");
+    expect(result.current.pending).toBe(false);
+  });
+
+  it("a late ack after the timeout is discarded, not double-settled", async () => {
+    const fake = makeFakeRoom();
+    const { result } = renderHook(() => useInterviewChat(fake.room));
+
+    const promise = startTurn(result, TURN);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(fake.sendText).toHaveBeenCalled();
+
+    let outcome!: ChatTurnOutcome;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(20_000);
+      outcome = await promise;
+    });
+    expect(outcome.event.errorClass).toBe("AckTimeout");
+
+    // The agent finally acks — the waiter is gone; the late event must not
+    // throw or resurrect the turn.
+    await fake.emitControl(control({ seq: 1, turn_key: TURN.turnKey }));
+    expect(result.current.pending).toBe(false);
   });
 });

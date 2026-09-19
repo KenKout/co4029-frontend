@@ -7,7 +7,8 @@
  * `sendText` resolving only means the bytes left the browser, while the agent has
  * not confirmed it took the turn until it acks on control.
  *
- * A turn settles on `accepted`, and there is deliberately NO timeout. The agent
+ * A turn settles on `accepted`, or on a retryable `AckTimeout` failure when
+ * the ack never arrives (see ACK_TIMEOUT_MS). The agent
  * streams: it acks, then reports every state change as a session-scoped snapshot
  * on the same topic. There is no later instant at which one structured turn
  * result becomes true, so waiting past the ack means waiting for a message that
@@ -46,6 +47,37 @@ import {
   type TurnAction,
 } from "@/lib/interview/control-protocol";
 import { StreamOrderTracker } from "@/lib/interview/stream-order";
+
+/**
+ * Ceiling for the AGENT ACK (not the answer): a turn whose ack never arrives
+ * within this window resolves as a retryable `AckTimeout` failure instead of
+ * holding the composer in `sending` forever on a zombie room.
+ */
+const ACK_TIMEOUT_MS = 20_000;
+
+/** The synthetic failed outcome a tripped ACK deadline resolves with. */
+function ackTimeoutOutcome(
+  turnKey: string,
+  turnAction: TurnAction,
+): ChatTurnOutcome {
+  return {
+    event: {
+      status: "failed",
+      turnKey,
+      seq: -1,
+      turnAction,
+      stateVersion: null,
+      rejection: null,
+      state: null,
+      actionKind: null,
+      actionText: null,
+      errorClass: "AckTimeout",
+      snapshot: null,
+      streamId: null,
+    },
+    preserveDraft: true,
+  };
+}
 
 /** Outcome of one typed turn, resolved from the control topic. */
 export interface ChatTurnOutcome {
@@ -283,18 +315,8 @@ export function useInterviewChat(
     for (const [key, resolve] of waiting) {
       resolve({
         event: {
-          status: "failed",
-          turnKey: key,
-          seq: -1,
-          turnAction: "answer",
-          stateVersion: null,
-          rejection: null,
-          state: null,
-          actionKind: null,
-          actionText: null,
+          ...ackTimeoutOutcome(key, "answer").event,
           errorClass: "RoomDisconnected",
-          snapshot: null,
-          streamId: null,
         },
         // A turn cut off mid-flight was never graded — keep the draft so the
         // candidate can retry (same turn_key stays idempotent server-side).
@@ -319,9 +341,25 @@ export function useInterviewChat(
 
       // Register the waiter BEFORE sending: the agent acks as soon as the text
       // arrives, which can be before `sendText` resolves.
+      let resolveTurn!: (outcome: ChatTurnOutcome) => void;
       const settled = new Promise<ChatTurnOutcome>((resolve) => {
-        waitingRef.current.set(turnKey, resolve);
+        resolveTurn = resolve;
       });
+      waitingRef.current.set(turnKey, resolveTurn);
+
+      // Audit P2 (ACK deadline): the ACK must arrive within a bounded window —
+      // a connected room with a dead/hung agent would otherwise hold the
+      // composer in `sending` forever. This is an ACK ceiling, not a result
+      // ceiling: the agent acks BEFORE it starts answering, so a slow LLM turn
+      // never trips it. On timeout the turn resolves as a retryable failure
+      // (draft preserved; the same turn_key stays idempotent server-side for
+      // the manual retry). A genuinely late ack lands on the removed waiter
+      // and is discarded by the no-waiter path.
+      const ackTimer = window.setTimeout(() => {
+        if (!waitingRef.current.has(turnKey)) return;
+        waitingRef.current.delete(turnKey);
+        resolveTurn(ackTimeoutOutcome(turnKey, turnAction));
+      }, ACK_TIMEOUT_MS);
 
       setPending(true);
       try {
@@ -330,19 +368,20 @@ export function useInterviewChat(
           attributes: chatAttributes({ turnAction, turnKey }),
         });
       } catch (err) {
+        window.clearTimeout(ackTimer);
         waitingRef.current.delete(turnKey);
         setPending(false);
         throw err;
       }
 
-      // No ceiling on this wait. The only ways it can fail to settle are a
-      // refusal (which the agent publishes) and the room going away (handled by
-      // the drop effect above) — a slow LLM turn is not one of them, and
-      // synthesising a failure for it reported a phantom send failure for a turn
-      // the candidate had already been answered.
+      // The only ways this can fail to settle are a refusal (which the agent
+      // publishes), the room going away (drop effect above), and the ACK
+      // deadline — a slow LLM answer is NOT one of them: the ack precedes the
+      // answer, so waiting for the ack is bounded by construction.
       try {
         return await settled;
       } finally {
+        window.clearTimeout(ackTimer);
         setPending(false);
       }
     },

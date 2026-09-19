@@ -44,6 +44,15 @@ import {
  * closure in the action modules, called with `ctx` instead of relying on the
  * enclosing component scope.
  */
+/** Audit P1/P2: an intentional leave clears the per-config resume marker. */
+function clearResumeMarker(configId: string): void {
+  try {
+    window.sessionStorage.removeItem(interviewActiveMarkerKey(configId));
+  } catch {
+    /* storage unavailable — best-effort */
+  }
+}
+
 export function useInterviewActions(base: InterviewBase) {
   const {
     sessionId,
@@ -92,6 +101,10 @@ export function useInterviewActions(base: InterviewBase) {
       // pure friction, so go straight to the result. The goodbye is still
       // persisted server-side, so it remains in the transcript.
       const closingElapsedSeconds = currentElapsedSeconds();
+      // Audit P2: park the composer text — the debounced autosave would
+      // otherwise persist "" on the clear. On failure the exact text returns
+      // to the composer (re-persisting the autosave).
+      const parkedAnswerText = base.answerText;
       setAnswerText("");
       setEndDialogOpen(false);
       setAiSpeaking(false);
@@ -132,6 +145,7 @@ export function useInterviewActions(base: InterviewBase) {
       } catch (error) {
         setClosingReason(null);
         setPhase("questioning");
+        setAnswerText(parkedAnswerText);
         toast.error(
           (error as Error).message ||
             t("course_interview.errors.finish_failed"),
@@ -210,17 +224,7 @@ export function useInterviewActions(base: InterviewBase) {
   function leaveInterviewOpen() {
     if (leaveBlocker.status !== "blocked") return;
     narration.cancel();
-    // Audit P1 (stale resume marker): an INTENTIONAL leave must not leave the
-    // "live attempt" marker behind — returning to this route in the same tab
-    // would otherwise pop the auto-resume dialog for an attempt the candidate
-    // deliberately walked away from. Only a genuine reload re-stamps it.
-    try {
-      window.sessionStorage.removeItem(
-        interviewActiveMarkerKey(ctxRef.current.configId),
-      );
-    } catch {
-      /* storage unavailable — best-effort */
-    }
+    clearResumeMarker(ctxRef.current.configId);
     leaveBlocker.proceed();
   }
 
