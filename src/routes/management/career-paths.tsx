@@ -3,16 +3,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Trans, useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { FileClock, GraduationCap, Loader2, Plus } from "lucide-react";
+import { FileClock, GraduationCap, Loader2, Plus, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Textarea } from "@/components/ui/textarea";
 import { CareerPathStatusBadge } from "@/components/ui/status-badges";
-import {
-  DataTable,
-  type DataTableColumn,
-} from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   DataTableToolbar,
   type FilterDef,
@@ -41,13 +38,18 @@ function buildPathColumns(
       sortable: true,
       sortValue: (p) => p.name,
       cell: (p) => (
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-m3-on-surface truncate">
-            {p.name}
-          </p>
-          <p className="text-[11px] font-mono text-m3-on-surface-variant truncate mt-0.5">
-            {p.slug}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+            <Route aria-hidden="true" className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-m3-on-surface">
+              {p.name}
+            </p>
+            <p className="mt-0.5 truncate font-mono text-[11px] text-m3-on-surface-variant">
+              {p.slug}
+            </p>
+          </div>
         </div>
       ),
     },
@@ -206,11 +208,7 @@ function CareerPathsTable({
           clearLabel={t("management_career_paths.clear_filters")}
           trailing={
             canManage ? (
-              <Button
-                size="sm"
-                onClick={onCreate}
-                className="gap-2 shrink-0"
-              >
+              <Button size="sm" onClick={onCreate} className="gap-2 shrink-0">
                 <Plus className="h-4 w-4" />
                 {t("management_career_paths.create_button")}
               </Button>
@@ -325,7 +323,8 @@ export function CreateDialog({ onClose }: { onClose: () => void }) {
             {t("management_career_paths.create_dialog.slug")}{" "}
             <span className="text-red-600">*</span>
           </label>
-          <Input mono
+          <Input
+            mono
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             placeholder={t(
@@ -466,7 +465,12 @@ export default function ManagementCareerPathsPage() {
               params: { id: p.id },
             })
           }
-          onCreate={() => void navigate({ to: "/management/career-paths/$id", params: { id: "new" } })}
+          onCreate={() =>
+            void navigate({
+              to: "/management/career-paths/$id",
+              params: { id: "new" },
+            })
+          }
         />
       )}
     </div>

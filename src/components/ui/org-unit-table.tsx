@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { collectTreeIds, filterTree } from "@/lib/tree-filter";
 import type { OrgUnitNode } from "@/lib/api/hooks/admin-organizations";
+import { Building2 } from "lucide-react";
 
 /**
  * The Faculty collection as a searchable, sortable table.
@@ -38,6 +39,8 @@ export interface OrgUnitTableProps {
   programCounts?: Map<string, number>;
   emptyState?: ReactNode;
   loading?: boolean;
+  /** Disable tree expanders for screens that intentionally show Faculties as a flat list. */
+  hierarchical?: boolean;
 }
 
 export function OrgUnitTable({
@@ -51,11 +54,14 @@ export function OrgUnitTable({
   programCounts,
   emptyState,
   loading,
+  hierarchical,
 }: OrgUnitTableProps) {
   const { t } = useTranslation();
   const formatDate = useFormatDate();
   const [query, setQuery] = useState("");
   const prefix = "management_org_units";
+  const usesHierarchy =
+    hierarchical ?? nodes.some((node) => node.children.length > 0);
 
   const needle = query.trim().toLowerCase();
   const filtered = useMemo(() => {
@@ -84,18 +90,23 @@ export function OrgUnitTable({
         sortable: true,
         sortValue: (n) => n.name.toLowerCase(),
         cell: (n) => (
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-2">
-              <p className="truncate text-sm font-semibold text-text-strong">
-                {n.name}
-              </p>
-              {nameAdornment?.(n)}
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed text-m3-primary">
+              <Building2 aria-hidden="true" className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <p className="truncate text-sm font-semibold text-text-strong">
+                  {n.name}
+                </p>
+                {nameAdornment?.(n)}
+              </div>
+              {n.code ? (
+                <p className="mt-0.5 truncate font-mono text-[11px] text-text-muted">
+                  {n.code}
+                </p>
+              ) : null}
             </div>
-            {n.code ? (
-              <p className="mt-0.5 truncate font-mono text-[11px] text-text-muted">
-                {n.code}
-              </p>
-            ) : null}
           </div>
         ),
       },
@@ -151,10 +162,16 @@ export function OrgUnitTable({
       columns={columns}
       data={filtered}
       getRowId={(n) => n.id}
-      getSubRows={(n) => (n.children.length ? n.children : undefined)}
-      defaultExpanded
+      getSubRows={
+        usesHierarchy
+          ? (n) => (n.children.length ? n.children : undefined)
+          : undefined
+      }
+      defaultExpanded={usesHierarchy}
       onRowClick={onSelect}
-      rowClassName={(n) => (n.id === selectedId ? "bg-m3-primary-fixed" : undefined)}
+      rowClassName={(n) =>
+        n.id === selectedId ? "bg-m3-primary-fixed" : undefined
+      }
       actions={actions}
       actionsHeader={t(`${prefix}.col_actions`)}
       loading={loading}
@@ -179,9 +196,7 @@ function Count({ value, warnOnZero }: { value: number; warnOnZero?: boolean }) {
       </span>
     );
   }
-  return (
-    <span className="text-sm tabular-nums text-text-strong">{value}</span>
-  );
+  return <span className="text-sm tabular-nums text-text-strong">{value}</span>;
 }
 
 /** Ids of every node in a (possibly filtered) tree — re-exported for callers. */

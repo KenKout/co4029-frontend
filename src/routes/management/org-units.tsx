@@ -1,7 +1,14 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
-import { BookOpen, Pencil, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
+import {
+  BookOpen,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -64,9 +71,7 @@ export default function ManagementOrgUnitsPage() {
   const { t } = useTranslation();
   const permissions = usePermissions();
   const c = useOrgUnitsPage();
-  const { peopleCounts, courseCounts, programCounts } = useUnitCounts(
-    c.orgId,
-  );
+  const { peopleCounts, courseCounts, programCounts } = useUnitCounts(c.orgId);
   // Flat id → name map so a picker can show a person's other faculties.
   const unitsById = useMemo(
     () => new Map(flattenOrgUnits(c.nodes).map((u) => [u.id, u.name])),
@@ -76,7 +81,9 @@ export default function ManagementOrgUnitsPage() {
     () =>
       c.deanUnitIds
         .map((id) => ({ id, name: unitsById.get(id) }))
-        .filter((row): row is { id: string; name: string } => Boolean(row.name)),
+        .filter((row): row is { id: string; name: string } =>
+          Boolean(row.name),
+        ),
     [c.deanUnitIds, unitsById],
   );
   const prefix = "management_org_units";
@@ -159,6 +166,7 @@ export default function ManagementOrgUnitsPage() {
               courseCounts={courseCounts}
               peopleCounts={peopleCounts}
               programCounts={programCounts}
+              hierarchical={false}
               nameAdornment={(node) =>
                 c.deanUnitIds.includes(node.id) ? (
                   <Badge
