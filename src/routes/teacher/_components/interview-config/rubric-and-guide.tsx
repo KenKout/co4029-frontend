@@ -13,6 +13,7 @@ import { HelpCircle, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PERSONA_KEYS, VOICE_KEYS } from "@/lib/interview/config-draft";
@@ -118,13 +119,17 @@ export function RubricEditor({
                     className="rounded-lg py-2"
                   />
                 </div>
-                <Button variant="ghost"
+                {/* `size="icon"` carries the grid/h-8/rounded-lg box — only the
+                    destructive hover tint is added here. */}
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => removeAt(index)}
                   aria-label={t(
                     "teacher_interview_config.fields.rubric_remove",
                   )}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-m3-on-surface-variant hover:bg-m3-error/10 hover:text-m3-error cursor-pointer"
+                  className="text-m3-on-surface-variant hover:bg-m3-error/10 hover:text-m3-error"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -163,9 +168,10 @@ export function VoicePersonaGuideSheet({
     <Sheet>
       <SheetTrigger
         render={
-          <Button variant="link"
+          <Button
+            variant="link"
             type="button"
-            className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-m3-primary hover:underline cursor-pointer"
+            className="mt-1 gap-1 text-[11px] font-semibold"
           />
         }
       >
@@ -198,28 +204,22 @@ export function VoicePersonaGuideSheet({
             <h3 className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
               {t("teacher_interview_config.voice_guide.persona_heading")}
             </h3>
-            <table className="w-full text-left text-xs">
-              <tbody>
+            <Table className="text-xs">
+              <TableBody>
                 {PERSONA_KEYS.map((p) => (
-                  <tr
-                    key={p}
-                    className="border-b border-m3-outline-variant/20 align-top"
-                  >
-                    <th
-                      scope="row"
-                      className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
-                    >
+                  <TableRow key={p} className="align-top">
+                    <TableCell className="w-1/3 py-2 pr-3 font-semibold text-m3-on-surface">
                       {t(`teacher_interview_config.persona.${p}`)}
-                    </th>
-                    <td className="py-2 text-m3-on-surface-variant">
+                    </TableCell>
+                    <TableCell className="py-2 text-m3-on-surface-variant">
                       {t(
                         `teacher_interview_config.voice_guide.persona_desc.${p}`,
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </section>
 
           {/* Voice table */}
@@ -236,28 +236,22 @@ export function VoicePersonaGuideSheet({
             <p className="text-[11px] text-m3-on-surface-variant">
               {t("teacher_interview_config.voice_guide.voice_note")}
             </p>
-            <table className="w-full text-left text-xs">
-              <tbody>
+            <Table className="text-xs">
+              <TableBody>
                 {VOICE_KEYS.map((v) => (
-                  <tr
-                    key={v}
-                    className="border-b border-m3-outline-variant/20 align-top"
-                  >
-                    <th
-                      scope="row"
-                      className="whitespace-nowrap py-2 pr-3 font-semibold text-m3-on-surface"
-                    >
+                  <TableRow key={v} className="align-top">
+                    <TableCell className="w-1/3 py-2 pr-3 font-semibold text-m3-on-surface">
                       {t(`teacher_interview_config.voice.${v}`)}
-                    </th>
-                    <td className="py-2 text-m3-on-surface-variant">
+                    </TableCell>
+                    <TableCell className="py-2 text-m3-on-surface-variant">
                       {t(
                         `teacher_interview_config.voice_guide.voice_desc.${v}`,
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </section>
         </div>
       </SheetContent>
