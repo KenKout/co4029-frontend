@@ -62,14 +62,24 @@ export default function DeptCourseDetailPage() {
   const courses = useDeptCourses();
   const course = courses.data?.find((c) => c.id === courseId);
 
-  const teachers = useCourseTeachers(enabled ? courseId : undefined);
-  const roster = useCourseRoster(enabled ? courseId : undefined);
-  // Placement count for the Career Paths tab badge. Same queryKey as the
-  // tab's own useCourseReadiness, so this adds no extra request.
-  const readiness = useCourseReadiness(enabled ? courseId : undefined);
-
   const initialTab = resolveInitialTab(tabParam, canDelete);
   const [tab, setTab] = useState<TabKey>(initialTab);
+
+  // Tab data is lazy: only the selected tab enables its request. Each hook
+  // keeps a short stale window, so the parent tab count and the tab panel share
+  // one cached request instead of refetching on every render.
+  const teachers = useCourseTeachers(
+    enabled ? courseId : undefined,
+    tab === "teachers",
+  );
+  const roster = useCourseRoster(
+    enabled ? courseId : undefined,
+    tab === "students",
+  );
+  const readiness = useCourseReadiness(
+    enabled ? courseId : undefined,
+    tab === "career-paths",
+  );
 
   if (permissions.isLoading) {
     return (

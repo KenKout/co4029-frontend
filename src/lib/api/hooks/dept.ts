@@ -50,12 +50,12 @@ export function useDeptCourses(
   });
 }
 
-export function useCourseTeachers(courseId: string | undefined) {
+export function useCourseTeachers(courseId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: queryKeys.dept.teachers(courseId ?? ""),
     queryFn: () =>
       apiFetch<TeacherAssignmentRead[]>(`/dept/courses/${courseId}/teachers`),
-    enabled: Boolean(courseId),
+    enabled: Boolean(courseId) && enabled,
     staleTime: 1000 * 60,
   });
 }
@@ -92,12 +92,12 @@ export function useAssignableTeachersForNewCourse(
  * Is this course actually deliverable? Teacher, content, career-path placement
  * and status — asked before publish rather than discovered as a 409 after.
  */
-export function useCourseReadiness(courseId: string | undefined) {
+export function useCourseReadiness(courseId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: queryKeys.dept.readiness(courseId ?? ""),
     queryFn: () =>
       apiFetch<CourseReadiness>(`/dept/courses/${courseId}/readiness`),
-    enabled: Boolean(courseId),
+    enabled: Boolean(courseId) && enabled,
     staleTime: 1000 * 30,
   });
 }
@@ -235,11 +235,11 @@ export function useBulkRemoveTeachers(courseId: string) {
   });
 }
 
-export function useCourseRoster(courseId: string | undefined) {
+export function useCourseRoster(courseId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: queryKeys.dept.roster(courseId ?? ""),
     queryFn: () => apiFetch<RosterEntry[]>(`/dept/courses/${courseId}/roster`),
-    enabled: Boolean(courseId),
+    enabled: Boolean(courseId) && enabled,
     staleTime: 1000 * 60,
   });
 }
