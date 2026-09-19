@@ -4,6 +4,7 @@ import { Check, X } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { cn } from "@/lib/utils";
 import type { ResponsesReportRead, ResponsesReportRow } from "@/lib/api/hooks/quizzes";
 
@@ -27,7 +28,7 @@ export function ResponsesReport({ report }: { report: ResponsesReportRead }) {
     return matchesSearch && matchesResult;
   }), [report.rows, search, result]);
   const columns: DataTableColumn<ResponsesReportRow>[] = [
-    { id: "student", header: t("teacher_quiz_results.reports.responses.student"), cell: (row) => <span className="font-mono text-xs">{row.student_id}</span> },
+    { id: "student", header: t("teacher_quiz_results.reports.responses.student"), cell: (row) => <UserEmailIdentity id={row.student_id} displayName={row.student_name ?? row.student_email ?? row.student_id} email={row.student_email} /> },
     { id: "question", header: t("teacher_quiz_results.reports.responses.question"), cell: (row) => <span className="block max-w-xs truncate" title={row.prompt_text}>{row.prompt_text}</span> },
     { id: "answer", header: t("teacher_quiz_results.reports.responses.their_answer"), cell: (row) => <span className="block max-w-xs truncate" title={row.student_answer}>{row.student_answer || "—"}</span> },
     { id: "correct_answer", header: t("teacher_quiz_results.reports.responses.correct_answer"), cell: (row) => <span className="block max-w-xs truncate" title={row.correct_answer}>{row.correct_answer || "—"}</span> },

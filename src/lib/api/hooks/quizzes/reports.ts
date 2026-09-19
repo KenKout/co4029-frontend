@@ -6,6 +6,8 @@ import { filenameFromDisposition } from "./helpers";
 // --- Phase 10: reports + export --------------------------------------------
 export interface ResponsesReportRow {
   student_id: string;
+  student_name: string | null;
+  student_email: string | null;
   attempt_id: string;
   question_id: string;
   prompt_text: string;
