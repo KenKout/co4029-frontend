@@ -25,7 +25,6 @@ export interface RegradeRunRead {
   id: string;
   quiz_id: string;
   status: string;
-  answers_scanned: number;
   answers_changed: number;
   attempts_affected: number;
   created_at: string;
@@ -48,10 +47,10 @@ export function useRegradeDryRun(quizId: string | null | undefined) {
 export function useRegradeCommit(quizId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (scope: RegradeScopeIn) =>
+    mutationFn: (runId: string) =>
       apiPost<RegradeRunRead>(
-        `/teacher/quizzes/${quizId}/regrade/commit`,
-        scope,
+        `/teacher/quizzes/${quizId}/regrade/runs/${runId}/commit`,
+        {},
       ),
     onSuccess: () => {
       if (quizId) {

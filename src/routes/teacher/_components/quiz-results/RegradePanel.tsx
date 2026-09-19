@@ -4,10 +4,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DataTable,
-  type DataTableColumn,
-} from "@/components/ui/data-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import {
   useRegradeCommit,
@@ -37,8 +34,7 @@ function regradeColumns(
               : "bg-red-100 text-red-700",
           )}
         >
-          {item.old_is_correct ? "✓" : "✗"} →{" "}
-          {item.new_is_correct ? "✓" : "✗"}
+          {item.old_is_correct ? "✓" : "✗"} → {item.new_is_correct ? "✓" : "✗"}
         </span>
       ),
     },
@@ -61,7 +57,13 @@ function regradeColumns(
   ];
 }
 
-export function RegradePanel({ quizId, onClose }: { quizId: string; onClose: () => void }) {
+export function RegradePanel({
+  quizId,
+  onClose,
+}: {
+  quizId: string;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const dryRun = useRegradeDryRun(quizId);
   const commit = useRegradeCommit(quizId);
@@ -76,9 +78,14 @@ export function RegradePanel({ quizId, onClose }: { quizId: string; onClose: () 
   }
 
   async function handleCommit() {
+    if (!preview) return;
     try {
-      const result = await commit.mutateAsync({});
-      toast.success(t("teacher_quiz_results.regrade.committed", { count: result.answers_changed }));
+      const result = await commit.mutateAsync(preview.id);
+      toast.success(
+        t("teacher_quiz_results.regrade.committed", {
+          count: result.answers_changed,
+        }),
+      );
       onClose();
     } catch {
       toast.error(t("teacher_quiz_results.regrade.commit_failed"));
@@ -89,7 +96,9 @@ export function RegradePanel({ quizId, onClose }: { quizId: string; onClose: () 
   return (
     <ConfirmDialog
       open
-      onOpenChange={(open) => { if (!open && !busy) onClose(); }}
+      onOpenChange={(open) => {
+        if (!open && !busy) onClose();
+      }}
       title={
         <span className="flex items-center gap-2">
           <RefreshCw className="h-5 w-5 text-m3-primary" />
@@ -97,27 +106,47 @@ export function RegradePanel({ quizId, onClose }: { quizId: string; onClose: () 
         </span>
       }
       description={t("teacher_quiz_results.regrade.description")}
-      confirmLabel={preview ? t("teacher_quiz_results.regrade.commit_action") : t("teacher_quiz_results.regrade.preview_action")}
+      confirmLabel={
+        preview
+          ? t("teacher_quiz_results.regrade.commit_action")
+          : t("teacher_quiz_results.regrade.preview_action")
+      }
       cancelLabel={t("common.cancel")}
       confirmVariant={preview ? "destructive" : "default"}
       isPending={busy}
       confirmDisabled={preview?.answers_changed === 0}
       onConfirm={() => void (preview ? handleCommit() : handleDryRun())}
-      backdropClassName="z-30"
       popupClassName="max-w-2xl"
       extraContent={
         !preview ? (
-          <div className="flex items-start gap-3 rounded-xl bg-m3-surface-container-low p-4">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-            <p className="text-sm text-m3-on-surface-variant">{t("teacher_quiz_results.regrade.dry_run_hint")}</p>
+          <div className="space-y-3 rounded-xl bg-m3-surface-container-low p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
+              <p className="text-sm text-m3-on-surface-variant">
+                {t("teacher_quiz_results.regrade.dry_run_hint")}
+              </p>
+            </div>
+            <ul className="ml-8 list-disc space-y-1 text-sm text-m3-on-surface-variant">
+              <li>{t("teacher_quiz_results.regrade.scope_hint")}</li>
+              <li>{t("teacher_quiz_results.regrade.exclusion_hint")}</li>
+            </ul>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <Stat label={t("teacher_quiz_results.regrade.scanned")} value={preview.answers_scanned} />
-              <Stat label={t("teacher_quiz_results.regrade.changed")} value={preview.answers_changed} highlight />
-              <Stat label={t("teacher_quiz_results.regrade.attempts")} value={preview.attempts_affected} />
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <Stat
+                label={t("teacher_quiz_results.regrade.changed")}
+                value={preview.answers_changed}
+                highlight
+              />
+              <Stat
+                label={t("teacher_quiz_results.regrade.attempts")}
+                value={preview.attempts_affected}
+              />
             </div>
+            <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+              {t("teacher_quiz_results.regrade.commit_hint")}
+            </p>
             {preview.items.length > 0 && (
               <div className="max-h-64 overflow-y-auto rounded-xl border border-m3-outline-variant/30">
                 <DataTable<RegradeRow>
@@ -139,6 +168,26 @@ export function RegradePanel({ quizId, onClose }: { quizId: string; onClose: () 
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
-  return <div className="rounded-xl bg-m3-surface-container-low p-3"><div className={cn("text-2xl font-bold tabular-nums", highlight ? "text-m3-primary" : "text-m3-on-surface")}>{value}</div><div className="text-xs text-m3-on-surface-variant">{label}</div></div>;
+function Stat({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="rounded-xl bg-m3-surface-container-low p-3">
+      <div
+        className={cn(
+          "text-2xl font-bold tabular-nums",
+          highlight ? "text-m3-primary" : "text-m3-on-surface",
+        )}
+      >
+        {value}
+      </div>
+      <div className="text-xs text-m3-on-surface-variant">{label}</div>
+    </div>
+  );
 }
