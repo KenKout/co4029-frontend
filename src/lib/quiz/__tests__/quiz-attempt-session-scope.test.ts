@@ -1,19 +1,31 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveQuizAttemptTabGuardId } from "../use-quiz-attempt-session";
+import { getQuizAttemptTabGuardScope } from "../use-quiz-attempt-session";
 
-describe("resolveQuizAttemptTabGuardId", () => {
-  it("uses the canonical quiz UUID after a legacy item-slug route loads", () => {
+describe("getQuizAttemptTabGuardScope", () => {
+  it("uses the canonical quiz UUID for a live taking attempt", () => {
     expect(
-      resolveQuizAttemptTabGuardId(
+      getQuizAttemptTabGuardScope(
         "quiz-1-0",
         "fcce0c53-6fdd-4c1c-b724-24146aae34d3",
+        "attempt-1",
+        true,
       ),
-    ).toBe("fcce0c53-6fdd-4c1c-b724-24146aae34d3");
+    ).toEqual({
+      quizId: "fcce0c53-6fdd-4c1c-b724-24146aae34d3",
+      attemptId: "attempt-1",
+    });
   });
 
-  it("keeps the route value while the quiz payload is loading", () => {
-    expect(resolveQuizAttemptTabGuardId("quiz-1-0", undefined)).toBe("quiz-1-0");
-    expect(resolveQuizAttemptTabGuardId("quiz-1-0", null)).toBe("quiz-1-0");
+  it("completely bypasses the browser guard without a live taking attempt", () => {
+    expect(
+      getQuizAttemptTabGuardScope("quiz-1-0", "quiz-uuid", null, false),
+    ).toBeNull();
+    expect(
+      getQuizAttemptTabGuardScope("quiz-1-0", "quiz-uuid", "attempt-1", false),
+    ).toBeNull();
+    expect(
+      getQuizAttemptTabGuardScope("quiz-1-0", undefined, "attempt-1", true),
+    ).toEqual({ quizId: "quiz-1-0", attemptId: "attempt-1" });
   });
 });
