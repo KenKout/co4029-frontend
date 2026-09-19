@@ -6,12 +6,59 @@ import { authenticatedFetch, publicFetch, setMfaRequired } from "../auth";
  */
 type Fetcher = (path: string, init?: RequestInit) => Promise<Response>;
 
+function cleanApiMessage(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  // Some endpoints prefix the readable sentence with an internal reason code,
+  // e.g. `course_slug_taken: a course ...`. Keep the sentence, not the code.
+  const withoutCode = trimmed.replace(/^[a-z][a-z0-9_]*:\s*/i, "").trim();
+  return withoutCode || null;
+}
+
+/** Extract a user-facing sentence from the response shapes used by FastAPI. */
+export function getApiBodyMessage(body: string): string | null {
+  if (!body.trim()) return null;
+  let payload: unknown;
+  try {
+    payload = JSON.parse(body);
+  } catch {
+    // Preserve useful plain-text errors, but never surface an HTML proxy page.
+    return /^\s*</.test(body) ? null : cleanApiMessage(body);
+  }
+  if (!payload || typeof payload !== "object") return null;
+
+  const record = payload as { detail?: unknown; message?: unknown };
+  const detail = record.detail;
+  if (typeof detail === "string") return cleanApiMessage(detail);
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    const message = (detail as { message?: unknown }).message;
+    if (typeof message === "string") return cleanApiMessage(message);
+  }
+  // FastAPI/Pydantic validation errors use `detail: [{loc, msg, type}]`.
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const message = (item as { msg?: unknown }).msg;
+        return typeof message === "string" ? cleanApiMessage(message) : null;
+      })
+      .filter((message): message is string => Boolean(message));
+    if (messages.length) return Array.from(new Set(messages)).join("; ");
+  }
+  if (typeof record.message === "string") {
+    return cleanApiMessage(record.message);
+  }
+  return null;
+}
+
 export class ApiError extends Error {
   status: number;
   body: string;
 
   constructor(status: number, body: string, statusText: string) {
-    super(`API ${status}: ${body || statusText}`);
+    super(
+      getApiBodyMessage(body) || statusText || `Request failed (${status})`,
+    );
     this.name = "ApiError";
     this.status = status;
     this.body = body;

@@ -4,7 +4,7 @@ import { ClipboardCheck, ClipboardEdit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { useRemoveTeacher, useSetTeacherTitles } from "@/lib/api/hooks/dept";
-import { ApiError } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 import type { TeacherAssignmentRead } from "@/lib/api/types";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { cn } from "@/lib/utils";
@@ -119,13 +119,16 @@ export function TeacherRowActions({
     const isInstructorNext = field === "instructor" ? next : isInstructor;
     const isAssistantNext = field === "assistant" ? next : isAssistant;
     setTitles.mutate(
-      { userId: assignment.user_id, isInstructor: isInstructorNext, isAssistant: isAssistantNext },
+      {
+        userId: assignment.user_id,
+        isInstructor: isInstructorNext,
+        isAssistant: isAssistantNext,
+      },
       {
         onSuccess: () =>
           toast.success(t("dept_course_detail.success.title_updated")),
         onError: (err) => {
-          const detail =
-            err instanceof ApiError ? err.body || err.message : String(err);
+          const detail = getApiErrorMessage(err, t("common.error"));
           toast.error(t("dept_course_detail.errors.role_failed", { detail }));
         },
       },
@@ -144,8 +147,7 @@ export function TeacherRowActions({
     remove.mutate(assignment.user_id, {
       onSuccess: () => toast.success(t("dept_course_detail.success.removed")),
       onError: (err) => {
-        const detail =
-          err instanceof ApiError ? err.body || err.message : String(err);
+        const detail = getApiErrorMessage(err, t("common.error"));
         toast.error(t("dept_course_detail.errors.remove_failed", { detail }));
       },
     });
@@ -161,7 +163,9 @@ export function TeacherRowActions({
           e.stopPropagation();
           handleToggle("instructor", !isInstructor);
         }}
-        disabled={setTitles.isPending || instructorOnDisabled || instructorOffDisabled}
+        disabled={
+          setTitles.isPending || instructorOnDisabled || instructorOffDisabled
+        }
         className="gap-1.5"
         title={
           instructorOffDisabled
@@ -182,7 +186,9 @@ export function TeacherRowActions({
           e.stopPropagation();
           handleToggle("assistant", !isAssistant);
         }}
-        disabled={setTitles.isPending || assistantOnDisabled || assistantOffDisabled}
+        disabled={
+          setTitles.isPending || assistantOnDisabled || assistantOffDisabled
+        }
         className="gap-1.5"
         title={
           assistantOnDisabled

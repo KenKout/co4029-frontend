@@ -5,7 +5,7 @@ import { join, relative, resolve } from "node:path";
 /**
  * A backend refusal must reach the user as its own sentence, not as JSON.
  *
- * `ApiError`'s `message` is built as `API ${status}: ${body}`, so
+ * Historically `ApiError.message` was built as `API ${status}: ${body}`, so
  *
  *   toast.error(error instanceof Error ? error.message : "fallback")
  *
@@ -16,7 +16,8 @@ import { join, relative, resolve } from "node:path";
  * The `detail.message` inside it is the sentence the backend wrote for this
  * exact situation — "You already have 3 career paths in progress, and this
  * organization allows at most 3 at a time." `getApiErrorMessage` reads that
- * field; `error.message` cannot.
+ * field. The API client now normalizes that globally; this scanner remains a
+ * guard against bypassing the shared formatter with ad-hoc caught errors.
  *
  * Eight call sites had the bug at once, which is what makes it worth a
  * scanner rather than eight tests: it is the obvious thing to write, it type

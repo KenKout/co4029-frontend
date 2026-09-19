@@ -5,7 +5,7 @@ import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchableMultiSelect } from "@/components/ui/searchable-multi-select";
 import { useAssignableTeachers, useAssignTeacher } from "@/lib/api/hooks/dept";
-import { ApiError } from "@/lib/api/client";
+import { getApiErrorMessage } from "@/lib/api/error-codes";
 import { cn } from "@/lib/utils";
 
 export function AssignTeacherForm({
@@ -83,8 +83,7 @@ export function AssignTeacherForm({
       } catch (err) {
         failed.push({
           id: userId,
-          detail:
-            err instanceof ApiError ? err.body || err.message : String(err),
+          detail: getApiErrorMessage(err, t("common.error")),
         });
       }
     }

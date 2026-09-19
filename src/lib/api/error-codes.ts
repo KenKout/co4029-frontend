@@ -1,4 +1,4 @@
-import { ApiError } from "./client";
+import { ApiError, getApiBodyMessage } from "./client";
 
 export type ApiErrorCode =
   | "card_cooldown_active"
@@ -23,11 +23,9 @@ export function isApiErrorCode(err: unknown, code: ApiErrorCode): boolean {
 /**
  * The sentence to put in a toast for a failed request.
  *
- * Prefers `detail.message` — the backend's human explanation — over
- * `ApiError.message`, which is the raw `API 409: {"detail":{...}}` dump, and
- * over machine codes like `concurrent_program_limit_reached:<uuid>:1` that
- * managers were being shown verbatim. Falls back to `fallback` when the
- * response carries no readable text.
+ * Reads the same normalized backend sentence used by `ApiError.message` and
+ * lets a call site provide a contextual fallback when the response carries no
+ * readable text. Machine codes and raw JSON never become display text.
  *
  * Duck-typed on `body` rather than `err instanceof ApiError`: several test
  * suites mock `@/lib/api/client` without exporting `ApiError`, and
@@ -36,17 +34,7 @@ export function isApiErrorCode(err: unknown, code: ApiErrorCode): boolean {
 export function getApiErrorMessage(err: unknown, fallback: string): string {
   const body = (err as { body?: unknown } | null)?.body;
   if (typeof body === "string") {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(body);
-    } catch {
-      return fallback;
-    }
-    const detail = (parsed as { detail?: unknown } | null)?.detail;
-    if (typeof detail === "string" && detail.trim()) return detail;
-    const message = (detail as { message?: unknown } | null)?.message;
-    if (typeof message === "string" && message.trim()) return message;
-    return fallback;
+    return getApiBodyMessage(body) ?? fallback;
   }
   const message = (err as { message?: unknown } | null)?.message;
   if (typeof message === "string" && message.trim()) return message;

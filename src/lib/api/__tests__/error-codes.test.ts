@@ -76,12 +76,48 @@ describe("getApiErrorMessage", () => {
 
   it("accepts a string detail (FastAPI's default shape)", () => {
     expect(
-      getApiErrorMessage(makeApiError({ detail: "Not allowed here" }, 403), "f"),
+      getApiErrorMessage(
+        makeApiError({ detail: "Not allowed here" }, 403),
+        "f",
+      ),
     ).toBe("Not allowed here");
   });
 
+  it("removes a machine-code prefix from a readable backend message", () => {
+    const err = makeApiError(
+      {
+        detail: {
+          error: "conflict",
+          message:
+            "course_slug_taken: a course with this slug already exists in this organization",
+        },
+      },
+      409,
+    );
+    expect(err.message).toBe(
+      "a course with this slug already exists in this organization",
+    );
+    expect(getApiErrorMessage(err, "fallback")).toBe(err.message);
+  });
+
+  it("normalizes FastAPI validation errors", () => {
+    const err = makeApiError(
+      {
+        detail: [
+          { loc: ["body", "slug"], msg: "Field required", type: "missing" },
+          { loc: ["body", "name"], msg: "Field required", type: "missing" },
+        ],
+      },
+      422,
+    );
+    expect(err.message).toBe("Field required");
+  });
+
   it("falls back when the body carries only a machine code", () => {
-    const err = makeApiError({ detail: { error: "program_is_not_active" } }, 409);
+    const err = makeApiError(
+      { detail: { error: "program_is_not_active" } },
+      409,
+    );
     expect(getApiErrorMessage(err, "Could not enroll students")).toBe(
       "Could not enroll students",
     );
@@ -89,7 +125,10 @@ describe("getApiErrorMessage", () => {
 
   it("falls back on an unparseable or empty body", () => {
     expect(
-      getApiErrorMessage(new ApiError(500, "", "Internal Server Error"), "boom"),
+      getApiErrorMessage(
+        new ApiError(500, "", "Internal Server Error"),
+        "boom",
+      ),
     ).toBe("boom");
     expect(
       getApiErrorMessage(new ApiError(502, "<html>", "Bad Gateway"), "boom"),
