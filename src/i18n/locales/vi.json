@@ -2798,6 +2798,16 @@
       "create_dialog_title": "Tạo chính sách",
       "load_failed": "Không tải được danh sách chính sách",
       "empty_title": "Chưa có chính sách nào",
+      "inventory": {
+        "title": "Tổng quan chính sách",
+        "subtitle": "Tổng hợp nhanh. Mở một chính sách để xem lịch sử phiên bản và trình chỉnh sửa.",
+        "total": "Tổng số chính sách",
+        "published": "Đã xuất bản",
+        "drafts": "Bản nháp đang mở",
+        "audience": "Công khai / giới hạn",
+        "public_hint": "Chính sách công khai áp dụng cho mọi người đọc đủ điều kiện.",
+        "restricted_hint": "Chính sách giới hạn chỉ áp dụng theo vai trò đối tượng."
+      },
       "fields": {
         "slug": "Định danh",
         "title": "Tiêu đề",

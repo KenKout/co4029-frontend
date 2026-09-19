@@ -2889,6 +2889,16 @@
       "create_dialog_title": "Create policy",
       "load_failed": "Failed to load policies",
       "empty_title": "No policies yet",
+      "inventory": {
+        "title": "Policy inventory",
+        "subtitle": "At-a-glance coverage. Open a policy for its version history and editor.",
+        "total": "Total policies",
+        "published": "Published",
+        "drafts": "Open drafts",
+        "audience": "Public / restricted",
+        "public_hint": "Public policies apply to every eligible reader.",
+        "restricted_hint": "Restricted policies are limited by audience roles."
+      },
       "fields": {
         "slug": "Slug",
         "title": "Title",
