@@ -29,15 +29,20 @@ export function findEligibleCoursePathId(
  * active career paths. The backend remains authoritative when the Start POST
  * runs; this read only decides which CTA to show on the landing page.
  */
+/**
+ * `enrolled` is tri-state on purpose: `undefined` means the enrollment
+ * lookup has not answered yet. Gating on `!enrolled` instead would treat
+ * "still loading" as "not enrolled" and fire both reads for an enrolled
+ * student, closing the gate only after the requests had gone out.
+ */
 export function useCourseStartEligibility(
   courseId: string | undefined,
-  enrolled: boolean,
+  enrolled: boolean | undefined,
 ) {
-  // Same gate as the progress fan-out below: an enrolled student cannot
-  // lazily start the course, so neither query has anything to answer.
-  const enrollments = useMyCareerEnrollments({
-    enabled: Boolean(courseId) && !enrolled,
-  });
+  const wantsEligibility = Boolean(courseId) && enrolled === false;
+  // An enrolled student cannot lazily start the course, so neither this nor
+  // the per-path fan-out below has anything to answer.
+  const enrollments = useMyCareerEnrollments({ enabled: wantsEligibility });
   const activePathIds = useMemo(
     () =>
       (enrollments.data ?? [])
@@ -52,7 +57,7 @@ export function useCourseStartEligibility(
         apiFetch<CareerPathProgressRead>(
           `/me/career-enrollments/${careerPathId}/progress`,
         ),
-      enabled: Boolean(courseId) && !enrolled,
+      enabled: wantsEligibility,
       staleTime: 1000 * 60,
     })),
   });
@@ -70,7 +75,7 @@ export function useCourseStartEligibility(
   return {
     eligiblePathId,
     isLoading:
-      !enrolled &&
+      wantsEligibility &&
       (enrollments.isLoading ||
         progressQueries.some((query) => query.isLoading)),
   };

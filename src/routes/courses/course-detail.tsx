@@ -57,7 +57,11 @@ export default function CourseDetailPage() {
   const { data: enrollment, isLoading: enrollmentLoading } =
     useMyEnrollment(courseId);
   const enrolled = Boolean(enrollment);
-  const lazyEligibility = useCourseStartEligibility(courseId, enrolled);
+  // `undefined` while the enrollment lookup is in flight — see the hook.
+  const lazyEligibility = useCourseStartEligibility(
+    courseId,
+    enrollmentLoading ? undefined : enrolled,
+  );
   const startCourse = useStartCourse(lazyEligibility.eligiblePathId ?? "");
 
   function handleLazyStart() {
