@@ -8,6 +8,7 @@ import {
 
 const HEARTBEAT_MS = 25_000;
 const TRANSFER_TIMEOUT_MS = 5_000;
+const OWNERSHIP_RETRY_MS = 500;
 const CHANNEL_PREFIX = "quiz-attempt:";
 
 type Message =
@@ -94,18 +95,23 @@ export function useQuizAttemptTabGuard(
     let cancelled = false;
     let acquired = false;
     let fallbackOwner = false;
+    let fallbackOwnerSeen = false;
     const fallbackTimer = {
+      current: null as ReturnType<typeof setTimeout> | null,
+    };
+    const retryTimer = {
       current: null as ReturnType<typeof setTimeout> | null,
     };
 
     const post = (message: Message) => channel?.postMessage(message);
     const acquireFallback = () => {
       if (cancelled || hasWebLocks()) return;
+      fallbackOwnerSeen = false;
       // A short leader handshake lets an existing owner answer before this tab
       // claims the fallback. The lexicographically smaller id wins ties.
       post({ type: "owner-present", tabId });
       fallbackTimer.current = setTimeout(() => {
-        if (cancelled || fallbackOwner) return;
+        if (cancelled || fallbackOwner || fallbackOwnerSeen) return;
         fallbackOwner = true;
         acquired = true;
         setBlocked(false);
@@ -114,13 +120,29 @@ export function useQuizAttemptTabGuard(
         post({ type: "owner-present", tabId });
       }, 120);
     };
+    const scheduleOwnershipRetry = (retry: () => void) => {
+      if (cancelled || retryTimer.current) return;
+      retryTimer.current = setTimeout(() => {
+        retryTimer.current = null;
+        retry();
+      }, OWNERSHIP_RETRY_MS);
+    };
 
     const onMessage = (event: MessageEvent<Message>) => {
       const message = event.data;
       if (!message || message.tabId === tabId) return;
       if (message.type === "owner-present") {
+        fallbackOwnerSeen = true;
+        if (acquired) {
+          // BroadcastChannel does not replay earlier announcements. Reply to
+          // a fresh probe so a tab opened after the owner can distinguish an
+          // active owner from a stale lock.
+          post({ type: "owner-present", tabId });
+          return;
+        }
         if (!acquired && (!hasWebLocks() || message.tabId < tabId)) {
           setBlocked(true);
+          scheduleOwnershipRetry(acquireFallback);
         }
         return;
       }
@@ -148,32 +170,39 @@ export function useQuizAttemptTabGuard(
       const held = new Promise<void>((resolve) => {
         releaseLockRef.current = resolve;
       });
-      void navigator.locks
-        .request(
-          lockName,
-          shouldSteal ? { steal: true } : { ifAvailable: true },
-          async (lock) => {
-            if (cancelled || !lock) {
-              setBlocked(true);
+      const requestLock = () => {
+        if (cancelled) return;
+        void navigator.locks
+          .request(
+            lockName,
+            shouldSteal ? { steal: true } : { ifAvailable: true },
+            async (lock) => {
+              if (cancelled) return;
+              if (!lock) {
+                setBlocked(true);
+                post({ type: "owner-present", tabId });
+                scheduleOwnershipRetry(requestLock);
+                return;
+              }
+              acquired = true;
+              forceTakeoverRef.current = false;
+              setIsOwner(true);
+              setBlocked(false);
+              settleTransfer(true);
               post({ type: "owner-present", tabId });
-              return;
+              await held;
+              setIsOwner(false);
+            },
+          )
+          .catch(() => {
+            if (!cancelled) {
+              setBlocked(true);
+              settleTransfer(false);
+              scheduleOwnershipRetry(requestLock);
             }
-            acquired = true;
-            forceTakeoverRef.current = false;
-            setIsOwner(true);
-            setBlocked(false);
-            settleTransfer(true);
-            post({ type: "owner-present", tabId });
-            await held;
-            setIsOwner(false);
-          },
-        )
-        .catch(() => {
-          if (!cancelled) {
-            setBlocked(true);
-            settleTransfer(false);
-          }
-        });
+          });
+      };
+      requestLock();
     } else {
       acquireFallback();
     }
@@ -181,6 +210,7 @@ export function useQuizAttemptTabGuard(
     return () => {
       cancelled = true;
       if (fallbackTimer.current) clearTimeout(fallbackTimer.current);
+      if (retryTimer.current) clearTimeout(retryTimer.current);
       releaseLockRef.current?.();
       releaseLockRef.current = null;
       channel?.removeEventListener("message", onMessage);

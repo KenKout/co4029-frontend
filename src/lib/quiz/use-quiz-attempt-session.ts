@@ -29,11 +29,17 @@ import { useQuizAttemptTabGuard } from "@/lib/quiz/use-quiz-attempt-tab-guard";
  * Legacy `/learn/$itemSlug` routes may initially pass a human-readable slug;
  * using it as a browser lock can collide with the same slug in another course.
  */
-export function resolveQuizAttemptTabGuardId(
+export function getQuizAttemptTabGuardScope(
   routeQuizId: string,
   canonicalQuizId: string | null | undefined,
-): string {
-  return canonicalQuizId ?? routeQuizId;
+  attemptId: string | null | undefined,
+  enabled: boolean,
+): { quizId: string; attemptId: string } | null {
+  if (!enabled || !attemptId) return null;
+  return {
+    quizId: canonicalQuizId ?? routeQuizId,
+    attemptId,
+  };
 }
 
 /**
@@ -99,11 +105,21 @@ export function useQuizAttemptSession(quizId: string) {
     Boolean(quiz?.require_camera),
     submittedSummary == null,
   );
-  const guardedAttemptId = submittedSummary
-    ? null
-    : (activeAttemptId ?? inProgressAttempt?.id ?? conflictAttemptId);
-  const tabGuardQuizId = resolveQuizAttemptTabGuardId(quizId, quiz?.id);
-  const tabGuard = useQuizAttemptTabGuard(tabGuardQuizId, guardedAttemptId);
+  // Do not acquire a browser lock on the intro/resume screen. A stored
+  // in-progress attempt is not proof that another browser tab is currently
+  // taking it, and blocking here produced false "already open" dialogs after
+  // a tab/browser had been closed. The server claim is authoritative until
+  // this tab has a live taking attempt.
+  const tabGuardScope = getQuizAttemptTabGuardScope(
+    quizId,
+    quiz?.id,
+    activeAttemptId,
+    Boolean(taking && !submittedSummary),
+  );
+  const tabGuard = useQuizAttemptTabGuard(
+    tabGuardScope?.quizId ?? "",
+    tabGuardScope?.attemptId,
+  );
   const claimSession = useClaimQuizAttemptSession(resumableAttemptId);
   const takeoverSession = useTakeoverQuizAttemptSession(resumableAttemptId);
   const handleSessionConflict = useCallback(
