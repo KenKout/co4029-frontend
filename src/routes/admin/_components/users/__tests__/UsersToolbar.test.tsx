@@ -16,7 +16,14 @@ function Harness() {
   const [orgFilter, setOrgFilter] = useState<string | undefined>(undefined);
   const c = {
     t: (k: string) => k,
-    table: { search, setSearch, roleFilter, setRoleFilter, orgFilter, setOrgFilter },
+    table: {
+      search,
+      setSearch,
+      roleFilter,
+      setRoleFilter,
+      orgFilter,
+      setOrgFilter,
+    },
     roleOptions: [
       { code: "teacher", name: "Teacher" },
       { code: "student", name: "Student" },
@@ -49,6 +56,7 @@ describe("admin users toolbar", () => {
     const input = screen.getByPlaceholderText("admin.users.search_placeholder");
     await user.type(input, "nguyen");
     expect(input).toHaveValue("nguyen");
+    expect(document.activeElement).toBe(input);
   });
 
   it("reflects the picked role on its filter chip", async () => {

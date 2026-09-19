@@ -4,10 +4,17 @@ import { CheckCircle2, ChevronDown, ChevronRight } from "lucide-react";
 
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { QuizResultsDataTable } from "./QuizResultsDataTable";
-import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
+import {
+  DataTableToolbar,
+  type FilterDef,
+} from "@/components/ui/data-table-toolbar";
 import { Button } from "@/components/ui/button";
-import type { QuizOptionDistribution, QuizQuestionBreakdown } from "@/lib/api/types";
+import type {
+  QuizOptionDistribution,
+  QuizQuestionBreakdown,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 
 interface PerQuestionTableProps {
   questions: QuizQuestionBreakdown[];
@@ -20,27 +27,61 @@ function correctnessColor(rate: number | null): string {
   return "text-emerald-600";
 }
 
-function OptionBar({ option, answeredCount }: { option: QuizOptionDistribution; answeredCount: number }) {
+function OptionBar({
+  option,
+  answeredCount,
+}: {
+  option: QuizOptionDistribution;
+  answeredCount: number;
+}) {
   const { t } = useTranslation();
-  const pct = answeredCount > 0 ? Math.round((option.chosen_count / answeredCount) * 100) : 0;
+  const pct =
+    answeredCount > 0
+      ? Math.round((option.chosen_count / answeredCount) * 100)
+      : 0;
   return (
     <div className="flex items-center gap-3 py-1">
-      <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold", option.is_correct ? "bg-emerald-100 text-emerald-700" : "bg-m3-surface-container text-m3-on-surface-variant")}>
+      <span
+        className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold",
+          option.is_correct
+            ? "bg-emerald-100 text-emerald-700"
+            : "bg-red-100 text-red-700",
+        )}
+      >
         {option.option_key}
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className={cn("truncate text-sm", option.is_correct ? "font-medium text-m3-on-surface" : "text-m3-on-surface-variant")}>
+          <span
+            className={cn(
+              "truncate text-sm",
+              option.is_correct
+                ? "font-medium text-m3-on-surface"
+                : "text-red-700",
+            )}
+          >
             {option.option_text}
           </span>
-          {option.is_correct && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />}
+          {option.is_correct && (
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+          )}
         </div>
         <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-m3-surface-container">
-          <div className={cn("h-full rounded-full", option.is_correct ? "bg-emerald-500" : "bg-m3-primary/60")} style={{ width: `${pct}%` }} />
+          <div
+            className={cn(
+              "h-full rounded-full",
+              option.is_correct ? "bg-emerald-500" : "bg-red-400",
+            )}
+            style={{ width: `${pct}%` }}
+          />
         </div>
       </div>
       <span className="w-16 shrink-0 text-right text-xs tabular-nums text-m3-on-surface-variant">
-        {t("teacher_quiz_results.per_question.chosen_count", { count: option.chosen_count, pct })}
+        {t("teacher_quiz_results.per_question.chosen_count", {
+          count: option.chosen_count,
+          pct,
+        })}
       </span>
     </div>
   );
@@ -49,29 +90,46 @@ function OptionBar({ option, answeredCount }: { option: QuizOptionDistribution; 
 export function PerQuestionTable({ questions }: PerQuestionTableProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [difficulty, setDifficulty] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const difficultyFilter: FilterDef = {
     id: "difficulty",
     label: t("teacher_quiz_results.filters.difficulty"),
+    allLabel: t("teacher_quiz_results.filters.all_difficulties"),
     options: [
       { value: "all", label: t("teacher_quiz_results.filters.all") },
       { value: "hard", label: t("teacher_quiz_results.filters.hard") },
       { value: "medium", label: t("teacher_quiz_results.filters.medium") },
       { value: "easy", label: t("teacher_quiz_results.filters.easy") },
-      { value: "unanswered", label: t("teacher_quiz_results.filters.unanswered") },
+      {
+        value: "unanswered",
+        label: t("teacher_quiz_results.filters.unanswered"),
+      },
     ],
   };
-  const filtered = useMemo(() => questions.filter((question) => {
-    const matchesSearch = !search.trim() || question.prompt.toLowerCase().includes(search.trim().toLowerCase());
-    const rate = question.correctness_rate;
-    const matchesDifficulty = difficulty === "all"
-      || (difficulty === "unanswered" && rate === null)
-      || (difficulty === "hard" && rate !== null && rate < 0.5)
-      || (difficulty === "medium" && rate !== null && rate >= 0.5 && rate < 0.8)
-      || (difficulty === "easy" && rate !== null && rate >= 0.8);
-    return matchesSearch && matchesDifficulty;
-  }), [questions, search, difficulty]);
+  const filtered = useMemo(
+    () =>
+      questions.filter((question) => {
+        const matchesSearch =
+          !debouncedSearch.trim() ||
+          question.prompt
+            .toLowerCase()
+            .includes(debouncedSearch.trim().toLowerCase());
+        const rate = question.correctness_rate;
+        const matchesDifficulty =
+          difficulty === "all" ||
+          (difficulty === "unanswered" && rate === null) ||
+          (difficulty === "hard" && rate !== null && rate < 0.5) ||
+          (difficulty === "medium" &&
+            rate !== null &&
+            rate >= 0.5 &&
+            rate < 0.8) ||
+          (difficulty === "easy" && rate !== null && rate >= 0.8);
+        return matchesSearch && matchesDifficulty;
+      }),
+    [questions, debouncedSearch, difficulty],
+  );
 
   const columns: DataTableColumn<QuizQuestionBreakdown>[] = [
     {
@@ -87,21 +145,38 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 shrink-0"
-                  aria-label={expanded ? t("teacher_quiz_results.actions.collapse_options") : t("teacher_quiz_results.actions.expand_options")}
+                  aria-label={
+                    expanded
+                      ? t("teacher_quiz_results.actions.collapse_options")
+                      : t("teacher_quiz_results.actions.expand_options")
+                  }
                   onClick={(event) => {
                     event.stopPropagation();
                     setExpandedId(expanded ? null : question.question_id);
                   }}
                 >
-                  {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {expanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
                 </Button>
               )}
-              <span className="min-w-0 truncate text-sm text-m3-on-surface" title={question.prompt}>{question.prompt}</span>
+              <span
+                className="min-w-0 truncate text-sm text-m3-on-surface"
+                title={question.prompt}
+              >
+                {question.prompt}
+              </span>
             </div>
             {expanded && question.option_distribution.length > 0 && (
               <div className="mt-2 space-y-1 rounded-lg bg-m3-surface-container-lowest p-2 pl-9">
                 {question.option_distribution.map((option) => (
-                  <OptionBar key={option.option_id} option={option} answeredCount={question.answered_count} />
+                  <OptionBar
+                    key={option.option_id}
+                    option={option}
+                    answeredCount={question.answered_count}
+                  />
                 ))}
               </div>
             )}
@@ -123,7 +198,18 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
       align: "right",
       sortable: true,
       sortValue: (row) => row.correctness_rate ?? -1,
-      cell: (row) => <span className={cn("font-semibold tabular-nums", correctnessColor(row.correctness_rate))}>{row.correctness_rate === null ? "—" : `${Math.round(row.correctness_rate * 100)}%`}</span>,
+      cell: (row) => (
+        <span
+          className={cn(
+            "font-semibold tabular-nums",
+            correctnessColor(row.correctness_rate),
+          )}
+        >
+          {row.correctness_rate === null
+            ? "—"
+            : `${Math.round(row.correctness_rate * 100)}%`}
+        </span>
+      ),
     },
   ];
 

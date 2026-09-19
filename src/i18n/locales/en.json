@@ -4698,8 +4698,13 @@
     },
     "filters": {
       "all": "All",
+      "all_statuses": "All statuses",
+      "all_difficulties": "All difficulties",
+      "all_results": "All results",
+      "all_qualities": "All quality levels",
       "status": "Status",
       "score": "Score",
+      "score_shown": "Score shown",
       "ungraded": "Not graded",
       "difficulty": "Difficulty",
       "hard": "Hard",
@@ -4841,6 +4846,7 @@
     },
     "audit": {
       "event_filter": "Event type",
+      "all_events": "All event types",
       "empty": "No audit events yet.",
       "col_event": "Event",
       "col_when": "When",

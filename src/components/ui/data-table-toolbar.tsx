@@ -171,7 +171,9 @@ export function DataTableToolbar({
           value={search ?? ""}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={searchPlaceholder}
-          onClear={search ? () => onSearchChange("") : undefined}
+          // Always keep SearchInput's wrapper mounted. Toggling this prop on
+          // the first character replaced the input node and lost focus.
+          onClear={() => onSearchChange("")}
           wrapperClassName="min-w-[180px] max-w-xs flex-1"
         />
       )}
@@ -541,7 +543,6 @@ function FilterDialog({
   );
 }
 
-
 // ── Mobile time-range chips ─────────────────────────────────────────────────
 //
 // The desktop picker (presets sidebar + two month columns) does not fit a
@@ -570,9 +571,7 @@ export function MobileTimeRangeChips({
 }) {
   const { t } = useTranslation();
   /** The calendar is OPT-IN: hidden until "From – To" is pressed (#3). */
-  const [pickingCustom, setPickingCustom] = React.useState(
-    value === "custom",
-  );
+  const [pickingCustom, setPickingCustom] = React.useState(value === "custom");
   const [draft, setDraft] = React.useState<DateRangeDraft>({
     from: customRange?.from ?? null,
     to: customRange?.to ?? null,
@@ -585,7 +584,10 @@ export function MobileTimeRangeChips({
 
   const chips: { value: string; label: string }[] = [
     ...options,
-    { value: MOBILE_FROM_TO, label: activeLabel ?? t("notifications.time.from_to") },
+    {
+      value: MOBILE_FROM_TO,
+      label: activeLabel ?? t("notifications.time.from_to"),
+    },
   ];
 
   const pickChip = (next: string) => {

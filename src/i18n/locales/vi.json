@@ -4520,8 +4520,13 @@
     },
     "filters": {
       "all": "Tất cả",
+      "all_statuses": "Tất cả trạng thái",
+      "all_difficulties": "Tất cả độ khó",
+      "all_results": "Tất cả kết quả",
+      "all_qualities": "Tất cả mức chất lượng",
       "status": "Trạng thái",
       "score": "Điểm",
+      "score_shown": "Loại điểm hiển thị",
       "ungraded": "Chưa chấm",
       "difficulty": "Độ khó",
       "hard": "Khó",
@@ -4663,6 +4668,7 @@
     },
     "audit": {
       "event_filter": "Loại sự kiện",
+      "all_events": "Tất cả loại sự kiện",
       "empty": "Chưa có sự kiện nào.",
       "col_event": "Sự kiện",
       "col_when": "Thời điểm",
