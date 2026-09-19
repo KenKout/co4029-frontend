@@ -113,21 +113,26 @@ export function CloneCourseButton({
               const Icon = opt.icon;
               const selected = depth === opt.value;
               return (
-                <button
+                <Button
                   key={opt.value}
                   type="button"
+                  variant="ghost"
                   role="radio"
                   aria-checked={selected}
                   disabled={cloneCourse.isPending}
                   onClick={() => setDepth(opt.value)}
-                  className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
+                  // A radio CARD, not a control-sized button: the size token's
+                  // fixed height, centring and nowrap are all overridden here.
+                  className={`h-auto w-full items-start justify-start gap-3 whitespace-normal border p-3 text-left ${
                     selected
-                      ? "border-m3-primary bg-m3-primary/5 ring-1 ring-m3-primary"
+                      ? "border-m3-primary bg-m3-primary/5 ring-1 ring-m3-primary hover:bg-m3-primary/5"
                       : "border-m3-outline-variant/50 hover:bg-m3-surface-container"
                   }`}
                 >
+                  {/* `size-5` rather than `h-5 w-5`: Button's base class shrinks
+                      any descendant svg that carries no `size-*` to 16px. */}
                   <Icon
-                    className={`mt-0.5 h-5 w-5 shrink-0 ${
+                    className={`mt-0.5 size-5 shrink-0 ${
                       selected ? "text-m3-primary" : "text-m3-on-surface-variant"
                     }`}
                   />
@@ -146,7 +151,7 @@ export function CloneCourseButton({
                       {opt.desc}
                     </span>
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>

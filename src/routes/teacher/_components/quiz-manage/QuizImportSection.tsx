@@ -54,6 +54,8 @@ export function QuizImportSection({
         <label className="inline-flex items-center gap-1.5 text-sm text-m3-primary cursor-pointer">
           <FileUp className="h-4 w-4" />
           {t("teacher_quiz_manage.import_export.upload")}
+          {/* Hidden file picker inside its label — no visible control for the kit to standardise. */}
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <input
             type="file"
             accept=".txt,.gift,.xml"

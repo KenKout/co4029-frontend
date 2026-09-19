@@ -119,6 +119,8 @@ export function RejectPathChangeDialog({
                         : "border-m3-outline-variant/40 hover:bg-m3-surface-container",
                     )}
                   >
+                    {/* The kit has no Radio primitive yet; Checkbox hardcodes type="checkbox". */}
+                    {/* eslint-disable-next-line no-restricted-syntax */}
                     <input
                       type="radio"
                       name="path-change-reject-reason"

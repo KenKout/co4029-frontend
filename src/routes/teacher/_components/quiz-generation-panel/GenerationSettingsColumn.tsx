@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 import { QUESTION_TYPE_LABELS } from "./constants";
@@ -79,12 +80,11 @@ function QuestionTypesPicker({
                   : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
               )}
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={checked}
-                onChange={(e) =>
+                onCheckedChange={(isChecked) =>
                   setForm((current) => {
-                    const next = e.target.checked
+                    const next = isChecked
                       ? [...current.question_types, type]
                       : current.question_types.filter(
                           (entry) => entry !== type,

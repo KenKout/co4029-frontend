@@ -1,5 +1,6 @@
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import type { SettingsTableController } from "./use-settings-table";
+import { Input } from "@/components/ui/input";
 
 /**
  * Numeric editor. Commits into the draft on blur or Enter — the same gestures
@@ -28,13 +29,14 @@ export function SettingsTableNumberInput({
   };
 
   return (
-    <input
+    <Input
       type="number"
+      size="sm"
       value={String(draft.displayValue(s))}
       step={s.type === "float" ? "0.01" : "1"}
       min={s.minimum ?? undefined}
       max={s.maximum ?? undefined}
-      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm tabular-nums focus:border-m3-primary focus:outline-none focus:ring-1 focus:ring-m3-primary/40"
+      className="w-24"
       onChange={(e) => commit(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === "Enter") commit((e.target as HTMLInputElement).value);

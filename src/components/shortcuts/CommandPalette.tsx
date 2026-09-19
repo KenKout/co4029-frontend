@@ -4,6 +4,7 @@ import { Search, Command, SlidersHorizontal, LayoutGrid, ChevronRight } from "lu
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   type ShortcutCategory,
   type ShortcutDef,
@@ -85,7 +86,8 @@ export function CommandPalette({
 
           <div className="flex items-center gap-2 border-b border-m3-outline-variant/30 px-4">
             <Search className="h-4 w-4 shrink-0 text-m3-on-surface-variant" />
-            <input
+            <Input
+              variant="bare"
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -93,7 +95,7 @@ export function CommandPalette({
                 if (e.key === "Escape") onOpenChange(false);
               }}
               placeholder={t("shortcuts.palette_placeholder")}
-              className="h-12 w-full bg-transparent text-sm text-m3-on-surface outline-none placeholder:text-m3-on-surface-variant"
+              className="h-12"
             />
             <Kbd combo="Esc" />
           </div>

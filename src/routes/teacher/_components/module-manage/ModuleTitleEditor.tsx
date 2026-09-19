@@ -1,6 +1,7 @@
 import { Check, Pencil } from "lucide-react";
 import type { CourseContentModule } from "@/lib/api/types/common";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { UpdateModuleMutation } from "./types";
 import type { ModuleTitleEditController } from "./use-module-title-edit";
 
@@ -29,7 +30,8 @@ export function ModuleTitleEditor({
   } = titleEdit;
 
   return editingTitle ? (
-    <input
+    <Input
+      variant="bare"
       ref={titleInputRef}
       value={titleDraft}
       onChange={(e) => setTitleDraft(e.target.value)}
@@ -41,7 +43,7 @@ export function ModuleTitleEditor({
           setTitleDraft(module.title);
         }
       }}
-      className="w-full font-headline font-bold text-2xl text-m3-primary bg-transparent border-b-2 border-m3-primary outline-none py-0.5"
+      className="border-b-2 border-m3-primary py-0.5 font-headline text-2xl font-bold text-m3-primary"
     />
   ) : (
     <div className="flex items-center gap-2 group">

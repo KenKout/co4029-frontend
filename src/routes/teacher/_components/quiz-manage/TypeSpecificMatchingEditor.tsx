@@ -3,6 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 
 import type { TypeSpecificEditorProps } from "./type-specific-value";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 /**
  * ``matching`` → list of {left,right} pairs (add/remove rows). Extracted from
@@ -24,7 +25,7 @@ export function TypeSpecificMatchingEditor({
       </label>
       {pairs.map((pair, idx) => (
         <div key={idx} className="flex items-center gap-2">
-          <input
+          <Input
             type="text"
             value={pair.left}
             disabled={disabled}
@@ -35,10 +36,10 @@ export function TypeSpecificMatchingEditor({
               );
               onChange({ match_pairs: next });
             }}
-            className="flex-1 rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary"
+            className="flex-1 rounded-lg border-m3-outline-variant/30"
           />
           <span className="text-m3-on-surface-variant">→</span>
-          <input
+          <Input
             type="text"
             value={pair.right}
             disabled={disabled}
@@ -49,7 +50,7 @@ export function TypeSpecificMatchingEditor({
               );
               onChange({ match_pairs: next });
             }}
-            className="flex-1 rounded-lg border-2 border-emerald-300 bg-emerald-50/60 px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary"
+            className="flex-1 rounded-lg border-2 border-emerald-300 bg-emerald-50/60"
           />
           <Button variant="ghost"
             type="button"
@@ -91,7 +92,7 @@ export function TypeSpecificMatchingEditor({
             <span className="w-6 shrink-0 text-center text-m3-on-surface-variant">
               ✗
             </span>
-            <input
+            <Input
               type="text"
               value={distractor}
               disabled={disabled}
@@ -102,7 +103,7 @@ export function TypeSpecificMatchingEditor({
                 );
                 onChange({ match_distractors: next });
               }}
-              className="flex-1 rounded-lg border-2 border-amber-300 bg-amber-50/50 px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary"
+              className="flex-1 rounded-lg border-2 border-amber-300 bg-amber-50/50"
             />
             <Button variant="ghost"
               type="button"

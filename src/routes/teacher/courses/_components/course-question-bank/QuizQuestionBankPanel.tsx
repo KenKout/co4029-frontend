@@ -243,6 +243,8 @@ function NewBankQuestionForm({ courseId }: { courseId: string }) {
                   key={index}
                   className="flex items-center gap-2 rounded-lg border border-m3-outline-variant/20 p-2"
                 >
+                  {/* The kit has no Radio primitive yet; Checkbox hardcodes type="checkbox". */}
+                  {/* eslint-disable-next-line no-restricted-syntax */}
                   <input
                     type="radio"
                     name="bank-correct-option"

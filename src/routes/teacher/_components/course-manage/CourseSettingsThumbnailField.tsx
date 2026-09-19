@@ -76,6 +76,8 @@ export function CourseSettingsThumbnailField({
             {t("teacher_course_settings.thumbnail.hint")}
           </p>
         </div>
+        {/* Hidden file picker opened by the button above — no visible control for the kit to standardise. */}
+        {/* eslint-disable-next-line no-restricted-syntax */}
         <input
           ref={inputRef}
           type="file"

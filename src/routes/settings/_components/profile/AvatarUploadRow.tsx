@@ -72,6 +72,8 @@ export default function AvatarUploadRow({
           {t("settings_profile.avatar.hint")}
         </p>
       </div>
+      {/* Hidden file picker opened by the button above — no visible control for the kit to standardise. */}
+      {/* eslint-disable-next-line no-restricted-syntax */}
       <input
         ref={fileInputRef}
         type="file"

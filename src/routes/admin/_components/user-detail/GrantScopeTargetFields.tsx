@@ -1,4 +1,5 @@
 import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 import type { RoleAssignmentsController } from "./types";
 
@@ -72,11 +73,12 @@ export function GrantScopeTargetFields({
       {scopeKind === "course" ? (
         <label className="text-xs text-text-muted">
           {t("admin.users.roles.course_id")}
-          <input
+          <Input
             type="text"
+            size="sm"
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-border bg-surface-elev px-2 py-1.5 text-sm font-mono"
+            className="mt-1 font-mono"
             required
           />
         </label>

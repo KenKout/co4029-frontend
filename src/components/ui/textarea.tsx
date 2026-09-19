@@ -43,6 +43,9 @@ function useAutoGrow(
  * * `low` — `bg-m3-surface-container-low` with a /30 border (dialog fields).
  * * `lowest` — `bg-m3-surface-container-lowest` with a faint /20 border
  *   (dense card grids like the quiz/question editors).
+ * * `bare` — no border, no radius and no hover/focus chrome, for a full-bleed
+ *   editor pane whose surrounding card already provides all of it. The call
+ *   site supplies the background and padding.
  *
  * Anything the variants don't cover (dashed model-answer boxes, `bg-white`
  * overrides, custom padding) is passed via `className` — tailwind-merge
@@ -55,12 +58,13 @@ function useAutoGrow(
  *
  * No `size` token: a textarea's height comes from `rows`.
  */
-type TextareaVariant = "default" | "low" | "lowest";
+type TextareaVariant = "default" | "low" | "lowest" | "bare";
 
 const TEXTAREA_VARIANT: Record<TextareaVariant, string> = {
   default: "border-m3-outline-variant/60 bg-m3-surface focus-visible:bg-m3-surface",
   low: "border-m3-outline-variant/30 bg-m3-surface-container-low",
   lowest: "border-m3-outline-variant/20 bg-m3-surface-container-lowest",
+  bare: "rounded-none border-0",
 };
 
 export interface TextareaProps extends React.ComponentProps<"textarea"> {
@@ -117,8 +121,10 @@ function Textarea({
         TEXTAREA_VARIANT[variant],
         "transition-colors outline-none",
         "placeholder:text-m3-on-surface-variant/50",
-        "hover:border-m3-primary/70 hover:bg-m3-primary/[0.04] hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]",
-        "focus-visible:border-m3-primary/60 focus-visible:ring-2 focus-visible:ring-m3-secondary/30",
+        variant !== "bare" &&
+          "hover:border-m3-primary/70 hover:bg-m3-primary/[0.04] hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]",
+        variant !== "bare" &&
+          "focus-visible:border-m3-primary/60 focus-visible:ring-2 focus-visible:ring-m3-secondary/30",
         "aria-invalid:border-danger aria-invalid:ring-danger/20",
         "disabled:cursor-not-allowed disabled:bg-m3-surface-container disabled:opacity-60",
         resize === "y" ? "resize-y" : "resize-none",

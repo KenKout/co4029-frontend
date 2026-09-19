@@ -1,6 +1,7 @@
 import type { LessonAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * Source-lesson picker: which lessons in the quiz's parent module the
@@ -51,11 +52,9 @@ export function SourceLessonsPicker({
                     : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
                 )}
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={checked}
-                  onChange={() => onToggleLesson(lesson.id)}
-                  className="h-4 w-4"
+                  onCheckedChange={() => onToggleLesson(lesson.id)}
                 />
                 <span className="flex-1 text-sm font-semibold text-m3-on-surface truncate">
                   {lesson.title}

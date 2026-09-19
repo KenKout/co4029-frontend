@@ -7,6 +7,7 @@ import { DiscussionThreadDialog } from "@/components/discussion/DiscussionThread
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 import { isEnterSubmit } from "@/components/discussion/enter-submit";
 import {
@@ -59,7 +60,7 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
     >
       {/* Inline composer: a borderless input that reads as a text line in the
           header row, not a nested form card. Enter posts. */}
-      <input
+      <Input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {
@@ -71,7 +72,7 @@ function NewTopicComposer({ lessonId }: { lessonId: string }) {
         maxLength={255}
         placeholder={t("discussion.topic_title_placeholder")}
         aria-label={t("discussion.topic_title_placeholder")}
-        className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="rounded-lg bg-white"
       />
       {title.trim() ? (
         /* No autoFocus: it mounted on the FIRST keystroke of the title and

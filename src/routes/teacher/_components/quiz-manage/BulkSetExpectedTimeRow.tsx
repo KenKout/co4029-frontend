@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * Selection row of the bulk action bar: one line, never wraps. Extracted from
@@ -28,15 +29,12 @@ export function BulkSetExpectedTimeRow({
   return (
     <div className="flex items-center gap-3 px-4 py-2">
       <label className="flex items-center gap-2.5 cursor-pointer select-none min-w-0">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={hasSelection && allSelected}
           /* Indeterminate when a partial subset is selected — reads as
              "some selected" instead of an empty box. */
-          ref={(el) => {
-            if (el) el.indeterminate = hasSelection && !allSelected;
-          }}
-          onChange={() => (allSelected ? onClear() : onSelectAll())}
+          indeterminate={hasSelection && !allSelected}
+          onCheckedChange={() => (allSelected ? onClear() : onSelectAll())}
           className="h-4 w-4 shrink-0 accent-m3-primary cursor-pointer"
           aria-label={t("teacher_quiz_manage.bulk_time.select_all")}
         />

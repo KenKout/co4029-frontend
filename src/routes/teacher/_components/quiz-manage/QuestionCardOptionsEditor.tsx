@@ -4,6 +4,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { QuizQuestionAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import type { QuestionDraft } from "./types";
+import { Input } from "@/components/ui/input";
 
 /**
  * The editable option list for multiple-choice / true-false questions.
@@ -42,6 +43,8 @@ export function QuestionCardOptionsEditor({
               answers are allowed the teacher needs checkboxes that toggle
               independently; a radio group would silently clear the others
               (and true_false is always single-answer). */}
+          {/* The type flips between checkbox and radio with allowMultiCorrect, so neither Checkbox (type is hardcoded) nor a Radio primitive fits. */}
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <input
             type={allowMultiCorrect ? "checkbox" : "radio"}
             name={allowMultiCorrect ? undefined : `correct-${question.id}`}
@@ -66,7 +69,8 @@ export function QuestionCardOptionsEditor({
           <span className="font-bold text-m3-on-surface-variant text-sm">
             {option.option_key}.
           </span>
-          <input
+          <Input
+            variant="bare"
             type="text"
             value={option.option_text}
             onChange={(e) =>
@@ -78,7 +82,7 @@ export function QuestionCardOptionsEditor({
               }))
             }
             disabled={question.question_type === "true_false"}
-            className="flex-1 bg-transparent text-sm text-m3-on-surface focus:outline-none disabled:text-m3-on-surface-variant disabled:cursor-not-allowed"
+            className="flex-1 disabled:text-m3-on-surface-variant"
           />
         </div>
       ))}

@@ -56,6 +56,8 @@ export function VideoContent({
           onPickFile={() => videoInputRef.current?.click()}
         />
 
+        {/* Hidden file picker opened by the button above — no visible control for the kit to standardise. */}
+        {/* eslint-disable-next-line no-restricted-syntax */}
         <input
           ref={videoInputRef}
           type="file"

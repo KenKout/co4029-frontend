@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   type DiscussionScope,
   useCreateComment,
@@ -269,10 +270,10 @@ function TopicEditForm({
       onSubmit={handleSubmit}
       className="shrink-0 space-y-2 border-b border-m3-outline-variant/40 px-5 py-4"
     >
-      <input
+      <Input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full rounded-xl bg-m3-surface-container px-3 py-2 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-m3-primary/50"
+        className="border-0 bg-m3-surface-container font-semibold"
         placeholder={t("discussion.topic_title_placeholder")}
       />
       <Textarea
@@ -761,7 +762,7 @@ function Composer({
         </div>
       )}
       <div className="flex items-end gap-2">
-        <textarea
+        <Textarea
           ref={inputRef}
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -777,9 +778,10 @@ function Composer({
               ? t("discussion.reply_placeholder", { name: replyName })
               : t("discussion.comment_placeholder")
           }
+          resize="y"
           className={cn(
-            "min-h-10 max-h-32 flex-1 resize-y rounded-2xl bg-m3-surface-container",
-            "px-4 py-2.5 text-sm text-m3-on-surface outline-none",
+            "min-h-10 max-h-32 flex-1 rounded-2xl bg-m3-surface-container",
+            "px-4 py-2.5 text-sm text-m3-on-surface",
             "focus-visible:ring-2 focus-visible:ring-m3-primary/50",
           )}
         />

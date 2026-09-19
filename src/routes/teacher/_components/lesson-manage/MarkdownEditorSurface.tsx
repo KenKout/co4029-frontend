@@ -3,6 +3,7 @@ import { AlignLeft, Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   MARKDOWN_DOCUMENT_CLASS,
   RichContent,
@@ -75,11 +76,13 @@ export function MarkdownEditorSurface({
               {t("teacher_lesson_manage.editor.hint")}
             </span>
           </div>
-          <textarea
+          <Textarea
             ref={editorRef}
+            variant="bare"
+            resize="y"
             className={cn(
               minHeight,
-              "w-full resize-y bg-m3-surface-container-lowest p-4 font-body text-base leading-relaxed text-m3-on-surface outline-none placeholder:text-m3-on-surface-variant/40 sm:p-6",
+              "bg-m3-surface-container-lowest p-4 font-body text-base placeholder:text-m3-on-surface-variant/40 sm:p-6",
             )}
             placeholder={placeholder}
             value={value}

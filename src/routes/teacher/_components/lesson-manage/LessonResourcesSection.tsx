@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Paperclip, Loader2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileDropzone } from "@/components/ui/file-dropzone";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ResourceCard } from "./ResourceCard";
 import { LessonEditorSection } from "./LessonEditorSection";
 import type {
@@ -90,11 +91,10 @@ export function LessonResourcesSection({
           to the AI Hub (quizzes, search, knowledge graph). Smart-defaulted
           per file type on drop, but the teacher can flip it here first. */}
       <label className="flex items-start gap-2.5 px-1 cursor-pointer select-none">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={editor.aiEnabled}
-          onChange={(e) => editor.setAiEnabled(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-m3-outline-variant accent-m3-secondary cursor-pointer"
+          onCheckedChange={editor.setAiEnabled}
+          className="mt-0.5 accent-m3-secondary"
         />
         <span className="text-sm text-m3-on-surface-variant">
           <span className="font-semibold text-m3-on-surface">

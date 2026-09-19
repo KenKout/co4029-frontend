@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 /**
  * The fill_blank distractor editor: the non-correct word-bank entries the
@@ -30,8 +31,9 @@ export function QuestionCardFillBlankDistractors({
           <span className="w-6 shrink-0 text-center text-m3-on-surface-variant">
             ✗
           </span>
-          <input
+          <Input
             type="text"
+            size="sm"
             value={distractor}
             disabled={disabled}
             placeholder={t(

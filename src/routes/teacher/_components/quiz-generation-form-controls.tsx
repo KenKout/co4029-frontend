@@ -36,6 +36,7 @@ import type { LessonPublic } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * Bloom's taxonomy levels accepted by the backend
@@ -129,7 +130,8 @@ export function TopicTagInput({
             </Button>
           </span>
         ))}
-        <input
+        <Input
+          variant="bare"
           value={draft}
           maxLength={200}
           disabled={atLimit}
@@ -149,7 +151,7 @@ export function TopicTagInput({
           }}
           onBlur={commit}
           placeholder={atLimit ? "Limit reached" : "Type and press Enter…"}
-          className="flex-1 min-w-[140px] bg-transparent text-sm text-m3-on-surface placeholder:text-m3-on-surface-variant/50 focus:outline-none disabled:cursor-not-allowed"
+          className="min-w-[140px] flex-1"
         />
       </div>
       <p className="text-[10px] text-m3-on-surface-variant">
@@ -289,11 +291,10 @@ export function CoverageOptionsForm({
         </p>
       </div>
       <label className="flex items-start gap-2 cursor-pointer">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={skipSummaries}
-          onChange={(e) => onChange({ skip_summaries: e.target.checked })}
-          className="mt-0.5 h-4 w-4"
+          onCheckedChange={(checked) => onChange({ skip_summaries: checked })}
+          className="mt-0.5"
         />
         <span className="text-xs text-m3-on-surface">
           Skip summary / review sections
@@ -433,10 +434,9 @@ function LessonOutlineSection({
                     : "hover:bg-m3-surface-container-low",
                 )}
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={checked}
-                  onChange={() => toggleSection(section.id)}
+                  onCheckedChange={() => toggleSection(section.id)}
                   className="mt-0.5 h-3.5 w-3.5"
                 />
                 <span className="flex-1 min-w-0">
@@ -560,12 +560,7 @@ export function BloomDistributionInput({
   return (
     <div className="space-y-2">
       <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={(e) => onToggle(e.target.checked)}
-          className="h-4 w-4"
-        />
+        <Checkbox checked={enabled} onCheckedChange={onToggle} />
         <span className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
           Bloom distribution
         </span>

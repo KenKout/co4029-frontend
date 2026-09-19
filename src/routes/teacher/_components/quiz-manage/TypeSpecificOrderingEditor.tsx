@@ -3,6 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 
 import type { TypeSpecificEditorProps } from "./type-specific-value";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 /**
  * ``ordering`` → ordered list of items (add/remove/reorder); the stored order IS
@@ -34,7 +35,7 @@ export function TypeSpecificOrderingEditor({
           <span className="w-6 h-6 shrink-0 flex items-center justify-center rounded bg-m3-primary/10 text-m3-primary font-bold text-xs tabular-nums">
             {idx + 1}
           </span>
-          <input
+          <Input
             type="text"
             value={item}
             disabled={disabled}
@@ -44,7 +45,7 @@ export function TypeSpecificOrderingEditor({
               );
               onChange({ ordering_sequence: next });
             }}
-            className="flex-1 rounded-lg border border-m3-outline-variant/30 bg-m3-surface px-3 py-2 text-sm text-m3-on-surface focus:outline-none focus:border-m3-primary"
+            className="flex-1 rounded-lg border-m3-outline-variant/30"
           />
           <div className="flex flex-col gap-0.5">
             <Button variant="ghost"

@@ -24,6 +24,25 @@ const INPUT_SIZE: Record<"default" | "sm", string> = {
   sm: "h-7 rounded-md px-2.5 text-xs",
 };
 
+/**
+ * `bare` is the inline-editor escape hatch: a click-to-edit title, a tag
+ * composer inside a chip row, an option row inside a question card. Those are
+ * not form fields and want none of the box -- no height, radius, border or
+ * hover/focus chrome -- but should still inherit the placeholder, disabled,
+ * aria-invalid and number-spinner behaviour. Without it each one hand-rolled
+ * a native <input> and drifted.
+ */
+type InputVariant = "default" | "bare";
+
+const INPUT_VARIANT: Record<InputVariant, string> = {
+  // No height here: that is INPUT_SIZE's job, and this string is concatenated
+  // after it, so an `h-*` token would silently beat `size="sm"`.
+  default:
+    "border border-m3-outline-variant/60 bg-m3-surface " +
+    "disabled:bg-m3-surface-container",
+  bare: "border-0 bg-transparent p-0 text-sm",
+};
+
 export interface InputProps
   extends Omit<React.ComponentProps<"input">, "size"> {
   /**
@@ -31,6 +50,8 @@ export interface InputProps
    * in this app uses — width comes from Tailwind) hence the `Omit` above.
    */
   size?: "default" | "sm";
+  /** Field box, or `bare` for an inline editor. See `INPUT_VARIANT`. */
+  variant?: InputVariant;
   /**
    * Trailing static text rendered inside the field — a unit ("min", "attempts")
    * or a short suffix. Purely decorative (`aria-hidden`): the accessible name
@@ -47,6 +68,7 @@ function Input({
   className,
   type,
   size = "default",
+  variant = "default",
   endAdornment,
   wrapperClassName,
   ...props
@@ -56,15 +78,20 @@ function Input({
       type={type}
       data-slot="input"
       className={cn(
-        "w-full min-w-0 border border-m3-outline-variant/60 bg-m3-surface text-m3-on-surface",
-        INPUT_SIZE[size],
+        "w-full min-w-0 text-m3-on-surface",
+        variant === "default" && INPUT_SIZE[size],
+        INPUT_VARIANT[variant],
         "transition-colors outline-none",
         "placeholder:text-m3-on-surface-variant/50",
-        // Same hover/focus language as the Select trigger.
-        "hover:border-m3-primary/70 hover:bg-m3-primary/[0.04] hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]",
-        "focus-visible:border-m3-primary/60 focus-visible:bg-m3-surface focus-visible:ring-2 focus-visible:ring-m3-secondary/30",
+        // Same hover/focus language as the Select trigger. `bare` skips them
+        // here rather than overriding in INPUT_VARIANT, which is concatenated
+        // earlier and so loses the tailwind-merge race.
+        variant !== "bare" &&
+          "hover:border-m3-primary/70 hover:bg-m3-primary/[0.04] hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]",
+        variant !== "bare" &&
+          "focus-visible:border-m3-primary/60 focus-visible:bg-m3-surface focus-visible:ring-2 focus-visible:ring-m3-secondary/30",
         "aria-invalid:border-danger aria-invalid:ring-danger/20",
-        "disabled:cursor-not-allowed disabled:bg-m3-surface-container disabled:opacity-60",
+        "disabled:cursor-not-allowed disabled:opacity-60",
         // Number fields: the native spin buttons are visual noise at this
         // density and shift the text off-centre. Align digits instead.
         "[&[type=number]]:[appearance:textfield] [&[type=number]]:tabular-nums",

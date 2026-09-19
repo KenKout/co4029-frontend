@@ -5,6 +5,7 @@ import { Select } from "@/components/ui/select";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import type {
   CareerPathStageAuthoring,
   CareerPathStageEnforcement,
@@ -189,14 +190,14 @@ function StageIdentityFields({
         <span className="text-xs font-semibold text-m3-on-surface-variant">
           {t(`${prefix}.fields.title`)}
         </span>
-        <input
+        <Input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder={t(`${prefix}.fields.title_placeholder`, {
             position: stage.position,
           })}
           maxLength={200}
-          className="h-10 rounded-xl px-3 text-sm bg-card ghost-border"
+          className="bg-card ghost-border"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -207,13 +208,13 @@ function StageIdentityFields({
             label={t(`${prefix}.fields.min_optional_hint`)}
           />
         </span>
-        <input
+        <Input
           type="number"
           min={0}
           max={optionalCap || undefined}
           value={minOptional}
           onChange={(e) => onMinOptionalChange(e.target.value)}
-          className="h-10 rounded-xl px-3 text-sm bg-card ghost-border"
+          className="bg-card ghost-border"
         />
       </label>
     </div>

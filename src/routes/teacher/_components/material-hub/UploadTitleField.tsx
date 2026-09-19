@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import type { UploadFieldProps } from "./types";
+import { Input } from "@/components/ui/input";
 
 /**
  * Title input of the upload form. Extracted verbatim from the former 1422-line
@@ -17,10 +18,10 @@ export function UploadTitleField({
       <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
         {t("teacher_lesson_materials.form.title_label")}
       </label>
-      <input
+      <Input
         required
         disabled={uploading}
-        className="w-full rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest px-3 py-2.5 text-sm text-m3-on-surface focus:outline-none focus:ring-2 focus:ring-m3-secondary/30 disabled:opacity-60"
+        className="border-m3-outline-variant/20 bg-m3-surface-container-lowest"
         value={form.title}
         onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
       />

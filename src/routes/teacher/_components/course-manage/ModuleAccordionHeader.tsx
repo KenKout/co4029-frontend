@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, ExternalLink, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { CourseContentModule } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 import { ModuleHeaderActions } from "./ModuleHeaderActions";
@@ -89,7 +90,8 @@ export function ModuleAccordionHeader({
 
       {/* Title — editable inline */}
       {editingTitle ? (
-        <input
+        <Input
+          variant="bare"
           ref={titleInputRef}
           value={titleDraft}
           onChange={(e) => setTitleDraft(e.target.value)}
@@ -103,7 +105,7 @@ export function ModuleAccordionHeader({
             e.stopPropagation();
           }}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 font-headline font-semibold text-sm text-m3-on-surface bg-transparent border-b border-m3-secondary outline-none py-0.5"
+          className="flex-1 border-b border-m3-secondary py-0.5 font-headline text-sm font-semibold"
         />
       ) : (
         <span className="flex-1 font-headline font-semibold text-sm text-m3-on-surface transition-colors group-hover:text-m3-primary">

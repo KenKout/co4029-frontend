@@ -85,6 +85,8 @@ export function CareerPathThumbnailField({
             </p>
           </div>
         ) : null}
+        {/* Hidden file picker opened by the button above — no visible control for the kit to standardise. */}
+        {/* eslint-disable-next-line no-restricted-syntax */}
         <input
           ref={inputRef}
           type="file"

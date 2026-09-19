@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown, GripVertical } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { QuestionCardActions } from "./QuestionCardActions";
 import { QuestionCardBody } from "./QuestionCardBody";
@@ -105,13 +106,12 @@ export function QuestionCard(props: QuestionCardProps) {
       {/* Collapsed header row */}
       <div className={cn("flex items-start gap-2", compact ? "p-2" : "p-3")}>
         {/* Selection checkbox */}
-        <input
-          type="checkbox"
+        <Checkbox
           checked={selected}
-          onChange={onToggleSelect}
+          onCheckedChange={onToggleSelect}
           disabled={isPublished}
           aria-label={t("teacher_interview_config.qbank.bulk.select_one")}
-          className="mt-1 h-4 w-4 shrink-0 rounded border-m3-outline-variant/60 text-m3-primary focus:ring-2 focus:ring-m3-primary/30 cursor-pointer"
+          className="mt-1"
         />
         {/* Drag handle + number + reorder */}
         <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">

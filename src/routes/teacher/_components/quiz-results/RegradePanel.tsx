@@ -4,8 +4,62 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  DataTable,
+  type DataTableColumn,
+} from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
-import { useRegradeCommit, useRegradeDryRun, type RegradeRunRead } from "@/lib/api/hooks/quizzes";
+import {
+  useRegradeCommit,
+  useRegradeDryRun,
+  type RegradeItemRead,
+  type RegradeRunRead,
+} from "@/lib/api/hooks/quizzes";
+
+/** One preview row plus the positional key the table needs. */
+type RegradeRow = RegradeItemRead & { rowId: string };
+
+function regradeColumns(
+  t: (key: string) => string,
+): DataTableColumn<RegradeRow>[] {
+  return [
+    {
+      id: "change",
+      header: t("teacher_quiz_results.regrade.col_change"),
+      cellClassName: "px-3 py-2",
+      headerClassName: "px-3 py-2",
+      cell: (item) => (
+        <span
+          className={cn(
+            "inline-block rounded px-1.5 py-0.5 text-xs font-semibold",
+            item.new_is_correct
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700",
+          )}
+        >
+          {item.old_is_correct ? "✓" : "✗"} →{" "}
+          {item.new_is_correct ? "✓" : "✗"}
+        </span>
+      ),
+    },
+    {
+      id: "old",
+      header: t("teacher_quiz_results.regrade.col_old"),
+      align: "right",
+      cellClassName: "px-3 py-2 tabular-nums",
+      headerClassName: "px-3 py-2",
+      cell: (item) => Number(item.old_points).toFixed(2),
+    },
+    {
+      id: "new",
+      header: t("teacher_quiz_results.regrade.col_new"),
+      align: "right",
+      cellClassName: "px-3 py-2 tabular-nums",
+      headerClassName: "px-3 py-2",
+      cell: (item) => Number(item.new_points).toFixed(2),
+    },
+  ];
+}
 
 export function RegradePanel({ quizId, onClose }: { quizId: string; onClose: () => void }) {
   const { t } = useTranslation();
@@ -66,20 +120,16 @@ export function RegradePanel({ quizId, onClose }: { quizId: string; onClose: () 
             </div>
             {preview.items.length > 0 && (
               <div className="max-h-64 overflow-y-auto rounded-xl border border-m3-outline-variant/30">
-                <table className="w-full text-sm">
-                  <thead className="bg-m3-surface-container-low text-m3-on-surface-variant"><tr>
-                    <th className="px-3 py-2 text-left font-semibold">{t("teacher_quiz_results.regrade.col_change")}</th>
-                    <th className="px-3 py-2 text-right font-semibold">{t("teacher_quiz_results.regrade.col_old")}</th>
-                    <th className="px-3 py-2 text-right font-semibold">{t("teacher_quiz_results.regrade.col_new")}</th>
-                  </tr></thead>
-                  <tbody>{preview.items.map((item, index) => (
-                    <tr key={`${item.attempt_id}-${item.question_id}-${index}`} className="border-t border-m3-outline-variant/20">
-                      <td className="px-3 py-2"><span className={cn("inline-block rounded px-1.5 py-0.5 text-xs font-semibold", item.new_is_correct ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{item.old_is_correct ? "✓" : "✗"} → {item.new_is_correct ? "✓" : "✗"}</span></td>
-                      <td className="px-3 py-2 text-right tabular-nums">{Number(item.old_points).toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">{Number(item.new_points).toFixed(2)}</td>
-                    </tr>
-                  ))}</tbody>
-                </table>
+                <DataTable<RegradeRow>
+                  columns={regradeColumns(t)}
+                  data={preview.items.map((item, index) => ({
+                    ...item,
+                    rowId: `${item.attempt_id}-${item.question_id}-${index}`,
+                  }))}
+                  getRowId={(item) => item.rowId}
+                  bordered={false}
+                  containerClassName="space-y-0"
+                />
               </div>
             )}
           </div>

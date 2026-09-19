@@ -5,6 +5,7 @@ import { InfiniteList } from "@/components/ui/InfiniteList";
 import type { QuestionBankEntry } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import type { QuestionBankModalController } from "./use-question-bank-modal";
 
@@ -26,12 +27,11 @@ function BankRow({
       )}
       onClick={onToggle}
     >
-      <input
-        type="checkbox"
+      <Checkbox
         checked={selected}
-        onChange={onToggle}
+        onCheckedChange={onToggle}
         onClick={(e) => e.stopPropagation()}
-        className="mt-0.5 h-3.5 w-3.5 shrink-0"
+        className="mt-0.5 h-3.5 w-3.5"
       />
       <div className="flex-1 min-w-0 space-y-1">
         <p className="text-sm text-m3-on-surface line-clamp-2">

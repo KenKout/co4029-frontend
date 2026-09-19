@@ -1,4 +1,5 @@
 import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import type { AdminCoursesController } from "./use-admin-courses";
 
@@ -46,11 +47,9 @@ export function CoursesToolbar({ c }: { c: AdminCoursesController }) {
       })}
       trailing={
         <label className="inline-flex items-center gap-2 text-sm text-text-strong select-none shrink-0 cursor-pointer">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={includeDeleted}
-            onChange={(e) => setIncludeDeleted(e.target.checked)}
-            className="h-4 w-4 rounded border-border accent-m3-primary"
+            onCheckedChange={setIncludeDeleted}
           />
           {t("admin.courses_list.include_deleted")}
         </label>

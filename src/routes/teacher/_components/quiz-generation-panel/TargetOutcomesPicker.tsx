@@ -1,6 +1,7 @@
 import type { CourseLearningOutcomeAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import type { TranslateFn } from "./types";
 
@@ -28,12 +29,7 @@ function OutcomeRow({
           : "border-m3-outline-variant/20 bg-m3-surface hover:bg-m3-surface-container-low",
       )}
     >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onToggle}
-        className="h-4 w-4"
-      />
+      <Checkbox checked={checked} onCheckedChange={onToggle} />
       <span className="shrink-0 rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-bold text-violet-700">
         {t("quiz_generation.outcomes.badge", "L.O.{{n}}", {
           n: outcome.code ?? outcome.position,

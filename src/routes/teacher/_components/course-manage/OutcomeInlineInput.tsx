@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type { CourseOutcome, TranslateFn } from "./types";
 import type { CourseOutcomesController } from "./use-course-outcomes-editor";
+import { Input } from "@/components/ui/input";
 
 /**
  * The statement input of an outliner row. One component so the keyboard
@@ -39,7 +40,8 @@ export function OutcomeInlineInput({
   const isEditing = editingId === outcome.id;
 
   return (
-    <input
+    <Input
+      variant="bare"
       ref={ref}
       key={`${outcome.id}-${outcome.outcome_text}`}
       defaultValue={outcome.outcome_text}
@@ -49,7 +51,7 @@ export function OutcomeInlineInput({
         "Learning outcome…",
       )}
       onFocus={() => setEditingId(outcome.id)}
-      className="min-w-0 flex-1 rounded bg-transparent text-sm text-m3-on-surface outline-none placeholder:text-m3-on-surface-variant/60"
+      className="min-w-0 flex-1 rounded placeholder:text-m3-on-surface-variant/60"
       onKeyDown={(e) => {
         const value = e.currentTarget.value;
         if (e.key === "Enter") {

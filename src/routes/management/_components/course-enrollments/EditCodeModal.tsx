@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { InvitationCodeAuthoring } from "@/lib/api/types";
 import { useEditCodeForm } from "./use-edit-code-form";
 
@@ -48,12 +49,7 @@ export function EditCodeModal({
         </div>
 
         <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="h-4 w-4 rounded border-m3-outline-variant accent-m3-primary"
-          />
+          <Checkbox checked={isActive} onCheckedChange={setIsActive} />
           <span className="font-medium text-m3-on-surface">
             {t("management_course_enrollments.codes.active")}
           </span>

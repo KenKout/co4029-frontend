@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { InfiniteList } from "@/components/ui/InfiniteList";
 import { Input } from "@/components/ui/input";
 import {
@@ -90,18 +91,19 @@ export function CuratedBankImportBody({
             isLoading={bank.isLoading}
             className="divide-y divide-m3-outline-variant/20"
             renderItem={(item) => (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => toggle(item.id)}
                 className={cn(
-                  "flex w-full items-start gap-3 px-3 py-3 text-left hover:bg-m3-surface-container-low",
-                  selected.has(item.id) && "bg-m3-secondary-fixed/20",
+                  "h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-none px-3 py-3 text-left hover:bg-m3-surface-container-low",
+                  selected.has(item.id) &&
+                    "bg-m3-secondary-fixed/20 hover:bg-m3-secondary-fixed/20",
                 )}
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={selected.has(item.id)}
-                  onChange={() => toggle(item.id)}
+                  onCheckedChange={() => toggle(item.id)}
                   onClick={(event) => event.stopPropagation()}
                   className="mt-1"
                 />
@@ -131,7 +133,7 @@ export function CuratedBankImportBody({
                     ) : null}
                   </span>
                 </span>
-              </button>
+              </Button>
             )}
           />
         )}

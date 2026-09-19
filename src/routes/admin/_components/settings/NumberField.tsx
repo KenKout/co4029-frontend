@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import { cn } from "@/lib/utils";
 import { unitFor } from "./helpers";
+import { Input } from "@/components/ui/input";
 
 export function NumberField({
   setting,
@@ -21,13 +22,10 @@ export function NumberField({
   return (
     <div className="w-full">
       <div className="relative">
-        <input
+        <Input
           type="number"
-          className={cn(
-            "w-full rounded-md border border-slate-300 py-1.5 pl-2.5 text-sm tabular-nums",
-            "focus:border-m3-primary focus:outline-none focus:ring-1 focus:ring-m3-primary/40",
-            unit ? "pr-10" : "pr-2.5",
-          )}
+          size="sm"
+          className={cn("w-full", unit ? "pr-10" : undefined)}
           value={shown}
           step={setting.type === "float" ? "0.01" : "1"}
           min={setting.minimum ?? undefined}

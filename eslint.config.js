@@ -178,19 +178,38 @@ export default tseslint.config([
         },
       ],
 
-      // Native <button> bypasses the system Button (@/components/ui/button —
-      // base-ui focus ring, disabled styling, variants/sizes, consistent
-      // chrome). Screens and components must use <Button>. The ui/ layer
-      // itself (tabs, segmented controls, filter bars, table toggles) is the
-      // base Button builds on, so it legitimately keeps native <button> —
-      // exempted below.
+      // Native form and table elements bypass the design system — its focus
+      // ring, disabled styling, density tokens, variants and (for tables)
+      // the shared column sizing, sorting, selection and empty/loading
+      // states. Screens and components must use the ui/ equivalents. The
+      // ui/ layer itself is the base they are built on, so it legitimately
+      // renders the natives — exempted below, as are tests, which query by
+      // role.
+      //
+      // Only <button> was covered originally, which is how roughly forty-five
+      // screens drifted onto hand-rolled inputs, textareas and tables.
+      //
+      // Where the design system genuinely has no equivalent — a hidden
+      // type="file" picker, type="radio", type="range" — the call site
+      // disables this rule on the line with a reason. Those are the visible
+      // backlog for the kit, not silent exceptions.
       "no-restricted-syntax": [
         "error",
-        {
-          selector: "JSXOpeningElement[name.name='button']",
-          message:
-            "Use <Button> from @/components/ui/button instead of the native <button> element.",
-        },
+        ...[
+          ["button", "<Button> from @/components/ui/button"],
+          ["input", "<Input> / <Checkbox> / <SearchInput> from @/components/ui"],
+          ["textarea", "<Textarea> from @/components/ui/textarea"],
+          ["select", "<Select> from @/components/ui/select"],
+          ["table", "<DataTable> from @/components/ui/data-table"],
+          ["thead", "<DataTable> from @/components/ui/data-table"],
+          ["tbody", "<DataTable> from @/components/ui/data-table"],
+          ["tr", "<DataTable> from @/components/ui/data-table"],
+          ["th", "<DataTable> from @/components/ui/data-table"],
+          ["td", "<DataTable> from @/components/ui/data-table"],
+        ].map(([tag, use]) => ({
+          selector: `JSXOpeningElement[name.name='${tag}']`,
+          message: `Use ${use} instead of the native <${tag}> element.`,
+        })),
       ],
 
       // --- react-hooks opt-outs (taste / aggressive-on-legacy) -------------
@@ -233,14 +252,38 @@ export default tseslint.config([
     },
   },
 
-  // The design-system layer is the base <Button> itself builds on — base-ui
+  // The design-system layer is what the primitives are built FROM — base-ui
   // triggers, tab strips, segmented controls, filter bars and table row
-  // toggles render their own native <button> as the foundation. Banning it
-  // here would forbid the primitives from existing.
+  // toggles render their own native <button>, and input.tsx / textarea.tsx /
+  // table.tsx are literally wrappers around the elements banned above.
+  // Enforcing the rule here would forbid the primitives from existing.
   {
     files: ["src/components/ui/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-syntax": "off",
+    },
+  },
+
+  // The interview surfaces (the live session UI, its composer and stages, and
+  // the teacher-side interview config) still render native inputs and a
+  // hand-rolled rubric table. They are deliberately excluded from the sweep
+  // that moved the rest of the app onto the design system, so the rule warns
+  // here instead of erroring: the list stays visible without failing the
+  // build. Delete this block once those screens are converted.
+  {
+    files: [
+      "src/components/interview/**/*.{ts,tsx}",
+      "src/routes/courses/_components/course-interview/**/*.{ts,tsx}",
+      "src/routes/courses/course-interview.tsx",
+      "src/routes/teacher/_components/interview-config/**/*.{ts,tsx}",
+      "src/routes/teacher/_components/interview-gap-report/**/*.{ts,tsx}",
+    ],
+    // This block sits AFTER the tests block, so without these ignores it
+    // would switch the rule back on (as a warning) for interview tests that
+    // the tests block had deliberately exempted.
+    ignores: ["**/__tests__/**", "**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": "warn",
     },
   },
 

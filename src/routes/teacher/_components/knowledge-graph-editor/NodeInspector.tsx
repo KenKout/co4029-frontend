@@ -96,6 +96,8 @@ export function NodeInspector({
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
             {t("teacher_kg_editor.field_weight")} ({selectedNode.weight})
           </label>
+          {/* The kit has no Slider primitive yet. */}
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <input
             type="range"
             min={1}

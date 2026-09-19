@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { TranslateFn } from "./types";
 import type { CourseOutcomesController } from "./use-course-outcomes-editor";
 
@@ -21,13 +22,14 @@ export function OutcomeDraftRow({
       <span className="shrink-0 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 border border-transparent">
         {t("teacher_outcomes.draft_badge", "new")}
       </span>
-      <input
+      <Input
+        variant="bare"
         autoFocus
         placeholder={t(
           "teacher_outcomes.row_placeholder",
           "Learning outcome…",
         )}
-        className="min-w-0 flex-1 rounded bg-transparent text-sm text-m3-on-surface outline-none placeholder:text-m3-on-surface-variant/60"
+        className="min-w-0 flex-1 rounded placeholder:text-m3-on-surface-variant/60"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();

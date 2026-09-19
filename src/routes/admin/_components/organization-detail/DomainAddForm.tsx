@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InfoTooltip } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { DomainsTabController } from "./use-domains-tab";
 
 /**
@@ -40,11 +41,9 @@ export function DomainAddForm({
         />
       </label>
       <label className="flex items-center gap-2 text-sm py-2">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={autoProvision}
-          onChange={(e) => setAutoProvision(e.target.checked)}
-          className="rounded"
+          onCheckedChange={setAutoProvision}
         />
         {t("admin.organizations.fields.auto_provision")}
         <InfoTooltip

@@ -1,5 +1,7 @@
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 /**
  * Editable lesson header: the lesson-type eyebrow, the click-to-edit title
@@ -31,7 +33,8 @@ export function LessonHeaderSection({
 
       {/* Inline editable title */}
       {titleEditing ? (
-        <input
+        <Input
+          variant="bare"
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -39,7 +42,7 @@ export function LessonHeaderSection({
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === "Escape") setTitleEditing(false);
           }}
-          className="w-full font-headline font-extrabold text-4xl lg:text-5xl text-m3-primary tracking-tight leading-tight bg-transparent border-b-2 border-m3-primary outline-none py-1"
+          className="border-b-2 border-m3-primary py-1 font-headline text-4xl font-extrabold leading-tight tracking-tight text-m3-primary lg:text-5xl"
           placeholder="Lesson title…"
         />
       ) : (
@@ -68,11 +71,12 @@ export function LessonHeaderSection({
       )}
 
       {/* Editable summary */}
-      <textarea
+      <Textarea
+        variant="bare"
         value={summary}
         onChange={(e) => setSummary(e.target.value)}
         rows={2}
-        className="w-full text-m3-on-surface-variant text-lg max-w-2xl leading-relaxed bg-transparent outline-none resize-none placeholder:text-m3-on-surface-variant/30 border-b border-transparent focus:border-m3-outline-variant/40 transition-colors py-1"
+        className="max-w-2xl bg-transparent px-0 py-1 text-lg text-m3-on-surface-variant placeholder:text-m3-on-surface-variant/30 border-b border-transparent focus:border-m3-outline-variant/40"
         placeholder="Add a brief summary of this lesson…"
       />
     </section>

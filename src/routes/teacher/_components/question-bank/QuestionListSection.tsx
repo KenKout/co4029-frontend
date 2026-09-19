@@ -15,6 +15,7 @@ import type {
   QuestionSelectionController,
 } from "./question-card-renderer";
 import type { ModuleGroup, OutcomeOption } from "./types";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * The question list itself: select-all row, the reorder-unavailable note, and
@@ -162,14 +163,10 @@ export function QuestionListSection(props: QuestionListSectionProps) {
       {!props.isPublished && (
         <div className="flex items-center justify-between gap-2 flex-wrap px-1">
           <label className="inline-flex items-center gap-2 text-xs font-medium text-m3-on-surface-variant cursor-pointer select-none">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={selection.allVisibleSelected}
-            ref={(el) => {
-              if (el) el.indeterminate = selection.someVisibleSelected;
-            }}
-            onChange={selection.toggleSelectAll}
-            className="h-4 w-4 rounded border-m3-outline-variant/60 text-m3-primary focus:ring-2 focus:ring-m3-primary/30 cursor-pointer"
+            indeterminate={selection.someVisibleSelected}
+            onCheckedChange={selection.toggleSelectAll}
             aria-label={t("teacher_interview_config.qbank.bulk.select_all")}
           />
           {selection.selectedVisibleIds.length > 0

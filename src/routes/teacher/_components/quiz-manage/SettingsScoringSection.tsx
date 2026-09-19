@@ -42,6 +42,8 @@ function SettingsScoringSectionComponent({
             </span>
           }
         >
+          {/* The kit has no Slider primitive yet. */}
+          {/* eslint-disable-next-line no-restricted-syntax */}
           <input
             aria-label={t("teacher_quiz_manage.settings.scoring.pass_score")}
             type="range"

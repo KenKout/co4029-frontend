@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Clock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { QuizQuestionAuthoring } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +39,7 @@ export function QuestionCardMetaRow({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggleSelect}
-          className="h-4 w-4"
-        />
+        <Checkbox checked={selected} onCheckedChange={onToggleSelect} />
         <span className="sr-only">
           {t("teacher_quiz_manage.questions.sr_select", {
             position: question.position,

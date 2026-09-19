@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { RichContent } from "@/components/ui/rich-content";
 import { ToolbarBtn, makeMarkdownApplier } from "@/components/ui/markdown-toolbar";
 import { cn } from "@/lib/utils";
@@ -167,11 +168,13 @@ export function PolicyVersionEditor({
         {tab === "write" ? (
           <>
             <EditorToolbar applyMarkdown={applyMarkdown} applyBlock={applyBlock} />
-            <textarea
+            <Textarea
               ref={bodyRef}
+              variant="bare"
+              resize="y"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="min-h-[420px] w-full resize-y bg-m3-surface-container-lowest p-6 font-body text-base leading-relaxed text-m3-on-surface outline-none placeholder:text-m3-on-surface-variant/40"
+              className="min-h-[420px] bg-m3-surface-container-lowest p-6 font-body text-base placeholder:text-m3-on-surface-variant/40"
               placeholder={"## Section\n\nPolicy text.\n\n- Obligation\n- Obligation"}
             />
           </>
