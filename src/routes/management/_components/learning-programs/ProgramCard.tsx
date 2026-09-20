@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { FileClock, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,12 +48,13 @@ export function ProgramCard({
   /** Only the dean reviews path changes, so only the dean sees the count. */
   isDean: boolean;
 }) {
+  const { t } = useTranslation();
   const formatDate = useFormatDate();
   const archive = useArchiveLearningProgram(program.id);
   const { confirm, dialog } = useConfirm({
-    title: "Archive this program?",
-    confirmLabel: "Archive program",
-    cancelLabel: "Cancel",
+    title: t("management_learning_programs.archive_title"),
+    confirmLabel: t("management_learning_programs.archive_action"),
+    cancelLabel: t("common.cancel"),
   });
 
   const version = program.current_version;
@@ -60,7 +62,9 @@ export function ProgramCard({
 
   async function handleArchive() {
     const ok = await confirm({
-      description: `"${program.name}" leaves the management list. Students already enrolled stay on their pinned version — this hides the program, it does not cancel anyone.`,
+      description: t("management_learning_programs.archive_description", {
+        name: program.name,
+      }),
     });
     if (!ok) return;
     archive.mutate();
@@ -78,7 +82,10 @@ export function ProgramCard({
           top line for the name. */}
       <span
         aria-hidden="true"
-        className={cn("absolute inset-y-0 left-0 w-1", STATUS_RAIL[program.status])}
+        className={cn(
+          "absolute inset-y-0 left-0 w-1",
+          STATUS_RAIL[program.status],
+        )}
       />
 
       <div className="flex-1 py-5 pr-5 pl-6">
@@ -113,8 +120,10 @@ export function ProgramCard({
               // element — verified in the browser, the button stayed
               // invisible with the card hovered.
               className="relative z-10 h-auto w-auto shrink-0 rounded-full p-1.5 text-text-muted opacity-50 transition-opacity hover:bg-red-50 hover:text-red-600 hover:opacity-100 focus-visible:opacity-100"
-              title="Archive program"
-              aria-label={`Archive ${program.name}`}
+              title={t("management_learning_programs.archive_action")}
+              aria-label={t("management_learning_programs.archive_aria", {
+                name: program.name,
+              })}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -140,11 +149,17 @@ export function ProgramCard({
             isDean ? "grid-cols-3" : "grid-cols-2",
           )}
         >
-          <Stat label="Paths" value={program.paths.length} />
-          <Stat label="Students" value={program.student_count ?? 0} />
+          <Stat
+            label={t("management_learning_programs.paths")}
+            value={program.paths.length}
+          />
+          <Stat
+            label={t("management_learning_programs.students")}
+            value={program.student_count ?? 0}
+          />
           {isDean ? (
             <Stat
-              label="Requests"
+              label={t("management_learning_programs.requests")}
               value={pendingRequests}
               alert={pendingRequests > 0}
             />
@@ -158,7 +173,9 @@ export function ProgramCard({
         <StatusBadge
           status={program.status}
           tokens={PROGRAM_STATUS_TOKENS}
-          label={program.status}
+          label={t(
+            `management_learning_program_detail.status.${program.status}`,
+          )}
           size="sm"
           shape="pill"
         />
@@ -174,7 +191,9 @@ export function ProgramCard({
           // right now, and it never stopped.
           <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-violet-300">
             <FileClock aria-hidden="true" className="h-3 w-3" />
-            Draft v{version.version_no + 1}
+            {t("management_learning_programs.draft_version", {
+              version: version.version_no + 1,
+            })}
           </span>
         ) : null}
       </footer>

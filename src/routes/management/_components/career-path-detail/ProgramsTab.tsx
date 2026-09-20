@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Boxes } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useManagedLearningPrograms } from "@/lib/api/hooks/learning-programs";
 
 export function ProgramsTab({ pathId }: { pathId: string }) {
+  const { t } = useTranslation();
   const programs = useManagedLearningPrograms();
   if (programs.isLoading) return <PageSkeleton rows={2} />;
   const rows = (programs.data ?? []).filter((program) =>
@@ -15,8 +17,10 @@ export function ProgramsTab({ pathId }: { pathId: string }) {
     return (
       <EmptyState
         icon={Boxes}
-        title="No Learning Program"
-        description="This Career Path is not included in a Learning Program version yet."
+        title={t("management_career_path_detail.programs.empty_title")}
+        description={t(
+          "management_career_path_detail.programs.empty_description",
+        )}
       />
     );
   }
@@ -33,7 +37,12 @@ export function ProgramsTab({ pathId }: { pathId: string }) {
           <div className="min-w-0">
             <p className="font-semibold text-m3-on-surface">{program.name}</p>
             <p className="mt-1 text-xs text-m3-on-surface-variant">
-              v{program.current_version.version_no} · {program.status}
+              {t("management_career_path_detail.programs.version_status", {
+                version: program.current_version.version_no,
+                status: t(
+                  `management_learning_program_detail.status.${program.status}`,
+                ),
+              })}
             </p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-m3-primary" />

@@ -4086,6 +4086,34 @@
       "behavior": "Reaching {{threshold}} points: a warning is recorded and the attempt is flagged for teacher review — the interview continues."
     }
   },
+  "management_learning_programs": {
+    "title": "Learning Programs",
+    "subtitle": "Enroll students into versioned programs; students choose their own Career Path.",
+    "new_program": "New program",
+    "search": "Search programs…",
+    "status": "Status",
+    "all_statuses": "All statuses",
+    "cards": "Cards",
+    "table": "Table",
+    "view_aria": "Choose how to display programs",
+    "clear_filters": "Clear filters",
+    "empty_title": "No Learning Programs",
+    "empty_description": "Create a draft and add published Career Paths before publishing it.",
+    "no_filter_match": "No programs match the selected filters.",
+    "no_view_match": "No programs match the current view.",
+    "program": "Program",
+    "version": "Version",
+    "paths": "Paths",
+    "students": "Students",
+    "requests": "Requests",
+    "published": "Published",
+    "draft_version": "Draft v{{version}}",
+    "draft_in_progress": "Draft v{{version}} in progress",
+    "archive_title": "Archive this program?",
+    "archive_action": "Archive program",
+    "archive_aria": "Archive {{name}}",
+    "archive_description": "\"{{name}}\" leaves the management list. Students already enrolled stay on their pinned version — this hides the program, it does not cancel anyone."
+  },
   "management_learning_program_new": {
     "title": "New Learning Program",
     "subtitle": "Create the program identity and choose published Career Paths by name.",
@@ -4552,7 +4580,11 @@
     },
     "dialogs": {
       "confirm_publish": "Confirm publish",
-      "confirm_archive": "Confirm archive"
+      "confirm_archive": "Confirm archive",
+      "publish_title": "Publish this Career Path version?",
+      "publish_description": "Publishing freezes the current version.",
+      "archive_title": "Archive this Career Path?",
+      "archive_description": "Existing learners keep access, but this path is blocked for new selections."
     },
     "actions": {
       "publish": "Publish",
@@ -4577,6 +4609,11 @@
       "required": "Required",
       "student_uuid": "Student UUID *",
       "organization": "Organization"
+    },
+    "programs": {
+      "empty_title": "No Learning Program",
+      "empty_description": "This Career Path is not included in a Learning Program version yet.",
+      "version_status": "v{{version}} · {{status}}"
     },
     "thumbnail": {
       "label": "Thumbnail",

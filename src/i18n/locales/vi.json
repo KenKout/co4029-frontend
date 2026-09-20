@@ -3908,6 +3908,34 @@
       "behavior": "Đạt {{threshold}} điểm: ghi nhận một cảnh báo và đánh dấu lượt làm bài để giáo viên xem lại — buổi phỏng vấn vẫn tiếp tục."
     }
   },
+  "management_learning_programs": {
+    "title": "Chương trình học",
+    "subtitle": "Ghi danh sinh viên vào chương trình có phiên bản; sinh viên tự chọn lộ trình nghề nghiệp.",
+    "new_program": "Chương trình mới",
+    "search": "Tìm chương trình…",
+    "status": "Trạng thái",
+    "all_statuses": "Tất cả trạng thái",
+    "cards": "Thẻ",
+    "table": "Bảng",
+    "view_aria": "Chọn cách hiển thị chương trình",
+    "clear_filters": "Xóa bộ lọc",
+    "empty_title": "Chưa có chương trình học",
+    "empty_description": "Tạo bản nháp và thêm các lộ trình nghề nghiệp đã xuất bản trước khi xuất bản chương trình.",
+    "no_filter_match": "Không có chương trình phù hợp với bộ lọc đã chọn.",
+    "no_view_match": "Không có chương trình phù hợp với chế độ xem hiện tại.",
+    "program": "Chương trình",
+    "version": "Phiên bản",
+    "paths": "Lộ trình",
+    "students": "Sinh viên",
+    "requests": "Yêu cầu",
+    "published": "Ngày xuất bản",
+    "draft_version": "Bản nháp v{{version}}",
+    "draft_in_progress": "Bản nháp v{{version}} đang được chỉnh sửa",
+    "archive_title": "Lưu trữ chương trình này?",
+    "archive_action": "Lưu trữ chương trình",
+    "archive_aria": "Lưu trữ {{name}}",
+    "archive_description": "\"{{name}}\" sẽ không còn trong danh sách quản lý. Sinh viên đã ghi danh vẫn học theo phiên bản được ghim — thao tác này chỉ ẩn chương trình, không hủy ghi danh."
+  },
   "management_learning_program_new": {
     "title": "Chương trình học mới",
     "subtitle": "Tạo thông tin chương trình và chọn các lộ trình nghề nghiệp đã xuất bản theo tên.",
@@ -4374,7 +4402,11 @@
     },
     "dialogs": {
       "confirm_publish": "Xác nhận xuất bản",
-      "confirm_archive": "Xác nhận lưu trữ"
+      "confirm_archive": "Xác nhận lưu trữ",
+      "publish_title": "Xuất bản phiên bản lộ trình nghề nghiệp này?",
+      "publish_description": "Sau khi xuất bản, phiên bản hiện tại sẽ được đóng băng.",
+      "archive_title": "Lưu trữ lộ trình nghề nghiệp này?",
+      "archive_description": "Học viên hiện tại vẫn có quyền truy cập, nhưng học viên mới không thể chọn lộ trình này."
     },
     "actions": {
       "publish": "Xuất bản",
@@ -4399,6 +4431,11 @@
       "required": "Bắt buộc",
       "student_uuid": "UUID sinh viên *",
       "organization": "Tổ chức"
+    },
+    "programs": {
+      "empty_title": "Chưa thuộc chương trình học nào",
+      "empty_description": "Lộ trình nghề nghiệp này chưa được đưa vào phiên bản chương trình học nào.",
+      "version_status": "v{{version}} · {{status}}"
     },
     "thumbnail": {
       "label": "Ảnh đại diện",

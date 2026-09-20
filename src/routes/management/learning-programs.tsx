@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { GraduationCap, LayoutGrid, Plus, Table2 } from "lucide-react";
 
@@ -7,7 +8,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PermissionDenied } from "@/components/ui/permission-denied";
-import { DataTableToolbar, type FilterDef } from "@/components/ui/data-table-toolbar";
+import {
+  DataTableToolbar,
+  type FilterDef,
+} from "@/components/ui/data-table-toolbar";
 import { Tabs, type TabDef } from "@/components/ui/tabs";
 import { useManagedLearningPrograms } from "@/lib/api/hooks/learning-programs";
 import type { LearningProgram } from "@/lib/api/types";
@@ -27,9 +31,11 @@ export function filterManagedLearningPrograms(
 ): LearningProgram[] {
   const q = search.trim().toLowerCase();
   return programs.filter((program) => {
-    if (statusFilter
-      ? program.status !== statusFilter
-      : program.status === "archived") {
+    if (
+      statusFilter
+        ? program.status !== statusFilter
+        : program.status === "archived"
+    ) {
       return false;
     }
     return (
@@ -54,6 +60,7 @@ export function filterManagedLearningPrograms(
  * typed into.
  */
 export default function ManagementLearningProgramsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const permissions = usePermissions();
   const programs = useManagedLearningPrograms();
@@ -82,31 +89,51 @@ export default function ManagementLearningProgramsPage() {
   const statusFilters: FilterDef[] = [
     {
       id: "status",
-      label: "Status",
-      allLabel: "All statuses",
+      label: t("management_learning_programs.status"),
+      allLabel: t("management_learning_programs.all_statuses"),
       options: [
-        { value: "draft", label: "Draft" },
-        { value: "published", label: "Published" },
-        { value: "archived", label: "Archived" },
+        {
+          value: "draft",
+          label: t("management_learning_program_detail.status.draft"),
+        },
+        {
+          value: "published",
+          label: t("management_learning_program_detail.status.published"),
+        },
+        {
+          value: "archived",
+          label: t("management_learning_program_detail.status.archived"),
+        },
       ],
     },
   ];
 
   const hasFilter = Boolean(search.trim() || statusFilter);
 
-  if (permissions.isLoading || programs.isLoading) return <PageSkeleton rows={4} />;
+  if (permissions.isLoading || programs.isLoading)
+    return <PageSkeleton rows={4} />;
   if (!canRead) return <PermissionDenied />;
 
   const viewTabs: TabDef<ProgramView>[] = [
-    { key: "card", label: "Cards", icon: LayoutGrid, labelHiddenOnMobile: true },
-    { key: "table", label: "Table", icon: Table2, labelHiddenOnMobile: true },
+    {
+      key: "card",
+      label: t("management_learning_programs.cards"),
+      icon: LayoutGrid,
+      labelHiddenOnMobile: true,
+    },
+    {
+      key: "table",
+      label: t("management_learning_programs.table"),
+      icon: Table2,
+      labelHiddenOnMobile: true,
+    },
   ];
 
   return (
     <div className="space-y-6 pb-16">
       <PageHeader
-        title="Learning Programs"
-        subtitle="Enroll students into versioned programs; students choose their own Career Path."
+        title={t("management_learning_programs.title")}
+        subtitle={t("management_learning_programs.subtitle")}
         action={
           <div className="flex items-center gap-2">
             <Tabs
@@ -114,7 +141,7 @@ export default function ManagementLearningProgramsPage() {
               value={view}
               onChange={setView}
               variant="contained"
-              ariaLabel="Choose how to display programs"
+              ariaLabel={t("management_learning_programs.view_aria")}
             />
             {canManage ? (
               <Button
@@ -123,7 +150,8 @@ export default function ManagementLearningProgramsPage() {
                   void navigate({ to: "/management/learning-programs/new" })
                 }
               >
-                <Plus className="h-4 w-4" /> New program
+                <Plus className="h-4 w-4" />
+                {t("management_learning_programs.new_program")}
               </Button>
             ) : null}
           </div>
@@ -133,8 +161,8 @@ export default function ManagementLearningProgramsPage() {
       {(programs.data ?? []).length === 0 && !statusFilter ? (
         <EmptyState
           icon={GraduationCap}
-          title="No Learning Programs"
-          description="Create a draft and add published Career Paths before publishing it."
+          title={t("management_learning_programs.empty_title")}
+          description={t("management_learning_programs.empty_description")}
         />
       ) : (
         <div className="space-y-4">
@@ -145,7 +173,7 @@ export default function ManagementLearningProgramsPage() {
           <DataTableToolbar
             search={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search programs…"
+            searchPlaceholder={t("management_learning_programs.search")}
             filters={statusFilters}
             filterValues={{ status: statusFilter }}
             onFilterChange={(filterId, value) => {
@@ -157,7 +185,7 @@ export default function ManagementLearningProgramsPage() {
               setSearch("");
               setStatusFilter(undefined);
             }}
-            clearLabel="Clear filters"
+            clearLabel={t("management_learning_programs.clear_filters")}
           />
 
           {view === "table" ? (
@@ -185,8 +213,8 @@ export default function ManagementLearningProgramsPage() {
           {filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-m3-on-surface-variant">
               {hasFilter
-                ? "No programs match the selected filters."
-                : "No programs match the current view."}
+                ? t("management_learning_programs.no_filter_match")
+                : t("management_learning_programs.no_view_match")}
             </p>
           ) : null}
         </div>

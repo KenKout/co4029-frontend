@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { FileClock, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,22 +28,25 @@ import { PROGRAM_STATUS_TOKENS } from "./program-status";
  * the filter and its input visible — a filter you cannot see is worse than
  * no filter, because the list silently lies about how many programs exist.
  */
+interface ProgramTableProps {
+  programs: LearningProgram[];
+  canManage: boolean;
+  isDean: boolean;
+}
+
 export function ProgramTable({
   programs,
   canManage,
   isDean,
-}: {
-  programs: LearningProgram[];
-  canManage: boolean;
-  isDean: boolean;
-}) {
+}: ProgramTableProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const formatDate = useFormatDate();
 
   const columns: DataTableColumn<LearningProgram>[] = [
     {
       id: "name",
-      header: "Program",
+      header: t("management_learning_programs.program"),
       sortable: true,
       sortValue: (row) => row.name.toLowerCase(),
       cell: (row) => (
@@ -56,14 +60,14 @@ export function ProgramTable({
     },
     {
       id: "status",
-      header: "Status",
+      header: t("management_learning_programs.status"),
       sortable: true,
       sortValue: (row) => row.status,
       cell: (row) => (
         <StatusBadge
           status={row.status}
           tokens={PROGRAM_STATUS_TOKENS}
-          label={row.status}
+          label={t(`management_learning_program_detail.status.${row.status}`)}
           size="sm"
           shape="pill"
         />
@@ -71,7 +75,7 @@ export function ProgramTable({
     },
     {
       id: "version",
-      header: "Version",
+      header: t("management_learning_programs.version"),
       align: "right",
       sortable: true,
       sortValue: (row) => row.current_version.version_no,
@@ -86,9 +90,12 @@ export function ProgramTable({
           {row.has_draft_version ? (
             <span
               className="inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold text-violet-700"
-              title={`Draft v${row.current_version.version_no + 1} in progress`}
+              title={t("management_learning_programs.draft_in_progress", {
+                version: row.current_version.version_no + 1,
+              })}
             >
-              <FileClock aria-hidden="true" className="h-2.5 w-2.5" />+1
+              <FileClock aria-hidden="true" className="h-2.5 w-2.5" />
+              +1
             </span>
           ) : null}
         </span>
@@ -96,7 +103,7 @@ export function ProgramTable({
     },
     {
       id: "paths",
-      header: "Paths",
+      header: t("management_learning_programs.paths"),
       align: "right",
       sortable: true,
       sortValue: (row) => row.paths.length,
@@ -104,7 +111,7 @@ export function ProgramTable({
     },
     {
       id: "students",
-      header: "Students",
+      header: t("management_learning_programs.students"),
       align: "right",
       sortable: true,
       sortValue: (row) => row.student_count ?? 0,
@@ -116,7 +123,7 @@ export function ProgramTable({
       ? [
           {
             id: "requests",
-            header: "Requests",
+            header: t("management_learning_programs.requests"),
             align: "right" as const,
             sortable: true,
             sortValue: (row: LearningProgram) =>
@@ -139,7 +146,7 @@ export function ProgramTable({
       : []),
     {
       id: "published",
-      header: "Published",
+      header: t("management_learning_programs.published"),
       align: "right",
       sortable: true,
       // Never published sorts to 0 rather than being treated as "oldest" —
@@ -170,14 +177,12 @@ export function ProgramTable({
           params: { id: row.id },
         })
       }
-      actions={
-        canManage ? (row) => <ArchiveAction program={row} /> : undefined
-      }
+      actions={canManage ? (row) => <ArchiveAction program={row} /> : undefined}
       emptyState={
         <EmptyState
           icon={GraduationCap}
-          title="No Learning Programs"
-          description="Create a draft and add published Career Paths before publishing it."
+          title={t("management_learning_programs.empty_title")}
+          description={t("management_learning_programs.empty_description")}
         />
       }
     />
@@ -185,11 +190,12 @@ export function ProgramTable({
 }
 
 function ArchiveAction({ program }: { program: LearningProgram }) {
+  const { t } = useTranslation();
   const archive = useArchiveLearningProgram(program.id);
   const { confirm, dialog } = useConfirm({
-    title: "Archive this program?",
-    confirmLabel: "Archive program",
-    cancelLabel: "Cancel",
+    title: t("management_learning_programs.archive_title"),
+    confirmLabel: t("management_learning_programs.archive_action"),
+    cancelLabel: t("common.cancel"),
   });
 
   return (
@@ -203,13 +209,17 @@ function ArchiveAction({ program }: { program: LearningProgram }) {
           // The row itself navigates; the action must not.
           event.stopPropagation();
           const ok = await confirm({
-            description: `"${program.name}" leaves the management list. Students already enrolled stay on their pinned version — this hides the program, it does not cancel anyone.`,
+            description: t("management_learning_programs.archive_description", {
+              name: program.name,
+            }),
           });
           if (ok) archive.mutate();
         }}
         className="h-auto w-auto rounded-full p-1.5 text-text-muted hover:bg-red-50 hover:text-red-600"
-        title="Archive program"
-        aria-label={`Archive ${program.name}`}
+        title={t("management_learning_programs.archive_action")}
+        aria-label={t("management_learning_programs.archive_aria", {
+          name: program.name,
+        })}
       >
         <Trash2 className="h-4 w-4" />
       </Button>

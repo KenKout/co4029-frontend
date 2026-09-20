@@ -16,7 +16,9 @@ import { useEditForm, type EditFormInitialValues } from "./use-edit-form";
  * ``org_unit_id`` is not consumed by any backend read path — offering an
  * editable unit picker under a locked org was misleading.
  */
-export function EditForm(props: EditFormInitialValues & { readOnly?: boolean }) {
+export function EditForm(
+  props: EditFormInitialValues & { readOnly?: boolean },
+) {
   const { t } = useTranslation();
   const form = useEditForm(props, t);
 
@@ -38,9 +40,10 @@ export function EditForm(props: EditFormInitialValues & { readOnly?: boolean }) 
         </div>
         <div className="space-y-1.5">
           <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Slug
+            {t("management_career_path_detail.fields.slug")}
           </label>
-          <Input mono
+          <Input
+            mono
             value={form.slug}
             onChange={(e) => form.setSlug(e.target.value)}
             disabled={props.readOnly}
@@ -64,17 +67,19 @@ export function EditForm(props: EditFormInitialValues & { readOnly?: boolean }) 
         onChange={form.setThumbnailFile}
         disabled={props.readOnly || form.isPending}
       />
-      {!props.readOnly && <div className="flex justify-end">
-        <Button
-          type="submit"
-          size="sm"
-          disabled={!form.dirty || form.isPending}
-          className="gap-2"
-        >
-          {form.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-          {t("common.save")}
-        </Button>
-      </div>}
+      {!props.readOnly && (
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!form.dirty || form.isPending}
+            className="gap-2"
+          >
+            {form.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {t("common.save")}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
