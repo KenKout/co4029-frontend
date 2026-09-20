@@ -17,10 +17,9 @@ import type { HeadlineMetric, ResultsTab } from "./types";
 export function useQuizResultsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { courseId, quizId } = useParams({ strict: false }) as {
-    courseId: string;
-    quizId: string;
-  };
+  const params = useParams({ strict: false });
+  const courseId = params.courseId ?? "";
+  const quizId = params.quizId ?? "";
 
   const { data: course } = useTeacherCourseById(courseId);
   const { data: results, isLoading, isError } = useQuizResults(quizId);
@@ -37,7 +36,6 @@ export function useQuizResultsPage() {
   const [tab, setTab] = useState<ResultsTab>("students");
   const [headlineMetric, setHeadlineMetric] = useState<HeadlineMetric>("best");
   const [downloading, setDownloading] = useState(false);
-  const [regradeOpen, setRegradeOpen] = useState(false);
 
   async function handleDownload(format: "csv" | "xlsx") {
     if (tab !== "responses" && tab !== "statistics" && tab !== "gradebook")
@@ -73,8 +71,6 @@ export function useQuizResultsPage() {
     headlineMetric,
     setHeadlineMetric,
     downloading,
-    regradeOpen,
-    setRegradeOpen,
     handleDownload,
     goToStudentDetail,
   };

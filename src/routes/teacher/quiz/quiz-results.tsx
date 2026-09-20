@@ -1,4 +1,3 @@
-import { RegradePanel } from "../_components/quiz-results/RegradePanel";
 import { ResultsOverview } from "./_components/quiz-results/ResultsOverview";
 import {
   ResultsBreadcrumbs,
@@ -29,8 +28,6 @@ export default function QuizResultsPage() {
     results,
     isLoading,
     isError,
-    regradeOpen,
-    setRegradeOpen,
   } = controller;
 
   if (isLoading) {
@@ -54,12 +51,7 @@ export default function QuizResultsPage() {
       <ResultsPageHeader
         controller={controller}
         quizTitle={results.quiz_title}
-        hasAttempts={hasAttempts}
       />
-
-      {regradeOpen && (
-        <RegradePanel quizId={quizId} onClose={() => setRegradeOpen(false)} />
-      )}
 
       {!hasAttempts ? (
         <ResultsNoAttempts t={t} />

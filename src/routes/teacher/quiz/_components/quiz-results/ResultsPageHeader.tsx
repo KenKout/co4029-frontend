@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
@@ -47,17 +47,15 @@ export function ResultsBreadcrumbs({
   );
 }
 
-/** Back arrow, page title, quiz title and the regrade affordance. */
+/** Back arrow, page title and quiz title. */
 export function ResultsPageHeader({
   controller,
   quizTitle,
-  hasAttempts,
 }: {
   controller: QuizResultsController;
   quizTitle: string;
-  hasAttempts: boolean;
 }) {
-  const { t, courseId, quizId, setRegradeOpen } = controller;
+  const { t, courseId, quizId } = controller;
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -81,17 +79,6 @@ export function ResultsPageHeader({
           <p className="text-sm text-m3-on-surface-variant">{quizTitle}</p>
         </div>
       </div>
-      {hasAttempts && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 shrink-0"
-          onClick={() => setRegradeOpen(true)}
-        >
-          <RotateCcw className="h-4 w-4" />
-          {t("teacher_quiz_results.regrade.action")}
-        </Button>
-      )}
     </div>
   );
 }
