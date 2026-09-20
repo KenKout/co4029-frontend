@@ -116,7 +116,7 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
                     {course.rating}
                   </span>
                   <span className="text-m3-on-surface-variant font-medium bg-m3-surface-container px-2 py-1 rounded-md">
-                    {t("common.student_count", { count: course.students })}
+                    {t("common.student_count", { count: Number(course.students) })}
                   </span>
                 </div>
               </div>
