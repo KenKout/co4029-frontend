@@ -46,6 +46,7 @@ export function DataTable<T>({
   emptyState,
   bordered = true,
   className,
+  tableContainerClassName,
   containerClassName,
   toolbar,
 }: DataTableProps<T>) {
@@ -101,6 +102,7 @@ export function DataTable<T>({
         className={cn(
           bordered &&
             "overflow-hidden rounded-xl bg-m3-surface-container-lowest ghost-border",
+          tableContainerClassName,
         )}
       >
         <Table className={className}>

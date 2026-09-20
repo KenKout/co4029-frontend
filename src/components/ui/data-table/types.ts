@@ -83,6 +83,8 @@ export interface DataTableProps<T> {
    *  drop the border when embedding inside an existing card. */
   bordered?: boolean;
   className?: string;
+  /** Classes for the bordered/overflow table wrapper, excluding the footer. */
+  tableContainerClassName?: string;
   containerClassName?: string;
 
   /** Optional toolbar rendered above the table. */

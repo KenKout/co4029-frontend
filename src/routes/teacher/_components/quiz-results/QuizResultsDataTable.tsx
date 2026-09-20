@@ -25,10 +25,13 @@ export function QuizResultsDataTable<T>({
   });
 
   if (props.manualPagination) {
+    const { containerClassName, ...tableProps } = props;
     return (
       <DataTable
-        {...props}
+        {...tableProps}
         data={data}
+        containerClassName={undefined}
+        tableContainerClassName={containerClassName}
         pagination
         pageSize={pageSize}
         pageSizeOptions={pageSizeOptions}
