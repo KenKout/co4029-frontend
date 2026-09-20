@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 import type { CourseStudentsController } from "./use-course-students-controller";
@@ -12,11 +13,12 @@ export function CohortOverviewCard({
 }: {
   controller: CourseStudentsController;
 }) {
+  const { t } = useTranslation();
   const { riskBreakdown, activeCount, atRiskCount } = controller;
   return (
     <div className="bg-m3-surface-container-lowest rounded-xl p-6 ghost-border shadow-editorial space-y-5">
       <h3 className="font-headline font-bold text-m3-primary text-base">
-        Cohort Overview
+        {t("teacher_course_students.cohort_overview")}
       </h3>
 
       {riskBreakdown.map(({ level, meta, count, pct }) => (
@@ -50,7 +52,7 @@ export function CohortOverviewCard({
             {activeCount}
           </div>
           <div className="text-[10px] text-m3-on-surface-variant font-bold uppercase tracking-wide mt-0.5">
-            Active
+            {t("teacher_course_students.active")}
           </div>
         </div>
         <div
@@ -73,7 +75,7 @@ export function CohortOverviewCard({
               atRiskCount > 0 ? "text-amber-600" : "text-m3-on-surface-variant",
             )}
           >
-            At Risk
+            {t("teacher_course_students.at_risk")}
           </div>
         </div>
       </div>

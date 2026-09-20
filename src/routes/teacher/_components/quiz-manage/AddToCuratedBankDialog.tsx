@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Library, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,28 +32,27 @@ export function AddToCuratedBankDialog({
   onOpenChange: (open: boolean) => void;
   onCleared: () => void;
 }) {
+  const { t } = useTranslation();
   async function handleAddSelectedToBank() {
     if (ids.length === 0) return;
     try {
       const { created, skipped } = await mutation.mutateAsync(ids);
       if (created.length === 0) {
-        toast.info("All selected questions are already in the curated bank");
+        toast.info(t("teacher_quiz_manage.bank.all_already_added"));
       } else {
         const drafts = created.filter((item) => item.status === "draft").length;
         const parts = [
-          `Added ${created.length} question${created.length === 1 ? "" : "s"} to the curated bank`,
+          t("teacher_quiz_manage.bank.added", { count: created.length }),
         ];
         if (skipped.length > 0) {
           parts.push(
-            `${skipped.length} already existed and were skipped`,
+            t("teacher_quiz_manage.bank.skipped", {
+              count: skipped.length,
+            }),
           );
         }
         if (drafts > 0) {
-          parts.push(
-            `${drafts} ${drafts === 1 ? "is" : "are"} draft${drafts === 1 ? "" : "s"} — approve ${
-              drafts === 1 ? "it" : "them"
-            } to import`,
-          );
+          parts.push(t("teacher_quiz_manage.bank.drafts", { count: drafts }));
         }
         toast.success(parts.join(". ") + ".");
       }
@@ -60,7 +60,7 @@ export function AddToCuratedBankDialog({
       onCleared();
     } catch (error) {
       toast.error(
-        getApiErrorMessage(error, "Could not add selected questions to bank"),
+        getApiErrorMessage(error, t("teacher_quiz_manage.bank.add_failed")),
       );
     }
   }
@@ -72,9 +72,11 @@ export function AddToCuratedBankDialog({
         if (!next && mutation.isPending) return;
         onOpenChange(next);
       }}
-      title={`Add ${ids.length} questions to curated bank?`}
-      description="Independent snapshots will be created. Later edits in this Quiz will not change the bank copies."
-      confirmLabel="Add to bank"
+      title={t("teacher_quiz_manage.bank.add_selected_title", {
+        count: ids.length,
+      })}
+      description={t("teacher_quiz_manage.bank.add_selected_description")}
+      confirmLabel={t("teacher_quiz_manage.editor.add_to_bank")}
       confirmVariant="default"
       isPending={mutation.isPending}
       backdropClassName="backdrop-blur-none"
@@ -97,6 +99,7 @@ export function AddToCuratedBankButton({
   ids: string[];
   onCleared: () => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const mutation = useCopyQuizQuestionsToCuratedBank(courseId);
 
@@ -115,7 +118,7 @@ export function AddToCuratedBankButton({
         ) : (
           <Library className="h-3.5 w-3.5" />
         )}
-        Add to bank
+        {t("teacher_quiz_manage.editor.add_to_bank")}
       </Button>
       <AddToCuratedBankDialog
         ids={ids}

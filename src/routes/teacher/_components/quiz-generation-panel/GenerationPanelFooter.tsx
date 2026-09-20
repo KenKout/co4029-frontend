@@ -20,6 +20,7 @@ export function GenerationPanelFooter({
     generationInProgress,
     selectedLessonIds,
     bloomOverflow,
+    t,
   } = controller;
   return (
     <>
@@ -28,8 +29,8 @@ export function GenerationPanelFooter({
         <Sparkles className="h-4 w-4 text-m3-secondary shrink-0 mt-0.5" />
         <p>
           {isCoverageMode
-            ? "Coverage mode allocates questions per section so every chunk of the lesson gets representation."
-            : "Topic mode picks a balanced spread across the selected lessons. Switch to coverage mode for full lesson breadth."}
+            ? t("quiz_generation.mode.coverage_help")
+            : t("quiz_generation.mode.topic_help")}
         </p>
       </div>
 
@@ -50,7 +51,9 @@ export function GenerationPanelFooter({
         ) : (
           <Sparkles className="h-4 w-4" />
         )}
-        {generationInProgress ? "Generating…" : "Generate questions"}
+        {generationInProgress
+          ? t("quiz_generation.generating")
+          : t("quiz_generation.generate")}
       </Button>
     </>
   );

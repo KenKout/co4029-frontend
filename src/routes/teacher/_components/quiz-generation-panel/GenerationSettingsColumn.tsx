@@ -13,12 +13,12 @@ function CountAndDifficulty({
 }: {
   controller: QuizGenerationController;
 }) {
-  const { form, setForm } = controller;
+  const { form, setForm, t } = controller;
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Questions
+          {t("quiz_generation.settings.questions")}
         </label>
         <Input
           type="number"
@@ -38,17 +38,17 @@ function CountAndDifficulty({
       </div>
       <div className="space-y-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Difficulty
+          {t("quiz_generation.settings.difficulty")}
         </label>
         <Select<Difficulty>
-          aria-label="Difficulty"
+          aria-label={t("quiz_generation.settings.difficulty")}
           value={form.difficulty}
           onValueChange={(next) =>
             setForm((current) => ({ ...current, difficulty: next }))
           }
           options={DIFFICULTIES.map((level) => ({
             value: level,
-            label: level,
+            label: t(`quiz_generation.difficulty.${level}`),
           }))}
         />
       </div>
@@ -61,11 +61,11 @@ function QuestionTypesPicker({
 }: {
   controller: QuizGenerationController;
 }) {
-  const { form, setForm } = controller;
+  const { form, setForm, t } = controller;
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-        Question types
+        {t("quiz_generation.settings.question_types")}
       </label>
       <div className="grid grid-cols-2 gap-2">
         {QUESTION_TYPES.map((type) => {
@@ -95,15 +95,16 @@ function QuestionTypesPicker({
                 className="h-3.5 w-3.5"
               />
               <span className="text-m3-on-surface">
-                {QUESTION_TYPE_LABELS[type]}
+                {t(`quiz_generation.question_types.${type}`, {
+                  defaultValue: QUESTION_TYPE_LABELS[type],
+                })}
               </span>
             </label>
           );
         })}
       </div>
       <p className="text-[10px] text-m3-on-surface-variant">
-        Generator cycles through the selected types when budgeting per section.
-        Pick at least one.
+        {t("quiz_generation.settings.question_types_hint")}
       </p>
     </div>
   );
@@ -118,14 +119,14 @@ export function GenerationSettingsColumn({
 }: {
   controller: QuizGenerationController;
 }) {
-  const { form, setForm, hasExistingQuestions } = controller;
+  const { form, setForm, hasExistingQuestions, t } = controller;
   return (
     <div className="space-y-4">
       <CountAndDifficulty controller={controller} />
 
       <div className="space-y-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Expected time per question (s)
+          {t("quiz_generation.settings.expected_time")}
         </label>
         <Input
           type="number"
@@ -142,7 +143,7 @@ export function GenerationSettingsColumn({
           }
         />
         <p className="text-[10px] text-m3-on-surface-variant">
-          Hard-set on every generated question — no "save time" pass needed.
+          {t("quiz_generation.settings.expected_time_hint")}
         </p>
       </div>
 

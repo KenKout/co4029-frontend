@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import i18n from "@/i18n";
 
 interface Row {
   id: string;
@@ -19,6 +20,10 @@ const COLUMNS: DataTableColumn<Row>[] = [
  * cannot take the dashboard down with a stack overflow.
  */
 describe("DataTable expansion cycle guard", () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
   it("does not blow the stack when getSubRows is cyclic", () => {
     const rows: Row[] = [{ id: "a", name: "Course A" }];
     // Every row claims one child that carries the SAME id (the classic

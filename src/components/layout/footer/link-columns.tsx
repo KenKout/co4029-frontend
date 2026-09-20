@@ -27,24 +27,21 @@ const ARROW_CLASS =
  */
 
 export function FooterPlatformColumn() {
-  const { i18n } = useTranslation();
-  const vi = i18n.resolvedLanguage?.startsWith("vi");
+  const { t } = useTranslation();
   return (
     <div className="lg:col-span-3">
       <h4 className="font-semibold text-white mb-6 tracking-wide text-sm uppercase">
-        {vi ? "Nền tảng" : "Platform"}
+        {t("footer.platform")}
       </h4>
       <ul className="space-y-3 text-sm text-slate-400">
         <li>
           <Link to="/courses" className={LINK_CLASS}>
-            <MoveRight className={ARROW_CLASS} />{" "}
-            {vi ? "Thư viện khóa học" : "Course Library"}
+            <MoveRight className={ARROW_CLASS} /> {t("footer.course_library")}
           </Link>
         </li>
         <li>
           <Link to="/catalog/career-paths" className={LINK_CLASS}>
-            <MoveRight className={ARROW_CLASS} />{" "}
-            {vi ? "Lộ trình học tập" : "Learning Paths"}
+            <MoveRight className={ARROW_CLASS} /> {t("footer.learning_paths")}
           </Link>
         </li>
       </ul>
@@ -53,18 +50,16 @@ export function FooterPlatformColumn() {
 }
 
 export function FooterSupportColumn() {
-  const { i18n } = useTranslation();
-  const vi = i18n.resolvedLanguage?.startsWith("vi");
+  const { t } = useTranslation();
   return (
     <div className="lg:col-span-3">
       <h4 className="font-semibold text-white mb-6 tracking-wide text-sm uppercase">
-        {vi ? "Hỗ trợ" : "Support"}
+        {t("footer.support")}
       </h4>
       <ul className="space-y-3 text-sm text-slate-400">
         <li>
           <Link to="/help" className={LINK_CLASS}>
-            <MoveRight className={ARROW_CLASS} />{" "}
-            {vi ? "Trung tâm trợ giúp" : "Help Center"}
+            <MoveRight className={ARROW_CLASS} /> {t("footer.help_center")}
           </Link>
         </li>
       </ul>

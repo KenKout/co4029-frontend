@@ -5,7 +5,6 @@ import { ApiError } from "@/lib/api/client";
 import { useCreateLesson } from "@/lib/api/hooks/teacher-courses";
 import { useCreateQuiz } from "@/lib/api/hooks/quizzes";
 import { useCreateInterviewConfig } from "@/lib/api/hooks/interviews";
-import { LESSON_TYPE_CONFIG } from "./constants";
 import type { TranslateFn } from "./types";
 
 /**
@@ -35,8 +34,12 @@ export function useAddContent(options: {
 
   async function handleAdd(lessonType: string) {
     if (adding) return;
-    const label = LESSON_TYPE_CONFIG[lessonType]?.label ?? lessonType;
-    const title = `New ${label}`;
+    const label = t(
+      lessonType === "video"
+        ? "teacher_common.video_label"
+        : "teacher_common.reading_label",
+    );
+    const title = t("teacher_common.new_item_title", { label });
     setAdding(true);
     try {
       await createLesson.mutateAsync({
@@ -47,9 +50,11 @@ export function useAddContent(options: {
         // teachers renamed the placeholder title.
         lesson_type: lessonType as "video" | "reading",
       });
-      toast.success(`${label} added`);
+      toast.success(t("teacher_common.lesson_added", { label }));
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Failed to add lesson");
+      toast.error(
+        (err as Error).message || t("teacher_common.add_lesson_failed"),
+      );
     } finally {
       setAdding(false);
     }
@@ -69,7 +74,7 @@ export function useAddContent(options: {
       const quiz = await createQuiz.mutateAsync({
         module_id: moduleId,
         title: quizTitle.trim(),
-        description: "Draft quiz for this module.",
+        description: t("teacher_common.new_quiz_description"),
         // Reminders (SR due-card pings) default ON for new quizzes — the
         // teacher can turn them off per quiz in Settings.
         reminders_enabled: true,

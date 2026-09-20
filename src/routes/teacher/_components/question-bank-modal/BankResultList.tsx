@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { InfiniteList } from "@/components/ui/InfiniteList";
@@ -18,6 +19,7 @@ function BankRow({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   const q = entry.question;
   return (
     <li
@@ -52,7 +54,7 @@ function BankRow({
             </Badge>
           ) : null}
           <span className="text-[10px] text-m3-on-surface-variant truncate">
-            from <strong>{entry.module_title}</strong>
+            {t("question_bank.from")} <strong>{entry.module_title}</strong>
             {" · "}
             {entry.quiz_title}
           </span>
@@ -71,6 +73,7 @@ export function BankResultList({
 }: {
   controller: QuestionBankModalController;
 }) {
+  const { t } = useTranslation();
   const {
     bank,
     rows,
@@ -85,22 +88,26 @@ export function BankResultList({
     <div className="flex-1 overflow-y-auto rounded-xl border border-m3-outline-variant/20">
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 p-8 text-sm text-m3-on-surface-variant">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading bank…
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {t("question_bank.loading")}
         </div>
       ) : error ? (
         <div className="p-6 text-sm text-red-700 bg-red-50">
-          Failed to load bank: {(error as Error).message}
+          {t("question_bank.load_failed", {
+            message: (error as Error).message,
+          })}
         </div>
       ) : rows.length === 0 ? (
         <div className="p-8 text-center text-sm text-m3-on-surface-variant space-y-2">
-          <p>No bank questions match these filters.</p>
+          <p>{t("question_bank.no_match")}</p>
           {activeFilterCount > 0 ? (
-            <Button variant="link"
+            <Button
+              variant="link"
               type="button"
               onClick={resetFilters}
               className="text-xs font-medium text-m3-secondary hover:underline"
             >
-              Clear filters
+              {t("question_bank.clear_filters")}
             </Button>
           ) : null}
         </div>

@@ -23,16 +23,69 @@
     "search": "Tìm kiếm",
     "submit": "Gửi",
     "close": "Đóng",
+    "clear_all": "Xóa tất cả",
+    "progress": "Tiến độ",
+    "vs_last_week": "so với tuần trước",
+    "student_count": "{{count}} học viên",
+    "previous_slide": "Trang trình chiếu trước",
+    "next_slide": "Trang trình chiếu sau",
     "back_to_top": "Lên đầu trang",
     "yes": "Có",
     "no": "Không",
     "breadcrumb_aria": "Đường dẫn",
     "unsaved_changes_warning": "Bạn có thay đổi chưa được lưu. Rời khỏi trang sẽ làm mất các thay đổi này.",
+    "data_table": {
+      "range": "{{from}}–{{to}} trên {{total}}",
+      "selected_one": "Đã chọn {{count}} mục",
+      "selected_other": "Đã chọn {{count}} mục",
+      "rows": "Số dòng",
+      "rows_per_page": "Số dòng mỗi trang",
+      "page": "Trang {{page}} / {{pageCount}}",
+      "first_page": "Trang đầu",
+      "previous_page": "Trang trước",
+      "next_page": "Trang sau",
+      "last_page": "Trang cuối",
+      "today": "Hôm nay",
+      "yesterday": "Hôm qua",
+      "week": "Tuần",
+      "month": "Tháng",
+      "six_months": "6 tháng",
+      "year": "Năm",
+      "all_time": "Toàn bộ thời gian",
+      "time_range": "Khoảng thời gian",
+      "custom_range": "Khoảng tùy chỉnh…",
+      "custom_time_range": "Khoảng thời gian tùy chỉnh",
+      "from": "Từ",
+      "to": "Đến",
+      "clear": "Xóa",
+      "filters": "Bộ lọc",
+      "all": "Tất cả",
+      "reset_all": "Đặt lại tất cả",
+      "done": "Xong",
+      "collapse_row": "Thu gọn dòng",
+      "expand_row": "Mở rộng dòng",
+      "select_row": "Chọn dòng",
+      "select_all_rows": "Chọn tất cả dòng",
+      "no_data": "Không có dữ liệu"
+    },
     "unsaved": {
       "title": "Bạn có chắc muốn thoát?",
       "description": "Bạn có thay đổi chưa lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất.",
       "quit": "Thoát"
     }
+  },
+  "footer": {
+    "privacy_policy": "Chính sách quyền riêng tư",
+    "terms_of_service": "Điều khoản dịch vụ",
+    "cookie_policy": "Chính sách cookie",
+    "help": "Trợ giúp",
+    "rights_reserved": "Đã đăng ký bản quyền.",
+    "description": "Kết nối tài liệu giảng dạy, hoạt động duyệt của giảng viên và bằng chứng học tập. Một lộ trình rõ ràng hơn từ nội dung giảng dạy đến mức độ thấu hiểu.",
+    "platform": "Nền tảng",
+    "course_library": "Thư viện khóa học",
+    "learning_paths": "Lộ trình học tập",
+    "support": "Hỗ trợ",
+    "help_center": "Trung tâm trợ giúp"
   },
   "permission_denied": {
     "title": "Bạn không có quyền truy cập trang này",
@@ -77,12 +130,15 @@
     "close_menu": "Đóng menu",
     "org_units": "Tổ chức",
     "operations": "Vận hành",
-    "resource_inventory": "Tài nguyên"
+    "resource_inventory": "Tài nguyên",
+    "user_menu": "Menu người dùng"
   },
   "auth": {
     "sign_in": "Đăng nhập",
     "sign_in_with_google": "Đăng nhập bằng Google",
     "sign_out": "Đăng xuất",
+    "redirecting_to_sign_in": "Đang chuyển đến trang đăng nhập…",
+    "checking_session": "Đang kiểm tra phiên đăng nhập…",
     "not_provisioned_title": "Tài khoản chưa được đăng ký",
     "not_provisioned_body": "Email này chưa được đăng ký. Vui lòng liên hệ quản trị viên để được thêm tài khoản trước khi đăng nhập."
   },
@@ -472,6 +528,19 @@
     "overall_risk_count_other": "{{count}} học viên cần chú ý",
     "highest_progress": "Tiến độ cao nhất",
     "view_profile": "Xem hồ sơ",
+    "cohort_overview": "Tổng quan lớp học",
+    "active": "Đang hoạt động",
+    "at_risk": "Có nguy cơ",
+    "progress_percent": "Tiến độ {{progress}}%",
+    "clear_filters": "Xóa bộ lọc",
+    "empty": {
+      "title": "Chưa có học viên ghi danh",
+      "description": "Khi có học viên ghi danh, tiến độ và tín hiệu rủi ro của họ sẽ xuất hiện tại đây."
+    },
+    "no_match": {
+      "title": "Không tìm thấy học viên phù hợp",
+      "description": "Hãy thử từ khóa khác hoặc xóa các bộ lọc."
+    },
     "stats": {
       "total": "Tổng số",
       "enrolled": "Đã ghi danh",
@@ -487,6 +556,31 @@
     "subtitle": "Tất cả lượt làm bài kiểm tra và phiên phỏng vấn trong khóa học.",
     "type_label": "Loại đánh giá",
     "search_placeholder": "Lọc theo học viên hoặc tiêu đề…",
+    "quiz": "Bài kiểm tra",
+    "interview": "Phỏng vấn",
+    "all_quizzes": "Tất cả bài kiểm tra",
+    "all_interviews": "Tất cả phỏng vấn",
+    "result": "Kết quả",
+    "all_results": "Tất cả kết quả",
+    "time": "Thời gian",
+    "all_time": "Toàn bộ thời gian",
+    "options": {
+      "all": "Tất cả kết quả",
+      "passed": "Đạt",
+      "not_passed": "Chưa đạt",
+      "grading": "Đang chấm",
+      "evaluating": "Đang đánh giá",
+      "in_progress": "Đang thực hiện",
+      "failed": "Đánh giá thất bại",
+      "not_graded": "Chưa chấm"
+    },
+    "time_options": {
+      "all": "Toàn bộ thời gian",
+      "today": "24 giờ qua",
+      "7": "7 ngày qua",
+      "30": "30 ngày qua",
+      "90": "90 ngày qua"
+    },
     "showing": "Hiển thị {{shown}} trên {{total}}",
     "showing_matching": "Hiển thị {{shown}} kết quả phù hợp",
     "empty": {
@@ -548,6 +642,22 @@
     "lesson_locked_body": "Hoàn thành các bài học tiên quyết và ôn tập các thẻ đến hạn để mở khóa bài học này.",
     "resource_unavailable": "Tài nguyên không khả dụng",
     "download": "Tải xuống",
+    "tabs": {
+      "notes": "Ghi chú bài học",
+      "discussion": "Thảo luận",
+      "resources": "Tài nguyên"
+    },
+    "next_lesson": "Tiếp theo: {{title}}",
+    "finished": "Đã hoàn tất",
+    "lesson_notes": "Ghi chú bài học",
+    "lesson_notes_pending": "Ghi chú bài học sẽ xuất hiện sau khi tài liệu được xử lý.",
+    "downloadable_resources": "Tài nguyên tải xuống",
+    "resource_count_one": "{{count}} tệp",
+    "resource_count_other": "{{count}} tệp",
+    "no_resources": "Bài học này chưa có tài nguyên",
+    "no_lessons_title": "Chưa có bài học",
+    "no_lessons_body": "Khóa học này chưa có nội dung bài học sẵn sàng cho học viên.",
+    "back_to_course": "Quay lại khóa học",
     "reading_lesson": "Bài đọc",
     "reading_open_fullscreen": "Mở toàn màn hình",
     "reading_material_unavailable": "Tài liệu đọc hiện chưa khả dụng.",
@@ -778,6 +888,12 @@
     "module_created": "Đã tạo chương",
     "create_module_failed": "Tạo chương thất bại",
     "module_title_placeholder": "Tên chương (vd. Nền tảng Máy học)",
+    "module_settings_title": "Cài đặt",
+    "module_description_label": "Mô tả",
+    "module_description_placeholder": "Mô tả ngắn gọn về chương này…",
+    "module_duration_label": "Thời lượng yêu cầu (phút)",
+    "module_duration_placeholder": "VD: 60",
+    "save_module_settings": "Lưu cài đặt",
     "no_items_yet": "Chưa có mục nào.",
     "edit_module": "Sửa chương",
     "edit_button": "Sửa",
@@ -788,6 +904,25 @@
     "publish_module_body": "Chương sẽ được hiển thị cho học viên. Tiếp tục?",
     "archive": "Lưu trữ",
     "module_archived": "Đã lưu trữ chương",
+    "module_published": "Đã xuất bản chương",
+    "module_unpublished": "Đã gỡ xuất bản chương",
+    "hide_module_hint": "Ẩn chương này khỏi học viên",
+    "archived_module_hint": "Chương đã được lưu trữ và không thể xuất bản lại",
+    "publish_module_hint": "Hiển thị chương này cho học viên đã ghi danh",
+    "unpublish": "Gỡ xuất bản",
+    "archived": "Đã lưu trữ",
+    "module_stats": "Thống kê chương",
+    "total_items": "Tổng số mục",
+    "published": "Đã xuất bản",
+    "draft": "Bản nháp",
+    "estimated_minutes": "Số phút ước tính",
+    "status_published": "đã xuất bản",
+    "status_draft": "bản nháp",
+    "status_archived": "đã lưu trữ",
+    "item_count_one": "{{count}} mục",
+    "item_count_other": "{{count}} mục",
+    "duration_suffix": " · ~{{minutes}} phút",
+    "module_not_found": "Không tìm thấy chương.",
     "archive_module_title": "Lưu trữ chương này?",
     "archive_module_body": "Chương sẽ bị ẩn khỏi học viên và không thể bắt đầu lượt làm mới. Các lượt đang thực hiện vẫn có thể hoàn tất và tiến độ lịch sử được giữ lại. Không thể hoàn tác thao tác này.",
     "delete_module": "Xóa chương nháp",
@@ -796,6 +931,9 @@
     "delete_module_confirm": "Xóa chương",
     "mark_module_as": "Nhấn để đánh dấu là {{status}}",
     "curriculum_fallback_title": "Cấu trúc chương trình",
+    "curriculum_items": "Nội dung chương",
+    "no_items_add_below": "Chưa có nội dung. Hãy thêm nội dung bên dưới.",
+    "add_content": "Thêm nội dung",
     "module_count": "{{count}} chương",
     "lesson_count_suffix": " · {{count}} bài học",
     "nav_students": "Học viên",
@@ -2901,7 +3039,8 @@
     "student": "Học viên",
     "teacher": "Giảng viên",
     "manager": "Quản lý",
-    "admin": "Quản trị"
+    "admin": "Quản trị",
+    "switcher_aria": "Chuyển khu vực làm việc"
   },
   "sidebar": {
     "collapse": "Thu gọn",
@@ -4731,7 +4870,115 @@
     "delete_scope_tail": "sẽ bị ảnh hưởng.",
     "delete_no_children": "{{code}} sẽ bị xóa. Không thể hoàn tác."
   },
+  "question_bank": {
+    "title": "Ngân hàng câu hỏi",
+    "description": "Tái sử dụng các câu hỏi đã được duyệt trong khóa học. Bản sao được nhập sẽ ở trạng thái nháp để bạn kiểm tra trước khi xuất bản.",
+    "selected_one": "đã chọn",
+    "selected_other": "đã chọn",
+    "shown": " · đang hiển thị {{count}}{{suffix}}",
+    "clear_selection": "Bỏ chọn",
+    "select_all_visible": "Chọn tất cả đang hiển thị",
+    "import": "Nhập",
+    "from": "từ",
+    "loading": "Đang tải ngân hàng…",
+    "load_failed": "Không thể tải ngân hàng: {{message}}",
+    "no_match": "Không có câu hỏi nào phù hợp với các bộ lọc.",
+    "clear_filters": "Xóa bộ lọc",
+    "search_placeholder": "Tìm theo nội dung câu hỏi hoặc tên bài kiểm tra…",
+    "clear_search": "Xóa nội dung tìm kiếm",
+    "loading_modules": "Đang tải chương…",
+    "all_modules": "Tất cả chương",
+    "module_option": "Chương {{position}} · {{title}}",
+    "pick_module_first": "Hãy chọn chương trước",
+    "all_lessons_pick_module": "Tất cả bài học (hãy chọn chương)",
+    "loading_lessons": "Đang tải bài học…",
+    "all_lessons_in_module": "Tất cả bài học trong chương",
+    "question_type": {
+      "all": "Tất cả loại",
+      "multiple_choice": "Trắc nghiệm một đáp án",
+      "true_false": "Đúng / sai",
+      "short_answer": "Trả lời ngắn",
+      "fill_blank": "Điền vào chỗ trống"
+    },
+    "bloom": {
+      "all": "Mọi cấp độ Bloom",
+      "remember": "Ghi nhớ",
+      "understand": "Hiểu",
+      "apply": "Vận dụng",
+      "analyze": "Phân tích",
+      "evaluate": "Đánh giá",
+      "create": "Sáng tạo"
+    },
+    "difficulty": {
+      "all": "Mọi độ khó",
+      "easy": "Dễ",
+      "medium": "Trung bình",
+      "hard": "Khó"
+    },
+    "review_status": {
+      "approved": "Chỉ câu đã duyệt",
+      "pending": "Chờ duyệt",
+      "edited": "Đã chỉnh sửa",
+      "all": "Tất cả trạng thái"
+    }
+  },
   "quiz_generation": {
+    "advanced": {
+      "toggle": "Cá nhân hóa nâng cao",
+      "extra_instructions": "Hướng dẫn bổ sung",
+      "extra_instructions_placeholder": "Các yêu cầu bổ sung cho trình tạo câu hỏi (phong cách, đối tượng, kiến thức nền…).",
+      "focus_topics": "Chủ đề trọng tâm",
+      "focus_topics_hint": "Trình tạo sẽ ưu tiên các chủ đề này. Tối đa 10 mục, mỗi mục 200 ký tự.",
+      "avoid_topics": "Chủ đề cần tránh",
+      "avoid_topics_hint": "Trình tạo sẽ tránh các chủ đề này."
+    },
+    "settings": {
+      "questions": "Số câu hỏi",
+      "difficulty": "Độ khó",
+      "question_types": "Loại câu hỏi",
+      "question_types_hint": "Trình tạo sẽ luân phiên các loại đã chọn khi phân bổ câu hỏi cho từng phần. Hãy chọn ít nhất một loại.",
+      "expected_time": "Thời gian dự kiến mỗi câu (giây)",
+      "expected_time_hint": "Áp dụng trực tiếp cho mọi câu hỏi được tạo."
+    },
+    "difficulty": {
+      "easy": "Dễ",
+      "medium": "Trung bình",
+      "hard": "Khó",
+      "mixed": "Kết hợp"
+    },
+    "question_types": {
+      "multiple_choice": "Trắc nghiệm một đáp án",
+      "true_false": "Đúng / sai",
+      "short_answer": "Trả lời ngắn",
+      "fill_blank": "Điền vào chỗ trống",
+      "numerical": "Dạng số",
+      "matching": "Ghép đôi",
+      "ordering": "Sắp xếp"
+    },
+    "mode": {
+      "label": "Chế độ tạo",
+      "topic": "Theo chủ đề",
+      "topic_hint": "Phân bổ cân bằng giữa các bài học",
+      "coverage": "Bao phủ nội dung",
+      "coverage_hint": "Ít nhất một câu hỏi cho mỗi phần bài học",
+      "topic_help": "Chế độ chủ đề phân bổ câu hỏi cân bằng giữa các bài học đã chọn. Chuyển sang chế độ bao phủ để kiểm tra toàn bộ nội dung bài học.",
+      "coverage_help": "Chế độ bao phủ phân bổ câu hỏi theo từng phần để mọi phần của bài học đều được đề cập."
+    },
+    "existing": {
+      "label": "Câu hỏi hiện có",
+      "replace": "Thay thế",
+      "replace_hint": "Xóa câu hỏi hiện tại và tạo lại từ đầu",
+      "append": "Thêm vào",
+      "append_hint": "Thêm câu hỏi mới bên cạnh các câu hiện có",
+      "replace_warning": "Bài kiểm tra đã có câu hỏi. Chế độ thay thế sẽ xóa chúng trước khi tạo mới."
+    },
+    "sources": {
+      "label": "Bài học nguồn",
+      "select_all": "Chọn tất cả",
+      "empty": "Chương này chưa có bài học. Hãy thêm bài học có tài liệu sẵn sàng cho AI trước khi tạo câu hỏi."
+    },
+    "generating": "Đang tạo…",
+    "generate": "Tạo câu hỏi",
     "outcomes": {
       "label": "Chuẩn đầu ra mục tiêu",
       "select_all": "Chọn tất cả",
@@ -4741,6 +4988,21 @@
     }
   },
   "teacher_quiz_manage": {
+    "bank": {
+      "all_already_added": "Tất cả câu hỏi đã chọn đều đã có trong ngân hàng tuyển chọn",
+      "added_one": "Đã thêm {{count}} câu hỏi vào ngân hàng tuyển chọn",
+      "added_other": "Đã thêm {{count}} câu hỏi vào ngân hàng tuyển chọn",
+      "skipped_one": "Đã bỏ qua {{count}} câu hỏi do đã tồn tại",
+      "skipped_other": "Đã bỏ qua {{count}} câu hỏi do đã tồn tại",
+      "drafts_one": "{{count}} câu đang ở trạng thái nháp — hãy duyệt trước khi nhập",
+      "drafts_other": "{{count}} câu đang ở trạng thái nháp — hãy duyệt trước khi nhập",
+      "add_failed": "Không thể thêm các câu hỏi đã chọn vào ngân hàng",
+      "add_selected_title_one": "Thêm {{count}} câu hỏi vào ngân hàng tuyển chọn?",
+      "add_selected_title_other": "Thêm {{count}} câu hỏi vào ngân hàng tuyển chọn?",
+      "add_selected_description": "Các bản sao độc lập sẽ được tạo. Những chỉnh sửa sau này trong bài kiểm tra sẽ không ảnh hưởng đến các bản sao trong ngân hàng.",
+      "add_one_title": "Thêm câu hỏi vào ngân hàng tuyển chọn?",
+      "add_one_description": "Một bản sao có thể tái sử dụng sẽ được tạo cho khóa học này. Các chỉnh sửa sau này đối với câu hỏi sẽ không ảnh hưởng đến bản sao trong ngân hàng."
+    },
     "outcome": {
       "label": "Chuẩn đầu ra",
       "none": "Không có chuẩn đầu ra"
@@ -5863,6 +6125,22 @@
     }
   },
   "teacher_lesson_manage": {
+    "quiz_draft": {
+      "title": "Bài kiểm tra: {{lesson}}",
+      "description": "Bài kiểm tra nháp được tạo từ tài liệu của bài học này."
+    },
+    "header": {
+      "type": "Bài học {{type}}",
+      "title_placeholder": "Tiêu đề bài học…",
+      "untitled": "Bài học chưa có tiêu đề",
+      "summary_placeholder": "Thêm mô tả ngắn cho bài học…"
+    },
+    "resources": {
+      "empty": "Chưa có tài nguyên đính kèm.",
+      "attach": "Đính kèm tài nguyên mới",
+      "formats": "PDF, ZIP, MP4, XLSX, PPTX, DOCX và các định dạng khác",
+      "no_file": "Chưa đính kèm tệp"
+    },
     "ai_optin": {
       "label": "Dùng cho AI",
       "hint": "Đồng thời thêm tài liệu vào AI Hub cho trắc nghiệm, tìm kiếm và đồ thị tri thức. Tắt với video, tệp nén và hình ảnh."
@@ -5910,7 +6188,17 @@
       "hint": "Văn bản thuần hoặc Markdown",
       "write": "Soạn thảo",
       "preview": "Xem trước",
-      "empty_preview": "Bắt đầu soạn thảo để xem nội dung hiển thị."
+      "empty_preview": "Bắt đầu soạn thảo để xem nội dung hiển thị.",
+      "reading_placeholder": "# Giới thiệu\n\nViết nội dung bài đọc tại đây.\n\n## Khái niệm chính\n\n- Khái niệm 1\n- Khái niệm 2\n\n**Chữ đậm**, *chữ nghiêng*, `mã nội tuyến`",
+      "notes_placeholder": "Viết ghi chú bài học bằng Markdown…\n\nBạn có thể dùng **chữ đậm**, *chữ nghiêng*, danh sách, khối mã và nhiều định dạng khác.",
+      "bold": "Chữ đậm",
+      "italic": "Chữ nghiêng",
+      "bullet_list": "Danh sách dấu đầu dòng",
+      "heading": "Tiêu đề",
+      "insert_link": "Chèn liên kết",
+      "insert_image": "Chèn hình ảnh",
+      "code_block": "Khối mã",
+      "inline_code": "Mã nội tuyến"
     },
     "actions": {
       "archive": "Lưu trữ",

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface GradientProgressProps {
@@ -29,6 +30,7 @@ export function GradientProgress({
   showLabel = false,
   size = "md",
 }: GradientProgressProps) {
+  const { t } = useTranslation();
   const percentage = Math.min(100, Math.max(0, (value / max) * 100));
 
   return (
@@ -36,7 +38,7 @@ export function GradientProgress({
       {showLabel && (
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-xs font-medium text-m3-on-surface-variant">
-            Progress
+            {t("common.progress")}
           </span>
           <span className="text-xs font-semibold text-m3-on-surface">
             {Math.round(percentage)}%

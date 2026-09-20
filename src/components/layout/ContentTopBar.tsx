@@ -208,7 +208,7 @@ export default function ContentTopBar({ navGroups = [] }: ContentTopBarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors hover:opacity-90"
-            aria-label="User menu"
+            aria-label={t("nav.user_menu")}
           >
             <Avatar className="h-9 w-9 ring-2 ring-surface-elev shadow-sm">
               <AuthenticatedAvatarImage alt={displayName} />

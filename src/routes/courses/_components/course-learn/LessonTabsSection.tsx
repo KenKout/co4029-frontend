@@ -39,6 +39,13 @@ export function LessonTabsSection({
   prevLabel: string | undefined;
   nextLabel: string | undefined;
 }) {
+  const { t } = useTranslation();
+  const tabLabels: Record<Tab, string> = {
+    "Lesson Notes": t("course_learn.tabs.notes"),
+    Discussion: t("course_learn.tabs.discussion"),
+    Resources: t("course_learn.tabs.resources"),
+  };
+
   return (
     <>
       <div className="flex flex-col justify-between gap-4 border-t border-m3-outline-variant/20 pt-4 md:flex-row md:items-center">
@@ -55,7 +62,7 @@ export function LessonTabsSection({
                   : "text-m3-on-surface-variant hover:text-m3-primary hover:bg-m3-surface-container",
               )}
             >
-              {tab}
+              {tabLabels[tab]}
             </Button>
           ))}
         </div>
@@ -74,7 +81,7 @@ export function LessonTabsSection({
                 {prevLabel}
               </span>
             ) : (
-              "Previous"
+              t("common.previous")
             )}
           </Button>
           <Button
@@ -85,10 +92,10 @@ export function LessonTabsSection({
           >
             {hasNext ? (
               <span className="min-w-0 truncate sm:max-w-[120px]">
-                Next: {nextLabel}
+                {t("course_learn.next_lesson", { title: nextLabel })}
               </span>
             ) : (
-              "Finished"
+              t("course_learn.finished")
             )}
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -101,11 +108,11 @@ export function LessonTabsSection({
             <div className="flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4 text-m3-secondary" />
               <h4 className="font-headline font-bold text-m3-on-surface text-sm">
-                Lesson Notes
+                {t("course_learn.lesson_notes")}
               </h4>
             </div>
             <p className="text-m3-on-surface-variant text-sm leading-relaxed">
-              Lesson notes will appear here once the material is processed.
+              {t("course_learn.lesson_notes_pending")}
             </p>
           </GlassCard>
         )}
@@ -126,16 +133,18 @@ function ResourcesPanel({
 }: {
   resources: LessonResourcePublic[] | undefined;
 }) {
+  const { t } = useTranslation();
+
   return (
     <GlassCard className="p-4 sm:p-8">
       <div className="flex items-center gap-2 mb-5">
         <Download className="h-4 w-4 text-m3-secondary" />
         <h4 className="font-headline font-bold text-m3-on-surface text-sm">
-          Downloadable Resources
+          {t("course_learn.downloadable_resources")}
         </h4>
         {resources && (
           <span className="ml-auto text-xs text-m3-on-surface-variant">
-            {resources.length} file{resources.length !== 1 ? "s" : ""}
+            {t("course_learn.resource_count", { count: resources.length })}
           </span>
         )}
       </div>
@@ -148,7 +157,7 @@ function ResourcesPanel({
             <FileText className="h-5 w-5 text-m3-outline" />
           </div>
           <p className="text-sm font-semibold text-m3-on-surface">
-            No resources for this lesson
+            {t("course_learn.no_resources")}
           </p>
         </div>
       ) : (

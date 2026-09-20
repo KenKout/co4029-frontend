@@ -74,7 +74,7 @@ export function LessonResourcesSection({
         <div className="flex flex-col items-center justify-center py-10 rounded-xl bg-m3-surface-container-lowest ghost-border">
           <Paperclip className="h-8 w-8 text-m3-on-surface-variant/40 mb-2" />
           <p className="text-sm text-m3-on-surface-variant">
-            No resources attached yet.
+            {t("teacher_lesson_manage.resources.empty")}
           </p>
         </div>
       )}
@@ -82,9 +82,9 @@ export function LessonResourcesSection({
       <FileDropzone
         onFile={(file) => void resourceUpload.handleResourceFile(file)}
         busy={editor.attachingResource}
-        busyLabel="Uploading…"
-        idleTitle="Attach New Resource"
-        hint="PDF, ZIP, MP4, XLSX, PPTX, DOCX, and more"
+        busyLabel={t("file_dropzone.uploading")}
+        idleTitle={t("teacher_lesson_manage.resources.attach")}
+        hint={t("teacher_lesson_manage.resources.formats")}
       />
 
       {/* Opt-in AI sync. Controls whether the NEXT upload is also added

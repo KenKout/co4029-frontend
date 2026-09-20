@@ -57,45 +57,43 @@ export function ReadingContent({
         value={notes}
         onChange={setNotes}
         editorRef={notesRef}
-        placeholder={
-          "# Introduction\n\nWrite your reading material here.\n\n## Key Concepts\n\n- Concept 1\n- Concept 2\n\n**Bold text**, *italic text*, `inline code`"
-        }
+        placeholder={t("teacher_lesson_manage.editor.reading_placeholder")}
         toolbar={
           <>
             <ToolbarBtn
               icon={Bold}
-              label="Bold"
+              label={t("teacher_lesson_manage.editor.bold")}
               onClick={() => applyMarkdown("**")}
             />
             <ToolbarBtn
               icon={Italic}
-              label="Italic"
+              label={t("teacher_lesson_manage.editor.italic")}
               onClick={() => applyMarkdown("*")}
             />
             <ToolbarBtn
               icon={List}
-              label="Bullet List"
+              label={t("teacher_lesson_manage.editor.bullet_list")}
               onClick={() => applyBlock("- ")}
             />
             <ToolbarBtn
               icon={Hash}
-              label="Heading"
+              label={t("teacher_lesson_manage.editor.heading")}
               onClick={() => applyBlock("# ")}
             />
             <span className="w-px h-4 bg-m3-outline-variant/30 mx-0.5" />
             <ToolbarBtn
               icon={LinkIcon}
-              label="Insert Link"
+              label={t("teacher_lesson_manage.editor.insert_link")}
               onClick={() => applyMarkdown("[", "](url)")}
             />
             <ToolbarBtn
               icon={Image}
-              label="Insert Image"
+              label={t("teacher_lesson_manage.editor.insert_image")}
               onClick={() => applyMarkdown("![alt](", ")")}
             />
             <ToolbarBtn
               icon={Code}
-              label="Code Block"
+              label={t("teacher_lesson_manage.editor.code_block")}
               onClick={() => applyMarkdown("```\n", "\n```")}
             />
           </>

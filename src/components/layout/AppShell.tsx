@@ -31,8 +31,9 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const routerLocation = useRouterState({ select: (s) => s.location });
-  const isInterviewWorkspace =
-    /^\/courses\/[^/]+\/interview\/[^/]+/.test(routerLocation.pathname);
+  const isInterviewWorkspace = /^\/courses\/[^/]+\/interview\/[^/]+/.test(
+    routerLocation.pathname,
+  );
   const isAuthoringWorkspace =
     /^\/management\/(career-paths|learning-programs)\/(new|[^/]+)$/.test(
       routerLocation.pathname,
@@ -97,8 +98,8 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
           <span>
             {status === "unauthenticated" || stalled
-              ? "Redirecting to sign in..."
-              : "Checking your session..."}
+              ? t("auth.redirecting_to_sign_in")
+              : t("auth.checking_session")}
           </span>
         </div>
       </div>
@@ -132,9 +133,7 @@ export default function AppShell({ children, navGroups, role }: AppShellProps) {
         <div
           className={cn(
             "relative",
-            hideInterviewChrome
-              ? "min-h-screen"
-              : "px-4 py-6 sm:px-6 lg:px-10",
+            hideInterviewChrome ? "min-h-screen" : "px-4 py-6 sm:px-6 lg:px-10",
           )}
         >
           {children}

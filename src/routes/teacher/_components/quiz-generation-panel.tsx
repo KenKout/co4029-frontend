@@ -153,7 +153,8 @@ export function QuizGenerationPanel(props: QuizGenerationPanelProps) {
         />
       )}
 
-      <Button variant="ghost"
+      <Button
+        variant="ghost"
         type="button"
         onClick={() => setShowAdvanced((current) => !current)}
         className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-m3-secondary hover:text-m3-primary cursor-pointer"
@@ -163,7 +164,7 @@ export function QuizGenerationPanel(props: QuizGenerationPanelProps) {
         ) : (
           <ChevronRight className="h-3.5 w-3.5" />
         )}
-        Advanced personalisation
+        {t("quiz_generation.advanced.toggle")}
       </Button>
 
       {showAdvanced && <AdvancedPersonalisation controller={controller} />}

@@ -1,4 +1,5 @@
 import type { LessonAuthoring } from "@/lib/api/types";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,26 +19,27 @@ export function SourceLessonsPicker({
   onToggleLesson: (lessonId: string) => void;
   onSelectAll: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Source lessons
+          {t("quiz_generation.sources.label")}
         </label>
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           disabled={lessons.length === 0}
           onClick={onSelectAll}
           className="text-xs font-semibold text-m3-secondary hover:text-m3-primary disabled:text-m3-on-surface-variant/50 disabled:cursor-not-allowed cursor-pointer"
         >
-          Select all
+          {t("quiz_generation.sources.select_all")}
         </Button>
       </div>
       <div className="space-y-2">
         {lessons.length === 0 ? (
           <div className="rounded-xl bg-m3-surface p-4 text-sm text-m3-on-surface-variant text-center">
-            This module has no lessons yet. Add a lesson with AI-ready material
-            before generating.
+            {t("quiz_generation.sources.empty")}
           </div>
         ) : (
           lessons.map((lesson) => {

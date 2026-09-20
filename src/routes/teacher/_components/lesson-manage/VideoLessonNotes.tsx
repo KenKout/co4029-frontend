@@ -51,40 +51,38 @@ export function VideoLessonNotes({
         onChange={setNotes}
         editorRef={notesRef}
         minHeight="min-h-[320px]"
-        placeholder={
-          "Write lesson notes in Markdown…\n\nYou can use **bold**, *italic*, lists, code blocks, and more."
-        }
+        placeholder={t("teacher_lesson_manage.editor.notes_placeholder")}
         toolbar={
           <>
             <ToolbarBtn
               icon={Bold}
-              label="Bold"
+              label={t("teacher_lesson_manage.editor.bold")}
               onClick={() => applyMarkdown("**")}
             />
             <ToolbarBtn
               icon={Italic}
-              label="Italic"
+              label={t("teacher_lesson_manage.editor.italic")}
               onClick={() => applyMarkdown("*")}
             />
             <span className="w-px h-4 bg-m3-outline-variant/30 mx-0.5" />
             <ToolbarBtn
               icon={List}
-              label="Bullet List"
+              label={t("teacher_lesson_manage.editor.bullet_list")}
               onClick={() => applyBlock("- ")}
             />
             <ToolbarBtn
               icon={LinkIcon}
-              label="Insert Link"
+              label={t("teacher_lesson_manage.editor.insert_link")}
               onClick={() => applyMarkdown("[", "](url)")}
             />
             <ToolbarBtn
               icon={Code}
-              label="Inline Code"
+              label={t("teacher_lesson_manage.editor.inline_code")}
               onClick={() => applyMarkdown("`")}
             />
             <ToolbarBtn
               icon={Image}
-              label="Insert Image"
+              label={t("teacher_lesson_manage.editor.insert_image")}
               onClick={() => applyMarkdown("![alt](", ")")}
             />
           </>

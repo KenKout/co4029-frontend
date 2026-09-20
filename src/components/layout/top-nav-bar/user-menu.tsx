@@ -35,7 +35,7 @@ export function TopNavUserMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-m3-secondary focus-visible:ring-offset-2 transition-all hover:opacity-90"
-        aria-label="User menu"
+        aria-label={t("nav.user_menu")}
       >
         <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm">
           <AuthenticatedAvatarImage alt={displayName} />

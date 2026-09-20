@@ -23,16 +23,69 @@
     "search": "Search",
     "submit": "Submit",
     "close": "Close",
+    "clear_all": "Clear all",
+    "progress": "Progress",
+    "vs_last_week": "vs last week",
+    "student_count": "{{count}} students",
+    "previous_slide": "Previous slide",
+    "next_slide": "Next slide",
     "back_to_top": "Back to top",
     "yes": "Yes",
     "no": "No",
     "breadcrumb_aria": "Breadcrumb",
     "unsaved_changes_warning": "You have unsaved changes. Leaving the page will discard them.",
+    "data_table": {
+      "range": "{{from}}–{{to}} of {{total}}",
+      "selected_one": "{{count}} selected",
+      "selected_other": "{{count}} selected",
+      "rows": "Rows",
+      "rows_per_page": "Rows per page",
+      "page": "Page {{page}} / {{pageCount}}",
+      "first_page": "First page",
+      "previous_page": "Previous page",
+      "next_page": "Next page",
+      "last_page": "Last page",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Week",
+      "month": "Month",
+      "six_months": "6 Months",
+      "year": "Year",
+      "all_time": "All time",
+      "time_range": "Time range",
+      "custom_range": "Custom range…",
+      "custom_time_range": "Custom time range",
+      "from": "From",
+      "to": "To",
+      "clear": "Clear",
+      "filters": "Filters",
+      "all": "All",
+      "reset_all": "Reset all",
+      "done": "Done",
+      "collapse_row": "Collapse row",
+      "expand_row": "Expand row",
+      "select_row": "Select row",
+      "select_all_rows": "Select all rows",
+      "no_data": "No data"
+    },
     "unsaved": {
       "title": "Are you sure you want to quit?",
       "description": "You have unsaved changes. If you quit now, they will be lost.",
       "quit": "Quit"
     }
+  },
+  "footer": {
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service",
+    "cookie_policy": "Cookie Policy",
+    "help": "Help",
+    "rights_reserved": "All rights reserved.",
+    "description": "Connect teaching materials, instructor review and learning evidence. A clearer path from what you teach to what learners understand.",
+    "platform": "Platform",
+    "course_library": "Course Library",
+    "learning_paths": "Learning Paths",
+    "support": "Support",
+    "help_center": "Help Center"
   },
   "permission_denied": {
     "title": "You don't have access to this page",
@@ -77,12 +130,15 @@
     "org_units": "Organization",
     "operations": "Operations",
     "resource_inventory": "Resource inventory",
-    "organizations": "Organizations"
+    "organizations": "Organizations",
+    "user_menu": "User menu"
   },
   "auth": {
     "sign_in": "Sign in",
     "sign_in_with_google": "Sign in with Google",
     "sign_out": "Sign out",
+    "redirecting_to_sign_in": "Redirecting to sign in…",
+    "checking_session": "Checking your session…",
     "not_provisioned_title": "Account not provisioned",
     "not_provisioned_body": "This email is not registered. Ask an administrator to add your account before signing in."
   },
@@ -524,6 +580,19 @@
     "overall_risk_count_other": "{{count}} students need attention",
     "highest_progress": "Highest progress",
     "view_profile": "View profile",
+    "cohort_overview": "Cohort Overview",
+    "active": "Active",
+    "at_risk": "At Risk",
+    "progress_percent": "{{progress}}% progress",
+    "clear_filters": "Clear filters",
+    "empty": {
+      "title": "No students enrolled yet",
+      "description": "Once students enroll in this course, they'll appear here with their progress and risk signals."
+    },
+    "no_match": {
+      "title": "No students match",
+      "description": "Try a different search term or clear your filters."
+    },
     "stats": {
       "total": "Total",
       "enrolled": "Enrolled",
@@ -539,6 +608,31 @@
     "subtitle": "Every quiz attempt and interview session in this course.",
     "type_label": "Assessment type",
     "search_placeholder": "Filter by student or title…",
+    "quiz": "Quiz",
+    "interview": "Interview",
+    "all_quizzes": "All quizzes",
+    "all_interviews": "All interviews",
+    "result": "Result",
+    "all_results": "All results",
+    "time": "Time",
+    "all_time": "All time",
+    "options": {
+      "all": "All results",
+      "passed": "Passed",
+      "not_passed": "Not passed",
+      "grading": "Grading",
+      "evaluating": "Evaluating",
+      "in_progress": "In progress",
+      "failed": "Evaluation failed",
+      "not_graded": "Not graded"
+    },
+    "time_options": {
+      "all": "All time",
+      "today": "Last 24 hours",
+      "7": "Last 7 days",
+      "30": "Last 30 days",
+      "90": "Last 90 days"
+    },
     "showing": "Showing {{shown}} of {{total}}",
     "showing_matching": "Showing {{shown}} matching",
     "empty": {
@@ -600,6 +694,22 @@
     "lesson_locked_body": "Complete the prerequisite lessons and review your due cards to unlock this lesson.",
     "resource_unavailable": "Resource unavailable",
     "download": "Download",
+    "tabs": {
+      "notes": "Lesson Notes",
+      "discussion": "Discussion",
+      "resources": "Resources"
+    },
+    "next_lesson": "Next: {{title}}",
+    "finished": "Finished",
+    "lesson_notes": "Lesson Notes",
+    "lesson_notes_pending": "Lesson notes will appear here once the material is processed.",
+    "downloadable_resources": "Downloadable Resources",
+    "resource_count_one": "{{count}} file",
+    "resource_count_other": "{{count}} files",
+    "no_resources": "No resources for this lesson",
+    "no_lessons_title": "No lessons available yet",
+    "no_lessons_body": "This course does not have any lesson content ready for students yet.",
+    "back_to_course": "Back to Course",
     "reading_lesson": "Reading",
     "reading_open_fullscreen": "Open fullscreen",
     "reading_material_unavailable": "Reading material is not available right now.",
@@ -847,6 +957,12 @@
     "module_created": "Module created",
     "create_module_failed": "Failed to create module",
     "module_title_placeholder": "Module title (e.g. Foundations of ML)",
+    "module_settings_title": "Settings",
+    "module_description_label": "Description",
+    "module_description_placeholder": "Brief description of this module…",
+    "module_duration_label": "Required duration (min)",
+    "module_duration_placeholder": "e.g. 60",
+    "save_module_settings": "Save settings",
     "no_items_yet": "No items yet.",
     "edit_module": "Edit module",
     "edit_button": "Edit",
@@ -857,6 +973,25 @@
     "publish_module_body": "This will make the module visible to students. Continue?",
     "archive": "Archive",
     "module_archived": "Module archived",
+    "module_published": "Module published",
+    "module_unpublished": "Module unpublished",
+    "hide_module_hint": "Hide this module from students",
+    "archived_module_hint": "This module is archived and cannot be republished",
+    "publish_module_hint": "Make this module visible to enrolled students",
+    "unpublish": "Unpublish",
+    "archived": "Archived",
+    "module_stats": "Module Stats",
+    "total_items": "Total Items",
+    "published": "Published",
+    "draft": "Draft",
+    "estimated_minutes": "Est. Minutes",
+    "status_published": "published",
+    "status_draft": "draft",
+    "status_archived": "archived",
+    "item_count_one": "{{count}} item",
+    "item_count_other": "{{count}} items",
+    "duration_suffix": " · ~{{minutes}}m",
+    "module_not_found": "Module not found.",
     "archive_module_title": "Archive this module?",
     "archive_module_body": "The module will be hidden from students and no new attempts can start. In-progress attempts can still be completed, and historical progress is preserved. This cannot be undone.",
     "delete_module": "Delete draft module",
@@ -865,6 +1000,9 @@
     "delete_module_confirm": "Delete module",
     "mark_module_as": "Click to mark as {{status}}",
     "curriculum_fallback_title": "Curriculum Structure",
+    "curriculum_items": "Curriculum items",
+    "no_items_add_below": "No items yet. Add one below.",
+    "add_content": "Add content",
     "module_count": "{{count}} module",
     "lesson_count_suffix": " · {{count}} lessons",
     "nav_students": "Students",
@@ -2992,7 +3130,8 @@
     "student": "Student",
     "teacher": "Teacher",
     "manager": "Manager",
-    "admin": "Admin"
+    "admin": "Admin",
+    "switcher_aria": "Section switcher"
   },
   "sidebar": {
     "collapse": "Collapse",
@@ -4909,7 +5048,115 @@
     "delete_scope_tail": "will be affected.",
     "delete_no_children": "{{code}} will be removed. This cannot be undone."
   },
+  "question_bank": {
+    "title": "Question bank",
+    "description": "Reuse approved questions across the course. Imported clones become drafts so you can review them before publishing.",
+    "selected_one": "selected",
+    "selected_other": "selected",
+    "shown": " · {{count}} shown{{suffix}}",
+    "clear_selection": "Clear selection",
+    "select_all_visible": "Select all visible",
+    "import": "Import",
+    "from": "from",
+    "loading": "Loading bank…",
+    "load_failed": "Failed to load bank: {{message}}",
+    "no_match": "No bank questions match these filters.",
+    "clear_filters": "Clear filters",
+    "search_placeholder": "Search prompt or quiz title…",
+    "clear_search": "Clear search",
+    "loading_modules": "Loading modules…",
+    "all_modules": "All modules",
+    "module_option": "Module {{position}} · {{title}}",
+    "pick_module_first": "Pick a module first",
+    "all_lessons_pick_module": "All lessons (pick module)",
+    "loading_lessons": "Loading lessons…",
+    "all_lessons_in_module": "All lessons in module",
+    "question_type": {
+      "all": "All types",
+      "multiple_choice": "Multiple choice",
+      "true_false": "True / false",
+      "short_answer": "Short answer",
+      "fill_blank": "Fill in the blank"
+    },
+    "bloom": {
+      "all": "Any Bloom",
+      "remember": "Remember",
+      "understand": "Understand",
+      "apply": "Apply",
+      "analyze": "Analyze",
+      "evaluate": "Evaluate",
+      "create": "Create"
+    },
+    "difficulty": {
+      "all": "Any difficulty",
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "review_status": {
+      "approved": "Approved only",
+      "pending": "Pending review",
+      "edited": "Edited",
+      "all": "All states"
+    }
+  },
   "quiz_generation": {
+    "advanced": {
+      "toggle": "Advanced personalisation",
+      "extra_instructions": "Extra instructions",
+      "extra_instructions_placeholder": "Any extra constraints for the generator (style, audience, prior knowledge…).",
+      "focus_topics": "Focus topics",
+      "focus_topics_hint": "The generator will lean toward these topics. Up to 10 entries, 200 chars each.",
+      "avoid_topics": "Avoid topics",
+      "avoid_topics_hint": "The generator will steer clear of these topics."
+    },
+    "settings": {
+      "questions": "Questions",
+      "difficulty": "Difficulty",
+      "question_types": "Question types",
+      "question_types_hint": "Generator cycles through the selected types when budgeting per section. Pick at least one.",
+      "expected_time": "Expected time per question (s)",
+      "expected_time_hint": "Applied directly to every generated question."
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "mixed": "Mixed"
+    },
+    "question_types": {
+      "multiple_choice": "Multiple choice",
+      "true_false": "True / false",
+      "short_answer": "Short answer",
+      "fill_blank": "Fill in the blank",
+      "numerical": "Numerical",
+      "matching": "Matching",
+      "ordering": "Ordering"
+    },
+    "mode": {
+      "label": "Generation mode",
+      "topic": "Topic",
+      "topic_hint": "Balanced spread across all lessons",
+      "coverage": "Coverage",
+      "coverage_hint": "One or more questions per lesson section",
+      "topic_help": "Topic mode picks a balanced spread across the selected lessons. Switch to coverage mode for full lesson breadth.",
+      "coverage_help": "Coverage mode allocates questions per section so every chunk of the lesson gets representation."
+    },
+    "existing": {
+      "label": "Existing questions",
+      "replace": "Replace",
+      "replace_hint": "Wipe current questions and start fresh",
+      "append": "Append",
+      "append_hint": "Add new questions next to existing ones",
+      "replace_warning": "This quiz already has questions. Replace will delete them before generating."
+    },
+    "sources": {
+      "label": "Source lessons",
+      "select_all": "Select all",
+      "empty": "This module has no lessons yet. Add a lesson with AI-ready material before generating."
+    },
+    "generating": "Generating…",
+    "generate": "Generate questions",
     "outcomes": {
       "label": "Target learning outcomes",
       "select_all": "Select all",
@@ -4919,6 +5166,21 @@
     }
   },
   "teacher_quiz_manage": {
+    "bank": {
+      "all_already_added": "All selected questions are already in the curated bank",
+      "added_one": "Added {{count}} question to the curated bank",
+      "added_other": "Added {{count}} questions to the curated bank",
+      "skipped_one": "{{count}} already existed and was skipped",
+      "skipped_other": "{{count}} already existed and were skipped",
+      "drafts_one": "{{count}} is a draft — approve it to import",
+      "drafts_other": "{{count}} are drafts — approve them to import",
+      "add_failed": "Could not add selected questions to bank",
+      "add_selected_title_one": "Add {{count}} question to curated bank?",
+      "add_selected_title_other": "Add {{count}} questions to curated bank?",
+      "add_selected_description": "Independent snapshots will be created. Later edits in this quiz will not change the bank copies.",
+      "add_one_title": "Add question to curated bank?",
+      "add_one_description": "A reusable snapshot will be created for this course. Future edits to this quiz question will not update the bank copy."
+    },
     "outcome": {
       "label": "Learning outcome",
       "none": "No outcome"
@@ -6041,6 +6303,22 @@
     }
   },
   "teacher_lesson_manage": {
+    "quiz_draft": {
+      "title": "Quiz: {{lesson}}",
+      "description": "Draft quiz generated from this lesson's material."
+    },
+    "header": {
+      "type": "{{type}} Lesson",
+      "title_placeholder": "Lesson title…",
+      "untitled": "Untitled Lesson",
+      "summary_placeholder": "Add a brief summary of this lesson…"
+    },
+    "resources": {
+      "empty": "No resources attached yet.",
+      "attach": "Attach New Resource",
+      "formats": "PDF, ZIP, MP4, XLSX, PPTX, DOCX, and more",
+      "no_file": "No file attached"
+    },
     "ai_optin": {
       "label": "Use for AI",
       "hint": "Also add documents to the AI Hub for quizzes, search, and the knowledge graph. Off for videos, archives, and images."
@@ -6088,7 +6366,17 @@
       "hint": "Plain text or Markdown",
       "write": "Write",
       "preview": "Preview",
-      "empty_preview": "Start writing to see the rendered preview."
+      "empty_preview": "Start writing to see the rendered preview.",
+      "reading_placeholder": "# Introduction\n\nWrite your reading material here.\n\n## Key Concepts\n\n- Concept 1\n- Concept 2\n\n**Bold text**, *italic text*, `inline code`",
+      "notes_placeholder": "Write lesson notes in Markdown…\n\nYou can use **bold**, *italic*, lists, code blocks, and more.",
+      "bold": "Bold",
+      "italic": "Italic",
+      "bullet_list": "Bullet List",
+      "heading": "Heading",
+      "insert_link": "Insert Link",
+      "insert_image": "Insert Image",
+      "code_block": "Code Block",
+      "inline_code": "Inline Code"
     },
     "actions": {
       "archive": "Archive",

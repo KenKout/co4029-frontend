@@ -1,4 +1,5 @@
 import { Filter, Search, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -19,24 +20,26 @@ export function BankSearchBar({
 }: {
   controller: QuestionBankModalController;
 }) {
+  const { t } = useTranslation();
   const { searchInput, setSearchInput } = controller;
   return (
     <div className="relative shrink-0">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-m3-on-surface-variant pointer-events-none" />
       <Input
         type="text"
-        placeholder="Search prompt or quiz title…"
+        placeholder={t("question_bank.search_placeholder")}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         className="h-10 pl-9 pr-9"
         autoFocus
       />
       {searchInput ? (
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           onClick={() => setSearchInput("")}
           className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full hover:bg-m3-surface-container-low flex items-center justify-center"
-          title="Clear search"
+          title={t("question_bank.clear_search")}
         >
           <X className="h-3.5 w-3.5 text-m3-on-surface-variant" />
         </Button>
@@ -50,6 +53,7 @@ function ModuleAndLessonSelects({
 }: {
   controller: QuestionBankModalController;
 }) {
+  const { t } = useTranslation();
   const {
     moduleId,
     setModuleId,
@@ -70,15 +74,20 @@ function ModuleAndLessonSelects({
         options={[
           {
             value: "",
-            label: modulesLoading ? "Loading modules…" : "All modules",
+            label: modulesLoading
+              ? t("question_bank.loading_modules")
+              : t("question_bank.all_modules"),
           },
           ...modules.map((m) => ({
             value: m.id,
-            label: `Module ${m.position + 1} · ${m.title}`,
+            label: t("question_bank.module_option", {
+              position: m.position + 1,
+              title: m.title,
+            }),
           })),
         ]}
       />
-      <div title={moduleId ? undefined : "Pick a module first"}>
+      <div title={moduleId ? undefined : t("question_bank.pick_module_first")}>
         <Select<string>
           value={lessonId}
           onValueChange={(next) => setLessonId(next)}
@@ -88,10 +97,10 @@ function ModuleAndLessonSelects({
             {
               value: "",
               label: !moduleId
-                ? "All lessons (pick module)"
+                ? t("question_bank.all_lessons_pick_module")
                 : lessonsLoading
-                  ? "Loading lessons…"
-                  : "All lessons in module",
+                  ? t("question_bank.loading_lessons")
+                  : t("question_bank.all_lessons_in_module"),
             },
             ...lessons.map((l) => ({
               value: l.id,
@@ -109,6 +118,7 @@ function TaxonomySelects({
 }: {
   controller: QuestionBankModalController;
 }) {
+  const { t } = useTranslation();
   const {
     questionType,
     setQuestionType,
@@ -126,8 +136,8 @@ function TaxonomySelects({
         onValueChange={(next) => setQuestionType(next)}
         size="sm"
         options={QUESTION_TYPE_OPTIONS.map((opt) => ({
-          value: opt.value as string,
-          label: opt.label,
+          value: opt.value,
+          label: t(`question_bank.question_type.${opt.value || "all"}`),
         }))}
       />
       <Select<string>
@@ -135,8 +145,8 @@ function TaxonomySelects({
         onValueChange={(next) => setBloomLevel(next)}
         size="sm"
         options={BLOOM_OPTIONS.map((opt) => ({
-          value: opt.value as string,
-          label: opt.label,
+          value: opt.value,
+          label: t(`question_bank.bloom.${opt.value || "all"}`),
         }))}
       />
       <Select<string>
@@ -144,8 +154,8 @@ function TaxonomySelects({
         onValueChange={(next) => setDifficulty(next)}
         size="sm"
         options={DIFFICULTY_OPTIONS.map((opt) => ({
-          value: opt.value as string,
-          label: opt.label,
+          value: opt.value,
+          label: t(`question_bank.difficulty.${opt.value || "all"}`),
         }))}
       />
       <Select<string>
@@ -153,8 +163,8 @@ function TaxonomySelects({
         onValueChange={(next) => setReviewStatus(next)}
         size="sm"
         options={REVIEW_STATUS_OPTIONS.map((opt) => ({
-          value: opt.value as string,
-          label: opt.label,
+          value: opt.value,
+          label: t(`question_bank.review_status.${opt.value || "all"}`),
         }))}
       />
     </>
@@ -167,6 +177,7 @@ export function BankFilterCard({
 }: {
   controller: QuestionBankModalController;
 }) {
+  const { t } = useTranslation();
   const { activeFilterCount, resetFilters } = controller;
   return (
     <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface-container-lowest p-3 space-y-2 shrink-0">
@@ -174,7 +185,7 @@ export function BankFilterCard({
         <div className="flex items-center gap-1.5">
           <Filter className="h-3 w-3 text-m3-secondary" />
           <p className="text-[10px] font-bold uppercase tracking-widest text-m3-secondary">
-            Filters
+            {t("common.data_table.filters")}
           </p>
           {activeFilterCount > 0 ? (
             <Badge className="border-0 bg-m3-secondary-fixed/40 text-m3-on-secondary-fixed text-[10px] h-4 px-1.5">
@@ -183,12 +194,13 @@ export function BankFilterCard({
           ) : null}
         </div>
         {activeFilterCount > 0 ? (
-          <Button variant="link"
+          <Button
+            variant="link"
             type="button"
             onClick={resetFilters}
             className="text-[10px] font-medium text-m3-secondary hover:underline"
           >
-            Clear all
+            {t("common.clear_all")}
           </Button>
         ) : null}
       </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Archive, CheckCircle, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export function ModulePublishButton({
   courseStatus: string;
   updateModule: UpdateModuleMutation;
 }) {
+  const { t } = useTranslation();
   const [archiveConfirm, setArchiveConfirm] = useState(false);
   const [publishConfirm, setPublishConfirm] = useState(false);
 
@@ -39,7 +41,9 @@ export function ModulePublishButton({
       {
         onSuccess: () =>
           toast.success(
-            next === "published" ? "Module published" : "Module unpublished",
+            next === "published"
+              ? t("teacher_common.module_published")
+              : t("teacher_common.module_unpublished"),
           ),
         onError: (err) => toast.error((err as Error).message),
       },
@@ -52,7 +56,7 @@ export function ModulePublishButton({
       {
         onSuccess: () => {
           setArchiveConfirm(false);
-          toast.success("Module archived");
+          toast.success(t("teacher_common.module_archived"));
         },
         onError: (err) => toast.error((err as Error).message),
       },
@@ -65,7 +69,7 @@ export function ModulePublishButton({
       {
         onSuccess: () => {
           setPublishConfirm(false);
-          toast.success("Module published");
+          toast.success(t("teacher_common.module_published"));
         },
         onError: (err) => toast.error((err as Error).message),
       },
@@ -86,10 +90,10 @@ export function ModulePublishButton({
         )}
         title={
           module.status === "published"
-            ? "Hide this module from students"
+            ? t("teacher_common.hide_module_hint")
             : module.status === "archived"
-              ? "This module is archived and cannot be republished"
-              : "Make this module visible to enrolled students"
+              ? t("teacher_common.archived_module_hint")
+              : t("teacher_common.publish_module_hint")
         }
       >
         {updateModule.isPending &&
@@ -105,19 +109,19 @@ export function ModulePublishButton({
         )}
         {module.status === "published"
           ? courseStatus === "published"
-            ? "Archive"
-            : "Unpublish"
+            ? t("teacher_common.archive")
+            : t("teacher_common.unpublish")
           : module.status === "archived"
-            ? "Archived"
-            : "Publish"}
+            ? t("teacher_common.archived")
+            : t("teacher_common.publish_item")}
       </Button>
       <ConfirmDialog
         open={publishConfirm}
         onOpenChange={setPublishConfirm}
-        title="Publish this module?"
-        description="This will make the module visible to enrolled students. Continue?"
-        confirmLabel="Publish"
-        cancelLabel="Cancel"
+        title={t("teacher_common.publish_module_title")}
+        description={t("teacher_common.publish_module_body")}
+        confirmLabel={t("teacher_common.publish_item")}
+        cancelLabel={t("common.cancel")}
         confirmVariant="default"
         isPending={updateModule.isPending}
         onConfirm={publishModule}
@@ -125,10 +129,10 @@ export function ModulePublishButton({
       <ConfirmDialog
         open={archiveConfirm}
         onOpenChange={setArchiveConfirm}
-        title="Archive this module?"
-        description="The module will be hidden from students and no new attempts can start. In-progress attempts can still be completed, and historical progress is preserved. This cannot be undone."
-        confirmLabel="Archive"
-        cancelLabel="Cancel"
+        title={t("teacher_common.archive_module_title")}
+        description={t("teacher_common.archive_module_body")}
+        confirmLabel={t("teacher_common.archive")}
+        cancelLabel={t("common.cancel")}
         confirmVariant="destructive"
         isPending={updateModule.isPending}
         onConfirm={archiveModule}

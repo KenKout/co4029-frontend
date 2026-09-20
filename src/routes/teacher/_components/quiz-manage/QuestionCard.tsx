@@ -269,9 +269,9 @@ export function QuestionCard({
       <ConfirmDialog
         open={confirmAddToBank}
         onOpenChange={setConfirmAddToBank}
-        title="Add question to curated bank?"
-        description="A reusable snapshot will be created for this course. Future edits to this Quiz question will not update the bank copy."
-        confirmLabel="Add to bank"
+        title={t("teacher_quiz_manage.bank.add_one_title")}
+        description={t("teacher_quiz_manage.bank.add_one_description")}
+        confirmLabel={t("teacher_quiz_manage.editor.add_to_bank")}
         confirmVariant="default"
         isPending={addToBank.isPending}
         onConfirm={() => {

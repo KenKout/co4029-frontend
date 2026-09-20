@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { CourseContentItem } from "@/lib/api/types/common";
 import { AddContentPills } from "./AddContentPills";
 import { ItemRow } from "./ItemRow";
@@ -21,21 +22,22 @@ export function CurriculumItemsCard({
   reorder: ItemReorderController;
   onDelete: (item: CourseContentItem, title: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-m3-surface-container-low rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-m3-outline-variant/10 flex items-center gap-2">
         <h2 className="font-headline font-bold text-sm text-m3-on-surface flex-1">
-          Curriculum Items
+          {t("teacher_common.curriculum_items")}
         </h2>
         <span className="text-xs text-m3-on-surface-variant">
-          Drag to reorder
+          {t("teacher_common.drag_to_reorder")}
         </span>
       </div>
 
       <div className="p-4 space-y-1.5">
         {sortedItems.length === 0 && (
           <p className="text-sm text-m3-on-surface-variant text-center py-6">
-            No items yet. Add one below.
+            {t("teacher_common.no_items_add_below")}
           </p>
         )}
         {sortedItems.map((item, idx) => (

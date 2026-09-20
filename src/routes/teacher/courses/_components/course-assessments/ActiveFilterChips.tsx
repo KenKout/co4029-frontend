@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { CourseAssessmentsController } from "./use-course-assessments-controller";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export function ActiveFilterChips({
 }: {
   controller: CourseAssessmentsController;
 }) {
+  const { t } = useTranslation();
   const {
     activeChips,
     setTitleFilter,
@@ -24,7 +26,8 @@ export function ActiveFilterChips({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {activeChips.map((chip) => (
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           key={chip.key}
           type="button"
           onClick={chip.onRemove}
@@ -35,7 +38,8 @@ export function ActiveFilterChips({
           <X className="h-3 w-3" />
         </Button>
       ))}
-      <Button variant="link"
+      <Button
+        variant="link"
         type="button"
         onClick={() => {
           setTitleFilter("all");
@@ -45,7 +49,7 @@ export function ActiveFilterChips({
         }}
         className="text-xs font-medium text-m3-on-surface-variant underline underline-offset-2 hover:text-m3-on-surface"
       >
-        Clear all
+        {t("common.clear_all")}
       </Button>
     </div>
   );

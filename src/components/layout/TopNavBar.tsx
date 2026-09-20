@@ -60,7 +60,7 @@ export default function TopNavBar() {
           ) : (
             <Link to="/login" search={{ next: undefined }}>
               <Button className="rounded-full px-5 font-semibold">
-                Sign In
+                {t("auth.sign_in")}
               </Button>
             </Link>
           )}

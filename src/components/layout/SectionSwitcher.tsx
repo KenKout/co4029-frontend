@@ -96,7 +96,7 @@ export default function SectionSwitcher() {
 
   return (
     <nav
-      aria-label="Section switcher"
+      aria-label={t("sections.switcher_aria")}
       className="hidden sm:flex items-center gap-1 rounded-md border border-border bg-surface p-1"
     >
       {visible.map((s) => {

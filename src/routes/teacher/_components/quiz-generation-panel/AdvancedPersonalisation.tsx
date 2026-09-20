@@ -13,12 +13,12 @@ function ExtraInstructionsField({
 }: {
   controller: QuizGenerationController;
 }) {
-  const { form, setForm } = controller;
+  const { form, setForm, t } = controller;
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex items-center gap-1.5">
         <MessageSquare className="h-3.5 w-3.5" />
-        Extra instructions
+        {t("quiz_generation.advanced.extra_instructions")}
       </label>
       <Textarea
         value={form.extra_instructions}
@@ -30,7 +30,9 @@ function ExtraInstructionsField({
         }
         rows={3}
         maxLength={1000}
-        placeholder="Any extra constraints for the generator (style, audience, prior knowledge…)."
+        placeholder={t(
+          "quiz_generation.advanced.extra_instructions_placeholder",
+        )}
         variant="lowest"
       />
       <p className="text-[10px] text-m3-on-surface-variant text-right">
@@ -50,13 +52,13 @@ export function AdvancedPersonalisation({
 }: {
   controller: QuizGenerationController;
 }) {
-  const { form, setForm, isCoverageMode, bloomOverflow, patchForm } =
+  const { form, setForm, isCoverageMode, bloomOverflow, patchForm, t } =
     controller;
   return (
     <div className="space-y-4 rounded-xl border border-m3-outline-variant/20 bg-m3-surface p-4">
       <TopicTagInput
-        label="Focus topics"
-        hint="The generator will lean toward these topics. Up to 10 entries, 200 chars each."
+        label={t("quiz_generation.advanced.focus_topics")}
+        hint={t("quiz_generation.advanced.focus_topics_hint")}
         icon={Tag}
         values={form.focus_topics}
         onChange={(values) =>
@@ -65,8 +67,8 @@ export function AdvancedPersonalisation({
       />
 
       <TopicTagInput
-        label="Avoid topics"
-        hint="The generator will steer clear of these topics."
+        label={t("quiz_generation.advanced.avoid_topics")}
+        hint={t("quiz_generation.advanced.avoid_topics_hint")}
         icon={X}
         values={form.avoid_topics}
         onChange={(values) =>

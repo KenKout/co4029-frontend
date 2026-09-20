@@ -64,16 +64,6 @@ export interface TimeRangeLabels {
   clear?: string;
 }
 
-const DEFAULT_TIME_OPTIONS: TimeRangeOption[] = [
-  { value: "today", label: "Today" },
-  { value: "yesterday", label: "Yesterday" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
-  { value: "6months", label: "6 Months" },
-  { value: "year", label: "Year" },
-  { value: "all", label: "All time" },
-];
-
 const DEFAULT_TIME_LABELS: TimeRangeLabels = {
   ariaLabel: "Time range",
   customOption: "Custom range…",
@@ -132,10 +122,10 @@ export interface DataTableToolbarProps {
 export function DataTableToolbar({
   search,
   onSearchChange,
-  searchPlaceholder = "Search\u2026",
+  searchPlaceholder,
   timeRange,
   onTimeRangeChange,
-  timeRangeOptions = DEFAULT_TIME_OPTIONS,
+  timeRangeOptions,
   timeRangeAriaLabel,
   customTimeRange,
   onCustomTimeRangeChange,
@@ -151,7 +141,27 @@ export function DataTableToolbar({
   trailing,
   className,
 }: DataTableToolbarProps) {
+  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const resolvedTimeOptions: TimeRangeOption[] = timeRangeOptions ?? [
+    { value: "today", label: t("common.data_table.today") },
+    { value: "yesterday", label: t("common.data_table.yesterday") },
+    { value: "week", label: t("common.data_table.week") },
+    { value: "month", label: t("common.data_table.month") },
+    { value: "6months", label: t("common.data_table.six_months") },
+    { value: "year", label: t("common.data_table.year") },
+    { value: "all", label: t("common.data_table.all_time") },
+  ];
+  const resolvedTimeLabels: TimeRangeLabels = {
+    ariaLabel: t("common.data_table.time_range"),
+    customOption: t("common.data_table.custom_range"),
+    dialogTitle: t("common.data_table.custom_time_range"),
+    from: t("common.data_table.from"),
+    to: t("common.data_table.to"),
+    apply: t("common.apply"),
+    clear: t("common.data_table.clear"),
+    ...timeRangeLabels,
+  };
 
   const hasSearch = onSearchChange !== undefined;
   const hasTimeRange = onTimeRangeChange !== undefined;
@@ -170,7 +180,7 @@ export function DataTableToolbar({
         <SearchInput
           value={search ?? ""}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={searchPlaceholder}
+          placeholder={searchPlaceholder ?? t("common.search")}
           // Always keep SearchInput's wrapper mounted. Toggling this prop on
           // the first character replaced the input node and lost focus.
           onClear={() => onSearchChange("")}
@@ -184,12 +194,12 @@ export function DataTableToolbar({
         <TimeRangeSelect
           value={timeRange ?? "all"}
           onChange={onTimeRangeChange}
-          options={timeRangeOptions}
+          options={resolvedTimeOptions}
           customRange={customTimeRange}
           onCustomRangeChange={onCustomTimeRangeChange}
           labels={{
-            ariaLabel: timeRangeAriaLabel,
-            ...timeRangeLabels,
+            ...resolvedTimeLabels,
+            ariaLabel: timeRangeAriaLabel ?? resolvedTimeLabels.ariaLabel,
           }}
         />
       )}
@@ -216,7 +226,7 @@ export function DataTableToolbar({
             onClick={() => setDialogOpen(true)}
           >
             <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
-            Filters
+            {t("common.data_table.filters")}
             {activeDialogCount > 0 && (
               <Badge
                 variant="default"
@@ -466,6 +476,7 @@ function FilterDialog({
   onChange?: (filterId: string, value: string | undefined) => void;
   onResetAll?: () => void;
 }) {
+  const { t } = useTranslation();
   const activeCount = Object.values(values).filter(Boolean).length;
 
   return (
@@ -490,7 +501,7 @@ function FilterDialog({
           {/* Header */}
           <div className="flex items-center justify-between">
             <DialogPrimitive.Title className="font-headline text-base font-bold text-text-strong">
-              Filters
+              {t("common.data_table.filters")}
             </DialogPrimitive.Title>
             <DialogPrimitive.Close
               render={
@@ -513,7 +524,7 @@ function FilterDialog({
                   value={values[f.id] ?? ""}
                   onValueChange={(next) => onChange?.(f.id, next || undefined)}
                   options={[
-                    { value: "", label: "All" },
+                    { value: "", label: t("common.data_table.all") },
                     ...f.options.map((opt) => ({
                       value: opt.value,
                       label: opt.label,
@@ -533,9 +544,11 @@ function FilterDialog({
               onClick={() => onResetAll?.()}
               className="text-destructive hover:text-destructive"
             >
-              Reset all
+              {t("common.data_table.reset_all")}
             </Button>
-            <DialogPrimitive.Close render={<Button size="sm">Done</Button>} />
+            <DialogPrimitive.Close
+              render={<Button size="sm">{t("common.data_table.done")}</Button>}
+            />
           </div>
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>

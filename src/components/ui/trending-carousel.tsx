@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,6 +21,7 @@ interface TrendingCarouselProps {
 }
 
 export function TrendingCarousel({ courses }: TrendingCarouselProps) {
+  const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(1);
 
   const nextSlide = () => {
@@ -114,7 +116,7 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
                     {course.rating}
                   </span>
                   <span className="text-m3-on-surface-variant font-medium bg-m3-surface-container px-2 py-1 rounded-md">
-                    {course.students} students
+                    {t("common.student_count", { count: course.students })}
                   </span>
                 </div>
               </div>
@@ -127,14 +129,14 @@ export function TrendingCarousel({ courses }: TrendingCarouselProps) {
       <button
         onClick={prevSlide}
         className="absolute left-2 md:left-10 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/80 dark:bg-m3-surface-container-high/80 backdrop-blur-md shadow-glass flex items-center justify-center z-30 hover:bg-white dark:hover:bg-m3-surface-container-highest transition-all hover:scale-110"
-        aria-label="Previous slide"
+        aria-label={t("common.previous_slide")}
       >
         <ChevronLeft className="w-6 h-6 text-m3-on-surface" />
       </button>
       <button
         onClick={nextSlide}
         className="absolute right-2 md:right-10 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/80 dark:bg-m3-surface-container-high/80 backdrop-blur-md shadow-glass flex items-center justify-center z-30 hover:bg-white dark:hover:bg-m3-surface-container-highest transition-all hover:scale-110"
-        aria-label="Next slide"
+        aria-label={t("common.next_slide")}
       >
         <ChevronRight className="w-6 h-6 text-m3-on-surface" />
       </button>

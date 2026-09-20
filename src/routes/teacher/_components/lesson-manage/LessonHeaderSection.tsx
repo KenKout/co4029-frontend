@@ -1,4 +1,5 @@
 import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -25,10 +26,11 @@ export function LessonHeaderSection({
   summary: string;
   setSummary: (v: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <section className="space-y-3">
       <span className="block text-m3-secondary font-headline font-bold text-sm tracking-widest uppercase">
-        {typeLabel} Lesson
+        {t("teacher_lesson_manage.header.type", { type: typeLabel })}
       </span>
 
       {/* Inline editable title */}
@@ -43,7 +45,7 @@ export function LessonHeaderSection({
             if (e.key === "Enter" || e.key === "Escape") setTitleEditing(false);
           }}
           className="border-b-2 border-m3-primary py-1 font-headline text-4xl font-extrabold leading-tight tracking-tight text-m3-primary lg:text-5xl"
-          placeholder="Lesson title…"
+          placeholder={t("teacher_lesson_manage.header.title_placeholder")}
         />
       ) : (
         <div
@@ -53,11 +55,12 @@ export function LessonHeaderSection({
           <h1 className="font-headline font-extrabold text-4xl lg:text-5xl text-m3-primary tracking-tight leading-tight flex-1">
             {title || (
               <span className="text-m3-on-surface-variant/40">
-                Untitled Lesson
+                {t("teacher_lesson_manage.header.untitled")}
               </span>
             )}
           </h1>
-          <Button variant="ghost"
+          <Button
+            variant="ghost"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -77,7 +80,7 @@ export function LessonHeaderSection({
         onChange={(e) => setSummary(e.target.value)}
         rows={2}
         className="max-w-2xl bg-transparent px-0 py-1 text-lg text-m3-on-surface-variant placeholder:text-m3-on-surface-variant/30 border-b border-transparent focus:border-m3-outline-variant/40"
-        placeholder="Add a brief summary of this lesson…"
+        placeholder={t("teacher_lesson_manage.header.summary_placeholder")}
       />
     </section>
   );

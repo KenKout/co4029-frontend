@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fast": "ESLINT_FAST=1 eslint .",
+    "i18n:scan": "node scripts/scan-untranslated-tsx.mjs",
+    "i18n:check": "node scripts/scan-untranslated-tsx.mjs --fail-on-findings",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "test": "vitest",

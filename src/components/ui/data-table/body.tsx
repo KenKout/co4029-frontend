@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,6 +32,7 @@ function DataTableCell<T>({
   isExp: boolean;
   onToggleExpanded: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <TableCell
       className={cn(col.align && ALIGN_CLASS[col.align], col.cellClassName)}
@@ -49,7 +51,11 @@ function DataTableCell<T>({
                 e.stopPropagation();
                 onToggleExpanded(id);
               }}
-              aria-label={isExp ? "Collapse row" : "Expand row"}
+              aria-label={
+                isExp
+                  ? t("common.data_table.collapse_row")
+                  : t("common.data_table.expand_row")
+              }
               aria-expanded={isExp}
               className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-m3-on-surface-variant hover:bg-m3-surface-container-high cursor-pointer"
             >
@@ -98,6 +104,7 @@ function DataTableBodyRow<T>({
   hasActions,
   actions,
 }: DataTableRowProps<T>) {
+  const { t } = useTranslation();
   const { row, id, depth, hasChildren, expanded: isExp } = flat;
   return (
     <TableRow
@@ -114,7 +121,7 @@ function DataTableBodyRow<T>({
             <Checkbox
               checked={isSelected}
               onCheckedChange={() => onToggleRowSelected(id)}
-              aria-label="Select row"
+              aria-label={t("common.data_table.select_row")}
             />
           )}
         </TableCell>
@@ -178,11 +185,12 @@ function EmptyRow({
   totalCols: number;
   emptyState: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <TableRow>
       <TableCell colSpan={totalCols}>
         <div className="py-10 text-center text-sm text-m3-on-surface-variant">
-          {emptyState ?? "No data"}
+          {emptyState ?? t("common.data_table.no_data")}
         </div>
       </TableCell>
     </TableRow>

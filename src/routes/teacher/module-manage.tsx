@@ -64,13 +64,13 @@ export default function ModuleManagePage() {
   if (!module) {
     return (
       <div className="text-center py-24 text-m3-on-surface-variant">
-        Module not found.{" "}
+        {t("teacher_common.module_not_found")}{" "}
         <Link
           to="/teacher/courses/$courseId"
           params={{ courseId }}
           className="text-m3-primary hover:underline"
         >
-          Back to course
+          {t("teacher_common.back_to_course")}
         </Link>
       </div>
     );

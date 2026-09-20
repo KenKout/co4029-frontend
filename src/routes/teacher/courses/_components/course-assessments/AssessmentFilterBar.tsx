@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { FilterBar, type FilterDef } from "@/components/ui/filter-bar";
 
 import {
@@ -20,6 +21,7 @@ export function AssessmentFilterBar({
 }: {
   controller: CourseAssessmentsController;
 }) {
+  const { t } = useTranslation();
   const {
     tab,
     quizTitles,
@@ -35,8 +37,14 @@ export function AssessmentFilterBar({
   const filterDefs: FilterDef[] = [
     {
       id: "title",
-      label: tab === "quizzes" ? "Quiz" : "Interview",
-      allLabel: tab === "quizzes" ? "All quizzes" : "All interviews",
+      label:
+        tab === "quizzes"
+          ? t("teacher_assessments.quiz")
+          : t("teacher_assessments.interview"),
+      allLabel:
+        tab === "quizzes"
+          ? t("teacher_assessments.all_quizzes")
+          : t("teacher_assessments.all_interviews"),
       options: (tab === "quizzes" ? quizTitles : interviewTitles).map(
         (title) => ({ value: title, label: title }),
       ),
@@ -44,21 +52,25 @@ export function AssessmentFilterBar({
     },
     {
       id: "result",
-      label: "Result",
-      allLabel: "All results",
+      label: t("teacher_assessments.result"),
+      allLabel: t("teacher_assessments.all_results"),
       options: [
         ...SHARED_RESULT_OPTIONS,
-        ...(tab === "quizzes"
-          ? QUIZ_RESULT_OPTIONS
-          : INTERVIEW_RESULT_OPTIONS),
-      ],
+        ...(tab === "quizzes" ? QUIZ_RESULT_OPTIONS : INTERVIEW_RESULT_OPTIONS),
+      ].map((option) => ({
+        ...option,
+        label: t(`teacher_assessments.options.${option.value}`),
+      })),
       className: "w-44",
     },
     {
       id: "time",
-      label: "Time",
-      allLabel: "All time",
-      options: TIME_OPTIONS,
+      label: t("teacher_assessments.time"),
+      allLabel: t("teacher_assessments.all_time"),
+      options: TIME_OPTIONS.map((option) => ({
+        ...option,
+        label: t(`teacher_assessments.time_options.${option.value}`),
+      })),
       className: "w-40",
     },
   ];

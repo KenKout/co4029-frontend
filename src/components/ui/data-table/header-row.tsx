@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -102,6 +103,7 @@ export function DataTableHeaderRow<T>({
   hasActions,
   actionsHeader,
 }: DataTableHeaderProps<T>) {
+  const { t } = useTranslation();
   return (
     <TableHeader>
       <TableRow className="bg-m3-surface-container-low">
@@ -111,7 +113,7 @@ export function DataTableHeaderRow<T>({
               checked={allSelected}
               indeterminate={someSelected}
               onCheckedChange={onToggleSelectAll}
-              aria-label="Select all rows"
+              aria-label={t("common.data_table.select_all_rows")}
             />
           </TableHead>
         )}

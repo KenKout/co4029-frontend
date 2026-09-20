@@ -27,7 +27,7 @@ export function AddContentPills({
   return (
     <div className="flex flex-wrap gap-2 mt-1 pt-4 border-t border-m3-outline-variant/10">
       <span className="w-full text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant mb-1">
-        Add Content
+        {t("teacher_common.add_content")}
       </span>
       {Object.entries(LESSON_TYPE_CONFIG).map(([type, cfg]) => {
         const Icon = cfg.icon;
@@ -36,12 +36,16 @@ export function AddContentPills({
             key={type}
             type="button"
             disabled={adding}
-            onClick={() => handleAdd(type)}
+            onClick={() => void handleAdd(type)}
             className={ADD_PILL_CLS}
           >
             <Icon className="h-3.5 w-3.5" />
             <Plus className="h-3 w-3 -ml-0.5" />
-            {cfg.label}
+            {t(
+              type === "video"
+                ? "teacher_common.video_label"
+                : "teacher_common.reading_label",
+            )}
           </Button>
         );
       })}
@@ -53,7 +57,7 @@ export function AddContentPills({
       >
         <HelpCircle className="h-3.5 w-3.5" />
         <Plus className="h-3 w-3 -ml-0.5" />
-        Quiz
+        {t("teacher_common.quiz_label")}
       </Button>
       <Button variant="ghost"
         type="button"
@@ -63,7 +67,7 @@ export function AddContentPills({
       >
         <Mic className="h-3.5 w-3.5" />
         <Plus className="h-3 w-3 -ml-0.5" />
-        Interview
+        {t("teacher_common.interview_label")}
       </Button>
 
       <AddContentDialogs ctl={ctl} t={t} />

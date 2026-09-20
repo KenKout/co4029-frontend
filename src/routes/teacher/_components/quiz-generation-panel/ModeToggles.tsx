@@ -1,4 +1,5 @@
 import { AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,29 +17,31 @@ export function ModeToggle({
   mode: GenerationMode;
   onChange: (mode: GenerationMode) => void;
 }) {
+  const { t } = useTranslation();
   const options: Array<{ key: GenerationMode; label: string; hint: string }> = [
     {
       key: "topic",
-      label: "Topic",
-      hint: "Balanced spread across all lessons",
+      label: t("quiz_generation.mode.topic"),
+      hint: t("quiz_generation.mode.topic_hint"),
     },
     {
       key: "coverage",
-      label: "Coverage",
-      hint: "One+ question per lesson section",
+      label: t("quiz_generation.mode.coverage"),
+      hint: t("quiz_generation.mode.coverage_hint"),
     },
   ];
 
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-        Generation mode
+        {t("quiz_generation.mode.label")}
       </label>
       <div className="grid grid-cols-2 gap-2">
         {options.map((option) => {
           const active = mode === option.key;
           return (
-            <Button variant="ghost"
+            <Button
+              variant="ghost"
               key={option.key}
               type="button"
               onClick={() => onChange(option.key)}
@@ -77,13 +80,15 @@ export function AppendToggle({
   hasExistingQuestions: boolean;
   onChange: (append: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-        Existing questions
+        {t("quiz_generation.existing.label")}
       </label>
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           onClick={() => onChange(false)}
           aria-pressed={!append}
@@ -95,13 +100,14 @@ export function AppendToggle({
           )}
         >
           <span className="text-sm font-semibold text-m3-on-surface">
-            Replace
+            {t("quiz_generation.existing.replace")}
           </span>
           <span className="text-[11px] text-m3-on-surface-variant">
-            Wipe current questions and start fresh
+            {t("quiz_generation.existing.replace_hint")}
           </span>
         </Button>
-        <Button variant="ghost"
+        <Button
+          variant="ghost"
           type="button"
           onClick={() => onChange(true)}
           aria-pressed={append}
@@ -113,18 +119,17 @@ export function AppendToggle({
           )}
         >
           <span className="text-sm font-semibold text-m3-on-surface">
-            Append
+            {t("quiz_generation.existing.append")}
           </span>
           <span className="text-[11px] text-m3-on-surface-variant">
-            Add new questions next to existing ones
+            {t("quiz_generation.existing.append_hint")}
           </span>
         </Button>
       </div>
       {hasExistingQuestions && !append && (
         <p className="text-[11px] text-amber-700 flex items-start gap-1.5 mt-1">
           <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
-          This quiz already has questions. Replace will delete them before
-          generating.
+          {t("quiz_generation.existing.replace_warning")}
         </p>
       )}
     </div>

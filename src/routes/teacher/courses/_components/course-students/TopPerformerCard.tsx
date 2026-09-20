@@ -47,7 +47,9 @@ export function TopPerformerCard({
           <div>
             <p className="font-bold text-sm">{top.display_name}</p>
             <p className="text-xs text-white/70">
-              {Math.round(top.progress_percent)}% progress
+              {t("teacher_course_students.progress_percent", {
+                progress: Math.round(top.progress_percent),
+              })}
             </p>
           </div>
         </div>

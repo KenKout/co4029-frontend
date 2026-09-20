@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { CourseContentModule } from "@/lib/api/types/common";
 import { cn } from "@/lib/utils";
 import type { UpdateModuleMutation } from "./types";
@@ -15,6 +16,8 @@ export function ModuleMetaRow({
   updateModule: UpdateModuleMutation;
   itemCount: number;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-center gap-2 mt-1.5">
       <span
@@ -29,11 +32,14 @@ export function ModuleMetaRow({
         updateModule.variables &&
         "status" in updateModule.variables
           ? "…"
-          : module.status}
+          : t(`teacher_common.status_${module.status}`)}
       </span>
       <span className="text-xs text-m3-on-surface-variant">
-        {itemCount} item{itemCount !== 1 ? "s" : ""}
-        {module.estimated_minutes && ` · ~${module.estimated_minutes}m`}
+        {t("teacher_common.item_count", { count: itemCount })}
+        {module.estimated_minutes &&
+          t("teacher_common.duration_suffix", {
+            minutes: module.estimated_minutes,
+          })}
       </span>
     </div>
   );

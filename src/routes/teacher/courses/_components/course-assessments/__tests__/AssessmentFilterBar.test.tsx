@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import i18n from "@/i18n";
 
 import { AssessmentFilterBar } from "../AssessmentFilterBar";
 import type { CourseAssessmentsController } from "../use-course-assessments-controller";
@@ -26,6 +27,10 @@ function Harness() {
 }
 
 describe("course assessments filter bar", () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
   it("renders the three dropdowns via the shared FilterBar (no native <select>)", () => {
     render(<Harness />);
     expect(screen.getByRole("combobox", { name: "Quiz" })).toBeInTheDocument();

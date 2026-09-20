@@ -8,8 +8,7 @@ import {
 } from "./footer/link-columns";
 
 export default function Footer() {
-  const { i18n } = useTranslation();
-  const vi = i18n.resolvedLanguage?.startsWith("vi");
+  const { t } = useTranslation();
   return (
     <footer className="relative bg-[#0b1120] border-t border-white/10 overflow-hidden text-slate-300">
       {/* High-tech background accents */}
@@ -47,28 +46,28 @@ export default function Footer() {
           to="/policy/$slug"
           params={{ slug: "privacy" }}
         >
-          {vi ? "Chính sách quyền riêng tư" : "Privacy Policy"}
+          {t("footer.privacy_policy")}
         </Link>
         <Link
           className="hover:text-white transition-colors"
           to="/policy/$slug"
           params={{ slug: "terms" }}
         >
-          {vi ? "Điều khoản dịch vụ" : "Terms of Service"}
+          {t("footer.terms_of_service")}
         </Link>
         <Link
           className="hover:text-white transition-colors"
           to="/policy/$slug"
           params={{ slug: "cookies" }}
         >
-          {vi ? "Chính sách cookie" : "Cookie Policy"}
+          {t("footer.cookie_policy")}
         </Link>
         {/* Academic policies (learning-program, career-path) are NOT listed
             here: they are seeded drafts, only meaningful once an admin has
             reviewed/published them, and the /policies page lists whatever
             the server actually serves instead of hardcoding slugs. */}
         <Link className="hover:text-white transition-colors" to="/help">
-          {vi ? "Trợ giúp" : "Help"}
+          {t("footer.help")}
         </Link>
       </FooterBottomBar>
     </footer>

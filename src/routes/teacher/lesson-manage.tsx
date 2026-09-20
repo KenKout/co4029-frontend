@@ -70,8 +70,10 @@ export default function LessonManagePage() {
     try {
       const quiz = await createQuiz.mutateAsync({
         module_id: moduleId,
-        title: `Quiz: ${lesson.title}`,
-        description: "Draft quiz generated from this lesson's material.",
+        title: t("teacher_lesson_manage.quiz_draft.title", {
+          lesson: lesson.title,
+        }),
+        description: t("teacher_lesson_manage.quiz_draft.description"),
         reminders_enabled: true,
       });
       void navigate({

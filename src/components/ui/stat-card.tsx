@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
 
@@ -50,6 +51,7 @@ export function StatCard({
   interactive = true,
   className,
 }: StatCardProps) {
+  const { t } = useTranslation();
   const isPrimary = variant === "primary";
 
   return (
@@ -128,7 +130,7 @@ export function StatCard({
               isPrimary ? "text-white/60" : "text-m3-on-surface-variant",
             )}
           >
-            vs last week
+            {t("common.vs_last_week")}
           </span>
         </div>
       )}
