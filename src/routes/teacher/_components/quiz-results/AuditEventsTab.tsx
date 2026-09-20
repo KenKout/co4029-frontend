@@ -23,6 +23,53 @@ const QUIZ_AUDIT_EVENTS = [
   "quiz_archived",
 ] as const;
 
+function humanizeAuditKey(key: string) {
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (character: string) => character.toUpperCase());
+}
+
+function formatAuditValue(value: unknown) {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "string") return value;
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    typeof value === "bigint" ||
+    typeof value === "symbol"
+  ) {
+    return value.toString();
+  }
+  return "—";
+}
+
+function AuditDetails({ payload }: { payload: Record<string, unknown> }) {
+  const entries = Object.entries(payload);
+  if (entries.length === 0) return <span className="text-m3-on-surface-variant">—</span>;
+
+  return (
+    <div
+      className="max-w-2xl space-y-1 py-1 text-sm"
+      title={JSON.stringify(payload, null, 2)}
+    >
+      {entries.map(([key, value]) => (
+        <div
+          key={key}
+          className="grid min-w-0 grid-cols-1 gap-0.5 sm:grid-cols-[minmax(8rem,max-content)_minmax(0,1fr)] sm:gap-x-3"
+        >
+          <span className="font-medium text-m3-on-surface-variant">
+            {humanizeAuditKey(key)}
+          </span>
+          <code className="min-w-0 break-words whitespace-pre-wrap font-mono text-xs text-m3-on-surface">
+            {formatAuditValue(value)}
+          </code>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AuditEventsTab({ quizId }: { quizId: string }) {
   const { t } = useTranslation();
   const [eventName, setEventName] = useState("all");
@@ -73,16 +120,7 @@ export function AuditEventsTab({ quizId }: { quizId: string }) {
     {
       id: "details",
       header: t("teacher_quiz_results.audit.col_details"),
-      cell: (event) => (
-        <span
-          className="block max-w-xl truncate text-m3-on-surface-variant"
-          title={JSON.stringify(event.payload_json)}
-        >
-          {Object.keys(event.payload_json).length > 0
-            ? JSON.stringify(event.payload_json)
-            : "—"}
-        </span>
-      ),
+      cell: (event) => <AuditDetails payload={event.payload_json} />,
     },
   ];
   return (
