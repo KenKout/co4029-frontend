@@ -6,6 +6,7 @@ import {
   DataTableToolbar,
   type FilterDef,
 } from "@/components/ui/data-table-toolbar";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import type { AuditEventRow } from "@/lib/api/hooks/quizzes";
 import { QuizResultsDataTable } from "./QuizResultsDataTable";
 import { useServerTable } from "@/lib/api/use-server-table";
@@ -122,16 +123,14 @@ export function AuditEventsTab({ quizId }: { quizId: string }) {
       header: t("teacher_quiz_results.audit.col_actor"),
       sortable: false,
       cell: (event) => {
-        const actor = event.actor_name ?? event.actor_email;
-        return actor ? (
-          <div className="min-w-32">
-            <div className="font-medium text-m3-on-surface">{actor}</div>
-            {event.actor_name && event.actor_email && (
-              <div className="break-words text-xs text-m3-on-surface-variant">
-                {event.actor_email}
-              </div>
-            )}
-          </div>
+        const actor = event.actor_name ?? event.actor_email ?? event.actor_user_id;
+        return event.actor_user_id && actor ? (
+          <UserEmailIdentity
+            id={event.actor_user_id}
+            displayName={actor}
+            email={event.actor_name ? event.actor_email : null}
+            className="min-w-32"
+          />
         ) : (
           <span
             className="text-m3-on-surface-variant"
