@@ -3,12 +3,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  downloadQuizReport,
-  useQuizResults,
-  useResponsesReport,
-  useStatisticsReport,
-} from "@/lib/api/hooks/quizzes";
+import { downloadQuizReport, useQuizResults } from "@/lib/api/hooks/quizzes";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 
 import type { HeadlineMetric, ResultsTab } from "./types";
@@ -43,14 +38,6 @@ export function useQuizResultsPage() {
   const [headlineMetric, setHeadlineMetric] = useState<HeadlineMetric>("best");
   const [downloading, setDownloading] = useState(false);
   const [regradeOpen, setRegradeOpen] = useState(false);
-
-  // Phase 10 report data — only fetched when the matching tab is open.
-  const { data: responsesReport } = useResponsesReport(
-    tab === "responses" ? quizId : undefined,
-  );
-  const { data: statisticsReport } = useStatisticsReport(
-    tab === "statistics" ? quizId : undefined,
-  );
 
   async function handleDownload(format: "csv" | "xlsx") {
     if (tab !== "responses" && tab !== "statistics" && tab !== "gradebook")
@@ -88,8 +75,6 @@ export function useQuizResultsPage() {
     downloading,
     regradeOpen,
     setRegradeOpen,
-    responsesReport,
-    statisticsReport,
     handleDownload,
     goToStudentDetail,
   };

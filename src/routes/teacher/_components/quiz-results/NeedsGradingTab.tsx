@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -7,36 +7,22 @@ import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { Input } from "@/components/ui/input";
-import {
-  useGradeAnswer,
-  useNeedsGrading,
-  type NeedsGradingRow,
-} from "@/lib/api/hooks/quizzes";
+import { useGradeAnswer, type NeedsGradingRow } from "@/lib/api/hooks/quizzes";
 import { QuizResultsDataTable } from "./QuizResultsDataTable";
-import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
+import { useServerTable } from "@/lib/api/use-server-table";
 
 export function NeedsGradingTab({ quizId }: { quizId: string }) {
   const { t } = useTranslation();
-  const { data: rows, isLoading } = useNeedsGrading(quizId);
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const filtered = useMemo(
-    () =>
-      (rows ?? []).filter((row) => {
-        const needle = debouncedSearch.trim().toLowerCase();
-        return (
-          !needle ||
-          `${row.prompt_text} ${row.answer_text} ${row.question_type}`
-            .toLowerCase()
-            .includes(needle)
-        );
-      }),
-    [rows, debouncedSearch],
-  );
+  const table = useServerTable<NeedsGradingRow>({
+    queryKey: ["quiz-results", quizId, "needs-grading"],
+    path: `/teacher/quizzes/${quizId}/needs-grading`,
+  });
   const columns: DataTableColumn<NeedsGradingRow>[] = [
     {
       id: "type",
       header: t("teacher_quiz_results.grading.col_type"),
+      sortable: true,
+      sortValue: (row) => row.question_type,
       cell: (row) => (
         <span className="rounded-md bg-m3-surface-container-low px-2 py-0.5 text-xs font-semibold">
           {row.question_type}
@@ -46,6 +32,8 @@ export function NeedsGradingTab({ quizId }: { quizId: string }) {
     {
       id: "question",
       header: t("teacher_quiz_results.grading.col_question"),
+      sortable: true,
+      sortValue: (row) => row.prompt_text,
       cell: (row) => (
         <span className="block max-w-sm truncate" title={row.prompt_text}>
           {row.prompt_text}
@@ -70,26 +58,30 @@ export function NeedsGradingTab({ quizId }: { quizId: string }) {
       cell: (row) => <GradeActionCell quizId={quizId} row={row} />,
     },
   ];
-  if (isLoading)
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-m3-secondary" />
-      </div>
-    );
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={table.search}
+        onSearchChange={table.setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_grading")}
       />
       <QuizResultsDataTable
         columns={columns}
-        data={filtered}
+        data={table.rows}
         getRowId={(row) => row.answer_id}
         emptyState={t("teacher_quiz_results.grading.empty")}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
+        manualPagination
+        manualSorting
+        rowCount={table.total}
+        page={table.page}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        sort={table.sort}
+        onSortChange={table.setSort}
+        loading={table.isLoading || table.isFetching}
       />
     </div>
   );

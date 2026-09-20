@@ -38,7 +38,9 @@ export function useQuizResults(quizId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.quizzes.results(quizId ?? ""),
     queryFn: () =>
-      apiFetch<QuizResultsRead>(`/teacher/quizzes/${quizId}/results`),
+      apiFetch<QuizResultsRead>(
+        `/teacher/quizzes/${quizId}/results?include_breakdowns=false`,
+      ),
     enabled: !!quizId,
   });
 }

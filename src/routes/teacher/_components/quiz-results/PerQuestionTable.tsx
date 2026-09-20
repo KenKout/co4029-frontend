@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, ChevronDown, ChevronRight } from "lucide-react";
 
@@ -14,10 +14,10 @@ import type {
   QuizQuestionBreakdown,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
+import { useServerTable } from "@/lib/api/use-server-table";
 
 interface PerQuestionTableProps {
-  questions: QuizQuestionBreakdown[];
+  quizId: string;
 }
 
 function correctnessColor(rate: number | null): string {
@@ -87,10 +87,8 @@ function OptionBar({
   );
 }
 
-export function PerQuestionTable({ questions }: PerQuestionTableProps) {
+export function PerQuestionTable({ quizId }: PerQuestionTableProps) {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
   const [difficulty, setDifficulty] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const difficultyFilter: FilterDef = {
@@ -108,28 +106,12 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
       },
     ],
   };
-  const filtered = useMemo(
-    () =>
-      questions.filter((question) => {
-        const matchesSearch =
-          !debouncedSearch.trim() ||
-          question.prompt
-            .toLowerCase()
-            .includes(debouncedSearch.trim().toLowerCase());
-        const rate = question.correctness_rate;
-        const matchesDifficulty =
-          difficulty === "all" ||
-          (difficulty === "unanswered" && rate === null) ||
-          (difficulty === "hard" && rate !== null && rate < 0.5) ||
-          (difficulty === "medium" &&
-            rate !== null &&
-            rate >= 0.5 &&
-            rate < 0.8) ||
-          (difficulty === "easy" && rate !== null && rate >= 0.8);
-        return matchesSearch && matchesDifficulty;
-      }),
-    [questions, debouncedSearch, difficulty],
-  );
+  const table = useServerTable<QuizQuestionBreakdown>({
+    queryKey: ["quiz-results", quizId, "questions"],
+    path: `/teacher/quizzes/${quizId}/results/questions`,
+    filters: { difficulty: difficulty === "all" ? undefined : difficulty },
+    initialSort: { columnId: "correct", direction: "asc" },
+  });
 
   const columns: DataTableColumn<QuizQuestionBreakdown>[] = [
     {
@@ -216,8 +198,8 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={table.search}
+        onSearchChange={table.setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_questions")}
         filters={[difficultyFilter]}
         filterValues={{ difficulty }}
@@ -225,11 +207,21 @@ export function PerQuestionTable({ questions }: PerQuestionTableProps) {
       />
       <QuizResultsDataTable
         columns={columns}
-        data={filtered}
+        data={table.rows}
         getRowId={(row) => row.question_id}
         emptyState={t("teacher_quiz_results.per_question.empty")}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
+        manualPagination
+        manualSorting
+        rowCount={table.total}
+        page={table.page}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        sort={table.sort}
+        onSortChange={table.setSort}
+        loading={table.isLoading || table.isFetching}
       />
     </div>
   );

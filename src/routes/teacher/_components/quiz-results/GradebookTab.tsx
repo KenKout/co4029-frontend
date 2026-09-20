@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, Loader2 } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -9,9 +9,9 @@ import {
   type FilterDef,
 } from "@/components/ui/data-table-toolbar";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
-import { useQuizGradebook, type QuizGradeRow } from "@/lib/api/hooks/quizzes";
+import type { QuizGradeRow } from "@/lib/api/hooks/quizzes";
 import { cn } from "@/lib/utils";
-import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
+import { useServerTable } from "@/lib/api/use-server-table";
 import { QuizResultsDataTable } from "./QuizResultsDataTable";
 
 function gradebookStatusFilter(t: (key: string) => string): FilterDef {
@@ -36,28 +36,13 @@ export function GradebookTab({
   onDownload: (format: "csv" | "xlsx") => void;
 }) {
   const { t } = useTranslation();
-  const { data, isLoading } = useQuizGradebook(quizId);
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
   const [status, setStatus] = useState("all");
   const statusFilter = gradebookStatusFilter(t);
-  const rows = useMemo(
-    () =>
-      (data ?? []).filter((row) => {
-        const needle = debouncedSearch.trim().toLowerCase();
-        const matchesSearch =
-          !needle ||
-          `${row.student_name ?? ""} ${row.student_email ?? ""} ${row.student_id}`
-            .toLowerCase()
-            .includes(needle);
-        const matchesStatus =
-          status === "all" ||
-          (status === "passed" && row.passed) ||
-          (status === "failed" && !row.passed);
-        return matchesSearch && matchesStatus;
-      }),
-    [data, debouncedSearch, status],
-  );
+  const table = useServerTable<QuizGradeRow>({
+    queryKey: ["quiz-results", quizId, "gradebook"],
+    path: `/teacher/quizzes/${quizId}/gradebook`,
+    filters: { status: status === "all" ? undefined : status },
+  });
 
   const columns: DataTableColumn<QuizGradeRow>[] = [
     {
@@ -120,18 +105,11 @@ export function GradebookTab({
     },
   ];
 
-  if (isLoading)
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-m3-secondary" />
-      </div>
-    );
-
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={table.search}
+        onSearchChange={table.setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_students")}
         filters={[statusFilter]}
         filterValues={{ status }}
@@ -163,11 +141,21 @@ export function GradebookTab({
       />
       <QuizResultsDataTable
         columns={columns}
-        data={rows}
+        data={table.rows}
         getRowId={(row) => row.student_id}
         emptyState={t("teacher_quiz_results.gradebook.empty")}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
+        manualPagination
+        manualSorting
+        rowCount={table.total}
+        page={table.page}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        sort={table.sort}
+        onSortChange={table.setSort}
+        loading={table.isLoading || table.isFetching}
       />
     </div>
   );

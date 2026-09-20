@@ -1,18 +1,14 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
 
 import type { DataTableColumn } from "@/components/ui/data-table";
 import {
   DataTableToolbar,
   type FilterDef,
 } from "@/components/ui/data-table-toolbar";
-import {
-  useQuizAuditEvents,
-  type AuditEventRow,
-} from "@/lib/api/hooks/quizzes";
+import type { AuditEventRow } from "@/lib/api/hooks/quizzes";
 import { QuizResultsDataTable } from "./QuizResultsDataTable";
-import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
+import { useServerTable } from "@/lib/api/use-server-table";
 
 const QUIZ_AUDIT_EVENTS = [
   "attempt_started",
@@ -29,10 +25,13 @@ const QUIZ_AUDIT_EVENTS = [
 
 export function AuditEventsTab({ quizId }: { quizId: string }) {
   const { t } = useTranslation();
-  const { data: events, isLoading } = useQuizAuditEvents(quizId);
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
   const [eventName, setEventName] = useState("all");
+  const table = useServerTable<AuditEventRow>({
+    queryKey: ["quiz-results", quizId, "audit"],
+    path: `/teacher/quizzes/${quizId}/audit-events`,
+    filters: { event_name: eventName === "all" ? undefined : eventName },
+    initialSort: { columnId: "when", direction: "desc" },
+  });
   const eventFilter: FilterDef = {
     id: "event",
     label: t("teacher_quiz_results.audit.event_filter"),
@@ -46,26 +45,12 @@ export function AuditEventsTab({ quizId }: { quizId: string }) {
       })),
     ],
   };
-  const rows = useMemo(
-    () =>
-      (events ?? []).filter((event) => {
-        const needle = debouncedSearch.trim().toLowerCase();
-        const matchesSearch =
-          !needle ||
-          `${event.event_name} ${JSON.stringify(event.payload_json)}`
-            .toLowerCase()
-            .includes(needle);
-        return (
-          matchesSearch &&
-          (eventName === "all" || event.event_name === eventName)
-        );
-      }),
-    [events, debouncedSearch, eventName],
-  );
   const columns: DataTableColumn<AuditEventRow>[] = [
     {
       id: "event",
       header: t("teacher_quiz_results.audit.col_event"),
+      sortable: true,
+      sortValue: (event) => event.event_name,
       cell: (event) => (
         <span className="inline-block rounded-md bg-m3-surface-container px-2 py-0.5 text-xs font-medium text-m3-on-surface">
           {t(`teacher_quiz_results.audit.events.${event.event_name}`, {
@@ -100,17 +85,11 @@ export function AuditEventsTab({ quizId }: { quizId: string }) {
       ),
     },
   ];
-  if (isLoading)
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-m3-secondary" />
-      </div>
-    );
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={table.search}
+        onSearchChange={table.setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_audit")}
         filters={[eventFilter]}
         filterValues={{ event: eventName }}
@@ -118,11 +97,21 @@ export function AuditEventsTab({ quizId }: { quizId: string }) {
       />
       <QuizResultsDataTable
         columns={columns}
-        data={rows}
+        data={table.rows}
         getRowId={(event) => event.id}
         emptyState={t("teacher_quiz_results.audit.empty")}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
+        manualPagination
+        manualSorting
+        rowCount={table.total}
+        page={table.page}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        sort={table.sort}
+        onSortChange={table.setSort}
+        loading={table.isLoading || table.isFetching}
       />
     </div>
   );

@@ -24,13 +24,21 @@ export function QuizResultsDataTable<T>({
     onPageSizeChange: undefined,
   });
 
-  return (
-    <div className="space-y-3">
+  if (props.manualPagination) {
+    return (
       <DataTable
         {...props}
-        data={pagination.pageRows}
-        pagination={false}
+        data={data}
+        pagination
+        pageSize={pageSize}
+        pageSizeOptions={pageSizeOptions}
       />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <DataTable {...props} data={pagination.pageRows} pagination={false} />
       {data.length > 0 && (
         <DataTablePagination
           page={pagination.page}

@@ -30,7 +30,8 @@ export function GenerationProgressLogs({
   if (events.length === 0) return null;
   return (
     <div className="rounded-lg border border-m3-outline-variant/60 overflow-hidden">
-      <Button variant="ghost"
+      <Button
+        variant="ghost"
         type="button"
         onClick={onToggleLogs}
         aria-expanded={logsOpen}

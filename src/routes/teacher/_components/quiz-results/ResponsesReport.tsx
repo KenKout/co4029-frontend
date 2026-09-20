@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, X } from "lucide-react";
 
@@ -10,23 +10,23 @@ import {
 } from "@/components/ui/data-table-toolbar";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { cn } from "@/lib/utils";
-import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
-import type {
-  ResponsesReportRead,
-  ResponsesReportRow,
-} from "@/lib/api/hooks/quizzes";
+import { useServerTable } from "@/lib/api/use-server-table";
+import type { ResponsesReportRow } from "@/lib/api/hooks/quizzes";
 
 export function ResponsesReport({
-  report,
+  quizId,
   trailing,
 }: {
-  report: ResponsesReportRead;
+  quizId: string;
   trailing?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
   const [result, setResult] = useState("all");
+  const table = useServerTable<ResponsesReportRow>({
+    queryKey: ["quiz-results", quizId, "responses"],
+    path: `/teacher/quizzes/${quizId}/reports/responses`,
+    filters: { result: result === "all" ? undefined : result },
+  });
   const resultFilter: FilterDef = {
     id: "result",
     label: t("teacher_quiz_results.filters.result"),
@@ -40,27 +40,12 @@ export function ResponsesReport({
       },
     ],
   };
-  const rows = useMemo(
-    () =>
-      report.rows.filter((row) => {
-        const needle = debouncedSearch.trim().toLowerCase();
-        const matchesSearch =
-          !needle ||
-          `${row.prompt_text} ${row.student_answer} ${row.correct_answer} ${row.student_id}`
-            .toLowerCase()
-            .includes(needle);
-        const matchesResult =
-          result === "all" ||
-          (result === "correct" && row.is_correct) ||
-          (result === "incorrect" && !row.is_correct);
-        return matchesSearch && matchesResult;
-      }),
-    [report.rows, debouncedSearch, result],
-  );
   const columns: DataTableColumn<ResponsesReportRow>[] = [
     {
       id: "student",
       header: t("teacher_quiz_results.reports.responses.student"),
+      sortable: true,
+      sortValue: (row) => row.student_name ?? row.student_email ?? row.student_id,
       cell: (row) => (
         <UserEmailIdentity
           id={row.student_id}
@@ -73,6 +58,8 @@ export function ResponsesReport({
     {
       id: "question",
       header: t("teacher_quiz_results.reports.responses.question"),
+      sortable: true,
+      sortValue: (row) => row.prompt_text,
       cell: (row) => (
         <span className="block max-w-xs truncate" title={row.prompt_text}>
           {row.prompt_text}
@@ -134,8 +121,8 @@ export function ResponsesReport({
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={table.search}
+        onSearchChange={table.setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_responses")}
         filters={[resultFilter]}
         filterValues={{ result }}
@@ -144,11 +131,23 @@ export function ResponsesReport({
       />
       <QuizResultsDataTable
         columns={columns}
-        data={rows}
-        getRowId={(row) => `${row.attempt_id}-${row.question_id}`}
+        data={table.rows}
+        getRowId={(row) =>
+          `${row.student_id}-${row.attempt_number}-${row.question_id}`
+        }
         emptyState={t("teacher_quiz_results.reports.responses.empty")}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
+        manualPagination
+        manualSorting
+        rowCount={table.total}
+        page={table.page}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        sort={table.sort}
+        onSortChange={table.setSort}
+        loading={table.isLoading || table.isFetching}
       />
     </div>
   );

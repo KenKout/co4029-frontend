@@ -4847,6 +4847,18 @@
     "audit": {
       "event_filter": "Event type",
       "all_events": "All event types",
+      "events": {
+        "attempt_started": "Attempt started",
+        "attempt_submitted": "Attempt submitted",
+        "attempt_regraded": "Attempt regraded",
+        "attempt_manually_graded": "Answer manually graded",
+        "override_created": "Override created",
+        "override_updated": "Override updated",
+        "override_deleted": "Override deleted",
+        "question_edited": "Question edited",
+        "quiz_published": "Quiz published",
+        "quiz_archived": "Quiz archived"
+      },
       "empty": "No audit events yet.",
       "col_event": "Event",
       "col_when": "When",

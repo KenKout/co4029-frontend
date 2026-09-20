@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -9,11 +9,8 @@ import {
 } from "@/components/ui/data-table-toolbar";
 import { fmtPercentScaled as fmtPercent } from "@/lib/format/number";
 import { cn } from "@/lib/utils";
-import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
-import type {
-  StatisticsReportRead,
-  StatisticsReportRow,
-} from "@/lib/api/hooks/quizzes";
+import { useServerTable } from "@/lib/api/use-server-table";
+import type { StatisticsReportRow } from "@/lib/api/hooks/quizzes";
 
 function discriminationClass(value: number | null): string {
   if (value === null) return "text-m3-on-surface-variant";
@@ -23,16 +20,19 @@ function discriminationClass(value: number | null): string {
 }
 
 export function StatisticsReport({
-  report,
+  quizId,
   trailing,
 }: {
-  report: StatisticsReportRead;
+  quizId: string;
   trailing?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
   const [quality, setQuality] = useState("all");
+  const table = useServerTable<StatisticsReportRow>({
+    queryKey: ["quiz-results", quizId, "statistics"],
+    path: `/teacher/quizzes/${quizId}/reports/statistics`,
+    filters: { quality: quality === "all" ? undefined : quality },
+  });
   const qualityFilter: FilterDef = {
     id: "quality",
     label: t("teacher_quiz_results.filters.quality"),
@@ -47,24 +47,6 @@ export function StatisticsReport({
       },
     ],
   };
-  const rows = useMemo(
-    () =>
-      report.rows.filter((row) => {
-        const matchesSearch =
-          !debouncedSearch.trim() ||
-          row.prompt_text
-            .toLowerCase()
-            .includes(debouncedSearch.trim().toLowerCase());
-        const value = row.discrimination_index;
-        const matchesQuality =
-          quality === "all" ||
-          (quality === "strong" && value !== null && value >= 0.3) ||
-          (quality === "weak" && value !== null && value < 0.3) ||
-          (quality === "unavailable" && value === null);
-        return matchesSearch && matchesQuality;
-      }),
-    [report.rows, debouncedSearch, quality],
-  );
   const columns: DataTableColumn<StatisticsReportRow>[] = [
     {
       id: "question",
@@ -109,8 +91,8 @@ export function StatisticsReport({
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={table.search}
+        onSearchChange={table.setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_questions")}
         filters={[qualityFilter]}
         filterValues={{ quality }}
@@ -119,11 +101,21 @@ export function StatisticsReport({
       />
       <QuizResultsDataTable
         columns={columns}
-        data={rows}
+        data={table.rows}
         getRowId={(row) => row.question_id}
         emptyState={t("teacher_quiz_results.reports.statistics.empty")}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
+        manualPagination
+        manualSorting
+        rowCount={table.total}
+        page={table.page}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        sort={table.sort}
+        onSortChange={table.setSort}
+        loading={table.isLoading || table.isFetching}
       />
     </div>
   );

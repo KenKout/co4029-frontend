@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -12,13 +12,13 @@ import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
+import { useServerTable } from "@/lib/api/use-server-table";
 import type { QuizPerStudentRow } from "@/lib/api/types";
 
 type HeadlineMetric = "best" | "latest";
 
 interface PerStudentTableProps {
-  rows: QuizPerStudentRow[];
+  quizId: string;
   passingScorePercent: number;
   headlineMetric: HeadlineMetric;
   onHeadlineMetricChange: (m: HeadlineMetric) => void;
@@ -101,33 +101,24 @@ function ScoreMetricSelect({
 }
 
 export function PerStudentTable({
-  rows,
+  quizId,
   passingScorePercent,
   headlineMetric,
   onHeadlineMetricChange,
   onStudentClick,
 }: PerStudentTableProps) {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
   const [status, setStatus] = useState("all");
   const statusFilter = studentStatusFilter(t);
-  const filteredRows = useMemo(() => {
-    const needle = debouncedSearch.trim().toLowerCase();
-    return rows.filter((row) => {
-      const name = row.student_name ?? "";
-      const email = row.student_email ?? "";
-      const matchesSearch =
-        !needle ||
-        `${name} ${email} ${row.student_id}`.toLowerCase().includes(needle);
-      const matchesStatus =
-        status === "all" ||
-        (status === "passed" && row.passed === true) ||
-        (status === "failed" && row.passed === false) ||
-        (status === "ungraded" && row.passed === null);
-      return matchesSearch && matchesStatus;
-    });
-  }, [rows, debouncedSearch, status]);
+  const table = useServerTable<QuizPerStudentRow>({
+    queryKey: ["quiz-results", quizId, "students"],
+    path: `/teacher/quizzes/${quizId}/results/students`,
+    filters: {
+      status: status === "all" ? undefined : status,
+      score_mode: headlineMetric,
+    },
+    initialSort: { columnId: "student", direction: "asc" },
+  });
 
   const columns: DataTableColumn<QuizPerStudentRow>[] = [
     {
@@ -219,8 +210,8 @@ export function PerStudentTable({
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={search}
-        onSearchChange={setSearch}
+        search={table.search}
+        onSearchChange={table.setSearch}
         searchPlaceholder={t("teacher_quiz_results.filters.search_students")}
         filters={[statusFilter]}
         filterValues={{ status }}
@@ -235,7 +226,7 @@ export function PerStudentTable({
       />
       <QuizResultsDataTable
         columns={columns}
-        data={filteredRows}
+        data={table.rows}
         getRowId={(row) => row.student_id}
         onRowClick={
           onStudentClick ? (row) => onStudentClick(row.student_id) : undefined
@@ -243,6 +234,16 @@ export function PerStudentTable({
         emptyState={t("teacher_quiz_results.per_student.empty")}
         bordered={false}
         containerClassName="overflow-hidden rounded-xl border border-m3-outline-variant bg-card"
+        manualPagination
+        manualSorting
+        rowCount={table.total}
+        page={table.page}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        sort={table.sort}
+        onSortChange={table.setSort}
+        loading={table.isLoading || table.isFetching}
       />
     </div>
   );

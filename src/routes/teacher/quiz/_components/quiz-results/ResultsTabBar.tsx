@@ -11,12 +11,14 @@ export function ResultsTabBar({
   controller: QuizResultsController;
 }) {
   const { t, tab, setTab } = controller;
-  const tabs: TabDef<ResultsTab>[] = RESULTS_TABS.map(({ id, icon, labelKey }) => ({
-    key: id,
-    icon,
-    label: t(labelKey),
-    labelHiddenOnMobile: true,
-  }));
+  const tabs: TabDef<ResultsTab>[] = RESULTS_TABS.map(
+    ({ id, icon, labelKey }) => ({
+      key: id,
+      icon,
+      label: t(labelKey),
+      labelHiddenOnMobile: true,
+    }),
+  );
 
   return (
     <Tabs

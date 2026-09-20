@@ -4669,6 +4669,18 @@
     "audit": {
       "event_filter": "Loại sự kiện",
       "all_events": "Tất cả loại sự kiện",
+      "events": {
+        "attempt_started": "Bắt đầu lượt làm",
+        "attempt_submitted": "Nộp bài",
+        "attempt_regraded": "Chấm lại lượt làm",
+        "attempt_manually_graded": "Giáo viên chấm thủ công",
+        "override_created": "Tạo ngoại lệ bài kiểm tra",
+        "override_updated": "Cập nhật ngoại lệ bài kiểm tra",
+        "override_deleted": "Xóa ngoại lệ bài kiểm tra",
+        "question_edited": "Chỉnh sửa câu hỏi",
+        "quiz_published": "Xuất bản bài kiểm tra",
+        "quiz_archived": "Lưu trữ bài kiểm tra"
+      },
       "empty": "Chưa có sự kiện nào.",
       "col_event": "Sự kiện",
       "col_when": "Thời điểm",
