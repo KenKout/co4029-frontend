@@ -118,6 +118,31 @@ export function AuditEventsTab({ quizId }: { quizId: string }) {
       ),
     },
     {
+      id: "actor",
+      header: t("teacher_quiz_results.audit.col_actor"),
+      sortable: false,
+      cell: (event) => {
+        const actor = event.actor_name ?? event.actor_email;
+        return actor ? (
+          <div className="min-w-32">
+            <div className="font-medium text-m3-on-surface">{actor}</div>
+            {event.actor_name && event.actor_email && (
+              <div className="break-words text-xs text-m3-on-surface-variant">
+                {event.actor_email}
+              </div>
+            )}
+          </div>
+        ) : (
+          <span
+            className="text-m3-on-surface-variant"
+            title={event.actor_user_id ?? undefined}
+          >
+            {event.actor_user_id ?? t("teacher_quiz_results.audit.system_actor")}
+          </span>
+        );
+      },
+    },
+    {
       id: "details",
       header: t("teacher_quiz_results.audit.col_details"),
       cell: (event) => <AuditDetails payload={event.payload_json} />,

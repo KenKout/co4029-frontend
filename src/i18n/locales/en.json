@@ -4865,8 +4865,10 @@
       },
       "empty": "No audit events yet.",
       "col_event": "Event",
+      "col_actor": "Actor",
       "col_when": "When",
-      "col_details": "Details"
+      "col_details": "Details",
+      "system_actor": "System / automatic"
     }
   },
   "teacher_outcomes": {

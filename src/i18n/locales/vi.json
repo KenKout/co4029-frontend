@@ -4687,8 +4687,10 @@
       },
       "empty": "Chưa có sự kiện nào.",
       "col_event": "Sự kiện",
+      "col_actor": "Người thực hiện",
       "col_when": "Thời điểm",
-      "col_details": "Chi tiết"
+      "col_details": "Chi tiết",
+      "system_actor": "Hệ thống / tự động"
     }
   },
   "teacher_outcomes": {
