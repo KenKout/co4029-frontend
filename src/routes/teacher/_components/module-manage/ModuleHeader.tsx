@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import type { CourseContentModule, CourseDetail } from "@/lib/api/types/common";
@@ -21,6 +21,8 @@ export function ModuleHeader({
   itemCount,
   updateModule,
   titleEdit,
+  onDelete,
+  deletePending,
   t,
 }: {
   module: CourseContentModule;
@@ -29,6 +31,8 @@ export function ModuleHeader({
   itemCount: number;
   updateModule: UpdateModuleMutation;
   titleEdit: ModuleTitleEditController;
+  onDelete: () => void;
+  deletePending: boolean;
   t: TranslateFn;
 }) {
   return (
@@ -69,11 +73,29 @@ export function ModuleHeader({
           />
         </div>
 
-        <ModulePublishButton
-          module={module}
-          courseStatus={course?.status ?? "draft"}
-          updateModule={updateModule}
-        />
+        <div className="flex shrink-0 items-center gap-2">
+          <ModulePublishButton
+            module={module}
+            courseStatus={course?.status ?? "draft"}
+            updateModule={updateModule}
+          />
+          {module.status === "draft" && (
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+              onClick={onDelete}
+              disabled={deletePending}
+            >
+              {deletePending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {t("teacher_common.delete_module")}
+            </Button>
+          )}
+        </div>
       </div>
     </>
   );

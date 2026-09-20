@@ -1,13 +1,17 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   useTeacherCourseById,
   useTeacherCourseContent,
   useUpdateModule,
   useReorderModuleItems,
   useDeleteModuleItem,
+  useDeleteModule,
 } from "@/lib/api/hooks/teacher-courses";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { CourseContentModule } from "@/lib/api/types/common";
 import { CurriculumItemsCard } from "./_components/module-manage/CurriculumItemsCard";
 import { DeleteItemDialog } from "./_components/module-manage/DeleteItemDialog";
@@ -27,10 +31,11 @@ import { useModuleTitleEdit } from "./_components/module-manage/use-module-title
  */
 export default function ModuleManagePage() {
   const { t } = useTranslation();
-  const { courseId, moduleId } = useParams({ strict: false }) as {
-    courseId: string;
-    moduleId: string;
-  };
+  const navigate = useNavigate();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const params = useParams({ strict: false });
+  const courseId = params.courseId ?? "";
+  const moduleId = params.moduleId ?? "";
 
   const { data: course } = useTeacherCourseById(courseId);
   const { data: content, isLoading } = useTeacherCourseContent(courseId);
@@ -42,6 +47,7 @@ export default function ModuleManagePage() {
   const updateModule = useUpdateModule(moduleId, courseId);
   const reorderItems = useReorderModuleItems(moduleId, courseId);
   const deleteItem = useDeleteModuleItem(courseId);
+  const deleteModule = useDeleteModule(courseId);
 
   const titleEdit = useModuleTitleEdit({ module, updateModule });
   const reorder = useItemReorder({ reorderItems });
@@ -74,6 +80,25 @@ export default function ModuleManagePage() {
     (a, b) => a.position - b.position,
   );
 
+  function confirmDeleteModule() {
+    if (!module || module.status !== "draft") return;
+    deleteModule.mutate(module.id, {
+      onSuccess: () => {
+        toast.success(t("teacher_common.module_deleted", "Module deleted"));
+        void navigate({
+          to: "/teacher/courses/$courseId",
+          params: { courseId },
+        });
+      },
+      onError: (error: unknown) =>
+        toast.error(
+          (error as Error).message ||
+            t("teacher_common.delete_module_failed", "Could not delete module"),
+        ),
+      onSettled: () => setDeleteConfirmOpen(false),
+    });
+  }
+
   return (
     <div className="space-y-6 pb-12">
       <ModuleHeader
@@ -83,6 +108,8 @@ export default function ModuleManagePage() {
         itemCount={sortedItems.length}
         updateModule={updateModule}
         titleEdit={titleEdit}
+        onDelete={() => setDeleteConfirmOpen(true)}
+        deletePending={deleteModule.isPending}
         t={t}
       />
 
@@ -105,6 +132,17 @@ export default function ModuleManagePage() {
       </div>
 
       <DeleteItemDialog itemDelete={itemDelete} deleteItem={deleteItem} t={t} />
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title={t("teacher_common.delete_module_title")}
+        description={t("teacher_common.delete_module_body")}
+        confirmLabel={t("teacher_common.delete_module_confirm")}
+        cancelLabel={t("common.cancel")}
+        confirmVariant="destructive"
+        onConfirm={confirmDeleteModule}
+        isPending={deleteModule.isPending}
+      />
     </div>
   );
 }

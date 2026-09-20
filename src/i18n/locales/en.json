@@ -861,7 +861,7 @@
     "archive_module_body": "The module will be hidden from students and no new attempts can start. In-progress attempts can still be completed, and historical progress is preserved. This cannot be undone.",
     "delete_module": "Delete draft module",
     "delete_module_title": "Delete this draft module?",
-    "delete_module_body": "The draft module will be removed from this curriculum. Its lesson, quiz, and interview content will be kept but no longer pinned to this module.",
+    "delete_module_body": "The draft module, its lessons, resources, and curriculum items will be removed. Quiz and interview content referenced by the module will be kept.",
     "delete_module_confirm": "Delete module",
     "mark_module_as": "Click to mark as {{status}}",
     "curriculum_fallback_title": "Curriculum Structure",

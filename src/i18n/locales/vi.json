@@ -792,7 +792,7 @@
     "archive_module_body": "Chương sẽ bị ẩn khỏi học viên và không thể bắt đầu lượt làm mới. Các lượt đang thực hiện vẫn có thể hoàn tất và tiến độ lịch sử được giữ lại. Không thể hoàn tác thao tác này.",
     "delete_module": "Xóa chương nháp",
     "delete_module_title": "Xóa chương nháp này?",
-    "delete_module_body": "Chương nháp sẽ bị xóa khỏi chương trình này. Nội dung bài học, bài kiểm tra và phỏng vấn vẫn được giữ lại nhưng không còn được ghim vào chương này.",
+    "delete_module_body": "Chương nháp, các bài học, tài nguyên và mục chương trình thuộc chương sẽ bị xóa. Nội dung bài kiểm tra và phỏng vấn được tham chiếu vẫn được giữ lại.",
     "delete_module_confirm": "Xóa chương",
     "mark_module_as": "Nhấn để đánh dấu là {{status}}",
     "curriculum_fallback_title": "Cấu trúc chương trình",
