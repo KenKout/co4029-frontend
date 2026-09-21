@@ -212,7 +212,7 @@ export default function ContentTopBar({ navGroups = [] }: ContentTopBarProps) {
           >
             <Avatar className="h-9 w-9 ring-2 ring-surface-elev shadow-sm">
               <AuthenticatedAvatarImage alt={displayName} />
-              <AvatarFallback className="bg-primary text-white text-xs font-bold">
+              <AvatarFallback className="bg-m3-primary text-white text-xs font-bold">
                 {getAuthUserInitials(user)}
               </AvatarFallback>
             </Avatar>

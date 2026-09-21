@@ -60,7 +60,7 @@ export function UserIdentity({
     <div className={cn("flex items-center gap-3 min-w-0", className)}>
       <Avatar size={size} className={avatarColor(id)}>
         {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
-        <AvatarFallback>
+        <AvatarFallback className="bg-m3-primary text-xs font-bold text-white">
           {avatarInitials(displayName, { uppercase: true })}
         </AvatarFallback>
       </Avatar>
