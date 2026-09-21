@@ -16,18 +16,23 @@ export interface SectionFlags {
   onAdminPath: boolean;
   onManagerPath: boolean;
   onTeacherPath: boolean;
+  onStudentPath: boolean;
 }
 
 /** Everything the access decision needs: the URL family plus query state. */
 export interface AccessInputs extends SectionFlags {
   needsCheck: boolean;
   permsReady: boolean;
-  perms: string[];
+  perms: readonly string[];
+  rolesReady: boolean;
+  roles: readonly string[];
 }
 
 /** The URL family plus whether the user is cleared for it. */
 export interface AllowedSection extends SectionFlags {
   isAllowed: boolean;
+  /** Role assignments used for section-specific sidebar context. */
+  roles: readonly string[];
   /** Sidebar context for shared routes such as /notifications and /settings. */
   defaultRole: LayoutRole;
 }

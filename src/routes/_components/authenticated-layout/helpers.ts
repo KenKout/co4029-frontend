@@ -10,6 +10,7 @@ import {
   ADMIN_PREFIXES,
   MANAGER_PERMS,
   MANAGER_PREFIXES,
+  STUDENT_PREFIXES,
   TEACHER_PREFIXES,
   TEACHER_PERMS,
 } from "./constants";
@@ -33,19 +34,28 @@ export function resolveSectionFlags(
   const onAdminPath = matchesPrefix(pathname, ADMIN_PREFIXES);
   const onManagerPath = matchesPrefix(pathname, MANAGER_PREFIXES);
   const onTeacherPath = matchesPrefix(pathname, TEACHER_PREFIXES);
+  const onStudentPath = matchesPrefix(pathname, STUDENT_PREFIXES);
   const needsCheck = onAdminPath || onManagerPath || onTeacherPath;
-  return { onAdminPath, onManagerPath, onTeacherPath, needsCheck };
+  return {
+    onAdminPath,
+    onManagerPath,
+    onTeacherPath,
+    onStudentPath,
+    needsCheck,
+  };
 }
 
 /**
- * Wait for the permission query to settle before deciding access. While
- * loading we treat privileged paths as blocked to avoid flashing a
- * privileged sidebar to a student who happens to be in the middle of a check.
+ * Wait for both effective permissions and explicit role assignments before
+ * deciding access. A higher role's broad permission set must not grant a
+ * section the user was not assigned (for example, admin without teacher).
  */
 export function resolveIsAllowed({
   needsCheck,
   permsReady,
   perms,
+  rolesReady,
+  roles,
   onAdminPath,
   onManagerPath,
   onTeacherPath,
@@ -53,9 +63,16 @@ export function resolveIsAllowed({
   return (
     !needsCheck ||
     (permsReady &&
-      ((onAdminPath && hasAnyPermission(perms, ADMIN_PERMS)) ||
-        (onManagerPath && hasAnyPermission(perms, MANAGER_PERMS)) ||
-        (onTeacherPath && hasAnyPermission(perms, TEACHER_PERMS))))
+      rolesReady &&
+      ((onAdminPath &&
+        roles.includes("admin") &&
+        hasAnyPermission(perms, ADMIN_PERMS)) ||
+        (onManagerPath &&
+          (roles.includes("manager") || roles.includes("hod")) &&
+          hasAnyPermission(perms, MANAGER_PERMS)) ||
+        (onTeacherPath &&
+          roles.includes("teacher") &&
+          hasAnyPermission(perms, TEACHER_PERMS))))
   );
 }
 
@@ -64,25 +81,29 @@ export function resolveIsAllowed({
  *
  * Shared pages do not carry a role prefix, so treating "no prefix" as
  * student made the notification inbox replace an admin/manager/teacher
- * sidebar with the student navigation. Permissions are already the source of
- * truth for section access; use the same precedence here. Manager must remain
- * ahead of teacher because manager permissions intentionally overlap the
- * teacher set.
+ * sidebar with the student navigation. Role assignments are the source of
+ * truth for the default context; permissions remain a fallback while roles
+ * are unavailable. Manager must remain ahead of teacher because manager
+ * permissions intentionally overlap the teacher set.
  */
-export function resolveDefaultRole(perms: readonly string[]): LayoutRole {
-  return hasAnyPermission(perms, ADMIN_PERMS)
+export function resolveDefaultRole(
+  roles: readonly string[],
+  perms: readonly string[],
+): LayoutRole {
+  return roles.includes("admin") || hasAnyPermission(perms, ADMIN_PERMS)
     ? "admin"
-    : hasAnyPermission(perms, MANAGER_PERMS)
+    : roles.includes("hod") ||
+        roles.includes("manager") ||
+        hasAnyPermission(perms, MANAGER_PERMS)
       ? "manager"
-      : hasAnyPermission(perms, TEACHER_PERMS)
+      : roles.includes("teacher") || hasAnyPermission(perms, TEACHER_PERMS)
         ? "teacher"
         : "student";
 }
 
 /**
- * Pick nav items based on permission, not just URL — a student who
- * somehow lands on /admin/* should see the student sidebar while the
- * redirect is in flight. Manager is checked before teacher because a manager
+ * Pick nav items based on the allowed URL family and assigned role, not just
+ * the highest permission. Manager is checked before teacher because a manager
  * holds course.create too (so would otherwise match the teacher section).
  */
 export function resolveNavGroups({
@@ -90,6 +111,8 @@ export function resolveNavGroups({
   onAdminPath,
   onManagerPath,
   onTeacherPath,
+  onStudentPath,
+  roles,
   defaultRole,
 }: AllowedSection): NavGroups {
   return isAllowed && onAdminPath
@@ -98,7 +121,9 @@ export function resolveNavGroups({
       ? managerNavGroups
       : isAllowed && onTeacherPath
         ? teacherNavGroups
-        : defaultRole === "admin"
+        : isAllowed && onStudentPath && roles.includes("student")
+          ? studentNavGroups
+          : defaultRole === "admin"
           ? adminNavGroups
           : defaultRole === "manager"
             ? managerNavGroups
@@ -113,6 +138,8 @@ export function resolveRole({
   onAdminPath,
   onManagerPath,
   onTeacherPath,
+  onStudentPath,
+  roles,
   defaultRole,
 }: AllowedSection): LayoutRole {
   return isAllowed && onAdminPath
@@ -121,5 +148,7 @@ export function resolveRole({
       ? ("manager" as const)
       : isAllowed && onTeacherPath
         ? ("teacher" as const)
-        : defaultRole;
+        : isAllowed && onStudentPath && roles.includes("student")
+          ? ("student" as const)
+          : defaultRole;
 }
