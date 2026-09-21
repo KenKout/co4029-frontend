@@ -6,81 +6,77 @@ import {
   Briefcase,
   Building2,
 } from "lucide-react";
+import { useMyRoles } from "@/lib/api/hooks/admin";
 import {
-  SUPERUSER_PERMISSION,
-  usePermissions,
-} from "@/lib/auth/use-permissions";
+  rolesForSwitcher,
+  type RoleSwitcherRole,
+} from "@/lib/auth/role-switcher";
 import { cn } from "@/lib/utils";
 
 interface SectionLink {
+  role: RoleSwitcherRole;
   i18nKey: string;
   fallback: string;
   href: string;
   icon: typeof LayoutDashboard;
   prefix: string;
-  show: (perms: string[]) => boolean;
 }
 
 const SECTIONS: SectionLink[] = [
   {
+    role: "student",
     i18nKey: "sections.student",
     fallback: "Student",
     href: "/dashboard",
     icon: LayoutDashboard,
     prefix: "/dashboard",
-    show: () => true,
   },
   {
+    role: "teacher",
     i18nKey: "sections.teacher",
     fallback: "Teacher",
     href: "/teacher",
     icon: Briefcase,
     prefix: "/teacher",
-    show: (perms) =>
-      perms.includes("course.create") || perms.includes("lesson.manage"),
   },
   {
-    // Manager: student + course management (course lifecycle, enrolment,
-    // teacher assignment, career pathways). Gated on permissions the teacher
-    // role does NOT hold, so a plain teacher never sees this section.
+    role: "manager",
     i18nKey: "sections.manager",
     fallback: "Manager",
-    href: "/management/courses",
+    href: "/management",
     icon: Building2,
     prefix: "/management",
-    show: (perms) =>
-      perms.includes("course.assign_teacher") ||
-      perms.includes("org_unit.manage") ||
-      perms.includes("course.enrollment.create"),
   },
   {
+    role: "hod",
+    i18nKey: "sections.dean",
+    fallback: "Dean",
+    href: "/management",
+    icon: Building2,
+    prefix: "/management",
+  },
+  {
+    role: "admin",
     i18nKey: "sections.admin",
     fallback: "Admin",
     href: "/admin/stats",
     icon: ShieldCheck,
     prefix: "/admin",
-    show: (perms) => perms.includes("system.administer"),
   },
 ];
 
 /**
- * The role switch bar (Student / Teacher / Manager / Admin pills in the top
- * bar). Admin-only since 2026-09: every other role gets exactly one section
- * (its own sidebar) and a URL belonging to another role renders the 404
- * guard, so there is nothing for them to switch between — the bar hid a
- * permission model that no longer exists. Admin keeps it because admin may
- * work across all four sections.
+ * The role switch bar in the top bar. Its entries come from the caller's
+ * active role assignments, not effective permissions: permissions overlap, so
+ * using them made every manager look like a teacher and made the switcher
+ * disappear for multi-role non-admin users.
  */
 export default function SectionSwitcher() {
   const { t } = useTranslation();
   const location = useLocation();
-  const permissions = usePermissions();
-  const perms = permissions.permissions;
-
-  // Hidden while permissions load (empty list) and for every non-admin.
-  if (!perms.includes(SUPERUSER_PERMISSION)) return null;
-
-  const visible = SECTIONS.filter((s) => s.show(perms));
+  const roles = useMyRoles();
+  const visibleRoles = rolesForSwitcher(roles.data ?? []);
+  const visible = SECTIONS.filter((s) => visibleRoles.includes(s.role));
   if (visible.length <= 1) return null;
 
   // Longest prefix wins, so a section nested under another still resolves to
@@ -88,11 +84,9 @@ export default function SectionSwitcher() {
   // manager's course pages lived at /dept while the rest of the section lived
   // at /management; with every manager route under one prefix the special case
   // is gone.
-  const activePrefix =
-    [...visible]
-      .sort((a, b) => b.prefix.length - a.prefix.length)
-      .find((s) => location.pathname.startsWith(s.prefix))?.prefix ??
-    "/dashboard";
+  const activeRole = [...visible]
+    .sort((a, b) => b.prefix.length - a.prefix.length)
+    .find((s) => location.pathname.startsWith(s.prefix))?.role;
 
   return (
     <nav
@@ -100,11 +94,13 @@ export default function SectionSwitcher() {
       className="hidden sm:flex items-center gap-1 rounded-md border border-border bg-surface p-1"
     >
       {visible.map((s) => {
-        const isActive = s.prefix === activePrefix;
+        // Dean and manager intentionally share `/management`; keep one pill
+        // active instead of rendering two selected controls for one route.
+        const isActive = s.role === activeRole;
         const Icon = s.icon;
         return (
           <Link
-            key={s.href}
+            key={s.role}
             to={s.href}
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 h-7 rounded-sm text-xs font-semibold transition-colors cursor-pointer",

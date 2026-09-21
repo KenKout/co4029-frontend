@@ -11,9 +11,10 @@ const TEACHER_PREFIXES = ["/teacher"];
 const MANAGER_PREFIXES = ["/management"];
 
 // Permission codes that grant access — the single authority for who can
-// reach a section. The header section switcher is admin-only now (it used
-// to mirror these lists); a non-admin hitting another section's URL is
-// denied here and the layout renders the 404 guard instead of the page.
+// reach a section. The header switcher uses role assignments for its labels;
+// these permissions still guard direct URL access. A user hitting another
+// section's URL without the required permission is denied here and the layout
+// renders the 404 guard instead of the page.
 const ADMIN_PERMS = ["system.administer"];
 const TEACHER_PERMS = ["course.create", "lesson.manage"];
 const MANAGER_PERMS = [

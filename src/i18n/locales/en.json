@@ -3131,6 +3131,7 @@
     "student": "Student",
     "teacher": "Teacher",
     "manager": "Manager",
+    "dean": "Dean",
     "admin": "Admin",
     "switcher_aria": "Section switcher"
   },
