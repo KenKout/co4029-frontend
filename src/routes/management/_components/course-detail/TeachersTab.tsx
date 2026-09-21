@@ -8,7 +8,10 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { getApiErrorMessage } from "@/lib/api/error-codes";
-import { useBulkRemoveTeachers, useCourseReadiness } from "@/lib/api/hooks/dept";
+import {
+  useBulkRemoveTeachers,
+  useCourseReadiness,
+} from "@/lib/api/hooks/dept";
 import type { TeacherAssignmentRead } from "@/lib/api/types";
 import { AssignTeacherForm } from "./AssignTeacherForm";
 import { TeacherIdentityCell, TeacherRowActions } from "./TeacherRow";
@@ -230,9 +233,9 @@ export function DeptTeachersTab({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const bulkRemove = useBulkRemoveTeachers(courseId);
   const { confirm, dialog } = useConfirm({
-    title: "Remove selected instructors?",
-    confirmLabel: "Remove",
-    cancelLabel: "Cancel",
+    title: t("dept_course_detail.bulk_remove_confirm_title"),
+    confirmLabel: t("common.remove"),
+    cancelLabel: t("common.cancel"),
   });
   const {
     hasInstructor,
@@ -261,8 +264,7 @@ export function DeptTeachersTab({
         id: "teacher",
         header: t("dept_course_detail.col_teacher"),
         sortable: true,
-        sortValue: (a) =>
-          (a.display_name || a.primary_email).toLowerCase(),
+        sortValue: (a) => (a.display_name || a.primary_email).toLowerCase(),
         cell: (a) => <TeacherIdentityCell assignment={a} />,
       },
     ],

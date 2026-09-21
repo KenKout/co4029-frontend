@@ -45,7 +45,9 @@ export function SettingRow({
           onCheckedChange={(c) => stage(c)}
           aria-label={label}
         />
-        <span className="text-xs text-slate-500">{value ? "On" : "Off"}</span>
+        <span className="text-xs text-slate-500">
+          {value ? t("admin_settings.ui.on") : t("admin_settings.ui.off")}
+        </span>
         {/* The row says outright that the deployment has not moved yet. */}
         {isPending && (
           <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">

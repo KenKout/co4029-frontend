@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { POLICY_ORDER, POLICY_TITLES } from "@/lib/help-content";
 import { useReaderPolicies } from "../use-reader-policies";
@@ -14,6 +15,7 @@ import { useReaderPolicies } from "../use-reader-policies";
  * real route either way.
  */
 export default function PolicyLinks() {
+  const { t } = useTranslation();
   const { data } = useReaderPolicies();
   const links = data?.length
     ? data.map((p) => ({ slug: p.slug, title: p.title }))
@@ -22,7 +24,7 @@ export default function PolicyLinks() {
   return (
     <section className="mt-12 border-t border-m3-outline-variant/20 pt-8">
       <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-        Policies
+        {t("help_page.policies")}
       </h2>
       <div className="flex flex-wrap gap-x-6 gap-y-2">
         {links.map(({ slug, title }) => (

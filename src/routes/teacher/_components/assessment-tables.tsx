@@ -29,7 +29,8 @@ function useStudentIdentityMap(
   return (row: { student_id: string; student_name?: string | null }) => {
     const u = byId.get(row.student_id);
     return {
-      displayName: u?.profile?.display_name || row.student_name || row.student_id,
+      displayName:
+        u?.profile?.display_name || row.student_name || row.student_id,
       email: u?.primary_email ?? null,
       avatarUrl: u?.profile?.avatar_url ?? null,
     };
@@ -70,11 +71,12 @@ function IntegrityFlagCell({ count }: { count: number }) {
 }
 
 function QuizStatusBadge({ attempt }: { attempt: QuizAttemptTeacherRead }) {
+  const { t } = useTranslation();
   if (attempt.status === "in_progress") {
     return (
       <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
         <Loader2 className="h-3 w-3" />
-        In progress
+        {t("teacher_assessments.options.in_progress")}
       </Badge>
     );
   }
@@ -82,7 +84,7 @@ function QuizStatusBadge({ attempt }: { attempt: QuizAttemptTeacherRead }) {
     return (
       <Badge className="text-[10px] border-0 bg-emerald-100 text-emerald-700 gap-1">
         <CheckCircle2 className="h-3 w-3" />
-        Passed
+        {t("teacher_assessments.options.passed")}
       </Badge>
     );
   }
@@ -90,13 +92,13 @@ function QuizStatusBadge({ attempt }: { attempt: QuizAttemptTeacherRead }) {
     return (
       <Badge className="text-[10px] border-0 bg-red-100 text-red-700 gap-1">
         <XCircle className="h-3 w-3" />
-        Failed
+        {t("teacher_assessments.options.not_passed")}
       </Badge>
     );
   }
   return (
     <Badge className="text-[10px] border-0 bg-amber-50 text-amber-700">
-      Grading…
+      {t("teacher_assessments.options.grading")}
     </Badge>
   );
 }
@@ -215,6 +217,7 @@ function InterviewVerdictBadge({
 }: {
   session: InterviewSessionTeacherRead;
 }) {
+  const { t } = useTranslation();
   // Shared with the student history badge: `failed` is NOT terminal while the
   // recovery sweep can re-drive the row — only `evaluation_state ===
   // "exhausted"` earns the error badge (legacy no-field fallback inside).
@@ -223,7 +226,7 @@ function InterviewVerdictBadge({
     return (
       <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
         <Loader2 className="h-3 w-3" />
-        In progress
+        {t("teacher_assessments.options.in_progress")}
       </Badge>
     );
   }
@@ -231,7 +234,7 @@ function InterviewVerdictBadge({
     return (
       <Badge className="text-[10px] border-0 bg-red-100 text-red-700 gap-1">
         <XCircle className="h-3 w-3" />
-        Evaluation failed
+        {t("teacher_assessments.options.failed")}
       </Badge>
     );
   }
@@ -239,7 +242,7 @@ function InterviewVerdictBadge({
     return (
       <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600 gap-1">
         <MinusCircle className="h-3 w-3" />
-        Not graded
+        {t("teacher_assessments.options.not_graded")}
       </Badge>
     );
   }
@@ -247,7 +250,7 @@ function InterviewVerdictBadge({
     return (
       <Badge className="text-[10px] border-0 bg-emerald-100 text-emerald-700 gap-1">
         <CheckCircle2 className="h-3 w-3" />
-        Passed
+        {t("teacher_assessments.options.passed")}
       </Badge>
     );
   }
@@ -255,13 +258,13 @@ function InterviewVerdictBadge({
     return (
       <Badge className="text-[10px] border-0 bg-red-100 text-red-700 gap-1">
         <XCircle className="h-3 w-3" />
-        Failed
+        {t("teacher_assessments.options.not_passed")}
       </Badge>
     );
   }
   return (
     <Badge className="text-[10px] border-0 bg-amber-50 text-amber-700">
-      Evaluating…
+      {t("teacher_assessments.options.evaluating")}
     </Badge>
   );
 }

@@ -63,7 +63,7 @@ function StudentRow({
       params={{ courseId: student.course_id, studentId: student.user_id }}
       className="group flex items-center gap-4 p-4 transition-colors hover:bg-m3-surface-container-low"
     >
-      <SeverityDot severity={student.severity} />
+      <SeverityDot severity={student.severity} t={t} />
 
       <Avatar size="lg" className="hidden sm:flex">
         <AvatarFallback>{initials(name)}</AvatarFallback>
@@ -71,7 +71,9 @@ function StudentRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <span className="truncate font-semibold text-text-strong">{name}</span>
+          <span className="truncate font-semibold text-text-strong">
+            {name}
+          </span>
           <span className="truncate text-xs text-text-muted">
             {student.course_title}
           </span>
@@ -115,19 +117,25 @@ function StudentRow({
  * explanation, and it is invisible to a colourblind teacher. High severity
  * gets the warning glyph; medium gets a plain dot.
  */
-function SeverityDot({ severity }: { severity: StudentNeedingAttention["severity"] }) {
+function SeverityDot({
+  severity,
+  t,
+}: {
+  severity: StudentNeedingAttention["severity"];
+  t: TranslateFn;
+}) {
   if (severity === "high") {
     return (
       <AlertTriangle
         className="h-4 w-4 shrink-0 text-destructive"
-        aria-label="High severity"
+        aria-label={t("teacher_dashboard.queue.high_severity")}
       />
     );
   }
   return (
     <span
       className={cn("h-2 w-2 shrink-0 rounded-full bg-m3-tertiary")}
-      aria-label="Medium severity"
+      aria-label={t("teacher_dashboard.queue.medium_severity")}
     />
   );
 }

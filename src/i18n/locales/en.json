@@ -87,6 +87,24 @@
     "support": "Support",
     "help_center": "Help Center"
   },
+  "interview_controls": {
+    "pause": "Pause",
+    "resume": "Resume",
+    "start_answering": "Start answering",
+    "finish_answer": "Finish answer",
+    "end_interview": "End interview",
+    "ending": "Ending…"
+  },
+  "help_page": {
+    "title": "Help & FAQ",
+    "subtitle": "Common questions about courses, reviews, quizzes and interviews.",
+    "clear_search": "Clear search",
+    "search": "Search help…",
+    "no_match": "No help topics match “{{query}}”.",
+    "no_match_hint": "Try a different word, or ask your course teacher or administrator.",
+    "policies": "Policies",
+    "contact_hint": "Still stuck? Contact your course teacher, or your organization's administrator for account and access problems."
+  },
   "permission_denied": {
     "title": "You don't have access to this page",
     "description": "This link may be out of date, or you may not have the permission needed to view it.",
@@ -139,6 +157,8 @@
     "sign_out": "Sign out",
     "redirecting_to_sign_in": "Redirecting to sign in…",
     "checking_session": "Checking your session…",
+    "redirecting": "Redirecting…",
+    "checking_access": "Checking access…",
     "not_provisioned_title": "Account not provisioned",
     "not_provisioned_body": "This email is not registered. Ask an administrator to add your account before signing in."
   },
@@ -391,7 +411,9 @@
       "empty_people": "No students are flagged. New enrolments are given time to start before they can be.",
       "empty_content": "No AI-generated content is waiting on a decision.",
       "all_clear_title": "You're all caught up",
-      "all_clear_hint": "Nothing is blocked, no student is flagged, and the review queue is clear."
+      "all_clear_hint": "Nothing is blocked, no student is flagged, and the review queue is clear.",
+      "high_severity": "High severity",
+      "medium_severity": "Medium severity"
     },
     "rail": {
       "at_a_glance": "At a glance"
@@ -409,6 +431,10 @@
     "slug_taken": "This slug is already taken",
     "slug_reset": "Reset to auto",
     "field_description": "Description",
+    "field_faculty": "Faculty",
+    "faculty_placeholder": "Select the owning faculty",
+    "faculty_organization_wide": "Organization-wide",
+    "faculty_locked_hint": "The owning faculty cannot be changed after creation.",
     "description_placeholder": "A short summary helps students choose. What will they learn?",
     "field_level": "Level",
     "field_duration": "Required duration",
@@ -688,6 +714,7 @@
     "n_courses_one": "{{count}} course"
   },
   "course_learn": {
+    "learn": "Learn",
     "lesson_unavailable_title": "Lesson unavailable",
     "lesson_unavailable_body": "This lesson's content isn't open yet.",
     "lesson_locked_title": "Lesson locked",
@@ -1163,6 +1190,7 @@
     "bulk_remove": "Remove selected",
     "bulk_clear": "Clear",
     "bulk_remove_confirm": "Remove {{count}} instructor(s) from this course? Their assignment is revoked but the record is kept. This is all-or-nothing — if the course would be left without a Course Instructor, nothing is removed.",
+    "bulk_remove_confirm_title": "Remove selected instructors?",
     "bulk_remove_done": "{{count}} instructor(s) removed",
     "bulk_remove_failed": "Could not remove the selected instructors"
   },
@@ -1239,7 +1267,11 @@
       "replace_warning": "This course already has a syllabus PDF. Uploading will replace the current document.",
       "replace_confirm_title": "Replace the current syllabus?",
       "replace_confirm_body": "The course already has a syllabus. The new upload will replace it — the old document will no longer be downloadable.",
-      "replace_confirm_submit": "Replace"
+      "replace_confirm_submit": "Replace",
+      "faculty_label": "Faculty",
+      "faculty_locked_hint": "The owning faculty cannot be changed after import.",
+      "faculty_placeholder": "Select faculty",
+      "faculty_organization_wide": "Organization-wide"
     },
     "scope_label": "Scoped to unit:",
     "scope_unknown": "Selected unit",
@@ -2501,7 +2533,10 @@
         "any_model": "All models",
         "any_role": "All roles",
         "any_operation": "All operations",
-        "any_status": "All statuses"
+        "any_status": "All statuses",
+        "operation_embedding": "Embedding",
+        "status_success": "Successful",
+        "status_failed": "Failed"
       },
       "drilldown": {
         "title": "Pipeline detail",
@@ -3090,6 +3125,16 @@
       "published_at": "Published {{value}}",
       "editor_title": "Draft",
       "editor_hint": "Markdown. Headings use ## — the reader page styles them as sections.",
+      "editor_placeholder": "## Section\n\nPolicy text.\n\n- Obligation\n- Obligation",
+      "toolbar": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "heading": "Section heading",
+        "list_item": "List item",
+        "link": "Link",
+        "image": "Image",
+        "code_block": "Code block"
+      },
       "changelog_hint": "Shown to admins in the version history, not to readers.",
       "unsaved_dot": "Unsaved changes",
       "saved_dot": "All changes saved",
@@ -5142,6 +5187,46 @@
     }
   },
   "quiz_generation": {
+    "controls": {
+      "remove_topic": "Remove {{value}}",
+      "limit_reached": "Limit reached",
+      "topic_placeholder": "Type and press Enter…",
+      "coverage_options": "Coverage options",
+      "min_per_section": "Min per section",
+      "max_per_section": "Max per section",
+      "section_grouping": "Section grouping",
+      "grouping_fixed": "Fixed bundle (use slides per section)",
+      "grouping_auto": "Auto (semantic — one section per topic)",
+      "grouping_help": "Fixed bundles consecutive slides together. Auto uses semantic enrichment so every distinct topic becomes its own section.",
+      "slides_per_section": "Slides per section (fixed bundle)",
+      "slides_per_section_help": "With fixed grouping, every N consecutive slides become one section. A lower value creates more sections and more questions per slide.",
+      "skip_summaries": "Skip summary / review sections",
+      "skip_summaries_hint": "Recommended when lessons end with a recap section.",
+      "loading_outline": "Loading outline for {{title}}…",
+      "outline_failed": "Could not load outline for {{title}}. Material may still be processing.",
+      "section_count_one": "{{count}} section",
+      "section_count_other": "{{count}} sections",
+      "suggested": "~{{count}} suggested",
+      "full_coverage_min": "Min for full coverage: {{count}}",
+      "apply_suggested": "Apply suggested",
+      "chunk_pages_one": "{{count}} chunk · pages {{from}}–{{to}} ·",
+      "chunk_pages_other": "{{count}} chunks · pages {{from}}–{{to}} ·",
+      "select_lesson_hint": "Select at least one ready lesson to preview its sections.",
+      "sections_to_cover": "Sections to cover",
+      "empty_includes_all": "Empty = include all eligible sections",
+      "bloom_distribution": "Bloom distribution",
+      "total": "Total: {{total}}/{{questionCount}}",
+      "exceeds_count": " — exceeds question count",
+      "bloom_hint": "Levels with 0 are left to the generator. Total ≤ question count."
+    },
+    "bloom": {
+      "remember": "Remember",
+      "understand": "Understand",
+      "apply": "Apply",
+      "analyze": "Analyze",
+      "evaluate": "Evaluate",
+      "create": "Create"
+    },
     "advanced": {
       "toggle": "Advanced personalisation",
       "extra_instructions": "Extra instructions",
@@ -5207,6 +5292,7 @@
     }
   },
   "teacher_quiz_manage": {
+    "ai_editor": "AI Quiz Editor",
     "bank": {
       "all_already_added": "All selected questions are already in the curated bank",
       "added_one": "Added {{count}} question to the curated bank",
@@ -6750,6 +6836,13 @@
     "new_node_indexed": "New concept {{n}}"
   },
   "admin_settings": {
+    "ui": {
+      "on": "On",
+      "off": "Off",
+      "load_failed": "Could not load settings. You may not have permission for this scope.",
+      "no_match": "No settings match your filters.",
+      "reset": "Reset"
+    },
     "group": {
       "ai": "AI models",
       "chunking": "Chunking",

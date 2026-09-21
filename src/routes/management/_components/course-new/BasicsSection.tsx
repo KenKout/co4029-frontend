@@ -102,7 +102,8 @@ function SlugField({
       <div className="flex items-center justify-between gap-2">
         <SlugHint controller={controller} t={t} />
         {slugManuallyEdited && form.title.trim() && (
-          <Button variant="link"
+          <Button
+            variant="link"
             type="button"
             onClick={resetSlugToAuto}
             className="shrink-0 text-[11px] font-medium text-m3-primary hover:underline"
@@ -150,18 +151,21 @@ export function CourseBasicsSection({
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-m3-on-surface">
-          Faculty{facultyRequired ? " *" : ""}
+          {t("teacher_course_new.field_faculty")}
+          {facultyRequired ? " *" : ""}
         </label>
         <Select
           value={form.facultyId}
           onValueChange={(value) => controller.setField("facultyId", value)}
           placeholder={
-            facultyRequired ? "Select the owning faculty" : "Organization-wide"
+            facultyRequired
+              ? t("teacher_course_new.faculty_placeholder")
+              : t("teacher_course_new.faculty_organization_wide")
           }
           options={facultyOptions}
         />
         <p className="text-[11px] text-m3-on-surface-variant">
-          The owning faculty cannot be changed after creation.
+          {t("teacher_course_new.faculty_locked_hint")}
         </p>
       </div>
 

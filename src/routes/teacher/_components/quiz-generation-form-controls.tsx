@@ -21,6 +21,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   ChevronDown,
@@ -87,6 +88,7 @@ export function TopicTagInput({
   values: string[];
   onChange: (values: string[]) => void;
 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState("");
   const atLimit = values.length >= 10;
 
@@ -124,7 +126,7 @@ export function TopicTagInput({
                 onChange(values.filter((entry) => entry !== value))
               }
               className="text-m3-secondary hover:text-m3-primary cursor-pointer"
-              aria-label={`Remove ${value}`}
+              aria-label={t("quiz_generation.controls.remove_topic", { value })}
             >
               <X className="h-3 w-3" />
             </Button>
@@ -150,7 +152,11 @@ export function TopicTagInput({
             }
           }}
           onBlur={commit}
-          placeholder={atLimit ? "Limit reached" : "Type and press Enter…"}
+          placeholder={
+            atLimit
+              ? t("quiz_generation.controls.limit_reached")
+              : t("quiz_generation.controls.topic_placeholder")
+          }
           className="min-w-[140px] flex-1"
         />
       </div>
@@ -192,18 +198,19 @@ export function CoverageOptionsForm({
   sectionGrouping: "auto" | "fixed";
   onChange: (patch: CoverageOptionsPatch) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3 rounded-xl border border-m3-secondary/20 bg-m3-secondary-fixed/10 p-3">
       <div className="flex items-center gap-1.5">
         <Layers className="h-3.5 w-3.5 text-m3-secondary" />
         <p className="text-xs font-bold uppercase tracking-widest text-m3-secondary">
-          Coverage options
+          {t("quiz_generation.controls.coverage_options")}
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Min per section
+            {t("quiz_generation.controls.min_per_section")}
           </label>
           <Input
             type="number"
@@ -222,7 +229,7 @@ export function CoverageOptionsForm({
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-            Max per section
+            {t("quiz_generation.controls.max_per_section")}
           </label>
           <Input
             type="number"
@@ -242,33 +249,30 @@ export function CoverageOptionsForm({
       </div>
       <div className="space-y-1.5">
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Section grouping
+          {t("quiz_generation.controls.section_grouping")}
         </label>
         <Select<"auto" | "fixed">
-          aria-label="Section grouping"
+          aria-label={t("quiz_generation.controls.section_grouping")}
           value={sectionGrouping}
           onValueChange={(next) => onChange({ section_grouping: next })}
           options={[
             {
               value: "fixed",
-              label: "Fixed bundle (use slides per section)",
+              label: t("quiz_generation.controls.grouping_fixed"),
             },
             {
               value: "auto",
-              label: "Auto (semantic — one section per topic)",
+              label: t("quiz_generation.controls.grouping_auto"),
             },
           ]}
         />
         <p className="text-[10px] text-m3-on-surface-variant">
-          <strong>Fixed</strong>: bundle every <em>N</em> consecutive slides
-          into one section. <strong>Auto</strong>: let the chunker's semantic
-          enrichment decide — every distinct topic becomes its own section
-          (slide-deck PDFs may produce one section per page).
+          {t("quiz_generation.controls.grouping_help")}
         </p>
       </div>
       <div className="space-y-1.5">
         <label className="text-[10px] font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Slides per section (fixed bundle)
+          {t("quiz_generation.controls.slides_per_section")}
         </label>
         <Input
           type="number"
@@ -285,9 +289,7 @@ export function CoverageOptionsForm({
           }
         />
         <p className="text-[10px] text-m3-on-surface-variant">
-          When grouping is <strong>fixed</strong>, every <em>N</em> consecutive
-          slides become one section. Lower = more sections = more questions per
-          slide.
+          {t("quiz_generation.controls.slides_per_section_help")}
         </p>
       </div>
       <label className="flex items-start gap-2 cursor-pointer">
@@ -297,9 +299,9 @@ export function CoverageOptionsForm({
           className="mt-0.5"
         />
         <span className="text-xs text-m3-on-surface">
-          Skip summary / review sections
+          {t("quiz_generation.controls.skip_summaries")}
           <span className="block text-[10px] text-m3-on-surface-variant">
-            Recommended when lessons end with a recap section.
+            {t("quiz_generation.controls.skip_summaries_hint")}
           </span>
         </span>
       </label>
@@ -333,6 +335,7 @@ function LessonOutlineSection({
   onSectionsChange: (sectionIds: string[]) => void;
   onSuggestQuestionCount: (count: number) => void;
 }) {
+  const { t } = useTranslation();
   const {
     data: outline,
     isLoading,
@@ -347,7 +350,9 @@ function LessonOutlineSection({
     return (
       <div className="rounded-xl border border-m3-outline-variant/20 bg-m3-surface px-3 py-2.5 text-xs text-m3-on-surface-variant flex items-center gap-2">
         <Loader2 className="h-3 w-3 animate-spin" />
-        Loading outline for {fallbackTitle}…
+        {t("quiz_generation.controls.loading_outline", {
+          title: fallbackTitle,
+        })}
       </div>
     );
   }
@@ -357,8 +362,9 @@ function LessonOutlineSection({
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 flex items-start gap-2">
         <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
         <span>
-          Could not load outline for <strong>{fallbackTitle}</strong>. Material
-          may still be processing.
+          {t("quiz_generation.controls.outline_failed", {
+            title: fallbackTitle,
+          })}
         </span>
       </div>
     );
@@ -388,11 +394,14 @@ function LessonOutlineSection({
           {outline.lesson_title}
         </span>
         <span className="text-[10px] text-m3-on-surface-variant">
-          {outline.sections.length} section
-          {outline.sections.length === 1 ? "" : "s"}
+          {t("quiz_generation.controls.section_count", {
+            count: outline.sections.length,
+          })}
         </span>
         <span className="text-[10px] font-semibold text-m3-secondary">
-          ~{outline.suggested_question_count} suggested
+          {t("quiz_generation.controls.suggested", {
+            count: outline.suggested_question_count,
+          })}
         </span>
       </Button>
 
@@ -400,7 +409,9 @@ function LessonOutlineSection({
         <div className="border-t border-m3-outline-variant/20 p-2 space-y-1">
           <div className="flex items-center justify-between gap-2 px-1 pb-1">
             <span className="text-[10px] text-m3-on-surface-variant">
-              Min for full coverage: {outline.min_for_full_coverage}
+              {t("quiz_generation.controls.full_coverage_min", {
+                count: outline.min_for_full_coverage,
+              })}
             </span>
             <div className="flex items-center gap-2">
               <Button variant="ghost"
@@ -410,7 +421,7 @@ function LessonOutlineSection({
                 }
                 className="text-[10px] font-semibold text-m3-secondary hover:text-m3-primary cursor-pointer"
               >
-                Apply suggested
+                {t("quiz_generation.controls.apply_suggested")}
               </Button>
               <Button variant="ghost"
                 type="button"
@@ -418,7 +429,7 @@ function LessonOutlineSection({
                 disabled={selectedSectionIds.length === 0}
                 className="text-[10px] font-semibold text-m3-on-surface-variant hover:text-m3-primary disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                Clear
+                {t("common.data_table.clear")}
               </Button>
             </div>
           </div>
@@ -444,11 +455,11 @@ function LessonOutlineSection({
                     {section.title}
                   </span>
                   <span className="block text-[10px] text-m3-on-surface-variant">
-                    {section.chunk_count} chunk
-                    {section.chunk_count === 1 ? "" : "s"}
-                    {" · "}
-                    pages {section.page_range[0]}–{section.page_range[1]}
-                    {" · "}
+                    {t("quiz_generation.controls.chunk_pages", {
+                      count: section.chunk_count,
+                      from: section.page_range[0],
+                      to: section.page_range[1],
+                    })}{" "}
                     <span className="capitalize">{section.content_role}</span>
                   </span>
                 </span>
@@ -488,6 +499,7 @@ export function CoverageSectionPicker({
   onSectionsChange: (lessonId: string, sectionIds: string[]) => void;
   onSuggestQuestionCount: (count: number) => void;
 }) {
+  const { t } = useTranslation();
   const visibleLessons = lessons.filter((lesson) =>
     selectedLessonIds.includes(lesson.id),
   );
@@ -495,7 +507,7 @@ export function CoverageSectionPicker({
   if (visibleLessons.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-m3-outline-variant/30 bg-m3-surface px-4 py-3 text-xs text-m3-on-surface-variant">
-        Select at least one ready lesson to preview its sections.
+        {t("quiz_generation.controls.select_lesson_hint")}
       </div>
     );
   }
@@ -505,10 +517,10 @@ export function CoverageSectionPicker({
       <div className="flex items-center justify-between gap-2">
         <label className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant flex items-center gap-1.5">
           <ListChecks className="h-3.5 w-3.5" />
-          Sections to cover
+          {t("quiz_generation.controls.sections_to_cover")}
         </label>
         <span className="text-[10px] text-m3-on-surface-variant">
-          Empty = include all eligible sections
+          {t("quiz_generation.controls.empty_includes_all")}
         </span>
       </div>
       <div className="space-y-2">
@@ -552,6 +564,7 @@ export function BloomDistributionInput({
   onToggle: (enabled: boolean) => void;
   onChange: (distribution: BloomDistribution) => void;
 }) {
+  const { t } = useTranslation();
   const total = Object.values(distribution).reduce(
     (sum, value) => sum + value,
     0,
@@ -562,7 +575,7 @@ export function BloomDistributionInput({
       <label className="flex items-center gap-2 cursor-pointer">
         <Checkbox checked={enabled} onCheckedChange={onToggle} />
         <span className="text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
-          Bloom distribution
+          {t("quiz_generation.controls.bloom_distribution")}
         </span>
       </label>
       {enabled && (
@@ -571,7 +584,7 @@ export function BloomDistributionInput({
             {BLOOM_LEVELS.map((level) => (
               <div key={level} className="space-y-1">
                 <label className="text-[10px] font-semibold uppercase tracking-wide text-m3-on-surface-variant">
-                  {level}
+                  {t(`quiz_generation.bloom.${level}`)}
                 </label>
                 <Input
                   type="number"
@@ -597,11 +610,11 @@ export function BloomDistributionInput({
                 : "text-m3-on-surface-variant",
             )}
           >
-            Total: {total}/{questionCount}
-            {overflow && " — exceeds question count"}
+            {t("quiz_generation.controls.total", { total, questionCount })}
+            {overflow && t("quiz_generation.controls.exceeds_count")}
           </p>
           <p className="text-[10px] text-m3-on-surface-variant">
-            Levels with 0 are left to the generator. Total ≤ question count.
+            {t("quiz_generation.controls.bloom_hint")}
           </p>
         </div>
       )}

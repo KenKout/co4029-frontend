@@ -8,6 +8,7 @@
  * button's branch set.
  */
 import { Check, Clock3, Pause, PhoneOff, Play, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 
@@ -37,6 +38,7 @@ export function MicToggleButton({
   onPausedByUserChange: (paused: boolean) => void;
   onMicErrorChange: (failed: boolean) => void;
 }) {
+  const { t } = useTranslation();
   if (micEnabled) {
     return (
       <Button
@@ -51,7 +53,7 @@ export function MicToggleButton({
         className="min-h-11"
       >
         <Pause className="h-4 w-4" />
-        <span className="hidden sm:inline">Pause</span>
+        <span className="hidden sm:inline">{t("interview_controls.pause")}</span>
       </Button>
     );
   }
@@ -75,7 +77,9 @@ export function MicToggleButton({
         <Play className="h-4 w-4" />
       )}
       <span className="hidden sm:inline">
-        {pausedByUser ? "Resume" : "Start answering"}
+        {pausedByUser
+          ? t("interview_controls.resume")
+          : t("interview_controls.start_answering")}
       </span>
     </Button>
   );
@@ -98,6 +102,7 @@ export function FinishAnswerButton({
   onPausedByUserChange: (paused: boolean) => void;
   onFinishingAnswerChange: (finishing: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Button
       type="button"
@@ -111,7 +116,9 @@ export function FinishAnswerButton({
       className="min-h-11"
     >
       <Check className="h-4 w-4" />
-      <span className="hidden sm:inline">Finish answer</span>
+      <span className="hidden sm:inline">
+        {t("interview_controls.finish_answer")}
+      </span>
     </Button>
   );
 }
@@ -132,18 +139,21 @@ export function EndInterviewButton({
   isEnding: boolean;
   onRequestEnd: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Button
       variant="destructive"
       onClick={onRequestEnd}
       disabled={isEnding}
       className="min-h-11 rounded-lg px-3 font-semibold text-danger hover:bg-danger/10"
-      aria-label="End interview"
-      title="End interview"
+      aria-label={t("interview_controls.end_interview")}
+      title={t("interview_controls.end_interview")}
     >
       <PhoneOff className="h-4 w-4" />
       <span className="hidden sm:inline">
-        {isEnding ? "Ending…" : "End interview"}
+        {isEnding
+          ? t("interview_controls.ending")
+          : t("interview_controls.end_interview")}
       </span>
     </Button>
   );

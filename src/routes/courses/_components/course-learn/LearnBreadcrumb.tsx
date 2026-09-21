@@ -1,9 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  Breadcrumbs,
-} from "@/components/ui/breadcrumbs";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -38,7 +36,7 @@ export function LearnBreadcrumb({
         items={[
           { label: t("course_detail.breadcrumb_courses"), to: "/courses" },
           { label: courseTitle, to: "/courses/$slug", params: { slug } },
-          { label: "Learn" },
+          { label: t("course_learn.learn") },
         ]}
       />
     );
@@ -73,7 +71,7 @@ export function LearnBreadcrumb({
         onClick={onGoHome}
         className="h-auto cursor-pointer rounded-md px-1 py-0 text-sm font-normal text-m3-on-surface-variant hover:text-m3-primary"
       >
-        Learn
+        {t("course_learn.learn")}
       </Button>
       <ChevronRight className="size-4 text-m3-outline" aria-hidden="true" />
       <span aria-current="page" className="font-medium text-m3-on-surface">

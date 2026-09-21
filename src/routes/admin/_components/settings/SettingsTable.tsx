@@ -1,4 +1,5 @@
 import { DataTable } from "@/components/ui/data-table";
+import { useTranslation } from "react-i18next";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import { buildSettingsTableColumns } from "./settings-table-columns";
 import { SettingsTableResetButton } from "./SettingsTableResetButton";
@@ -29,6 +30,7 @@ export function SettingsTable({
   /** Page-level draft, so table and card view stage into one set. */
   draft: SettingsDraft;
 }) {
+  const { t } = useTranslation();
   const controller = useSettingsTable(orgId, draft);
 
   const nodes: TableNode[] = groups.map((group) => {
@@ -57,7 +59,9 @@ export function SettingsTable({
       getSubRows={(n) => (n.kind === "group" ? n.children : undefined)}
       defaultExpanded
       rowClassName={(n) => (n.kind === "group" ? "bg-slate-50/60" : undefined)}
-      actionsHeader={<span className="sr-only">Reset</span>}
+      actionsHeader={
+        <span className="sr-only">{t("admin_settings.ui.reset")}</span>
+      }
       actions={(node) => {
         if (node.kind === "group") return null;
         return (

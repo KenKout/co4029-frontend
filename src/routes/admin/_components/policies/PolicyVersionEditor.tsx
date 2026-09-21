@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RichContent } from "@/components/ui/rich-content";
-import { ToolbarBtn, makeMarkdownApplier } from "@/components/ui/markdown-toolbar";
+import {
+  ToolbarBtn,
+  makeMarkdownApplier,
+} from "@/components/ui/markdown-toolbar";
 import { cn } from "@/lib/utils";
 import {
   usePublishPolicyVersion,
@@ -51,13 +54,15 @@ export function PolicyVersionEditor({
   /** Reports the draft text's unsaved state to the shared action bar. */
   onDirtyChange?: (dirty: boolean) => void;
   /** Registers save/publish so the shared sticky bar can trigger them. */
-  registerActions?: (actions: {
-    save: () => Promise<boolean>;
-    publish: () => Promise<void>;
-    savePending: () => boolean;
-    publishPending: () => boolean;
-    canPublish: () => boolean;
-  } | null) => void;
+  registerActions?: (
+    actions: {
+      save: () => Promise<boolean>;
+      publish: () => Promise<void>;
+      savePending: () => boolean;
+      publishPending: () => boolean;
+      canPublish: () => boolean;
+    } | null,
+  ) => void;
 }) {
   const { t } = useTranslation();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
@@ -92,7 +97,9 @@ export function PolicyVersionEditor({
       return true;
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : t("admin.policies.toasts.save_failed"),
+        err instanceof Error
+          ? err.message
+          : t("admin.policies.toasts.save_failed"),
       );
       return false;
     }
@@ -136,7 +143,11 @@ export function PolicyVersionEditor({
         <span className="text-sm font-semibold text-text-strong">
           {t("admin.policies.fields.title")}
         </span>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="mt-1"
+        />
       </label>
 
       <div className="overflow-hidden rounded-xl border border-m3-outline-variant/20 shadow-sm">
@@ -167,7 +178,10 @@ export function PolicyVersionEditor({
 
         {tab === "write" ? (
           <>
-            <EditorToolbar applyMarkdown={applyMarkdown} applyBlock={applyBlock} />
+            <EditorToolbar
+              applyMarkdown={applyMarkdown}
+              applyBlock={applyBlock}
+            />
             <Textarea
               ref={bodyRef}
               variant="bare"
@@ -175,7 +189,7 @@ export function PolicyVersionEditor({
               value={body}
               onChange={(e) => setBody(e.target.value)}
               className="min-h-[420px] bg-m3-surface-container-lowest p-6 font-body text-base placeholder:text-m3-on-surface-variant/40"
-              placeholder={"## Section\n\nPolicy text.\n\n- Obligation\n- Obligation"}
+              placeholder={t("admin.policies.editor_placeholder")}
             />
           </>
         ) : (
@@ -215,23 +229,39 @@ function EditorToolbar({
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-m3-outline-variant/10 px-2 py-1">
-      <ToolbarBtn icon={Bold} label="Bold" onClick={() => applyMarkdown("**")} />
-      <ToolbarBtn icon={Italic} label="Italic" onClick={() => applyMarkdown("*")} />
-      <ToolbarBtn icon={Hash} label="Section heading" onClick={() => applyBlock("## ")} />
-      <ToolbarBtn icon={List} label="List item" onClick={() => applyBlock("- ")} />
+      <ToolbarBtn
+        icon={Bold}
+        label={t("admin.policies.toolbar.bold")}
+        onClick={() => applyMarkdown("**")}
+      />
+      <ToolbarBtn
+        icon={Italic}
+        label={t("admin.policies.toolbar.italic")}
+        onClick={() => applyMarkdown("*")}
+      />
+      <ToolbarBtn
+        icon={Hash}
+        label={t("admin.policies.toolbar.heading")}
+        onClick={() => applyBlock("## ")}
+      />
+      <ToolbarBtn
+        icon={List}
+        label={t("admin.policies.toolbar.list_item")}
+        onClick={() => applyBlock("- ")}
+      />
       <ToolbarBtn
         icon={LinkIcon}
-        label="Link"
+        label={t("admin.policies.toolbar.link")}
         onClick={() => applyMarkdown("[", "](url)")}
       />
       <ToolbarBtn
         icon={Image}
-        label="Image"
+        label={t("admin.policies.toolbar.image")}
         onClick={() => applyMarkdown("![alt](", ")")}
       />
       <ToolbarBtn
         icon={Code}
-        label="Code block"
+        label={t("admin.policies.toolbar.code_block")}
         onClick={() => applyMarkdown("```\n", "\n```")}
       />
       <span className="ml-auto pr-2 text-xs text-m3-on-surface-variant/50">

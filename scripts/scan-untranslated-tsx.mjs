@@ -37,6 +37,45 @@ const toastMethods = new Set([
   "success",
   "warning",
 ]);
+const intentionalTechnicalLabels = new Set([
+  "AI",
+  "Archive",
+  "Audio",
+  "Code",
+  "CSV",
+  "Ctrl+Shift+P",
+  "Email:",
+  "Enter",
+  "File",
+  "GIFT",
+  "h",
+  "hutech, hcmut...",
+  "Image",
+  "LO",
+  "Markdown",
+  "Moodle XML",
+  "ms",
+  "PDF",
+  "Q",
+  "s",
+  "Sheet",
+  "Shift",
+  "Slides",
+  "Text",
+  "tok",
+  "UUID:",
+  "v",
+  "Video",
+  "Word",
+  "XLSX",
+  "(L.O.",
+]);
+const intentionalBrandLabels = new Set([
+  "aBridge",
+  "aBridgeAI",
+  "aBridgeAI Learning Systems.",
+  "The Cognitive Conduit",
+]);
 
 function collectTsxFiles(directory) {
   const files = [];
@@ -64,6 +103,9 @@ function normaliseText(value) {
 function looksUserFacing(value) {
   const text = normaliseText(value);
   if (!text || !/\p{L}/u.test(text)) return false;
+  if (intentionalTechnicalLabels.has(text) || intentionalBrandLabels.has(text))
+    return false;
+  if (text === "&copy;" || /^[\w.+-]+@[\w.-]+(?:\s|$)/.test(text)) return false;
   if (/^(https?:|mailto:|tel:|\/|\.\/|\.\.\/)/i.test(text)) return false;
   if (/^[a-z][a-z0-9]*(?:[._:/-][a-z0-9]+)+$/i.test(text)) return false;
   return true;

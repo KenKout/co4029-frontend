@@ -87,6 +87,24 @@
     "support": "Hỗ trợ",
     "help_center": "Trung tâm trợ giúp"
   },
+  "interview_controls": {
+    "pause": "Tạm dừng",
+    "resume": "Tiếp tục",
+    "start_answering": "Bắt đầu trả lời",
+    "finish_answer": "Kết thúc câu trả lời",
+    "end_interview": "Kết thúc phỏng vấn",
+    "ending": "Đang kết thúc…"
+  },
+  "help_page": {
+    "title": "Trợ giúp & Câu hỏi thường gặp",
+    "subtitle": "Các câu hỏi thường gặp về khóa học, ôn tập, bài kiểm tra và phỏng vấn.",
+    "clear_search": "Xóa tìm kiếm",
+    "search": "Tìm trong trợ giúp…",
+    "no_match": "Không có chủ đề trợ giúp nào khớp với “{{query}}”.",
+    "no_match_hint": "Hãy thử từ khóa khác hoặc hỏi giảng viên hay quản trị viên.",
+    "policies": "Chính sách",
+    "contact_hint": "Vẫn cần trợ giúp? Hãy liên hệ giảng viên khóa học hoặc quản trị viên của tổ chức nếu gặp vấn đề về tài khoản và quyền truy cập."
+  },
   "permission_denied": {
     "title": "Bạn không có quyền truy cập trang này",
     "description": "Liên kết có thể đã lỗi thời, hoặc bạn không có quyền cần thiết để xem trang này.",
@@ -139,6 +157,8 @@
     "sign_out": "Đăng xuất",
     "redirecting_to_sign_in": "Đang chuyển đến trang đăng nhập…",
     "checking_session": "Đang kiểm tra phiên đăng nhập…",
+    "redirecting": "Đang chuyển hướng…",
+    "checking_access": "Đang kiểm tra quyền truy cập…",
     "not_provisioned_title": "Tài khoản chưa được đăng ký",
     "not_provisioned_body": "Email này chưa được đăng ký. Vui lòng liên hệ quản trị viên để được thêm tài khoản trước khi đăng nhập."
   },
@@ -389,7 +409,9 @@
       "empty_people": "Không có học viên nào bị đánh dấu. Học viên mới ghi danh được cho thời gian bắt đầu trước đó.",
       "empty_content": "Không có nội dung AI nào chờ quyết định.",
       "all_clear_title": "Bạn đã xử lý hết",
-      "all_clear_hint": "Không có gì bị chặn, không học viên nào bị đánh dấu, hàng đợi xem xét đã trống."
+      "all_clear_hint": "Không có gì bị chặn, không học viên nào bị đánh dấu, hàng đợi xem xét đã trống.",
+      "high_severity": "Mức độ nghiêm trọng cao",
+      "medium_severity": "Mức độ nghiêm trọng trung bình"
     },
     "rail": {
       "at_a_glance": "Tổng quan nhanh"
@@ -636,6 +658,7 @@
     "n_courses_one": "{{count}} khóa học"
   },
   "course_learn": {
+    "learn": "Học",
     "lesson_unavailable_title": "Bài học không khả dụng",
     "lesson_unavailable_body": "Nội dung bài học này hiện chưa được mở.",
     "lesson_locked_title": "Bài học đang khóa",
@@ -1089,6 +1112,7 @@
     "bulk_remove": "Xoá mục đã chọn",
     "bulk_clear": "Bỏ chọn",
     "bulk_remove_confirm": "Xoá {{count}} giảng viên khỏi khóa học? Phân công bị thu hồi nhưng hồ sơ vẫn được giữ. Thao tác này là toàn bộ hoặc không — nếu khóa học sẽ không còn Giảng viên chính, sẽ không xoá gì cả.",
+    "bulk_remove_confirm_title": "Xoá các giảng viên đã chọn?",
     "bulk_remove_done": "Đã xoá {{count}} giảng viên",
     "bulk_remove_failed": "Không thể xoá các giảng viên đã chọn"
   },
@@ -1163,7 +1187,11 @@
       "replace_warning": "Khoá học này đã có đề cương PDF. Việc tải lên sẽ thay thế tệp hiện tại.",
       "replace_confirm_title": "Thay thế đề cương hiện tại?",
       "replace_confirm_body": "Khoá học đã có đề cương. Bản tải lên mới sẽ thay thế nó — tệp cũ sẽ không còn tải được nữa.",
-      "replace_confirm_submit": "Thay thế"
+      "replace_confirm_submit": "Thay thế",
+      "faculty_label": "Khoa",
+      "faculty_locked_hint": "Không thể đổi khoa sở hữu sau khi nhập.",
+      "faculty_placeholder": "Chọn khoa",
+      "faculty_organization_wide": "Toàn tổ chức"
     },
     "scope_label": "Phạm vi đơn vị:",
     "scope_unknown": "Đơn vị đã chọn",
@@ -2410,7 +2438,10 @@
         "any_model": "Tất cả mô hình",
         "any_role": "Tất cả vai trò",
         "any_operation": "Tất cả thao tác",
-        "any_status": "Tất cả trạng thái"
+        "any_status": "Tất cả trạng thái",
+        "operation_embedding": "Tạo embedding",
+        "status_success": "Thành công",
+        "status_failed": "Thất bại"
       },
       "drilldown": {
         "title": "Chi tiết pipeline",
@@ -2999,6 +3030,16 @@
       "published_at": "Xuất bản lúc {{value}}",
       "editor_title": "Bản nháp",
       "editor_hint": "Markdown. Tiêu đề mục dùng ## — trang người đọc sẽ định dạng thành từng phần.",
+      "editor_placeholder": "## Mục\n\nNội dung chính sách.\n\n- Nghĩa vụ\n- Nghĩa vụ",
+      "toolbar": {
+        "bold": "In đậm",
+        "italic": "In nghiêng",
+        "heading": "Tiêu đề mục",
+        "list_item": "Mục danh sách",
+        "link": "Liên kết",
+        "image": "Hình ảnh",
+        "code_block": "Khối mã"
+      },
       "changelog_hint": "Chỉ hiển thị cho quản trị viên trong lịch sử phiên bản, không hiển thị cho người đọc.",
       "unsaved_dot": "Có thay đổi chưa lưu",
       "saved_dot": "Đã lưu tất cả",
@@ -4964,6 +5005,46 @@
     }
   },
   "quiz_generation": {
+    "controls": {
+      "remove_topic": "Xóa {{value}}",
+      "limit_reached": "Đã đạt giới hạn",
+      "topic_placeholder": "Nhập và nhấn Enter…",
+      "coverage_options": "Tùy chọn bao phủ",
+      "min_per_section": "Tối thiểu mỗi phần",
+      "max_per_section": "Tối đa mỗi phần",
+      "section_grouping": "Cách nhóm nội dung",
+      "grouping_fixed": "Nhóm cố định (theo số slide mỗi phần)",
+      "grouping_auto": "Tự động (theo ngữ nghĩa — mỗi chủ đề là một phần)",
+      "grouping_help": "Chế độ cố định nhóm các slide liên tiếp. Chế độ tự động dùng phân tích ngữ nghĩa để mỗi chủ đề riêng biệt trở thành một phần.",
+      "slides_per_section": "Số slide mỗi phần (nhóm cố định)",
+      "slides_per_section_help": "Khi nhóm cố định, mỗi N slide liên tiếp trở thành một phần. Giá trị thấp hơn tạo nhiều phần và nhiều câu hỏi hơn cho mỗi slide.",
+      "skip_summaries": "Bỏ qua phần tóm tắt / ôn tập",
+      "skip_summaries_hint": "Nên bật khi bài học kết thúc bằng phần tổng kết.",
+      "loading_outline": "Đang tải dàn ý của {{title}}…",
+      "outline_failed": "Không thể tải dàn ý của {{title}}. Tài liệu có thể vẫn đang được xử lý.",
+      "section_count_one": "{{count}} phần",
+      "section_count_other": "{{count}} phần",
+      "suggested": "đề xuất ~{{count}}",
+      "full_coverage_min": "Tối thiểu để bao phủ đầy đủ: {{count}}",
+      "apply_suggested": "Áp dụng đề xuất",
+      "chunk_pages_one": "{{count}} đoạn · trang {{from}}–{{to}} ·",
+      "chunk_pages_other": "{{count}} đoạn · trang {{from}}–{{to}} ·",
+      "select_lesson_hint": "Chọn ít nhất một bài học đã sẵn sàng để xem trước các phần.",
+      "sections_to_cover": "Các phần cần bao phủ",
+      "empty_includes_all": "Để trống = gồm tất cả phần phù hợp",
+      "bloom_distribution": "Phân bổ Bloom",
+      "total": "Tổng: {{total}}/{{questionCount}}",
+      "exceeds_count": " — vượt quá số câu hỏi",
+      "bloom_hint": "Các cấp độ có giá trị 0 sẽ do trình tạo quyết định. Tổng không được vượt quá số câu hỏi."
+    },
+    "bloom": {
+      "remember": "Ghi nhớ",
+      "understand": "Hiểu",
+      "apply": "Vận dụng",
+      "analyze": "Phân tích",
+      "evaluate": "Đánh giá",
+      "create": "Sáng tạo"
+    },
     "advanced": {
       "toggle": "Cá nhân hóa nâng cao",
       "extra_instructions": "Hướng dẫn bổ sung",
@@ -5029,6 +5110,7 @@
     }
   },
   "teacher_quiz_manage": {
+    "ai_editor": "Trình soạn bài kiểm tra AI",
     "bank": {
       "all_already_added": "Tất cả câu hỏi đã chọn đều đã có trong ngân hàng tuyển chọn",
       "added_one": "Đã thêm {{count}} câu hỏi vào ngân hàng tuyển chọn",
@@ -6545,6 +6627,10 @@
     "slug_taken": "Slug này đã được sử dụng",
     "slug_reset": "Đặt lại tự động",
     "field_description": "Mô tả",
+    "field_faculty": "Khoa",
+    "faculty_placeholder": "Chọn khoa sở hữu",
+    "faculty_organization_wide": "Toàn tổ chức",
+    "faculty_locked_hint": "Không thể đổi khoa sở hữu sau khi tạo.",
     "description_placeholder": "Mô tả ngắn giúp học viên lựa chọn. Họ sẽ học được gì?",
     "field_level": "Cấp độ",
     "field_duration": "Thời lượng yêu cầu",
@@ -6726,6 +6812,13 @@
     "new_node_indexed": "Khái niệm mới {{n}}"
   },
   "admin_settings": {
+    "ui": {
+      "on": "Bật",
+      "off": "Tắt",
+      "load_failed": "Không thể tải cài đặt. Bạn có thể không có quyền trong phạm vi này.",
+      "no_match": "Không có cài đặt nào phù hợp với bộ lọc.",
+      "reset": "Đặt lại"
+    },
     "group": {
       "ai": "Mô hình AI",
       "chunking": "Phân đoạn (chunking)",

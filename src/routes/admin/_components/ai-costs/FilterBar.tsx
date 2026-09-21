@@ -117,7 +117,10 @@ export function FilterBar({
             options={[
               { value: "", label: anyOperation },
               { value: "chat_completion", label: "chat_completion" },
-              { value: "embedding", label: "embedding" },
+              {
+                value: "embedding",
+                label: t("admin.ai_costs.filters.operation_embedding"),
+              },
             ]}
             className="w-40 h-9"
           />
@@ -133,8 +136,14 @@ export function FilterBar({
             onValueChange={(next) => set("status", next)}
             options={[
               { value: "", label: anyStatus },
-              { value: "success", label: "success" },
-              { value: "failed", label: "failed" },
+              {
+                value: "success",
+                label: t("admin.ai_costs.filters.status_success"),
+              },
+              {
+                value: "failed",
+                label: t("admin.ai_costs.filters.status_failed"),
+              },
             ]}
             className="w-40 h-9"
           />

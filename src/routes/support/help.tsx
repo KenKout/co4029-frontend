@@ -1,4 +1,5 @@
 import TopNavBar from "@/components/layout/TopNavBar";
+import { useTranslation } from "react-i18next";
 import Footer from "@/components/layout/Footer";
 import FaqAccordion from "./_components/help/FaqAccordion";
 import {
@@ -18,6 +19,7 @@ import { useFaqSearch } from "./_components/help/use-faq-search";
  * "why can't I log in" answers unreachable.
  */
 export default function HelpPage() {
+  const { t } = useTranslation();
   const { query, setQuery, matches, grouped, toggle, openIds, isSearching } =
     useFaqSearch();
 
@@ -48,8 +50,7 @@ export default function HelpPage() {
         <PolicyLinks />
 
         <p className="mt-10 text-xs text-m3-on-surface-variant">
-          Still stuck? Contact your course teacher, or your organisation&apos;s
-          administrator for account and access problems.
+          {t("help_page.contact_hint")}
         </p>
       </div>
       <Footer />

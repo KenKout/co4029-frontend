@@ -105,7 +105,9 @@ export function QuizManageHeader({
                   {t("teacher_quiz_manage.status.draft")}
                 </Badge>
               )}
-              <AIInsightChip>AI Quiz Editor</AIInsightChip>
+              <AIInsightChip>
+                {t("teacher_quiz_manage.ai_editor")}
+              </AIInsightChip>
             </div>
             {quiz.description && (
               <p className="text-sm text-m3-on-surface-variant max-w-2xl leading-relaxed">

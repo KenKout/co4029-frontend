@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { ApplyChangesDialog } from "./ApplyChangesDialog";
 import { ChangeHistorySection } from "./ChangeHistorySection";
@@ -16,6 +17,7 @@ export function SettingsPageBody({
 }: {
   controller: AdminSettingsPageController;
 }) {
+  const { t } = useTranslation();
   const {
     settings,
     dense,
@@ -30,17 +32,17 @@ export function SettingsPageBody({
   return (
     <>
       {settings.isLoading && (
-        <p className="mt-8 text-sm text-slate-500">Loading…</p>
+        <p className="mt-8 text-sm text-slate-500">{t("common.loading")}</p>
       )}
       {settings.isError && (
         <p className="mt-8 text-sm text-red-600">
-          Could not load settings. You may not have permission for this scope.
+          {t("admin_settings.ui.load_failed")}
         </p>
       )}
 
       {settings.data && visibleGroups.length === 0 && (
         <p className="mt-8 text-sm text-slate-500">
-          No settings match your filters.
+          {t("admin_settings.ui.no_match")}
         </p>
       )}
 

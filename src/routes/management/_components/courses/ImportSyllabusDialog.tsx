@@ -73,8 +73,12 @@ export function ImportSyllabusDialog({
   const navigate = useNavigate();
   const importCourse = useImportCourseFromSyllabus();
   const { data: me } = useMe();
-  const faculties = useOrgUnits(me?.organization_id ?? undefined, { onlyRoots: true });
-  const facultyAssignments = useFacultyAssignments(me?.organization_id ?? undefined);
+  const faculties = useOrgUnits(me?.organization_id ?? undefined, {
+    onlyRoots: true,
+  });
+  const facultyAssignments = useFacultyAssignments(
+    me?.organization_id ?? undefined,
+  );
 
   const onCourse = Boolean(courseId);
   const canOverride = onCourse && courseStatus === "draft";
@@ -101,10 +105,14 @@ export function ImportSyllabusDialog({
   );
   const facultyOptions = useMemo(() => {
     const all = faculties.data ?? [];
-    const visible = assignedFacultyIds.size > 0
-      ? all.filter((faculty) => assignedFacultyIds.has(faculty.id))
-      : all;
-    return visible.map((faculty) => ({ value: faculty.id, label: faculty.name }));
+    const visible =
+      assignedFacultyIds.size > 0
+        ? all.filter((faculty) => assignedFacultyIds.has(faculty.id))
+        : all;
+    return visible.map((faculty) => ({
+      value: faculty.id,
+      label: faculty.name,
+    }));
   }, [assignedFacultyIds, faculties.data]);
   useEffect(() => {
     if (!facultyId && assignedFacultyIds.size === 1 && facultyOptions[0]) {
@@ -238,7 +246,9 @@ export function ImportSyllabusDialog({
                 disabled={
                   !file ||
                   importCourse.isPending ||
-                  (mode === "create" && assignedFacultyIds.size > 1 && !facultyId)
+                  (mode === "create" &&
+                    assignedFacultyIds.size > 1 &&
+                    !facultyId)
                 }
               >
                 {importCourse.isPending
@@ -414,16 +424,20 @@ function ImportForm({
 
       {mode === "create" ? (
         <Field
-          label={`Faculty${facultyRequired ? " *" : ""}`}
-          hint="The owning faculty cannot be changed after import."
+          label={`${t(`${prefix}.faculty_label`)}${facultyRequired ? " *" : ""}`}
+          hint={t(`${prefix}.faculty_locked_hint`)}
         >
           <Select
             value={facultyId}
             onValueChange={onFacultyChange}
             disabled={busy}
-            placeholder={facultyRequired ? "Select faculty" : "Organization-wide"}
+            placeholder={
+              facultyRequired
+                ? t(`${prefix}.faculty_placeholder`)
+                : t(`${prefix}.faculty_organization_wide`)
+            }
             options={facultyOptions}
-            aria-label="Faculty"
+            aria-label={t(`${prefix}.faculty_label`)}
           />
         </Field>
       ) : null}
@@ -437,7 +451,9 @@ function ImportForm({
             </p>
             {/* The backend's own reason, verbatim — it names the missing
                 field, which is what the manager needs to fix the file. */}
-            <p className="mt-0.5 text-xs break-words text-text-muted">{error}</p>
+            <p className="mt-0.5 text-xs break-words text-text-muted">
+              {error}
+            </p>
           </div>
         </div>
       ) : null}
@@ -503,7 +519,10 @@ function ImportResult({
           </p>
           <ul className="mt-2 space-y-1">
             {result.warnings.map((warning) => (
-              <li key={warning} className="text-xs break-words text-amber-900/80">
+              <li
+                key={warning}
+                className="text-xs break-words text-amber-900/80"
+              >
                 • {warning}
               </li>
             ))}
