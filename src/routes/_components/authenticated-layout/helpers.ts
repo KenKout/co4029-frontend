@@ -10,6 +10,7 @@ import {
   ADMIN_PREFIXES,
   MANAGER_PERMS,
   MANAGER_PREFIXES,
+  STUDENT_PERMS,
   STUDENT_PREFIXES,
   TEACHER_PREFIXES,
   TEACHER_PERMS,
@@ -35,7 +36,8 @@ export function resolveSectionFlags(
   const onManagerPath = matchesPrefix(pathname, MANAGER_PREFIXES);
   const onTeacherPath = matchesPrefix(pathname, TEACHER_PREFIXES);
   const onStudentPath = matchesPrefix(pathname, STUDENT_PREFIXES);
-  const needsCheck = onAdminPath || onManagerPath || onTeacherPath;
+  const needsCheck =
+    onAdminPath || onManagerPath || onTeacherPath || onStudentPath;
   return {
     onAdminPath,
     onManagerPath,
@@ -43,6 +45,18 @@ export function resolveSectionFlags(
     onStudentPath,
     needsCheck,
   };
+}
+
+function canEnterSection(
+  roles: readonly string[],
+  perms: readonly string[],
+  allowedRoles: readonly string[],
+  allowedPermissions: readonly string[],
+): boolean {
+  return (
+    allowedRoles.some((role) => roles.includes(role)) &&
+    hasAnyPermission(perms, allowedPermissions)
+  );
 }
 
 /**
@@ -59,21 +73,18 @@ export function resolveIsAllowed({
   onAdminPath,
   onManagerPath,
   onTeacherPath,
+  onStudentPath,
 }: AccessInputs): boolean {
-  return (
-    !needsCheck ||
-    (permsReady &&
-      rolesReady &&
-      ((onAdminPath &&
-        roles.includes("admin") &&
-        hasAnyPermission(perms, ADMIN_PERMS)) ||
-        (onManagerPath &&
-          (roles.includes("manager") || roles.includes("hod")) &&
-          hasAnyPermission(perms, MANAGER_PERMS)) ||
-        (onTeacherPath &&
-          roles.includes("teacher") &&
-          hasAnyPermission(perms, TEACHER_PERMS))))
-  );
+  if (!needsCheck) return true;
+  if (!permsReady || !rolesReady) return false;
+
+  return [
+    onAdminPath && canEnterSection(roles, perms, ["admin"], ADMIN_PERMS),
+    onManagerPath &&
+      canEnterSection(roles, perms, ["manager", "hod"], MANAGER_PERMS),
+    onTeacherPath && canEnterSection(roles, perms, ["teacher"], TEACHER_PERMS),
+    onStudentPath && canEnterSection(roles, perms, ["student"], STUDENT_PERMS),
+  ].some(Boolean);
 }
 
 /**

@@ -124,4 +124,28 @@ describe("shared-route sidebar context", () => {
     expect(resolveNavGroups(section)).toBe(studentNavGroups);
     expect(resolveRole(section)).toBe("student");
   });
+
+  it("blocks /dashboard for an admin without an assigned student role", () => {
+    const flags = resolveSectionFlags("/dashboard");
+
+    expect(
+      resolveIsAllowed({
+        ...flags,
+        permsReady: true,
+        rolesReady: true,
+        perms: ["system.administer", "course.read"],
+        roles: ["admin"],
+      }),
+    ).toBe(false);
+
+    expect(
+      resolveIsAllowed({
+        ...flags,
+        permsReady: true,
+        rolesReady: true,
+        perms: ["system.administer", "course.read"],
+        roles: ["admin", "student"],
+      }),
+    ).toBe(true);
+  });
 });

@@ -17,6 +17,7 @@ const MANAGER_PREFIXES = ["/management"];
 // section's URL without the required permission is denied here and the layout
 // renders the 404 guard instead of the page.
 const ADMIN_PERMS = ["system.administer"];
+const STUDENT_PERMS = ["course.read"];
 const TEACHER_PERMS = ["course.create", "lesson.manage"];
 const MANAGER_PERMS = [
   "course.assign_teacher",
@@ -32,6 +33,7 @@ export {
   MANAGER_PERMS,
   MANAGER_PREFIXES,
   STUDENT_PREFIXES,
+  STUDENT_PERMS,
   TEACHER_PERMS,
   TEACHER_PREFIXES,
 };
