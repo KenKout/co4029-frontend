@@ -25,7 +25,8 @@ something crossing the span.
 | `logo-lockup-compact.svg` | lockup **140–260px** (tagline dropped; it aliases badly below ~260px)                                                  |
 | `logo-lockup-dark.svg`    | lockup on dark surfaces                                                                                                |
 | `logo-tile.svg`           | app icon and search-result favicon, **≥32px**                                                                          |
-| `logo-favicon-16.svg`     | compact 16px browser favicon                                                                                           |
+| `logo-favicon-16.svg`     | compact 16px browser favicon (tile variant)                                                            |
+| `favicon.svg`             | transparent browser favicon actually linked from `index.html` (source of the rasterised PNG/ICO)       |
 | `logo-concepts.svg`       | the review board (3 concepts, scale + mono + clearspace tests). Not a shipping asset                                   |
 
 ## Rules
@@ -59,5 +60,8 @@ a dark surface.
 
 - The production build emits a 112px PNG from the same artwork for Google
   Search; browsers can continue using the sharper SVG source.
-- The favicon uses a white `aB` set in Be Vietnam Pro ExtraBold on the brand
-  blue tile, with the amber bridge span below it.
+- The browser favicon (`favicon.svg`) is the transparent variant: brand-blue
+  `aB` plus the amber span, no tile. The palette PNG previously shipped in its
+  place flattened transparency to a white box on the tab strip.
+- `logo-favicon-16.svg` keeps the white-on-blue tile look for places that need
+  an opaque tile at 16px.
