@@ -3085,6 +3085,7 @@
       "fork_confirm_body": "The latest published text will be copied into a new editable draft.",
       "versions_current": "current",
       "no_published_version": "Never published",
+      "published_by_label": "Publishing audit",
       "published_by": "Published by {{name}}",
       "published_at": "Published {{value}}",
       "editor_title": "Draft",

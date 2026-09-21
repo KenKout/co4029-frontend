@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CheckCircle2,
@@ -7,29 +6,30 @@ import {
   Globe,
   Plus,
   ShieldCheck,
-  UserRound,
   Users,
   X,
 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PermissionDenied } from "@/components/ui/permission-denied";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionDenied } from "@/components/ui/permission-denied";
-import { usePermissions } from "@/lib/auth/use-permissions";
+import { UserEmailIdentity } from "@/components/ui/user-identity";
 import { useUsersByIds } from "@/lib/api/hooks/admin";
-import type { User } from "@/lib/api/types";
-import { getUserDisplayName } from "@/lib/user-identity";
-import { useFormatDateTimeMedium } from "@/lib/format/date";
 import {
   useAdminPolicies,
   useCreatePolicy,
   type PolicyCategory,
   type PolicyDetail,
 } from "@/lib/api/hooks/policies";
+import type { User } from "@/lib/api/types";
+import { usePermissions } from "@/lib/auth/use-permissions";
+import { useFormatDateTimeMedium } from "@/lib/format/date";
+import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 import { displayVersion } from "./_components/policies/policy-display";
 import { PolicyStatusBadge } from "./_components/policies/PolicyStatusBadge";
 
@@ -171,9 +171,11 @@ function CreatePolicyDialog({ onClose }: { onClose: () => void }) {
 function PolicyRow({
   policy,
   publishers,
+  publishersLoading,
 }: {
   policy: PolicyDetail;
   publishers: User[] | undefined;
+  publishersLoading: boolean;
 }) {
   const { t } = useTranslation();
   const formatDateTime = useFormatDateTimeMedium();
@@ -192,69 +194,88 @@ function PolicyRow({
         <FileText className="h-4 w-4 text-m3-primary" />
       </span>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-sm font-semibold text-text-strong">
-            {shown?.title ?? policy.slug}
+      <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-sm font-semibold text-text-strong">
+              {shown?.title ?? policy.slug}
+            </p>
+            <span className="rounded-full bg-m3-surface-container-high px-2 py-0.5 text-[11px] font-semibold text-m3-on-surface-variant">
+              {t(`admin.policies.category_label.${policy.category}`)}
+            </span>
+          </div>
+          <p className="truncate font-mono text-xs text-text-muted">
+            /policy/{policy.slug}
           </p>
-          <span className="rounded-full bg-m3-surface-container-high px-2 py-0.5 text-[11px] font-semibold text-m3-on-surface-variant">
-            {t(`admin.policies.category_label.${policy.category}`)}
-          </span>
-        </div>
-        <p className="truncate font-mono text-xs text-text-muted">
-          /policy/{policy.slug}
-        </p>
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
-          {published ? (
-            <PolicyStatusBadge
-              status="published"
-              version={published.version_no}
-            />
-          ) : (
-            <span className="font-semibold text-amber-700">
-              {t("admin.policies.no_published_version")}
-            </span>
-          )}
-          {/* An open draft is the actionable state, so it is called out even
-              when a published version already exists. */}
-          {draft ? (
-            <PolicyStatusBadge status="draft" version={draft.version_no} />
-          ) : null}
-
-          <span className="inline-flex items-center gap-1">
-            {policy.audience.length === 0 ? (
-              <>
-                <Globe className="h-3 w-3" />
-                {t("admin.policies.public_audience")}
-              </>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
+            {published ? (
+              <PolicyStatusBadge
+                status="published"
+                version={published.version_no}
+              />
             ) : (
-              <>
-                <Users className="h-3 w-3" />
-                {policy.audience.map((r) => r.name).join(", ")}
-              </>
+              <span className="font-semibold text-amber-700">
+                {t("admin.policies.no_published_version")}
+              </span>
             )}
-          </span>
-        </div>
-        {published ? (
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-m3-outline-variant/15 pt-2 text-xs text-text-muted">
-            <span className="inline-flex items-center gap-1.5">
-              <UserRound className="h-3.5 w-3.5" />
-              {t("admin.policies.published_by", {
-                name: publisher
-                  ? getUserDisplayName(publisher)
-                  : (published.published_by ?? t("admin.audit.system")),
-              })}
+            {/* An open draft is the actionable state, so it is called out even
+                when a published version already exists. */}
+            {draft ? (
+              <PolicyStatusBadge status="draft" version={draft.version_no} />
+            ) : null}
+
+            <span className="inline-flex items-center gap-1">
+              {policy.audience.length === 0 ? (
+                <>
+                  <Globe className="h-3 w-3" />
+                  {t("admin.policies.public_audience")}
+                </>
+              ) : (
+                <>
+                  <Users className="h-3 w-3" />
+                  {policy.audience.map((r) => r.name).join(", ")}
+                </>
+              )}
             </span>
+          </div>
+        </div>
+
+        {published ? (
+          <aside className="shrink-0 border-t border-m3-outline-variant/15 pt-3 sm:min-w-56 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-text-muted sm:text-right">
+              {t("admin.policies.published_by_label")}
+            </p>
+            {published.published_by && publishersLoading ? (
+              <div className="flex items-center gap-3 sm:justify-end">
+                <Skeleton className="h-7 w-7 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-36" />
+                </div>
+              </div>
+            ) : publisher ? (
+              <UserEmailIdentity
+                id={publisher.id}
+                displayName={getUserDisplayName(publisher)}
+                avatarUrl={getUserAvatarUrl(publisher)}
+                email={publisher.primary_email}
+                className="sm:justify-end"
+              />
+            ) : (
+              <p className="text-sm font-semibold text-text-strong sm:text-right">
+                {published.published_by ?? t("admin.audit.system")}
+              </p>
+            )}
             {published.published_at ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Clock3 className="h-3.5 w-3.5" />
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted sm:justify-end">
+                <Clock3 className="h-3.5 w-3.5 shrink-0" />
                 {t("admin.policies.published_at", {
                   value: formatDateTime(published.published_at),
                 })}
-              </span>
+              </p>
             ) : null}
-          </div>
+          </aside>
         ) : null}
       </div>
     </Link>
@@ -365,7 +386,8 @@ export default function AdminPoliciesPage() {
         version.published_by ? [version.published_by] : [],
       ),
     ) ?? [];
-  const { data: publishers } = useUsersByIds(publisherIds);
+  const { data: publishers, isPending: publishersLoading } =
+    useUsersByIds(publisherIds);
 
   if (!permissions.hasAny("system.administer")) return <PermissionDenied />;
 
@@ -408,7 +430,12 @@ export default function AdminPoliciesPage() {
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
           <div className="space-y-3">
             {data.map((p) => (
-              <PolicyRow key={p.id} policy={p} publishers={publishers} />
+              <PolicyRow
+                key={p.id}
+                policy={p}
+                publishers={publishers}
+                publishersLoading={publishersLoading}
+              />
             ))}
           </div>
           <PolicyInventoryPanel policies={data} />

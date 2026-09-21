@@ -2994,6 +2994,7 @@
       "fork_confirm_body": "Nội dung bản đã xuất bản mới nhất sẽ được sao chép vào một bản nháp mới.",
       "versions_current": "hiện tại",
       "no_published_version": "Chưa từng xuất bản",
+      "published_by_label": "Nhật ký xuất bản",
       "published_by": "Xuất bản bởi {{name}}",
       "published_at": "Xuất bản lúc {{value}}",
       "editor_title": "Bản nháp",
