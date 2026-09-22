@@ -76,12 +76,12 @@ export function SettingsTab({
       <div className="min-w-0 space-y-6">
         <form onSubmit={onSubmit} className="space-y-6">
           <fieldset disabled={busy} className="min-w-0 border-0 p-0 space-y-6">
-            <Card>
+            <Card className="overflow-visible">
               <CardContent>
                 <SettingsGeneralSection draft={draft} update={update} />
               </CardContent>
             </Card>
-            <Card>
+            <Card className="overflow-visible">
               <CardContent>
                 <SettingsScheduleSection
                   draft={draft}
@@ -90,7 +90,7 @@ export function SettingsTab({
                 />
               </CardContent>
             </Card>
-            <Card>
+            <Card className="overflow-visible">
               <CardContent className="space-y-6">
                 <SettingsAttemptsSection
                   draft={draft}
@@ -104,7 +104,7 @@ export function SettingsTab({
                 />
               </CardContent>
             </Card>
-            <Card>
+            <Card className="overflow-visible">
               <CardContent>
                 <SettingsBehaviorSection
                   draft={draft}
@@ -138,7 +138,7 @@ export function SettingsTab({
         <p className="text-sm text-m3-on-surface-variant">
           {t("teacher_quiz_manage.settings.assist.separate_saves")}
         </p>
-        <Card>
+        <Card className="overflow-visible">
           <CardContent>
             <SettingsSection
               title={t("teacher_quiz_manage.settings.feedback.title")}
@@ -155,7 +155,7 @@ export function SettingsTab({
             </SettingsSection>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="overflow-visible">
           <CardContent>
             <SettingsSection
               title={t("teacher_quiz_manage.settings.overrides.title")}
