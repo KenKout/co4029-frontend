@@ -1,3 +1,4 @@
+import type { MouseEventHandler } from "react";
 import { Fragment } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
@@ -8,6 +9,7 @@ export type BreadcrumbItem = {
   to?: string;
   params?: Record<string, string>;
   search?: Record<string, string | number | boolean | undefined>;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
@@ -34,6 +36,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                 to={item.to}
                 params={item.params ?? {}}
                 search={item.search}
+                onClick={item.onClick}
                 className="rounded-md px-1 hover:text-m3-primary focus-visible:outline-2 focus-visible:outline-m3-primary transition-colors"
               >
                 {item.label}

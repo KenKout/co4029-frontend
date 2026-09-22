@@ -110,6 +110,8 @@ export default function LessonManagePage() {
           courseModule={courseModule}
           title={editor.title}
           lessonTitle={lesson?.title}
+          isDirty={editor.isDirty}
+          onNavigateWhileDirty={(action) => editor.leaveGuard.run(action)}
         />
       </div>
 
