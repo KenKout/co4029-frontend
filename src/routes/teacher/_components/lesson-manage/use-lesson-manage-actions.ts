@@ -65,6 +65,7 @@ export function useLessonManageActions({
         );
       }
       await Promise.all(saves);
+      editor.markSaved({ estimatedMinutes: String(estimatedMinutes) });
       editor.setSaved(true);
       setTimeout(() => editor.setSaved(false), 2000);
       toast.success(t("teacher_common.lesson_saved"));
