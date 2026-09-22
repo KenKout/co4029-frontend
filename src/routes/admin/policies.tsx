@@ -243,9 +243,6 @@ function PolicyRow({
 
         {published ? (
           <aside className="shrink-0 border-t border-m3-outline-variant/15 pt-3 sm:min-w-56 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-text-muted sm:text-right">
-              {t("admin.policies.published_by_label")}
-            </p>
             {published.published_by && publishersLoading ? (
               <div className="flex items-center gap-3 sm:justify-end">
                 <Skeleton className="h-7 w-7 rounded-full" />
