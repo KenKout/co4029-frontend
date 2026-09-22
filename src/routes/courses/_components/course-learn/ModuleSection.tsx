@@ -98,14 +98,13 @@ export function ModuleSection({
 
   return (
     <div className="space-y-1">
-      <Button variant="ghost"
+      <Button
+        variant="ghost"
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "w-full flex items-center gap-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer h-auto whitespace-normal",
-          variant === "home"
-            ? "px-2 py-2"
-            : "px-2 py-1.5",
+          "w-full min-w-0 flex items-center gap-1.5 rounded-md text-left transition-colors hover:bg-m3-primary/5 group cursor-pointer h-auto whitespace-normal",
+          variant === "home" ? "px-2 py-2" : "px-2 py-1.5",
         )}
       >
         <ChevronDown
@@ -116,7 +115,10 @@ export function ModuleSection({
         />
         {variant === "home" ? (
           <>
-            <span className="flex-1 min-w-0 truncate text-sm sm:text-base font-bold text-m3-on-surface transition-colors group-hover:text-m3-primary">
+            <span
+              className="min-w-0 flex-1 line-clamp-2 break-words text-left text-sm font-bold text-m3-on-surface transition-colors group-hover:text-m3-primary sm:text-base"
+              title={mod.title}
+            >
               {mod.title}
             </span>
             <span
@@ -134,7 +136,9 @@ export function ModuleSection({
             {moduleDuration && (
               <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-m3-on-surface-variant">
                 <Clock className="h-3 w-3" aria-hidden="true" />
-                {t("course_learn.module_duration", { duration: moduleDuration })}
+                {t("course_learn.module_duration", {
+                  duration: moduleDuration,
+                })}
               </span>
             )}
           </>
@@ -172,7 +176,9 @@ export function ModuleSection({
   );
 }
 
-function formatModuleDuration(minutes: number | null | undefined): string | null {
+function formatModuleDuration(
+  minutes: number | null | undefined,
+): string | null {
   if (!minutes || minutes < 0) return null;
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
@@ -288,7 +294,8 @@ function CurriculumItemRow({
   }
 
   return (
-    <Button variant="ghost"
+    <Button
+      variant="ghost"
       onClick={() => idx >= 0 && onSelect(idx)}
       disabled={idx < 0 /* || state === "locked" */} // DEV: uncomment state check to re-enable lock
       className={className}
@@ -307,17 +314,24 @@ function rowClassName(
   return variant === "home"
     ? cn(
         "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
-        state === "completed" && "text-m3-outline font-normal hover:text-m3-on-surface-variant",
+        state === "completed" &&
+          "text-m3-outline font-normal hover:text-m3-on-surface-variant",
         state === "active" && "bg-m3-secondary/10 text-m3-on-surface font-bold",
-        state === "pending" && !isNextUp && "text-m3-on-surface-variant font-medium hover:bg-m3-primary/5",
-        isNextUp && "border border-m3-primary/40 bg-m3-primary/5 shadow-sm font-bold text-m3-on-surface hover:bg-m3-primary/10",
+        state === "pending" &&
+          !isNextUp &&
+          "text-m3-on-surface-variant font-medium hover:bg-m3-primary/5",
+        isNextUp &&
+          "border border-m3-primary/40 bg-m3-primary/5 shadow-sm font-bold text-m3-on-surface hover:bg-m3-primary/10",
       )
     : cn(
         "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 text-sm",
         state === "active" && "bg-m3-primary text-white shadow-md font-bold",
-        state === "completed" && "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
-        state === "pending" && "text-m3-on-surface-variant hover:bg-white/50 font-medium",
-        isNextUp && "bg-m3-secondary/10 font-bold text-m3-on-surface shadow-[inset_0_0_14px_2px_rgba(59,130,246,0.16)] hover:bg-m3-secondary/15",
+        state === "completed" &&
+          "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
+        state === "pending" &&
+          "text-m3-on-surface-variant hover:bg-white/50 font-medium",
+        isNextUp &&
+          "bg-m3-secondary/10 font-bold text-m3-on-surface shadow-[inset_0_0_14px_2px_rgba(59,130,246,0.16)] hover:bg-m3-secondary/15",
       );
 }
 

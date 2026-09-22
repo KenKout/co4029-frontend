@@ -31,6 +31,7 @@ import {
 import { InterviewWorkspaceScreen } from "@/routes/courses/_components/course-interview/InterviewWorkspaceScreen";
 import { useCourseInterviewWithRef } from "@/routes/courses/_components/course-interview/use-course-interview-with-ref";
 import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/CurriculumSidebar";
+import { resolveCourseInstructors } from "@/routes/courses/_components/course-learn/InstructorBlock";
 import {
   earliestPendingItemId,
   itemStateFor,
@@ -244,6 +245,7 @@ function MatchedItemView({
         <LessonItemView
           slug={slug}
           courseId={course.id}
+          course={course}
           matched={matched}
           sortedModules={sortedModules}
           flatItems={flatItems}
@@ -276,6 +278,7 @@ function MatchedItemView({
 function LessonItemView({
   slug,
   courseId,
+  course,
   matched,
   sortedModules,
   flatItems,
@@ -283,6 +286,7 @@ function LessonItemView({
 }: {
   slug: string;
   courseId: string;
+  course: CoursePublic;
   matched: FlatItem;
   sortedModules: ModulePublic[];
   flatItems: FlatItem[];
@@ -344,6 +348,9 @@ function LessonItemView({
     interviewProgressMap,
     nextItemId,
   };
+  const activeIndex = lessonItems.findIndex(
+    (fi) => fi.item.id === matched.item.id,
+  );
 
   if (lessonUnavailable) {
     return (
@@ -390,51 +397,20 @@ function LessonItemView({
               onTabChange={setActiveTab}
               activeLessonId={activeLessonId}
               resources={resources}
-              hasPrev={
-                lessonItems.findIndex((fi) => fi.item.id === matched.item.id) >
-                0
-              }
-              hasNext={
-                lessonItems.findIndex((fi) => fi.item.id === matched.item.id) <
-                lessonItems.length - 1
-              }
-              onPrev={() =>
-                onSelect(
-                  Math.max(
-                    0,
-                    lessonItems.findIndex(
-                      (fi) => fi.item.id === matched.item.id,
-                    ) - 1,
-                  ),
-                )
-              }
+              hasPrev={activeIndex > 0}
+              hasNext={activeIndex < lessonItems.length - 1}
+              onPrev={() => onSelect(Math.max(0, activeIndex - 1))}
               onNext={() =>
-                onSelect(
-                  Math.min(
-                    lessonItems.length - 1,
-                    lessonItems.findIndex(
-                      (fi) => fi.item.id === matched.item.id,
-                    ) + 1,
-                  ),
-                )
+                onSelect(Math.min(lessonItems.length - 1, activeIndex + 1))
               }
-              prevLabel={
-                lessonItems[
-                  lessonItems.findIndex(
-                    (fi) => fi.item.id === matched.item.id,
-                  ) - 1
-                ]?.label
-              }
-              nextLabel={
-                lessonItems[
-                  lessonItems.findIndex(
-                    (fi) => fi.item.id === matched.item.id,
-                  ) + 1
-                ]?.label
-              }
+              prevLabel={lessonItems[activeIndex - 1]?.label}
+              nextLabel={lessonItems[activeIndex + 1]?.label}
             />
           </div>
-          <CurriculumSidebar {...curriculum} />
+          <CurriculumSidebar
+            {...curriculum}
+            instructors={resolveCourseInstructors(course)}
+          />
         </div>
       </div>
     </div>
@@ -469,7 +445,7 @@ function LessonContentPane({
     return (
       <div ref={readingContentRef}>
         <GlassCard
-          className="p-6 sm:p-8 space-y-6 mt-2"
+          className="mt-2 space-y-6 p-4 sm:p-6"
           data-testid="course-learn-reading"
         >
           <ReadingLessonBody

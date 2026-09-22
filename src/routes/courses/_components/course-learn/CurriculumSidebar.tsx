@@ -2,7 +2,10 @@ import { useTranslation } from "react-i18next";
 import { BookOpen, ChevronDown } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ModuleSection } from "./ModuleSection";
+import { InstructorBlock } from "./InstructorBlock";
 import type { CurriculumProps } from "./types";
+import type { InstructorRead } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
 
 /**
  * Lesson-mode curriculum sidebar. Only rendered in lesson mode: in home mode
@@ -20,11 +23,12 @@ export function CurriculumSidebar({
   inProgressByConfigId,
   interviewProgressMap,
   nextItemId,
-}: CurriculumProps) {
+  instructors = [],
+}: CurriculumProps & { instructors?: InstructorRead[] }) {
   const { t } = useTranslation();
 
   const curriculumContent = (
-    <div className="space-y-4 p-3">
+    <div className="min-w-0 space-y-4 p-3">
       {sortedModules.map((mod) => (
         <ModuleSection
           key={mod.id}
@@ -45,8 +49,8 @@ export function CurriculumSidebar({
   );
 
   return (
-    <aside className="order-first flex w-full flex-shrink-0 flex-col gap-4 self-start lg:order-none lg:sticky lg:top-24 lg:w-72 xl:w-80">
-      <details className="group overflow-hidden rounded-xl border border-m3-outline-variant/20 bg-card shadow-sm lg:hidden">
+    <aside className="flex w-full min-w-0 flex-shrink-0 flex-col gap-4 self-start lg:sticky lg:top-24 lg:w-72 xl:w-80">
+      <details className="group w-full min-w-0 overflow-hidden rounded-xl border border-m3-outline-variant/20 bg-card shadow-sm lg:hidden">
         <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
           <BookOpen className="h-4 w-4 text-m3-secondary" />
           <span className="flex-1 font-headline text-sm font-bold text-m3-on-surface">
@@ -54,12 +58,12 @@ export function CurriculumSidebar({
           </span>
           <ChevronDown className="h-4 w-4 text-m3-on-surface-variant transition-transform duration-200 group-open:rotate-180" />
         </summary>
-        <div className="max-h-[55vh] overflow-y-auto border-t border-m3-outline-variant/20">
+        <div className="max-h-[55vh] overflow-y-auto overscroll-contain border-t border-m3-outline-variant/20">
           {curriculumContent}
         </div>
       </details>
 
-      <GlassCard className="hidden flex-col overflow-hidden lg:flex">
+      <GlassCard className="hidden min-w-0 flex-col lg:flex">
         {/* Header matches the course-home curriculum header: icon + title, no
             background band, compact. */}
         <div className="flex items-center gap-2 px-4 py-3">
@@ -68,10 +72,18 @@ export function CurriculumSidebar({
             {t("course_learn.home.curriculum", "Curriculum")}
           </h3>
         </div>
-        <div className="max-h-[calc(100vh-10rem)] overflow-y-auto">
+        <div
+          className={cn(
+            "min-w-0 overflow-y-auto overscroll-contain border-t border-m3-outline-variant/20",
+            instructors.length > 0
+              ? "max-h-[calc(100dvh-27rem)]"
+              : "max-h-[calc(100dvh-10rem)]",
+          )}
+        >
           {curriculumContent}
         </div>
       </GlassCard>
+      {instructors.length > 0 && <InstructorBlock instructors={instructors} />}
     </aside>
   );
 }

@@ -104,7 +104,7 @@ export function LessonTabsSection({
 
       <div className="pb-4">
         {activeTab === "Lesson Notes" && (
-          <GlassCard className="p-4 sm:p-8">
+          <GlassCard className="p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4 text-m3-secondary" />
               <h4 className="font-headline font-bold text-m3-on-surface text-sm">
@@ -136,7 +136,7 @@ function ResourcesPanel({
   const { t } = useTranslation();
 
   return (
-    <GlassCard className="p-4 sm:p-8">
+    <GlassCard className="p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-5">
         <Download className="h-4 w-4 text-m3-secondary" />
         <h4 className="font-headline font-bold text-m3-on-surface text-sm">

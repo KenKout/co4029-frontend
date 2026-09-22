@@ -3,11 +3,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { ApiError } from "@/lib/api/client";
 import { useCourseBySlug, useCourseContent } from "@/lib/api/hooks/courses";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
-import type {
-  InstructorRead,
-  LessonPublic,
-  ModulePublic,
-} from "@/lib/api/types";
+import type { LessonPublic, ModulePublic } from "@/lib/api/types";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
 import { LessonKnowledgeMap } from "@/routes/courses/_components/LessonKnowledgeMap";
 import { Link, useParams } from "@tanstack/react-router";
@@ -26,7 +22,7 @@ import {
   earliestPendingItemId,
   itemStateFor,
 } from "./_components/course-learn/helpers";
-import { InstructorBlock } from "./_components/course-learn/InstructorBlock";
+import { resolveCourseInstructors } from "./_components/course-learn/InstructorBlock";
 import { LearnBreadcrumb } from "./_components/course-learn/LearnBreadcrumb";
 import { LessonHeadingBlock } from "./_components/course-learn/LessonHeadingBlock";
 import {
@@ -103,15 +99,6 @@ export default function CourseLearnPage() {
       sortedModules={sortedModules}
     />
   );
-}
-
-function resolveInstructors(
-  course: NonNullable<ReturnType<typeof useCourseBySlug>["data"]>,
-): InstructorRead[] {
-  if (course.instructors?.length) return course.instructors;
-  if (!course.instructor) return [];
-  // Older payloads: the single instructor block is the Course Instructor.
-  return [{ ...course.instructor, is_instructor: true, is_assistant: false }];
 }
 
 function CourseLearnView({
@@ -207,7 +194,7 @@ function CourseLearnLoaded({
 }) {
   const { t } = useTranslation();
   const itemsByModule = useModuleItemsMap(sortedModules);
-  const instructors = resolveInstructors(course);
+  const instructors = resolveCourseInstructors(course);
   const { flatItems, lessonItems } = useCurriculumItems(
     sortedModules,
     itemsByModule,
@@ -332,10 +319,6 @@ function CourseLearnLoaded({
               }}
             />
 
-            {!showHome && instructors.length > 0 && (
-              <InstructorBlock instructors={instructors} />
-            )}
-
             {!showHome && (
               <LessonTabsSection
                 activeTab={activeTab}
@@ -352,7 +335,9 @@ function CourseLearnLoaded({
             )}
           </div>
 
-          {!showHome && <CurriculumSidebar {...curriculum} />}
+          {!showHome && (
+            <CurriculumSidebar {...curriculum} instructors={instructors} />
+          )}
         </div>
       </div>
     </div>
@@ -493,7 +478,7 @@ function ReadingLessonPane({
     <div className="space-y-6">
       <div ref={readingContentRef}>
         <GlassCard
-          className="p-6 sm:p-8 space-y-6"
+          className="space-y-6 p-4 sm:p-6"
           data-testid="course-learn-reading"
         >
           <ReadingLessonBody
