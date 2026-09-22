@@ -1333,7 +1333,9 @@
       "dropped": "Dropped"
     },
     "n_paths_other": "{{count}} paths",
-    "n_paths_one": "{{count}} path"
+    "n_paths_one": "{{count}} path",
+    "prepared": "Prepared",
+    "prepared_regressed": "Prepared earlier. Coverage is now {{percent}}% — a course was un-marked or a requirement changed. Your achievement is kept."
   },
   "me_interviews": {
     "title": "My interviews",

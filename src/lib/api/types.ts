@@ -1123,7 +1123,19 @@ export type CareerPathProgressRead =
  */
 export type MyCareerEnrollmentRead = Schemas["MyCareerEnrollmentRead"] & {
   overall_percent?: number | null;
+  /**
+   * The "prepared" milestone — every stage complete, counting the stage
+   * latch. Historical: it does not go back to false when a student un-marks
+   * a lesson or an author raises an elective quota.
+   */
   is_prepared?: boolean | null;
+  /**
+   * Whether every stage satisfies its rule *right now*, ignoring the latch.
+   * Differs from `is_prepared` exactly when work that once counted no longer
+   * does — which is also when `overall_percent` sits below 100 beneath a
+   * "Prepared" badge.
+   */
+  is_currently_complete?: boolean | null;
 };
 export type StudentPathProgressAuthoring =
   Schemas["StudentPathProgressAuthoring"];

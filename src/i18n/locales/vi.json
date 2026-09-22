@@ -1253,7 +1253,9 @@
       "dropped": "Đã bỏ"
     },
     "n_paths_other": "{{count}} lộ trình",
-    "n_paths_one": "{{count}} lộ trình"
+    "n_paths_one": "{{count}} lộ trình",
+    "prepared": "Đã sẵn sàng",
+    "prepared_regressed": "Đã sẵn sàng trước đó. Mức hoàn thành hiện là {{percent}}% — một khoá học đã bị bỏ đánh dấu hoặc yêu cầu đã thay đổi. Kết quả của bạn vẫn được giữ."
   },
   "me_interviews": {
     "title": "Phỏng vấn của tôi",

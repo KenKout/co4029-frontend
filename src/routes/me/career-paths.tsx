@@ -23,6 +23,17 @@ function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
     Math.min(100, Math.max(0, item.overall_percent ?? 0)),
   );
   const prepared = item.is_prepared ?? item.status === "completed";
+  /**
+   * "Prepared" is a milestone that was earned, not a claim about today. The
+   * stage latch is append-only, so un-marking a lesson or an author raising
+   * an elective quota lowers `overall_percent` while the badge stays.
+   *
+   * Shown together with no explanation that reads as a bug: a green
+   * completed badge over a bar at 87%. So the two are only styled as one
+   * thing while they agree, and the row says what happened when they do not.
+   */
+  const currentlyComplete = item.is_currently_complete ?? prepared;
+  const regressed = prepared && !currentlyComplete;
   return (
     <Link
       to="/catalog/career-paths/$slug"
@@ -56,7 +67,7 @@ function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
           <div className="mt-2 flex items-center gap-2">
             <div className="h-1.5 flex-1 rounded-full bg-m3-surface-container overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${prepared ? "bg-emerald-500" : "gradient-primary"}`}
+                className={`h-full rounded-full transition-all ${currentlyComplete ? "bg-emerald-500" : "gradient-primary"}`}
                 style={{ width: `${percent}%` }}
               />
             </div>
@@ -64,6 +75,12 @@ function EnrollmentRow({ item }: { item: MyCareerEnrollmentRead }) {
               {percent}%
             </span>
           </div>
+
+          {regressed ? (
+            <p className="mt-1 text-[11px] text-amber-700">
+              {t("me_career_paths.prepared_regressed", { percent })}
+            </p>
+          ) : null}
 
           <div className="mt-1 flex items-center gap-3 text-[11px] text-m3-on-surface-variant">
             <span className="font-mono truncate">{item.slug}</span>
