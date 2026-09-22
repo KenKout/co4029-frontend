@@ -140,11 +140,7 @@ export function createQuizManageActions({
     }
     try {
       const saved = await patchQuiz.mutateAsync(settingsPatchFromDraft(draft));
-      state.setDraft((current) =>
-        JSON.stringify(current) === JSON.stringify(draft)
-          ? draftFromQuiz(saved)
-          : current,
-      );
+      state.markSettingsSaved(draft, draftFromQuiz(saved));
       toast.success(t("teacher_quiz_manage.toasts.settings_saved"));
     } catch (err: unknown) {
       toast.error(

@@ -158,6 +158,20 @@ export function useQuizManageState({
     baseline.current = next;
   }, [quiz]);
 
+  const markSettingsSaved = useCallback(
+    (submitted: SettingsDraft, saved: SettingsDraft) => {
+      // Advance the baseline immediately from the mutation response. Waiting
+      // for the query invalidation/refetch leaves a window where the draft is
+      // already saved but the old baseline still makes a tab switch appear
+      // dirty, so the discard dialog opens after a successful Save.
+      baseline.current = saved;
+      setDraft((current) =>
+        JSON.stringify(current) === JSON.stringify(submitted) ? saved : current,
+      );
+    },
+    [],
+  );
+
   function selectTab(next: TabKey) {
     if (settingsBusy) return;
     if (next === tab) return;
@@ -224,6 +238,7 @@ export function useQuizManageState({
     setSettingsBusy,
     hasUnsavedWork,
     selectTab,
+    markSettingsSaved,
     settingsDirty,
     leaveGuard,
     goToQuestionInEditor,
