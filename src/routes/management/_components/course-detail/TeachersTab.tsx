@@ -146,13 +146,24 @@ function TeachersToolbar({
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3">
-      {/* First row: the staffing summary alone. */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* First row: staffing summary and search stay together. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <StaffingSummary
           current={currentCount}
           min={minTeachers}
           max={maxTeachers}
         />
+        {hasTeachers ? (
+          <div className="w-full sm:ml-auto sm:w-64">
+            <SearchInput
+              value={query}
+              onChange={(e) => onQueryChange(e.target.value)}
+              onClear={query ? () => onQueryChange("") : undefined}
+              placeholder={t("dept_course_detail.search_teachers")}
+              aria-label={t("dept_course_detail.search_teachers")}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/* Bulk bar replaces the assign row while a selection is live:
@@ -198,19 +209,6 @@ function TeachersToolbar({
             currentCount={currentCount}
             maxCount={hasStaffingData ? maxTeachers : undefined}
           />
-          {/* Search earns its place only once there is a list worth
-              narrowing. */}
-          {hasTeachers ? (
-            <div className="ml-auto w-full sm:w-64">
-              <SearchInput
-                value={query}
-                onChange={(e) => onQueryChange(e.target.value)}
-                onClear={query ? () => onQueryChange("") : undefined}
-                placeholder={t("dept_course_detail.search_teachers")}
-                aria-label={t("dept_course_detail.search_teachers")}
-              />
-            </div>
-          ) : null}
         </div>
       ) : null}
     </div>
