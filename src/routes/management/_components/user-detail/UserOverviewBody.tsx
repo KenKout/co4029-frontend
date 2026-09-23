@@ -94,13 +94,20 @@ function IdentityCard({ data }: { data: UserOverview }) {
   const u = data.user;
   const displayName = getUserDisplayName(u);
   const avatarUrl = getUserAvatarUrl(u);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const roles = u.roles ?? [];
 
   return (
     <div className="bg-surface-elev border border-border rounded-xl p-6">
       <div className="flex items-start gap-4">
         <Avatar size="lg" className={avatarColor(u.id)}>
-          {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
+          {avatarUrl && !avatarFailed ? (
+            <AvatarImage
+              src={avatarUrl}
+              alt={displayName}
+              onError={() => setAvatarFailed(true)}
+            />
+          ) : null}
           <AvatarFallback>{avatarInitials(displayName, { uppercase: true })}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
