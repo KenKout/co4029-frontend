@@ -1163,7 +1163,7 @@
       "status_draft": "Still a draft — not visible to students.",
       "status_published": "Live and visible to students.",
       "status_archived": "Archived.",
-      "blocks_stage": "This course is required on a career path but has nothing to grade, so no student can ever finish it — that stage and every stage after it stay locked. Add and publish a lesson, quiz or interview."
+      "blocks_stage": "This course has nothing to grade, so no student can ever finish it — that stage and every stage after it stay locked. Add and publish a lesson, quiz or interview."
     },
     "teacher_role_course_instructor": "Course Instructor",
     "teacher_role_teacher_assistant": "Teacher Assistant",

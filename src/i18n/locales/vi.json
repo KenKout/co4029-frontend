@@ -1071,7 +1071,7 @@
       "status_draft": "Vẫn là bản nháp — sinh viên chưa thấy.",
       "status_published": "Đã đăng, sinh viên thấy được.",
       "status_archived": "Đã lưu trữ.",
-      "blocks_stage": "Khóa này là bắt buộc trong một lộ trình nhưng chưa có gì để tính điểm, nên không sinh viên nào hoàn thành được — chặng đó và mọi chặng sau bị khóa vĩnh viễn. Hãy thêm và đăng một bài học, quiz hoặc phỏng vấn."
+      "blocks_stage": "Khóa học này chưa có gì để tính điểm, nên không sinh viên nào hoàn thành được — chặng đó và mọi chặng sau bị khóa vĩnh viễn. Hãy thêm và đăng một bài học, quiz hoặc phỏng vấn."
     },
     "clone": {
       "button": "Nhân bản khóa học",
