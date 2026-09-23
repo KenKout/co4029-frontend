@@ -20,16 +20,11 @@ import {
   useLearningProgramOptions,
 } from "@/lib/api/hooks/learning-programs";
 import { parseCareerPathLimit } from "./_components/career-path-limit";
+import {
+  resolveProgramDraftFields,
+  slugify,
+} from "./_components/learning-program-new-helpers";
 import { getApiErrorMessage } from "@/lib/api/error-codes";
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
 
 // The creation workflow intentionally keeps its interdependent draft fields,
 // validation, confirmation, and picker state together.
@@ -83,7 +78,14 @@ export default function ManagementLearningProgramNewPage() {
   if (options.isLoading) return <PageSkeleton rows={4} />;
 
   async function submit() {
-    if (!name.trim() || !slug.trim() || !facultyId) {
+    const fields = resolveProgramDraftFields({
+      name,
+      slug,
+      facultyId,
+      defaultFacultyId: options.data?.default_faculty_id,
+      faculties: options.data?.faculties,
+    });
+    if (!fields.name || !fields.slug || !fields.facultyId) {
       toast.error(t("management_learning_program_new.errors.required_fields"));
       return;
     }
@@ -124,9 +126,9 @@ export default function ManagementLearningProgramNewPage() {
     if (!accepted) return;
     try {
       const program = await create.mutateAsync({
-        faculty_id: facultyId,
-        name: name.trim(),
-        slug: slug.trim(),
+        faculty_id: fields.facultyId,
+        name: fields.name,
+        slug: fields.slug,
         description: description.trim() || null,
         max_path_switches: switches,
         max_career_paths_per_enrollment: careerPathLimit.value,
