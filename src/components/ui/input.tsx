@@ -115,24 +115,20 @@ export interface InputProps
   wrapperClassName?: string;
 }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
-  {
-    className,
-    type,
-    size = "default",
-    variant = "default",
-    mono = false,
-    startAdornment,
-    endAdornment,
-    wrapperClassName,
-    ...props
-  },
-  ref,
-) {
+function Input({
+  className,
+  type,
+  size = "default",
+  variant = "default",
+  mono = false,
+  startAdornment,
+  endAdornment,
+  wrapperClassName,
+  ...props
+}: InputProps) {
   const bare = variant === "bare";
   const field = (
     <InputPrimitive
-      ref={ref}
       type={type}
       data-slot="input"
       className={cn(
@@ -193,6 +189,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
       )}
     </div>
   );
-});
+}
 
 export { Input };
