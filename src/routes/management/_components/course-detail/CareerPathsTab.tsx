@@ -59,7 +59,9 @@ export function DeptCareerPathsTab({
       </p>
       <ul className="space-y-2">
         {placements.map((placement) => (
-          <li key={`${placement.career_path_id}:${placement.stage_id}`}>
+          <li
+            key={`${placement.career_path_id}:${placement.career_path_version_id}:${placement.stage_id}`}
+          >
             <PlacementRow placement={placement} />
           </li>
         ))}
@@ -83,7 +85,11 @@ function PlacementRow({ placement }: { placement: CoursePathPlacement }) {
     <Link
       to="/management/career-paths/$id"
       params={{ id: placement.career_path_id }}
-      search={{ tab: "courses", stage: placement.stage_id }}
+      search={{
+        tab: "courses",
+        stage: placement.stage_id,
+        version: placement.career_path_version_id,
+      }}
       className="flex items-center gap-3 rounded-xl bg-m3-surface-container p-3 transition-colors hover:bg-m3-surface-container-high"
     >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-m3-primary-fixed font-headline text-xs font-bold text-m3-primary">
@@ -96,6 +102,9 @@ function PlacementRow({ placement }: { placement: CoursePathPlacement }) {
             {placement.career_path_name}
           </p>
           <CareerPathStatusBadge status={placement.career_path_status} />
+          <span className="rounded-full bg-m3-surface-container-high px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-m3-on-surface-variant">
+            v{placement.career_path_version_no}
+          </span>
           <span
             className={
               placement.is_required

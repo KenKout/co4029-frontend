@@ -4479,7 +4479,8 @@
     "programs": {
       "empty_title": "Chưa thuộc chương trình học nào",
       "empty_description": "Lộ trình nghề nghiệp này chưa được đưa vào phiên bản chương trình học nào.",
-      "version_status": "v{{version}} · {{status}}"
+      "version_status": "v{{version}} · {{status}}",
+      "path_version": "Lộ trình được ghim v{{version}}"
     },
     "thumbnail": {
       "label": "Ảnh đại diện",

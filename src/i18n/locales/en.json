@@ -4661,7 +4661,8 @@
     "programs": {
       "empty_title": "No Learning Program",
       "empty_description": "This Career Path is not included in a Learning Program version yet.",
-      "version_status": "v{{version}} · {{status}}"
+      "version_status": "v{{version}} · {{status}}",
+      "path_version": "Pinned Career Path v{{version}}"
     },
     "thumbnail": {
       "label": "Thumbnail",

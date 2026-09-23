@@ -38,6 +38,8 @@ export interface CoursePathPlacement {
   career_path_id: string;
   career_path_name: string;
   career_path_status: string;
+  career_path_version_id: string;
+  career_path_version_no: number;
   stage_id: string;
   stage_title?: string | null;
   stage_position: number;

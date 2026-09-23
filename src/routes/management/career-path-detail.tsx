@@ -88,6 +88,16 @@ function ExistingCareerPathWorkspace({ id }: { id: string }) {
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
     null,
   );
+  const requestedVersionId = search.version;
+  useEffect(() => {
+    if (!requestedVersionId || !versions.data) return;
+    const requested = versions.data.find(
+      (version) => version.id === requestedVersionId,
+    );
+    if (requested) {
+      setSelectedVersionId(requested.status === "draft" ? null : requested.id);
+    }
+  }, [requestedVersionId, versions.data]);
   const readOnly = selectedVersionId !== null;
   const hasDraft = (versions.data ?? []).some(
     (version) => version.status === "draft",

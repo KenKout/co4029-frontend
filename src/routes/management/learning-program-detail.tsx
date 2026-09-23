@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Archive, ArrowLeft, GitBranch, History, Plus, Route, Star, Trash2, Users } from "lucide-react";
@@ -62,8 +62,9 @@ export default function ManagementLearningProgramDetailPage() {
   // Tab rides the URL (?tab=requests) so a dean notification can deep-link
   // straight to the Path changes review queue of THIS program. Unknown or
   // absent values fall back to "general" (validateSearch drops them).
-  const { tab: tabParam } = useSearch({ strict: false }) as {
+  const { tab: tabParam, version: requestedVersionId } = useSearch({ strict: false }) as {
     tab?: "general" | "roster" | "requests" | "history";
+    version?: string;
   };
   const tab: TabKey =
     tabParam === "roster" || tabParam === "requests" || tabParam === "history"
@@ -87,6 +88,14 @@ export default function ManagementLearningProgramDetailPage() {
   const { confirm, dialog } = useConfirm();
   const formatDate = useFormatDate();
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!requestedVersionId || !current.data) return;
+    setSelectedVersionId(
+      requestedVersionId === current.data.current_version.id
+        ? null
+        : requestedVersionId,
+    );
+  }, [requestedVersionId, current.data?.current_version.id]);
   const historical = useLearningProgramVersion(id, selectedVersionId ?? undefined);
   const data = selectedVersionId ? historical.data : current.data;
   const readOnly = selectedVersionId !== null;
@@ -230,6 +239,7 @@ export default function ManagementLearningProgramDetailPage() {
                       <Link
                         to="/management/career-paths/$id"
                         params={{ id: path.career_path_id }}
+                        search={{ version: path.career_path_version_id }}
                         className="flex min-w-0 flex-1 cursor-pointer items-center justify-between rounded-lg p-2"
                       >
                         <div className="min-w-0">

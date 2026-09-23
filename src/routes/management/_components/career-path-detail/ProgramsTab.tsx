@@ -27,27 +27,40 @@ export function ProgramsTab({ pathId }: { pathId: string }) {
 
   return (
     <div className="divide-y divide-m3-outline-variant rounded-xl border border-m3-outline-variant/40 bg-card">
-      {rows.map((program) => (
-        <Link
-          key={program.id}
-          to="/management/learning-programs/$id"
-          params={{ id: program.id }}
-          className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-m3-surface-container"
-        >
-          <div className="min-w-0">
-            <p className="font-semibold text-m3-on-surface">{program.name}</p>
-            <p className="mt-1 text-xs text-m3-on-surface-variant">
-              {t("management_career_path_detail.programs.version_status", {
-                version: program.current_version.version_no,
-                status: t(
-                  `management_learning_program_detail.status.${program.status}`,
-                ),
-              })}
-            </p>
-          </div>
-          <ArrowRight className="h-4 w-4 shrink-0 text-m3-primary" />
-        </Link>
-      ))}
+      {rows.map((program) => {
+        const path = program.paths.find(
+          (candidate) => candidate.career_path_id === pathId,
+        );
+        return (
+          <Link
+            key={program.id}
+            to="/management/learning-programs/$id"
+            params={{ id: program.id }}
+            search={{ version: program.current_version.id }}
+            className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-m3-surface-container"
+          >
+            <div className="min-w-0">
+              <p className="font-semibold text-m3-on-surface">{program.name}</p>
+              <p className="mt-1 text-xs text-m3-on-surface-variant">
+                {t("management_career_path_detail.programs.version_status", {
+                  version: program.current_version.version_no,
+                  status: t(
+                    `management_learning_program_detail.status.${program.status}`,
+                  ),
+                })}
+              </p>
+              {path && (
+                <p className="mt-0.5 text-xs text-m3-on-surface-variant">
+                  {t("management_career_path_detail.programs.path_version", {
+                    version: path.career_path_version_no,
+                  })}
+                </p>
+              )}
+            </div>
+            <ArrowRight className="h-4 w-4 shrink-0 text-m3-primary" />
+          </Link>
+        );
+      })}
     </div>
   );
 }
