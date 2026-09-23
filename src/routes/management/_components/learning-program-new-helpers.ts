@@ -17,6 +17,13 @@ export interface ProgramDraftFields {
   facultyId: string;
 }
 
+export function readInputValue(
+  input: HTMLInputElement | null,
+  fallback: string,
+): string {
+  return input?.value ?? fallback;
+}
+
 /** Resolve values at submit time rather than trusting a stale intermediate UI state. */
 export function resolveProgramDraftFields(input: {
   name: string;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus, Star, X } from "lucide-react";
@@ -22,6 +22,7 @@ import {
 import { parseCareerPathLimit } from "./_components/career-path-limit";
 import {
   resolveProgramDraftFields,
+  readInputValue,
   slugify,
 } from "./_components/learning-program-new-helpers";
 import { getApiErrorMessage } from "@/lib/api/error-codes";
@@ -37,6 +38,8 @@ export default function ManagementLearningProgramNewPage() {
   const { confirm, dialog } = useConfirm();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const slugInputRef = useRef<HTMLInputElement>(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [facultyId, setFacultyId] = useState("");
@@ -79,8 +82,8 @@ export default function ManagementLearningProgramNewPage() {
 
   async function submit() {
     const fields = resolveProgramDraftFields({
-      name,
-      slug,
+      name: readInputValue(nameInputRef.current, name),
+      slug: readInputValue(slugInputRef.current, slug),
       facultyId,
       defaultFacultyId: options.data?.default_faculty_id,
       faculties: options.data?.faculties,
@@ -170,6 +173,9 @@ export default function ManagementLearningProgramNewPage() {
               {t("management_learning_program_new.fields.name")}{" "}
               <span className="text-red-600">*</span>
               <Input
+                ref={nameInputRef}
+                id="learning-program-name"
+                autoComplete="off"
                 autoFocus
                 value={name}
                 onChange={(event) => {
@@ -182,7 +188,11 @@ export default function ManagementLearningProgramNewPage() {
             <label className="space-y-1.5 text-xs font-bold uppercase tracking-widest text-m3-on-surface-variant">
               {t("management_learning_program_new.fields.slug")}{" "}
               <span className="text-red-600">*</span>
-              <Input mono
+              <Input
+                ref={slugInputRef}
+                id="learning-program-slug"
+                autoComplete="off"
+                mono
                 value={slug}
                 onChange={(event) => {
                   setSlugTouched(true);
