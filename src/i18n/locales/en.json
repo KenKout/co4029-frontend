@@ -6262,6 +6262,8 @@
       "no_outcome_short": "No outcome",
       "outcome_control_label": "Learning outcome: {{outcome}}. Change assignment",
       "status_control_label": "Approval status: {{status}}. Change status",
+      "difficulty_control_label": "Difficulty: {{difficulty}}. Change difficulty",
+      "difficulty_missing": "—",
       "showing_all": "{{count}} questions · {{approved}} approved",
       "showing_filtered": "Showing {{shown}} of {{total}} questions",
       "active_filters": "Active filters:",
@@ -6345,12 +6347,14 @@
       "toasts": {
         "status_changed": "Status changed to {{status}}",
         "outcome_changed": "Outcome set to {{outcome}}",
+        "difficulty_changed": "Difficulty set to {{difficulty}}",
         "logical_question_approved": "Approved {{count}} angle(s)",
         "logical_question_deleted": "Deleted {{count}} angle(s)"
       },
       "sr": {
         "status_changed": "Status changed to {{status}}",
         "outcome_changed": "Outcome set to {{outcome}}",
+        "difficulty_changed": "Difficulty set to {{difficulty}}",
         "moved": "Question moved to position {{position}}"
       },
       "remove_filter": "Remove filter {{label}}",

@@ -1,15 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { Bot, FileText, Layers, User } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { difficultyChipClass } from "./helpers";
+import { DifficultyControl } from "./DifficultyControl";
 import { OutcomeControl } from "./OutcomeControl";
 import type { QuestionCardProps } from "./types";
 
 /**
  * Metadata row of a question card (real fields only): question type, practice
- * partition chip, module attribution chips, difficulty, the inline outcome
- * control, AI/manual source and the source-reference count.
+ * partition chip, module attribution chips, the inline difficulty control, the
+ * inline outcome control, AI/manual source and the source-reference count.
  *
  * Extracted verbatim from the former 2.4k-line question-bank.tsx; the
  * `(!compact || expanded)` visibility condition stays with the caller.
@@ -20,6 +19,7 @@ export function QuestionCardMeta({
   saving,
   isPublished,
   onSetOutcome,
+  onSetDifficulty,
   moduleTitles,
 }: Pick<
   QuestionCardProps,
@@ -28,6 +28,7 @@ export function QuestionCardMeta({
   | "saving"
   | "isPublished"
   | "onSetOutcome"
+  | "onSetDifficulty"
   | "moduleTitles"
 >) {
   const { t } = useTranslation();
@@ -51,19 +52,16 @@ export function QuestionCardMeta({
           </span>
         </span>
       ))}
-      {q.difficulty && (
-        <>
-          <Sep />
-          <span
-            className={cn(
-              "rounded-full px-1.5 py-0.5 font-semibold",
-              difficultyChipClass(q.difficulty),
-            )}
-          >
-            {t(`teacher_interview_config.difficulty.${q.difficulty}`)}
-          </span>
-        </>
-      )}
+      {/* Difficulty: a control, not a chip. The generated label is a guess
+          the teacher can re-judge in one click — same contract as the
+          outcome control beside it. */}
+      <Sep />
+      <DifficultyControl
+        value={q.difficulty ?? null}
+        saving={saving}
+        disabled={isPublished}
+        onSetDifficulty={onSetDifficulty}
+      />
       <Sep />
       <OutcomeControl
         value={q.linked_outcome_id ?? null}

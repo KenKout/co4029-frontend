@@ -108,6 +108,10 @@ export function useQuestionEditDraft(options: EditDraftOptions) {
     editingId,
     editingText,
     editingAnswer,
+    // True once the teacher changed anything in the open editor. Opening the
+    // editor seeds the draft from the saved question, so this — not "is the
+    // editor open" — is what a Save button must gate on.
+    editDirty,
     beginEdit,
     cancelEdit,
     changeEditingText,

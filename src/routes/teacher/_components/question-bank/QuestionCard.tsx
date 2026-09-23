@@ -146,6 +146,7 @@ export function QuestionCard(props: QuestionCardProps) {
           moduleTitles={props.moduleTitles}
           onToggleExpand={props.onToggleExpand}
           onSetOutcome={props.onSetOutcome}
+          onSetDifficulty={props.onSetDifficulty}
         />
 
         {/* Right-side controls: status + actions */}
@@ -179,6 +180,7 @@ export function QuestionCard(props: QuestionCardProps) {
         editing={editing}
         editingText={props.editingText}
         editingAnswer={props.editingAnswer}
+        editDirty={props.editDirty}
         saving={saving}
         onCancelEdit={props.onCancelEdit}
         onSaveEdit={props.onSaveEdit}
@@ -200,6 +202,7 @@ function QuestionCardPrompt({
   moduleTitles,
   onToggleExpand,
   onSetOutcome,
+  onSetDifficulty,
 }: Pick<
   QuestionCardProps,
   | "q"
@@ -211,6 +214,7 @@ function QuestionCardPrompt({
   | "moduleTitles"
   | "onToggleExpand"
   | "onSetOutcome"
+  | "onSetDifficulty"
 >) {
   const { t } = useTranslation();
   return (
@@ -260,6 +264,7 @@ function QuestionCardPrompt({
           saving={saving}
           isPublished={isPublished}
           onSetOutcome={onSetOutcome}
+          onSetDifficulty={onSetDifficulty}
           moduleTitles={moduleTitles}
         />
       )}

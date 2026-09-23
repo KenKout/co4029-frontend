@@ -6080,6 +6080,8 @@
       "no_outcome_short": "Chưa gán",
       "outcome_control_label": "Chuẩn đầu ra: {{outcome}}. Đổi phân công",
       "status_control_label": "Trạng thái duyệt: {{status}}. Đổi trạng thái",
+      "difficulty_control_label": "Độ khó: {{difficulty}}. Đổi độ khó",
+      "difficulty_missing": "—",
       "showing_all": "{{count}} câu hỏi · {{approved}} đã duyệt",
       "showing_filtered": "Hiển thị {{shown}} trên {{total}} câu hỏi",
       "active_filters": "Bộ lọc đang áp dụng:",
@@ -6163,12 +6165,14 @@
       "toasts": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
+        "difficulty_changed": "Đã đặt độ khó: {{difficulty}}",
         "logical_question_approved": "Đã duyệt {{count}} góc hỏi",
         "logical_question_deleted": "Đã xoá {{count}} góc hỏi"
       },
       "sr": {
         "status_changed": "Đã đổi trạng thái sang {{status}}",
         "outcome_changed": "Đã gán chuẩn đầu ra: {{outcome}}",
+        "difficulty_changed": "Đã đặt độ khó: {{difficulty}}",
         "moved": "Đã chuyển câu hỏi tới vị trí {{position}}"
       },
       "remove_filter": "Bỏ bộ lọc {{label}}",

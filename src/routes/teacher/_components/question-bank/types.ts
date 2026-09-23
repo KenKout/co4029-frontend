@@ -94,6 +94,10 @@ export interface QuestionCardProps {
   editing: boolean;
   editingText: string;
   editingAnswer: string;
+  // True once the open editor has an actual change (text, answer). "Edit"
+  // alone seeds the draft from the saved question, so Save must stay disabled
+  // until something really changed.
+  editDirty: boolean;
   outcomeOptions: OutcomeOption[];
   deleting: boolean;
   saving: boolean;
@@ -102,6 +106,7 @@ export interface QuestionCardProps {
   onToggleExpand: () => void;
   onSetStatus: (s: ReviewStatus) => void;
   onSetOutcome: (o: string | null) => void;
+  onSetDifficulty: (d: QuestionDifficulty) => void;
   onBeginEdit: () => void;
   onCancelEdit: () => void;
   onSaveEdit: () => void;

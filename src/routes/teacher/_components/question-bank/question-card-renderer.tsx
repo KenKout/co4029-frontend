@@ -76,6 +76,7 @@ export function createQuestionCardRenderer(
         editing={edit.editingId === q.id}
         editingText={edit.editingText}
         editingAnswer={edit.editingAnswer}
+        editDirty={edit.editDirty}
         outcomeOptions={outcomeOptions}
         deleting={mutations.deletingIds.has(q.id)}
         saving={mutations.savingId === q.id}
@@ -84,6 +85,7 @@ export function createQuestionCardRenderer(
         onToggleExpand={() => rows.toggleExpanded(q.id)}
         onSetStatus={(s) => void mutations.setStatus(q, s)}
         onSetOutcome={(o) => void mutations.setOutcome(q, o)}
+        onSetDifficulty={(d) => void mutations.setDifficulty(q, d)}
         onBeginEdit={() => edit.beginEdit(q)}
         onCancelEdit={() => void edit.cancelEdit()}
         onSaveEdit={() => void edit.saveEdit()}

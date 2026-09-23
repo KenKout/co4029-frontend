@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { InterviewQuestionAuthoring } from "@/lib/api/types";
+import type {
+  InterviewQuestionAuthoring,
+  InterviewDifficulty,
+} from "@/lib/api/types";
 import { statusMeta } from "./helpers";
 import type { useApproveInterviewQuestionVariants } from "@/lib/api/hooks/interviews";
 import type {
@@ -26,7 +29,9 @@ import type {
  */
 export interface QuestionMutationsOptions {
   updateQuestion: UpdateQuestionMutation;
-  approveQuestionVariants: ReturnType<typeof useApproveInterviewQuestionVariants>;
+  approveQuestionVariants: ReturnType<
+    typeof useApproveInterviewQuestionVariants
+  >;
   deleteQuestion: DeleteQuestionMutation;
   deleteQuestionVariants: DeleteQuestionVariantsMutation;
   pendingQuestions: InterviewQuestionAuthoring[];
@@ -72,6 +77,8 @@ export function useQuestionMutations(options: QuestionMutationsOptions) {
       setStatus(ctx, q, next),
     setOutcome: (q: InterviewQuestionAuthoring, next: string | null) =>
       setOutcome(ctx, q, next),
+    setDifficulty: (q: InterviewQuestionAuthoring, next: InterviewDifficulty) =>
+      setDifficulty(ctx, q, next),
     handleApproveAll: () => handleApproveAll(ctx),
     handleApproveLogicalQuestion: (questions: InterviewQuestionAuthoring[]) =>
       void handleApproveLogicalQuestion(ctx, questions),
@@ -130,6 +137,57 @@ async function setStatus(
   }
 }
 
+// ── Difficulty override (inline, with toast + undo) ─────────────────────────
+// Same contract as the outcome control: pick a level on the card, PATCH it
+// immediately, offer Undo from the toast. Difficulty is the one generated
+// property a teacher routinely re-judges per question, so it gets the same
+// one-click treatment instead of hiding inside the full edit form.
+async function setDifficulty(
+  ctx: MutationCtx,
+  q: InterviewQuestionAuthoring,
+  next: InterviewDifficulty,
+) {
+  const { updateQuestion, announce, t, setSavingId } = ctx;
+  const current = q.difficulty ?? null;
+  if (current === next) return;
+  setSavingId(q.id);
+  try {
+    await updateQuestion.mutateAsync({
+      questionId: q.id,
+      patch: { difficulty: next },
+    });
+    const label = (d: InterviewDifficulty | null) =>
+      d
+        ? t(`teacher_interview_config.difficulty.${d}`)
+        : t("teacher_interview_config.qbank.difficulty_missing");
+    announce(
+      t("teacher_interview_config.qbank.sr.difficulty_changed", {
+        difficulty: label(next),
+      }),
+    );
+    toast.success(
+      t("teacher_interview_config.qbank.toasts.difficulty_changed", {
+        difficulty: label(next),
+      }),
+      {
+        action: {
+          label: t("common.undo"),
+          onClick: () => {
+            void updateQuestion.mutateAsync({
+              questionId: q.id,
+              patch: { difficulty: current },
+            });
+          },
+        },
+      },
+    );
+  } catch (err: unknown) {
+    toast.error((err as Error).message);
+  } finally {
+    setSavingId(null);
+  }
+}
+
 // ── Outcome assignment (inline, with toast + undo) ──────────────────────────
 async function setOutcome(
   ctx: MutationCtx,
@@ -180,9 +238,15 @@ async function handleApproveLogicalQuestion(
   ctx: MutationCtx,
   questions: InterviewQuestionAuthoring[],
 ) {
-  const { approveQuestionVariants, approvingGroupId, setApprovingGroupId, t } = ctx;
+  const { approveQuestionVariants, approvingGroupId, setApprovingGroupId, t } =
+    ctx;
   const anchor = questions[0];
-  if (!anchor || approvingGroupId || questions.every((q) => q.review_status === "approved")) return;
+  if (
+    !anchor ||
+    approvingGroupId ||
+    questions.every((q) => q.review_status === "approved")
+  )
+    return;
   setApprovingGroupId(anchor.variant_group_id ?? anchor.id);
   try {
     const result = await approveQuestionVariants.mutateAsync(anchor.id);
@@ -258,14 +322,24 @@ async function handleDeleteLogicalQuestion(
   ctx: MutationCtx,
   questions: InterviewQuestionAuthoring[],
 ) {
-  const { deleteQuestionVariants, deletingIds, setDeletingIds, confirmAction, t } = ctx;
+  const {
+    deleteQuestionVariants,
+    deletingIds,
+    setDeletingIds,
+    confirmAction,
+    t,
+  } = ctx;
   const anchor = questions[0];
-  if (!anchor || questions.some((question) => deletingIds.has(question.id))) return;
+  if (!anchor || questions.some((question) => deletingIds.has(question.id)))
+    return;
   const confirmed = await confirmAction({
     title: t("teacher_interview_config.qbank.delete_logical_question_title"),
-    description: t("teacher_interview_config.qbank.delete_logical_question_description", {
-      count: questions.length,
-    }),
+    description: t(
+      "teacher_interview_config.qbank.delete_logical_question_description",
+      {
+        count: questions.length,
+      },
+    ),
     confirmLabel: t("teacher_interview_config.qbank.delete_logical_question"),
     confirmVariant: "destructive",
   });

@@ -19,6 +19,7 @@ export function QuestionCardBody({
   editing,
   editingText,
   editingAnswer,
+  editDirty,
   saving,
   onCancelEdit,
   onSaveEdit,
@@ -31,6 +32,7 @@ export function QuestionCardBody({
   | "editing"
   | "editingText"
   | "editingAnswer"
+  | "editDirty"
   | "saving"
   | "onCancelEdit"
   | "onSaveEdit"
@@ -89,7 +91,7 @@ export function QuestionCardBody({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={saving || !editingText.trim()}
+                  disabled={saving || !editDirty || !editingText.trim()}
                   onClick={onSaveEdit}
                   className="gap-1.5"
                 >
