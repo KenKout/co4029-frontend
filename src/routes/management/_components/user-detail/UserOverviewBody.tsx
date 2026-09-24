@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  Briefcase,
   Clock,
   Mail,
   Map as MapIcon,
@@ -24,6 +23,8 @@ import {
   CourseStatusBadge,
   UserStatusBadge as StatusBadge,
 } from "@/components/ui/status-badges";
+import { useListRoles } from "@/lib/api/hooks/admin";
+import { RoleBadges } from "@/routes/admin/_components/users/RoleBadges";
 import { useFormatDate } from "@/lib/format/date";
 import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
 import type {
@@ -96,6 +97,13 @@ function IdentityCard({ data }: { data: UserOverview }) {
   const avatarUrl = getUserAvatarUrl(u);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const roles = u.roles ?? [];
+  const roleCatalog = useListRoles();
+  const labelForRole = useMemo(() => {
+    const byCode = new Map(
+      (roleCatalog.data ?? []).map((entry) => [entry.role.code, entry.role.name]),
+    );
+    return (code: string) => byCode.get(code) ?? code;
+  }, [roleCatalog.data]);
 
   return (
     <div className="bg-surface-elev border border-border rounded-xl p-6">
@@ -122,12 +130,7 @@ function IdentityCard({ data }: { data: UserOverview }) {
             <span className="truncate">{u.primary_email}</span>
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
-            <span className="inline-flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
-              <Briefcase className="h-3 w-3" />
-              {roles.length > 0
-                ? roles.join(", ")
-                : t("management_users.detail.no_roles", { defaultValue: "No roles" })}
-            </span>
+            <RoleBadges roles={roles} labelFor={labelForRole} />
             {u.organization_name && (
               <span className="inline-flex items-center gap-1.5 text-xs text-m3-on-surface-variant">
                 <MapIcon className="h-3 w-3" />
