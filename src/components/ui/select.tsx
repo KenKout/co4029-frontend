@@ -121,13 +121,21 @@ export function Select<T extends string>({
         >
           <SelectPrimitive.Popup
             className={cn(
-              // Width: at LEAST the trigger, and free to grow for long labels.
-              // `w-(--anchor-width)` alone is not enough — a narrow trigger (the
-              // `sm` filter chips are ~82px) lost to `min-w-40`, which made the
-              // popup 78px wider than its trigger and, with the default centred
-              // alignment, hang 27px off its left edge. Measured in a browser;
+              // Width: at LEAST the trigger, and free to grow for long labels —
+              // but on a PHONE it must never grow past the viewport: the quiz
+              // matching inputs hand this popup full choice sentences, and an
+              // unclamped popup hung half its text past the 390px edge.
+              // Below `sm`, clamp to Base UI's `--available-width` (space
+              // between the anchor and the viewport edge, same var family as
+              // the max-h clamp) minus a 0.5rem gutter, capped at 20rem.
+              // Desktop keeps the old uncapped growth — long labels stay fully
+              // readable where there is room. min-width still loses to
+              // max-width in the cascade, so narrow triggers keep winning
+              // their `min-w-(--anchor-width)` fight. Measured in a browser at
+              // 390px (clamped, right edge 328 < 390) and 1280px (unchanged);
               // `align="start"` above pins the left edges together.
               "z-50 max-h-[min(20rem,var(--available-height))] min-w-(--anchor-width) overflow-y-auto",
+              "max-sm:max-w-[min(calc(var(--available-width)-0.5rem),20rem)]",
               "rounded-xl border border-m3-outline-variant/40 bg-white p-1.5 shadow-xl shadow-black/5",
               "origin-(--transform-origin) outline-none",
               // Enter/exit: opacity+transform only → compositor-only, no reflow.
