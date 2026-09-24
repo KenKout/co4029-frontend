@@ -3,7 +3,7 @@ const DESKTOP_FIRST_PREFIXES = ["/admin", "/teacher", "/management"];
 // URL prefixes that require elevated permissions.
 const ADMIN_PREFIXES = ["/admin"];
 const TEACHER_PREFIXES = ["/teacher"];
-const STUDENT_PREFIXES = ["/dashboard"];
+const STUDENT_PREFIXES = ["/dashboard", "/courses", "/me"];
 // Every manager surface — courses, enrolment, career pathways, users, org
 // units — lives under one prefix. It used to be two (/dept for the course
 // pages, /management for the rest), so both had to be listed here and in

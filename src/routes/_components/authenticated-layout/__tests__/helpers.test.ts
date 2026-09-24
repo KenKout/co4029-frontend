@@ -125,6 +125,23 @@ describe("shared-route sidebar context", () => {
     expect(resolveRole(section)).toBe("student");
   });
 
+  it("uses the student sidebar throughout student course pages", () => {
+    const flags = resolveSectionFlags("/courses/example/quiz/quiz-1");
+    const section = {
+      ...flags,
+      isAllowed: true,
+      roles: ["admin", "student", "teacher"],
+      defaultRole: resolveDefaultRole(
+        ["admin", "student", "teacher"],
+        ["system.administer", "course.read", "course.create"],
+      ),
+    };
+
+    expect(flags.onStudentPath).toBe(true);
+    expect(resolveNavGroups(section)).toBe(studentNavGroups);
+    expect(resolveRole(section)).toBe("student");
+  });
+
   it("blocks /dashboard for an admin without an assigned student role", () => {
     const flags = resolveSectionFlags("/dashboard");
 
