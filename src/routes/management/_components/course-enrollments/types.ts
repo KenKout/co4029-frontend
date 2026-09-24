@@ -4,4 +4,4 @@
  * tab sections and the hooks agree on one definition instead of re-declaring it.
  */
 
-export type TabKey = "roster" | "bulk" | "codes";
+export type TabKey = "roster" | "bulk";

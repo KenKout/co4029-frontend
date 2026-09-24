@@ -5,7 +5,6 @@ import { PermissionDenied } from "@/components/ui/permission-denied";
 import { usePermissions } from "@/lib/auth/use-permissions";
 import { useTeacherCourseById } from "@/lib/api/hooks/teacher-courses";
 import { BulkTab } from "@/routes/management/_components/course-enrollments/BulkTab";
-import { CodesTab } from "@/routes/management/_components/course-enrollments/CodesTab";
 import { PageHeader } from "@/routes/management/_components/course-enrollments/PageHeader";
 import { RosterTab } from "@/routes/management/_components/course-enrollments/RosterTab";
 import { TabBar } from "@/routes/management/_components/course-enrollments/TabBar";
@@ -14,7 +13,7 @@ import type { TabKey } from "@/routes/management/_components/course-enrollments/
 /**
  * Enrollment management for one course. This module is the orchestrator only:
  * permission gate, course lookup and which tab is showing. The roster table, the
- * bulk import flow and the invitation-code manager each own their own state in
+ * bulk import flow each owns its own state in
  * `_components/management-course-enrollments/`.
  */
 export default function ManagementCourseEnrollmentsPage() {
@@ -54,7 +53,6 @@ export default function ManagementCourseEnrollmentsPage() {
 
       {tab === "roster" && <RosterTab courseId={courseId} />}
       {tab === "bulk" && <BulkTab courseId={courseId} />}
-      {tab === "codes" && <CodesTab courseId={courseId} />}
     </div>
   );
 }

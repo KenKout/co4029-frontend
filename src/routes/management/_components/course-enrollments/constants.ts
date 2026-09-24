@@ -1,4 +1,4 @@
-import { FileSpreadsheet, Upload, Users } from "lucide-react";
+import { Upload, Users } from "lucide-react";
 import type { TabKey } from "./types";
 
 /**
@@ -15,11 +15,6 @@ export const TABS: { key: TabKey; labelKey: string; icon: typeof Users }[] = [
     key: "bulk",
     labelKey: "management_course_enrollments.tabs.bulk",
     icon: Upload,
-  },
-  {
-    key: "codes",
-    labelKey: "management_course_enrollments.tabs.codes",
-    icon: FileSpreadsheet,
   },
 ];
 

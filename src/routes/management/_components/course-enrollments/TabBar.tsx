@@ -4,7 +4,7 @@ import { TABS } from "./constants";
 import type { TabKey } from "./types";
 
 /**
- * The roster / bulk / codes tab strip. Driven off `TABS`, rendered by the shared
+ * The roster / bulk tab strip. Driven off `TABS`, rendered by the shared
  * outlined <Tabs> so this screen stays in step with the rest of the app.
  */
 export function TabBar({
