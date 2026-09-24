@@ -15,6 +15,12 @@ import { cn } from "@/lib/utils";
 
 import { PROGRAM_STATUS_TOKENS } from "./program-status";
 
+function draftTooltipVersion(row: LearningProgram): number {
+  return row.current_version.status === "draft"
+    ? row.current_version.version_no
+    : row.current_version.version_no + 1;
+}
+
 /**
  * The comparison view: every program as a sortable row.
  *
@@ -87,11 +93,11 @@ export function ProgramTable({
           {/* The draft flag rides in the Version cell rather than taking a
               column of its own: it is a fact ABOUT the version, and an
               almost-always-empty column would waste the width. */}
-          {row.has_draft_version ? (
+          {row.has_draft_version && row.status !== "draft" ? (
             <span
               className="inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold text-violet-700"
               title={t("management_learning_programs.draft_in_progress", {
-                version: row.current_version.version_no + 1,
+                version: draftTooltipVersion(row),
               })}
             >
               <FileClock aria-hidden="true" className="h-2.5 w-2.5" />
