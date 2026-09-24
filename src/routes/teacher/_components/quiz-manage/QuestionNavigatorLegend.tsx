@@ -3,6 +3,7 @@ import { PreviewCard } from "@base-ui/react/preview-card";
 import { HelpCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 /**
  * The status legend is a hover popover on the title rather than a block under
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
  */
 export function QuestionNavigatorLegend() {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery("(max-width: 639px)");
 
   return (
     <PreviewCard.Root>
@@ -27,12 +29,17 @@ export function QuestionNavigatorLegend() {
         }
       />
       <PreviewCard.Portal>
-        <PreviewCard.Positioner side="right" align="start" sideOffset={10}>
+        <PreviewCard.Positioner
+          side={isMobile ? "bottom" : "right"}
+          align={isMobile ? "center" : "start"}
+          sideOffset={10}
+          collisionPadding={12}
+        >
           <PreviewCard.Popup
             className={cn(
               // z-40 to clear the sticky top bar (z-20); the sidebar is the
               // only thing above it (see frontend/AGENTS.md).
-              "z-40 w-64 rounded-xl border border-m3-outline-variant/40 bg-m3-surface p-4 shadow-2xl outline-none",
+              "z-40 w-[min(16rem,calc(100vw-1.5rem))] max-h-[calc(100dvh-1.5rem)] overflow-y-auto break-words rounded-xl border border-m3-outline-variant/40 bg-m3-surface p-4 shadow-2xl outline-none",
               "transition-all duration-150",
               "data-[starting-style]:opacity-0 data-[starting-style]:scale-95",
               "data-[ending-style]:opacity-0 data-[ending-style]:scale-95",
