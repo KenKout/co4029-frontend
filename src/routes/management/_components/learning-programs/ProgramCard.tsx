@@ -185,14 +185,14 @@ export function ProgramCard({
         {version.published_at ? (
           <span className="truncate">{formatDate(version.published_at)}</span>
         ) : null}
-        {program.has_draft_version ? (
-          // No pulse. A draft revision is a state, not an alert — the
-          // animation made every such card look like it needed attention
-          // right now, and it never stopped.
+        {program.has_draft_version && program.status !== "draft" ? (
+          // A draft program's current version is its own base draft, not a
+          // separate revision in progress. For a published program, the
+          // highest current version is the draft revision itself (not +1).
           <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-violet-300">
             <FileClock aria-hidden="true" className="h-3 w-3" />
             {t("management_learning_programs.draft_version", {
-              version: version.version_no + 1,
+              version: version.status === "draft" ? version.version_no : version.version_no + 1,
             })}
           </span>
         ) : null}
