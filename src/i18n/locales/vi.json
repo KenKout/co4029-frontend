@@ -1396,7 +1396,8 @@
       "counts_optional": "{{count}} tự chọn",
       "counts_min_optional": "hoàn thành ít nhất {{count}}",
       "unlock_after_previous_required": "Sau các khóa bắt buộc trước đó",
-      "unlock_after_previous_stage": "Sau giai đoạn trước"
+      "unlock_after_previous_stage": "Sau giai đoạn trước",
+      "unlock_choose_to_start": "Chọn để mở khóa"
     }
   },
   "study_cards_due": {

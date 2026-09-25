@@ -1477,7 +1477,8 @@
       "counts_optional": "{{count}} optional",
       "counts_min_optional": "complete at least {{count}}",
       "unlock_after_previous_required": "After previous required courses",
-      "unlock_after_previous_stage": "After previous stage"
+      "unlock_after_previous_stage": "After previous stage",
+      "unlock_choose_to_start": "Choose to unlock"
     }
   },
   "study_cards_due": {

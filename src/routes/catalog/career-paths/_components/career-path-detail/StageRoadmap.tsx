@@ -62,7 +62,7 @@ export function StageRoadmap({ stages }: { stages: CareerPathStagePublic[] }) {
                     </p>
                   ) : null}
                 </div>
-                <UnlockHint policy={stage.unlock_policy} />
+                <UnlockHint policy={stage.unlock_policy} isFirst={index === 0} />
               </div>
 
               <p className="mt-2 text-xs text-text-muted">
@@ -139,15 +139,22 @@ export function RequirementTag({ required }: { required: boolean }) {
  *
  * `always` gets no badge — a stage with no gate needs no explanation, and
  * labelling every one of them would bury the stages that DO gate.
+ *
+ * The FIRST stage's `after_previous*` policy is inert (position 1 is
+ * implicitly unlocked), so instead of the misleading "After previous stage"
+ * it gets the truthful "Choose to unlock" — the student picks this path to
+ * open it, which is exactly how program default-path selection works.
  */
-function UnlockHint({ policy }: { policy: string }) {
+function UnlockHint({ policy, isFirst }: { policy: string; isFirst: boolean }) {
   const { t } = useTranslation();
   if (policy === "always") return null;
-  const label = t(
-    policy === "after_previous_required"
-      ? "career_path_detail.roadmap.unlock_after_previous_required"
-      : "career_path_detail.roadmap.unlock_after_previous_stage",
-  );
+  const label = isFirst
+    ? t("career_path_detail.roadmap.unlock_choose_to_start")
+    : t(
+        policy === "after_previous_required"
+          ? "career_path_detail.roadmap.unlock_after_previous_required"
+          : "career_path_detail.roadmap.unlock_after_previous_stage",
+      );
   return (
     <span
       className={cn(
