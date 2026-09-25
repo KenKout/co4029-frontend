@@ -719,6 +719,9 @@
     "lesson_unavailable_body": "This lesson's content isn't open yet.",
     "lesson_locked_title": "Lesson locked",
     "lesson_locked_body": "Complete the prerequisite lessons and review your due cards to unlock this lesson.",
+    "lesson_locked_progress": "{{passing}} of {{total}} cards meet the {{required}}% retention threshold.",
+    "lesson_locked_prerequisites": "Complete the prerequisite lessons first.",
+    "lesson_locked_interview": "Pass the required interview first.",
     "resource_unavailable": "Resource unavailable",
     "download": "Download",
     "tabs": {

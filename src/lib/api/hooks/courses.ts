@@ -218,6 +218,15 @@ export function useLessonResources(lessonId: string | undefined) {
     queryFn: () =>
       apiFetch<LessonResourcePublic[]>(`/lessons/${lessonId}/resources`),
     enabled: !!lessonId,
+    retry: (failureCount, error) => {
+      if (
+        error instanceof ApiError &&
+        (error.status === 404 || error.status === 403)
+      ) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 }
 

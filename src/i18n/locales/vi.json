@@ -663,6 +663,9 @@
     "lesson_unavailable_body": "Nội dung bài học này hiện chưa được mở.",
     "lesson_locked_title": "Bài học đang khóa",
     "lesson_locked_body": "Hoàn thành các bài học tiên quyết và ôn tập các thẻ đến hạn để mở khóa bài học này.",
+    "lesson_locked_progress": "{{passing}}/{{total}} thẻ đạt ngưỡng ghi nhớ {{required}}%.",
+    "lesson_locked_prerequisites": "Hãy hoàn thành các bài học tiên quyết trước.",
+    "lesson_locked_interview": "Hãy vượt qua bài phỏng vấn bắt buộc trước.",
     "resource_unavailable": "Tài nguyên không khả dụng",
     "download": "Tải xuống",
     "tabs": {

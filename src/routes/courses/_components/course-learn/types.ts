@@ -13,8 +13,7 @@ import type { TABS } from "./constants";
  * the hooks agree on one definition instead of passing loosely-typed props.
  */
 
-// type LessonState = "active" | "completed" | "pending" | "locked";
-export type LessonState = "active" | "completed" | "pending";
+export type LessonState = "active" | "completed" | "pending" | "locked";
 
 export interface FlatItem {
   moduleId: string;

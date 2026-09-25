@@ -36,8 +36,13 @@ import type {
   UploadUrlResponse,
 } from "../types/teacher";
 
-function retryUnless404(failureCount: number, error: unknown) {
-  if (error instanceof ApiError && error.status === 404) return false;
+function retryUnlessUnavailable(failureCount: number, error: unknown) {
+  if (
+    error instanceof ApiError &&
+    (error.status === 404 || error.status === 403)
+  ) {
+    return false;
+  }
   return failureCount < 3;
 }
 
@@ -47,7 +52,7 @@ export function useMaterial(materialId: string | null | undefined) {
     queryFn: () => apiFetch<MaterialPublic>(`/materials/${materialId}`),
     enabled: !!materialId,
     staleTime: 5 * 60_000,
-    retry: retryUnless404,
+    retry: retryUnlessUnavailable,
   });
 }
 
@@ -59,7 +64,7 @@ export function useStreamUrl(materialId: string | null | undefined) {
     enabled: !!materialId,
     staleTime: 30 * 60_000,
     refetchInterval: 30 * 60_000,
-    retry: retryUnless404,
+    retry: retryUnlessUnavailable,
   });
 }
 
@@ -79,7 +84,7 @@ export function useChunksPreview(
       apiFetch<ChunkPreview[]>(`/materials/${materialId}/chunks/preview${qs}`),
     enabled: !!materialId,
     staleTime: 5 * 60_000,
-    retry: retryUnless404,
+    retry: retryUnlessUnavailable,
   });
 }
 
@@ -165,7 +170,7 @@ export function useTeacherMaterial(materialId: string | null | undefined) {
       apiFetch<MaterialAuthoring>(`/teacher/materials/${materialId}`),
     enabled: !!materialId,
     staleTime: 1000 * 30,
-    retry: retryUnless404,
+    retry: retryUnlessUnavailable,
   });
 }
 
@@ -262,7 +267,7 @@ export function useCuratedKnowledgeGraph(lessonId: string | undefined) {
     // clobber in-progress local edits. The editor manages its own state and
     // invalidates on save/publish.
     staleTime: Infinity,
-    retry: retryUnless404,
+    retry: retryUnlessUnavailable,
   });
 }
 
@@ -323,7 +328,7 @@ export function usePublishedLessonKnowledgeGraph(
       ),
     enabled: !!lessonId,
     staleTime: 1000 * 60 * 5,
-    retry: retryUnless404,
+    retry: retryUnlessUnavailable,
   });
 }
 

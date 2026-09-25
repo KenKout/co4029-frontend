@@ -56,13 +56,15 @@ function itemIsCompleted(
   lessonStatusMap: Map<string, string>,
   quizProgressMap?: Map<string, QuizProgressRead>,
   interviewProgressMap?: Map<string, InterviewProgressRead>,
+  lockedLessonIds?: ReadonlySet<string>,
 ): boolean {
   const targetId = fi.item.target?.id;
   if (!targetId) return false;
   switch (fi.item.item_type) {
     case "lesson":
-      // if (lockedLessonIds.has(targetId)) return "locked"; // DEV: comment out to disable lock
-      return lessonStatusMap.get(targetId) === "completed";
+      return lockedLessonIds?.has(targetId) === true
+        ? false
+        : lessonStatusMap.get(targetId) === "completed";
     case "quiz":
       return quizProgressMap?.get(targetId)?.completed === true;
     case "interview":
@@ -78,9 +80,23 @@ export function itemStateFor(
   lessonStatusMap: Map<string, string>,
   quizProgressMap?: Map<string, QuizProgressRead>,
   interviewProgressMap?: Map<string, InterviewProgressRead>,
+  lockedLessonIds?: ReadonlySet<string>,
 ): LessonState {
   if (
-    itemIsCompleted(fi, lessonStatusMap, quizProgressMap, interviewProgressMap)
+    fi.item.item_type === "lesson" &&
+    fi.item.target?.id &&
+    lockedLessonIds?.has(fi.item.target.id)
+  ) {
+    return "locked";
+  }
+  if (
+    itemIsCompleted(
+      fi,
+      lessonStatusMap,
+      quizProgressMap,
+      interviewProgressMap,
+      lockedLessonIds,
+    )
   ) {
     return "completed";
   }

@@ -13,6 +13,7 @@ import {
   Sparkles,
   HelpCircle,
   Clock,
+  Lock,
 } from "lucide-react";
 import type {
   InterviewProgressRead,
@@ -280,6 +281,20 @@ function CurriculumItemRow({
     );
   }
 
+  if (state === "locked") {
+    return (
+      <Button
+        variant="ghost"
+        type="button"
+        disabled
+        aria-disabled="true"
+        className={className}
+      >
+        {inner}
+      </Button>
+    );
+  }
+
   if (targetRef) {
     return (
       <Link
@@ -317,6 +332,8 @@ function rowClassName(
         state === "completed" &&
           "text-m3-outline font-normal hover:text-m3-on-surface-variant",
         state === "active" && "bg-m3-secondary/10 text-m3-on-surface font-bold",
+        state === "locked" &&
+          "cursor-not-allowed text-m3-outline opacity-70",
         state === "pending" &&
           !isNextUp &&
           "text-m3-on-surface-variant font-medium hover:bg-m3-primary/5",
@@ -328,6 +345,8 @@ function rowClassName(
         state === "active" && "bg-m3-primary text-white shadow-md font-bold",
         state === "completed" &&
           "bg-m3-surface-container-lowest text-m3-primary shadow-sm font-medium hover:bg-m3-surface-container",
+        state === "locked" &&
+          "cursor-not-allowed text-m3-outline opacity-70",
         state === "pending" &&
           "text-m3-on-surface-variant hover:bg-white/50 font-medium",
         isNextUp &&
@@ -393,6 +412,9 @@ function RowLeadingIcon({
   variant: "sidebar" | "home";
 }) {
   const LessonIcon = PlayCircle;
+  if (state === "locked") {
+    return <Lock className="h-4 w-4 flex-shrink-0 text-m3-outline" />;
+  }
   if (state === "completed") {
     return (
       <CheckCircle2

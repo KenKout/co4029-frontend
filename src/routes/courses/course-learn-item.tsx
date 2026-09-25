@@ -55,6 +55,7 @@ import {
 import {
   useActiveLessonContent,
   useLessonStatusMap,
+  type LessonLockRequirements,
 } from "@/routes/courses/_components/course-learn/use-lesson-content";
 import { QuizFullscreenGateScreen } from "@/routes/courses/_components/course-quiz/QuizFullscreenGateScreen";
 import { getQuizBlockingStage } from "@/routes/courses/_components/course-quiz/QuizGuardScreens";
@@ -296,7 +297,7 @@ function LessonItemView({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("Lesson Notes");
-  const { activeLessonId, activeLesson, lessonUnavailable, resources } =
+  const { activeLessonId, activeLesson, lessonUnavailable, lessonLock, resources } =
     useActiveLessonContent(matched as FlatItem, activeTab);
   const playerRef = useRef<HTMLDivElement | null>(null);
 
@@ -307,6 +308,9 @@ function LessonItemView({
   const interviewProgressMap = useMyInterviewProgress(courseId);
   const inProgressByConfigId = useInProgressInterviewSessions(courseId);
 
+  const lockedLessonIds = lessonLock && activeLessonId
+    ? new Set([activeLessonId])
+    : undefined;
   const itemState = (fi: FlatItem) =>
     itemStateFor(
       fi,
@@ -314,6 +318,7 @@ function LessonItemView({
       lessonStatusMap,
       quizProgressMap,
       interviewProgressMap,
+      lockedLessonIds,
     );
   // Earliest item still to do — highlighted in the rail so the eye lands on
   // the next step after finishing this lesson.
@@ -352,6 +357,16 @@ function LessonItemView({
   const activeIndex = lessonItems.findIndex(
     (fi) => fi.item.id === matched.item.id,
   );
+
+  if (lessonLock) {
+    return (
+      <LessonLockedView
+        course={course}
+        curriculum={curriculum}
+        lock={lessonLock}
+      />
+    );
+  }
 
   if (lessonUnavailable) {
     return (
@@ -420,6 +435,54 @@ function LessonItemView({
             instructors={resolveCourseInstructors(course)}
           />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LessonLockedView({
+  course,
+  curriculum,
+  lock,
+}: {
+  course: CoursePublic;
+  curriculum: CurriculumProps;
+  lock: LessonLockRequirements;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen pb-16 sm:pb-24">
+      <div className="mx-auto flex max-w-[1800px] flex-col gap-4 px-3 pt-2 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
+        <GlassCard className="min-w-0 flex-1 space-y-4 p-6 sm:p-10">
+          <div className="space-y-2">
+            <h2 className="font-headline text-xl font-bold text-m3-on-surface sm:text-2xl">
+              {t("course_learn.lesson_locked_title")}
+            </h2>
+            <p className="text-sm leading-relaxed text-m3-on-surface-variant">
+              {t("course_learn.lesson_locked_body")}
+            </p>
+          </div>
+          <div className="space-y-2 rounded-xl bg-m3-surface-container-low p-4 text-sm text-m3-on-surface-variant">
+            <p>
+              {t("course_learn.lesson_locked_progress", {
+                passing: lock.passingCards,
+                total: lock.totalCards,
+                required: Math.round(lock.requiredRatio * 100),
+              })}
+            </p>
+            {!lock.prerequisitesMet && (
+              <p>{t("course_learn.lesson_locked_prerequisites")}</p>
+            )}
+            {lock.interviewPassRequired && !lock.interviewPassed && (
+              <p>{t("course_learn.lesson_locked_interview")}</p>
+            )}
+            {lock.nextUnlockEstimate && <p>{lock.nextUnlockEstimate}</p>}
+          </div>
+        </GlassCard>
+        <CurriculumSidebar
+          {...curriculum}
+          instructors={resolveCourseInstructors(course)}
+        />
       </div>
     </div>
   );
