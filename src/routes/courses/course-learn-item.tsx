@@ -36,6 +36,7 @@ import {
   earliestPendingItemId,
   itemStateFor,
 } from "@/routes/courses/_components/course-learn/helpers";
+import { LessonHeadingBlock } from "@/routes/courses/_components/course-learn/LessonHeadingBlock";
 import { LessonVideoPlayer } from "@/routes/courses/_components/course-learn/LessonPlayerFrame";
 import { LessonTabsSection } from "@/routes/courses/_components/course-learn/LessonTabsSection";
 import { ReadingLessonBody } from "@/routes/courses/_components/course-learn/ReadingLessonBody";
@@ -385,6 +386,13 @@ function LessonItemView({
             on the right (desktop) / below the content on mobile. */}
         <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-4 sm:gap-6">
+            <LessonHeadingBlock
+              title={matched.label || activeLesson.title}
+              moduleTitle={matched.moduleTitle}
+              activeLessonId={activeLessonId}
+              courseId={courseId}
+              lessonStatusMap={lessonStatusMap}
+            />
             <LessonContentPane
               activeLesson={activeLesson}
               courseId={courseId}
