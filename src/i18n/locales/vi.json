@@ -693,7 +693,7 @@
     },
     "home": {
       "eyebrow": "Trang khóa học",
-      "progress_label": "Đã hoàn thành {{completed}}/{{total}} bài học",
+      "progress_label": "Đã hoàn thành {{completed}}/{{total}} đơn vị học tập",
       "continue": "Tiếp tục học",
       "start": "Bắt đầu khóa học",
       "review": "Xem lại khóa học",

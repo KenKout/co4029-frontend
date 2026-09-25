@@ -749,7 +749,7 @@
     },
     "home": {
       "eyebrow": "Course home",
-      "progress_label": "{{completed}} of {{total}} lessons completed",
+      "progress_label": "{{completed}} of {{total}} learning units completed",
       "continue": "Continue learning",
       "start": "Start course",
       "review": "Review course",
