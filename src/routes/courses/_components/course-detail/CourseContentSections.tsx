@@ -6,7 +6,11 @@ import type {
   useCourseContent,
   useCourseOutcomes,
 } from "@/lib/api/hooks/courses";
-import type { MyCourseProgressSummary } from "@/lib/api/types";
+import type {
+  InterviewProgressRead,
+  MyCourseProgressSummary,
+  QuizProgressRead,
+} from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { SkeletonBlock } from "./CourseDetailAtoms";
 import { ModuleAccordion } from "./ModuleAccordion";
@@ -83,11 +87,15 @@ function CourseContentBody({
   moduleCount,
   isLoading,
   progress,
+  quizProgressMap,
+  interviewProgressMap,
 }: {
   content: CourseContentData;
   moduleCount: number;
   isLoading: boolean;
   progress?: MyCourseProgressSummary;
+  quizProgressMap?: Map<string, QuizProgressRead>;
+  interviewProgressMap?: Map<string, InterviewProgressRead>;
 }) {
   const { t } = useTranslation();
 
@@ -102,7 +110,14 @@ function CourseContentBody({
   }
 
   if (content && moduleCount > 0) {
-    return <ModuleAccordion modules={content.modules} progress={progress} />;
+    return (
+      <ModuleAccordion
+        modules={content.modules}
+        progress={progress}
+        quizProgressMap={quizProgressMap}
+        interviewProgressMap={interviewProgressMap}
+      />
+    );
   }
 
   return (
@@ -120,11 +135,15 @@ export function CourseContentSection({
   moduleCount,
   isLoading,
   progress,
+  quizProgressMap,
+  interviewProgressMap,
 }: {
   content: CourseContentData;
   moduleCount: number;
   isLoading: boolean;
   progress?: MyCourseProgressSummary;
+  quizProgressMap?: Map<string, QuizProgressRead>;
+  interviewProgressMap?: Map<string, InterviewProgressRead>;
 }) {
   const { t } = useTranslation();
 
@@ -146,6 +165,8 @@ export function CourseContentSection({
         moduleCount={moduleCount}
         isLoading={isLoading}
         progress={progress}
+        quizProgressMap={quizProgressMap}
+        interviewProgressMap={interviewProgressMap}
       />
     </div>
   );

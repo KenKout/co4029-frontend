@@ -10,8 +10,8 @@ import type { CurriculumProps } from "./types";
 
 export interface CourseHomeProps extends CurriculumProps {
   course: NonNullable<ReturnType<typeof useCourseBySlug>["data"]>;
-  completedCount: number;
-  totalLessons: number;
+  completedUnits: number;
+  totalUnits: number;
   resumeIdx: number;
   resumeLabel?: string;
   resumeStarted: boolean;
@@ -73,8 +73,8 @@ export function CourseHome({
   onSelect,
   slug,
   activeModuleId,
-  completedCount,
-  totalLessons,
+  completedUnits,
+  totalUnits,
   resumeIdx,
   resumeLabel,
   resumeStarted,
@@ -84,8 +84,8 @@ export function CourseHome({
 }: CourseHomeProps) {
   const { t } = useTranslation();
   const pct =
-    totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-  const allDone = totalLessons > 0 && completedCount >= totalLessons;
+    totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
+  const allDone = totalUnits > 0 && completedUnits >= totalUnits;
 
   return (
     <div className="space-y-6" data-testid="course-learn-home">
@@ -108,8 +108,8 @@ export function CourseHome({
           <div className="flex items-center justify-between text-xs font-semibold">
             <span className="text-m3-on-surface-variant">
               {t("course_learn.home.progress_label", {
-                completed: completedCount,
-                total: totalLessons,
+                completed: completedUnits,
+                total: totalUnits,
               })}
             </span>
             <span className="text-m3-primary">{pct}%</span>
@@ -165,8 +165,8 @@ export function CourseHome({
           </h2>
           <span className="ml-auto text-xs font-semibold text-m3-on-surface-variant tabular-nums">
             {t("course_learn.home.progress_label", {
-              completed: completedCount,
-              total: totalLessons,
+              completed: completedUnits,
+              total: totalUnits,
             })}
           </span>
         </div>

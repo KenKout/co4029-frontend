@@ -181,7 +181,12 @@ export type LessonOverviewItem = Schemas["LessonOverviewItem"];
 export type LessonProgress = Schemas["LessonProgressPublic"];
 export type LessonProgressPublic = Schemas["LessonProgressPublic"];
 export type LessonProgressSummary = Schemas["LessonProgressSummary"];
-export type MyCourseProgressSummary = Schemas["MyCourseProgressSummary"];
+export type MyCourseProgressSummary = Schemas["MyCourseProgressSummary"] & {
+  /** Career-path-compatible gradeable-unit progress. */
+  unit_total?: number;
+  unit_done?: number;
+  unit_completion_percent?: string | number;
+};
 export type RosterProgressRead = Schemas["RosterProgressRead"];
 export type AtRiskListRead = Schemas["AtRiskListRead"];
 export type LessonResource = Schemas["LessonResourcePublic"];

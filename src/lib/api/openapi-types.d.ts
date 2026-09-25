@@ -14895,6 +14895,12 @@ export interface components {
             total_time_seconds: number;
             /** Last Activity At */
             last_activity_at: string | null;
+            /** Gradeable Unit Total */
+            unit_total?: number | null;
+            /** Gradeable Units Done */
+            unit_done?: number | null;
+            /** Gradeable Unit Completion Percent */
+            unit_completion_percent?: string | null;
             /** Lessons */
             lessons: components["schemas"]["LessonProgressSummary"][];
         };

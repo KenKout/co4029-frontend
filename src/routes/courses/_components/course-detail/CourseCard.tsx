@@ -386,7 +386,9 @@ export function CourseCard({
       progress.lessons.some((l) => l.status !== "not_started"),
   );
   const percent = progress
-    ? Math.round(Number(progress.completion_percent))
+    ? Math.round(
+        Number(progress.unit_completion_percent ?? progress.completion_percent),
+      )
     : 0;
   const duration = formatEstimatedDuration(course.estimated_minutes);
   const level = courseStageLabel(course.career_paths, t);

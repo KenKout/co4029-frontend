@@ -9,6 +9,10 @@ import {
 } from "@/lib/api/hooks/courses";
 import { useMyCourseProgress } from "@/lib/api/hooks/progress";
 import { useStartCourse } from "@/lib/api/hooks/career-paths";
+import {
+  useMyInterviewProgress,
+  useMyQuizProgress,
+} from "@/routes/courses/_components/course-learn/use-curriculum";
 import { useMyEnrollment } from "@/lib/api/hooks/me";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
@@ -87,6 +91,8 @@ export default function CourseDetailPage() {
   // per-module ✓ marks in the curriculum.
   const { data: progress, isLoading: progressLoading } =
     useMyCourseProgress(courseId);
+  const quizProgressMap = useMyQuizProgress(courseId ?? "");
+  const interviewProgressMap = useMyInterviewProgress(courseId ?? "");
 
   const courseUnavailable =
     courseQuery.isError &&
@@ -145,6 +151,8 @@ export default function CourseDetailPage() {
                 moduleCount={moduleCount}
                 isLoading={contentLoading}
                 progress={progress}
+                quizProgressMap={quizProgressMap}
+                interviewProgressMap={interviewProgressMap}
               />
             )}
 

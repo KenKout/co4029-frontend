@@ -7,12 +7,19 @@ import {
   CircleDashed,
 } from "lucide-react";
 import { useModuleItems } from "@/lib/api/hooks/courses";
-import type { ModulePublic, MyCourseProgressSummary } from "@/lib/api/types";
+import type {
+  InterviewProgressRead,
+  ModulePublic,
+  MyCourseProgressSummary,
+  QuizProgressRead,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   lessonCount,
   moduleCompletion,
+  moduleDoneCount,
+  unitCount,
 } from "@/routes/courses/_components/course-detail/helpers";
 import { ItemTypeIcon, SkeletonBlock } from "./CourseDetailAtoms";
 
@@ -71,27 +78,32 @@ function ModuleRow({
   isOpen,
   onToggle,
   progress,
+  quizProgressMap,
+  interviewProgressMap,
 }: {
   mod: ModulePublic;
   index: number;
   isOpen: boolean;
   onToggle: () => void;
   progress?: MyCourseProgressSummary;
+  quizProgressMap?: Map<string, QuizProgressRead>;
+  interviewProgressMap?: Map<string, InterviewProgressRead>;
 }) {
   const { t } = useTranslation();
   const lessons = lessonCount(mod);
-  const completion = moduleCompletion(mod, progress);
-  const doneCount = completion === "complete"
-    ? lessons
-    : completion === "partial"
-      ? mod.items.filter(
-          (i) =>
-            i.item_type === "lesson" &&
-            progress?.lessons.some(
-              (l) => l.lesson_id === i.target?.id && l.status === "completed",
-            ),
-        ).length
-      : 0;
+  const units = unitCount(mod);
+  const completion = moduleCompletion(
+    mod,
+    progress,
+    quizProgressMap,
+    interviewProgressMap,
+  );
+  const doneCount = moduleDoneCount(
+    mod,
+    progress,
+    quizProgressMap,
+    interviewProgressMap,
+  );
 
   return (
     <div
@@ -135,7 +147,7 @@ function ModuleRow({
           )}
           {completion === "partial" && (
             <span className="text-[11px] font-bold text-m3-secondary tabular-nums">
-              {doneCount}/{lessons}
+              {doneCount}/{units}
             </span>
           )}
           {completion === "none" && lessons > 0 && (
@@ -158,9 +170,13 @@ function ModuleRow({
 export function ModuleAccordion({
   modules,
   progress,
+  quizProgressMap,
+  interviewProgressMap,
 }: {
   modules: ModulePublic[];
   progress?: MyCourseProgressSummary;
+  quizProgressMap?: Map<string, QuizProgressRead>;
+  interviewProgressMap?: Map<string, InterviewProgressRead>;
 }) {
   const [open, setOpen] = useState<Set<string>>(new Set());
 
@@ -188,6 +204,8 @@ export function ModuleAccordion({
           isOpen={open.has(mod.id)}
           onToggle={() => toggle(mod.id)}
           progress={progress}
+          quizProgressMap={quizProgressMap}
+          interviewProgressMap={interviewProgressMap}
         />
       ))}
     </div>

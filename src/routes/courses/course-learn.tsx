@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ApiError } from "@/lib/api/client";
 import { useCourseBySlug, useCourseContent } from "@/lib/api/hooks/courses";
+import { useMyCourseProgress } from "@/lib/api/hooks/progress";
 import { useStreamUrl } from "@/lib/api/hooks/materials";
 import type { LessonPublic, ModulePublic } from "@/lib/api/types";
 import { useLessonEngagementTracker } from "@/lib/hooks/useLessonEngagementTracker";
@@ -211,6 +212,7 @@ function CourseLearnLoaded({
   const { activeLessonId, activeLesson, lessonUnavailable, resources } =
     useActiveLessonContent(activeEntry, activeTab);
   const lessonStatusMap = useLessonStatusMap(course.id);
+  const courseProgress = useMyCourseProgress(course.id);
 
   const urlState = useLearnUrlState(lessonItems, lessonStatusMap);
   const {
@@ -221,7 +223,7 @@ function CourseLearnLoaded({
     targetPage,
     targetAnchor,
     resumeIdx,
-    completedCount,
+    completedCount: completedLessonCount,
   } = urlState;
 
   useTabDeepLink(search.tab, setActiveTab);
@@ -311,11 +313,13 @@ function CourseLearnLoaded({
               homeProps={{
                 ...curriculum,
                 course,
-                completedCount,
-                totalLessons: lessonItems.length,
+                completedUnits:
+                  courseProgress.data?.unit_done ?? completedLessonCount,
+                totalUnits:
+                  courseProgress.data?.unit_total ?? lessonItems.length,
                 resumeIdx,
                 resumeLabel: lessonItems[resumeIdx]?.label,
-                resumeStarted: completedCount > 0,
+                resumeStarted: completedLessonCount > 0,
               }}
             />
 

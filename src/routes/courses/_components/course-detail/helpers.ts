@@ -2,6 +2,8 @@ import type {
   CoursePublic,
   ModulePublic,
   MyCourseProgressSummary,
+  QuizProgressRead,
+  InterviewProgressRead,
 } from "@/lib/api/types";
 
 /**
@@ -44,32 +46,70 @@ export function formatEstimatedDuration(
 
 export type ModuleCompletion = "complete" | "partial" | "none";
 
-/** How many lesson-type items a module has (quizzes/interviews excluded). */
+/** How many visible gradeable units a module has. */
+export function unitCount(mod: ModulePublic): number {
+  return mod.items.filter((i) => i.target?.id).length;
+}
+
+/** How many lesson-type items a module has (legacy display metadata). */
 export function lessonCount(mod: ModulePublic): number {
   return mod.items.filter((i) => i.item_type === "lesson").length;
 }
 
+function itemIsComplete(
+  item: ModulePublic["items"][number],
+  progress: MyCourseProgressSummary | undefined,
+  quizProgressMap: Map<string, QuizProgressRead> | undefined,
+  interviewProgressMap: Map<string, InterviewProgressRead> | undefined,
+): boolean {
+  const targetId = item.target?.id;
+  if (!targetId) return false;
+  if (item.item_type === "lesson") {
+    return progress?.lessons.some(
+      (lesson) =>
+        lesson.lesson_id === targetId && lesson.status === "completed",
+    ) ?? false;
+  }
+  if (item.item_type === "quiz") {
+    return quizProgressMap?.get(targetId)?.completed === true;
+  }
+  if (item.item_type === "interview") {
+    return interviewProgressMap?.get(targetId)?.completed === true;
+  }
+  return false;
+}
+
 /**
- * Per-module completion for the landing-page curriculum rows, derived from
- * the enrolled student's course progress. Only lesson items are counted —
- * quiz/interview items have no lesson-status signal on this page. A module
- * is "complete" when every lesson item is completed, "partial" when at
- * least one is, "none" when nothing is done (or progress is unavailable,
- * e.g. anonymous / unenrolled / the course has no lesson items).
+ * Per-module completion using the same gradeable-unit vocabulary as career
+ * paths: published lesson, quiz, or interview items visible in the module.
  */
 export function moduleCompletion(
   mod: ModulePublic,
   progress: MyCourseProgressSummary | undefined,
+  quizProgressMap?: Map<string, QuizProgressRead>,
+  interviewProgressMap?: Map<string, InterviewProgressRead>,
 ): ModuleCompletion {
-  const lessonIds = mod.items
-    .filter((i) => i.item_type === "lesson" && i.target?.id)
-    .map((i) => i.target!.id);
-  if (!lessonIds.length || !progress) return "none";
-  const statusById = new Map(progress.lessons.map((l) => [l.lesson_id, l.status]));
-  const done = lessonIds.filter((id) => statusById.get(id) === "completed").length;
-  if (done === lessonIds.length) return "complete";
+  const items = mod.items.filter((item) => item.target?.id);
+  if (!items.length || !progress) return "none";
+  const done = items.filter((item) =>
+    itemIsComplete(item, progress, quizProgressMap, interviewProgressMap),
+  ).length;
+  if (done === items.length) return "complete";
   if (done > 0) return "partial";
   return "none";
+}
+
+export function moduleDoneCount(
+  mod: ModulePublic,
+  progress: MyCourseProgressSummary | undefined,
+  quizProgressMap?: Map<string, QuizProgressRead>,
+  interviewProgressMap?: Map<string, InterviewProgressRead>,
+): number {
+  return mod.items
+    .filter((item) => item.target?.id)
+    .filter((item) =>
+      itemIsComplete(item, progress, quizProgressMap, interviewProgressMap),
+    ).length;
 }
 
 /**
