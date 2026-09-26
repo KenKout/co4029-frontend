@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Inbox, Loader2, PartyPopper } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   deriveDoneStats,
@@ -99,10 +99,15 @@ function DoneBacklogNotice({
         {/* Send the student back to the cards-due overview to pick what to
             review next. The cards-due cache was invalidated on each answer,
             so its counts are already fresh. */}
-        <Link to="/me/study/cards-due" search={{ lesson, course }}>
-          <Button variant="default" size="sm" className="cursor-pointer">
-            {t("study_review.keep_reviewing", "Keep reviewing")}
-          </Button>
+        <Link
+          to="/me/study/cards-due"
+          search={{ lesson, course }}
+          className={buttonVariants({
+            size: "sm",
+            className: "cursor-pointer",
+          })}
+        >
+          {t("study_review.keep_reviewing", "Keep reviewing")}
         </Link>
       </div>
     );
