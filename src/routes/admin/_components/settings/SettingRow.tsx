@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { RuntimeSetting } from "@/lib/api/hooks/admin-settings";
 import { Switch } from "@/components/ui/switch";
 import { settingDescription } from "./helpers";
@@ -48,30 +49,28 @@ export function SettingRow({
         <span className="text-xs text-slate-500">
           {value ? t("admin_settings.ui.on") : t("admin_settings.ui.off")}
         </span>
-        {/* The row says outright that the deployment has not moved yet. */}
-        {isPending && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
-            {t("admin_settings.pending.badge")}
-          </span>
-        )}
       </div>
     ) : (
-      <div className="flex items-center gap-2">
+      <div>
         <NumberField
           setting={setting}
           value={String(value)}
           onCommit={commitNumber}
         />
-        {isPending && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
-            {t("admin_settings.pending.badge")}
-          </span>
-        )}
       </div>
     );
 
   return (
-    <div className="border-b border-slate-100 py-3.5 last:border-b-0">
+    <div
+      className={cn(
+        "border-b border-slate-100 py-3.5 transition-colors last:border-b-0",
+        isPending &&
+          "rounded-lg bg-amber-50/70 ring-1 ring-inset ring-amber-200/80",
+      )}
+    >
+      {isPending && (
+        <span className="sr-only">{t("admin_settings.pending.badge")}</span>
+      )}
       <div className="grid grid-cols-1 items-start gap-x-6 gap-y-2 md:grid-cols-[minmax(0,1fr)_200px]">
         {/* Label + description */}
         <SettingRowLabel
