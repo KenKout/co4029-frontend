@@ -23,6 +23,7 @@ import type {
 import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
+import { PathAttemptProgress } from "../PathAttemptProgress";
 
 type TerminalStatus = Extract<
   PathChangeRequestStatus,
@@ -39,6 +40,7 @@ interface HistoryRow {
   toPath: string;
   result: TerminalStatus;
   occurredAt: string;
+  sourceAttempt: LearningProgramEnrollment["attempts"][number] | undefined;
 }
 
 const RESULT_CLASSES: Record<TerminalStatus, string> = {
@@ -65,7 +67,9 @@ const REASON_CODES: PathChangeRejectionReasonCode[] = [
   "other",
 ];
 
-function isTerminalStatus(status: PathChangeRequestStatus): status is TerminalStatus {
+function isTerminalStatus(
+  status: PathChangeRequestStatus,
+): status is TerminalStatus {
   return TERMINAL_STATUSES.includes(status as TerminalStatus);
 }
 
@@ -113,8 +117,8 @@ function pathName(
 ): string {
   if (!careerPathId) return unavailableLabel;
   return (
-    enrollment.paths.find((path) => path.career_path_id === careerPathId)?.name ??
-    unavailableLabel
+    enrollment.paths.find((path) => path.career_path_id === careerPathId)
+      ?.name ?? unavailableLabel
   );
 }
 
@@ -156,12 +160,19 @@ function buildRows(
               ),
         result: request.status,
         occurredAt: request.reviewed_at ?? request.created_at,
+        sourceAttempt: fromAttempt,
       },
     ];
   });
 }
 
-function ResultBadge({ status, label }: { status: TerminalStatus; label: string }) {
+function ResultBadge({
+  status,
+  label,
+}: {
+  status: TerminalStatus;
+  label: string;
+}) {
   return (
     <span
       className={cn(
@@ -204,8 +215,12 @@ export function PathChangeHistoryTab({
   const allRows = useMemo(
     () =>
       buildRows(requests, roster, usersById, {
-        unknownStudent: t("management_learning_program_detail.history.unknown_student"),
-        unavailablePath: t("management_learning_program_detail.history.unavailable_path"),
+        unknownStudent: t(
+          "management_learning_program_detail.history.unknown_student",
+        ),
+        unavailablePath: t(
+          "management_learning_program_detail.history.unavailable_path",
+        ),
         dropped: t("management_learning_program_detail.history.dropped"),
       }),
     [requests, roster, t, usersById],
@@ -218,7 +233,9 @@ export function PathChangeHistoryTab({
         allLabel: t("management_learning_program_detail.history.all_results"),
         options: TERMINAL_STATUSES.map((value) => ({
           value,
-          label: t(`management_learning_program_detail.history.results.${value}`),
+          label: t(
+            `management_learning_program_detail.history.results.${value}`,
+          ),
         })),
       },
       {
@@ -227,7 +244,9 @@ export function PathChangeHistoryTab({
         allLabel: t("management_learning_program_detail.history.all_reasons"),
         options: REASON_CODES.map((value) => ({
           value,
-          label: t(`management_learning_program_detail.history.reasons.${value}`),
+          label: t(
+            `management_learning_program_detail.history.reasons.${value}`,
+          ),
         })),
       },
     ],
@@ -251,11 +270,13 @@ export function PathChangeHistoryTab({
     const bounds = boundsForRange(timeRange, customTimeRange);
     return allRows.filter((row) => {
       const occurredAt = new Date(row.occurredAt).getTime();
-      if (students.length > 0 && !students.includes(row.studentId)) return false;
+      if (students.length > 0 && !students.includes(row.studentId))
+        return false;
       if (result && row.result !== result) return false;
       if (reason && row.request.decision_reason_code !== reason) return false;
       if (bounds.from !== undefined && occurredAt < bounds.from) return false;
-      if (bounds.until !== undefined && occurredAt >= bounds.until) return false;
+      if (bounds.until !== undefined && occurredAt >= bounds.until)
+        return false;
       if (!needle) return true;
       return [
         row.displayName,
@@ -275,7 +296,16 @@ export function PathChangeHistoryTab({
         .toLowerCase()
         .includes(needle);
     });
-  }, [allRows, customTimeRange, reason, result, search, students, t, timeRange]);
+  }, [
+    allRows,
+    customTimeRange,
+    reason,
+    result,
+    search,
+    students,
+    t,
+    timeRange,
+  ]);
 
   const columns = useMemo<DataTableColumn<HistoryRow>[]>(
     () => [
@@ -326,6 +356,21 @@ export function PathChangeHistoryTab({
         ),
       },
       {
+        id: "exit-progress",
+        header: t("management_learning_program_detail.history.exit_progress"),
+        cell: (row) =>
+          row.sourceAttempt?.exit_snapshot ? (
+            <PathAttemptProgress
+              snapshot={row.sourceAttempt.exit_snapshot}
+              progressPercent={row.sourceAttempt.progress_percent}
+              completedCourses={row.sourceAttempt.completed_courses}
+              totalCourses={row.sourceAttempt.total_courses}
+            />
+          ) : (
+            <span className="text-xs text-text-muted">—</span>
+          ),
+      },
+      {
         id: "time",
         header: t("management_learning_program_detail.history.time"),
         sortable: true,
@@ -371,7 +416,9 @@ export function PathChangeHistoryTab({
               row.request.decision_reason) ? (
               <p className="mt-1 text-text-muted">
                 <span className="font-semibold text-text-strong">
-                  {t("management_learning_program_detail.history.decision_note")}
+                  {t(
+                    "management_learning_program_detail.history.decision_note",
+                  )}
                 </span>{" "}
                 {row.request.decision_note ?? row.request.decision_reason}
               </p>
@@ -412,8 +459,12 @@ export function PathChangeHistoryTab({
           value={students}
           onValueChange={setStudents}
           label={t("management_learning_program_detail.history.student_filter")}
-          placeholder={t("management_learning_program_detail.history.student_search")}
-          emptyText={t("management_learning_program_detail.history.student_empty")}
+          placeholder={t(
+            "management_learning_program_detail.history.student_search",
+          )}
+          emptyText={t(
+            "management_learning_program_detail.history.student_empty",
+          )}
           removeLabel={(label) =>
             t("management_learning_program_detail.history.remove_filter", {
               name: label,
@@ -436,12 +487,16 @@ export function PathChangeHistoryTab({
           <DataTableToolbar
             search={search}
             onSearchChange={setSearch}
-            searchPlaceholder={t("management_learning_program_detail.history.search")}
+            searchPlaceholder={t(
+              "management_learning_program_detail.history.search",
+            )}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
             customTimeRange={customTimeRange}
             onCustomTimeRangeChange={setCustomTimeRange}
-            timeRangeAriaLabel={t("management_learning_program_detail.history.time_filter")}
+            timeRangeAriaLabel={t(
+              "management_learning_program_detail.history.time_filter",
+            )}
             filters={filters}
             filterValues={{ result, reason }}
             onFilterChange={(id, value) => {

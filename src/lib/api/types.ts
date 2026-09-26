@@ -1223,6 +1223,8 @@ export type {
   PathChangeRejectionReasonCode,
   PathChangeRequest,
   PathChangeRequestStatus,
+  PathExitCourseSnapshot,
+  PathExitSnapshot,
   PathRequestKind,
   ProgramPathAttempt,
 } from "./types/learning-programs";

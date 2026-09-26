@@ -4046,6 +4046,13 @@
       "created": "Đã tạo bản nháp chương trình học"
     }
   },
+  "path_attempt_progress": {
+    "at_exit": "Khi rời lộ trình",
+    "current": "Hiện tại",
+    "course_breakdown_one": "Xem 1 khoá học",
+    "course_breakdown_other": "Xem {{count}} khoá học",
+    "legacy_breakdown_unavailable": "Lần chuyển cũ này chưa lưu chi tiết theo từng khoá học."
+  },
   "management_learning_program_detail": {
     "back": "Chương trình học",
     "not_found": "Không tìm thấy chương trình học.",
@@ -4220,6 +4227,7 @@
       "time_filter": "Lọc theo thời điểm xử lý",
       "student": "Sinh viên",
       "transition": "Chuyển đổi lộ trình",
+      "exit_progress": "Tiến độ khi rời",
       "result": "Kết quả",
       "all_results": "Tất cả kết quả",
       "time": "Thời điểm",

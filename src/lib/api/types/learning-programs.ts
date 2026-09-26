@@ -55,6 +55,29 @@ export interface LearningProgram {
   has_draft_version?: boolean;
 }
 
+export interface PathExitCourseSnapshot {
+  course_id: string;
+  title: string;
+  slug: string;
+  progress_percent: number;
+  completed: boolean;
+}
+
+/** Frozen state of one path attempt at the instant it was closed.
+ *  `courses` is empty for legacy v1 snapshots created before per-course
+ *  progress was captured. */
+export interface PathExitSnapshot {
+  schema_version: number;
+  career_path_id: string;
+  career_path_version_id: string;
+  completed_course_ids: string[];
+  completed_courses: number;
+  total_courses: number;
+  overall_percent: number;
+  captured_at: string;
+  courses: PathExitCourseSnapshot[];
+}
+
 export interface ProgramPathAttempt {
   id: string;
   career_path_id: string;
@@ -64,7 +87,7 @@ export interface ProgramPathAttempt {
   selection_source: "student" | "program_default" | "path_change";
   selected_at: string;
   ended_at: string | null;
-  exit_snapshot: Record<string, unknown> | null;
+  exit_snapshot: PathExitSnapshot | null;
   progress_percent: number;
   completed_courses: number;
   total_courses: number;

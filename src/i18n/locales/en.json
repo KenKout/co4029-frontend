@@ -4228,6 +4228,13 @@
       "created": "Learning Program draft created"
     }
   },
+  "path_attempt_progress": {
+    "at_exit": "At exit",
+    "current": "Current",
+    "course_breakdown_one": "View 1 course",
+    "course_breakdown_other": "View {{count}} courses",
+    "legacy_breakdown_unavailable": "Course details were not captured for this older transition."
+  },
   "management_learning_program_detail": {
     "back": "Learning Programs",
     "not_found": "Learning Program not found.",
@@ -4402,6 +4409,7 @@
       "time_filter": "Filter by decision time",
       "student": "Student",
       "transition": "Career Path transition",
+      "exit_progress": "Progress at exit",
       "result": "Result",
       "all_results": "All results",
       "time": "Time",

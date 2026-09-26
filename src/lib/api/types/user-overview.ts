@@ -1,4 +1,5 @@
 import type { User } from "../types";
+import type { PathExitSnapshot } from "./learning-programs";
 
 /**
  * Manager/HOD user-detail overview (GET /users/{id}/overview).
@@ -47,6 +48,10 @@ export interface UserProgramPathAttemptRead {
   status: string;
   selected_at: string;
   ended_at?: string | null;
+  exit_snapshot: PathExitSnapshot | null;
+  progress_percent: number;
+  completed_courses: number;
+  total_courses: number;
 }
 
 /**

@@ -12,6 +12,7 @@ import type {
   UserProgramPathAttemptRead,
   UserProgramProgressRead,
 } from "@/lib/api/types/user-overview";
+import { PathAttemptProgress } from "../PathAttemptProgress";
 
 /**
  * A student's learning programs, with their path history nested underneath.
@@ -93,7 +94,9 @@ export function ProgramsTable({
         header: t(`${prefix}.cols.path_status`, { defaultValue: "Status" }),
         cell: (row) => (
           <CourseEnrollmentStatusBadge
-            status={row.kind === "program" ? row.program.status : row.attempt.status}
+            status={
+              row.kind === "program" ? row.program.status : row.attempt.status
+            }
           />
         ),
       },
@@ -101,9 +104,14 @@ export function ProgramsTable({
         id: "progress",
         header: t(`${prefix}.cols.progress`, { defaultValue: "Progress" }),
         cell: (row) =>
-          // Progress belongs to the enrolment, not to a past attempt — a
-          // percentage on an abandoned path would be meaningless.
-          row.kind !== "program" ? null : (
+          row.kind === "attempt" ? (
+            <PathAttemptProgress
+              snapshot={row.attempt.exit_snapshot}
+              progressPercent={row.attempt.progress_percent}
+              completedCourses={row.attempt.completed_courses}
+              totalCourses={row.attempt.total_courses}
+            />
+          ) : (
             <div className="flex min-w-[180px] items-center gap-3">
               <GradientProgress
                 value={row.program.completion_percent}
