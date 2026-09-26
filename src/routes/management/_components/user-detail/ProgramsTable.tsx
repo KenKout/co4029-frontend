@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CornerDownRight } from "lucide-react";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { PathAttemptProgress } from "@/components/learning-programs/PathAttemptProgress";
 import { DataTableToolbar } from "@/components/ui/data-table-toolbar";
 import { GradientProgress } from "@/components/ui/gradient-progress";
 import { CourseEnrollmentStatusBadge } from "@/components/ui/status-badges";
@@ -12,7 +13,6 @@ import type {
   UserProgramPathAttemptRead,
   UserProgramProgressRead,
 } from "@/lib/api/types/user-overview";
-import { PathAttemptProgress } from "../PathAttemptProgress";
 
 /**
  * A student's learning programs, with their path history nested underneath.

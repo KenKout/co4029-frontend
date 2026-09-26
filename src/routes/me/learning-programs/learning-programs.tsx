@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PathAttemptProgress } from "@/components/learning-programs/PathAttemptProgress";
 import {
   StudentPage,
   StudentPageHeader,
@@ -134,14 +135,8 @@ function TransitionHistory({
         const path = enrollment.paths.find(
           (item) => item.career_path_id === attempt.career_path_id,
         );
-        const percent = attempt.exit_snapshot?.overall_percent;
         const details = [
           t("my_learning_programs.switched_away"),
-          typeof percent === "number"
-            ? t("my_learning_programs.percent_done", {
-                percent: Math.round(percent),
-              })
-            : null,
           t("my_learning_programs.transition_started_at", {
             value: formatDateTime(attempt.selected_at),
           }),
@@ -156,14 +151,22 @@ function TransitionHistory({
         return (
           <div
             key={attempt.id}
-            className="flex flex-col gap-1 rounded-lg bg-m3-surface-container px-3 py-2 text-sm sm:flex-row sm:justify-between sm:gap-3"
+            className="grid gap-3 rounded-lg bg-m3-surface-container px-3 py-2 text-sm sm:grid-cols-[minmax(0,1fr)_minmax(190px,0.8fr)]"
           >
-            <span className="font-medium">
-              {path?.name ?? attempt.career_path_id}
-            </span>
-            <span className="text-m3-on-surface-variant sm:text-right">
-              {details}
-            </span>
+            <div className="min-w-0">
+              <p className="truncate font-medium">
+                {path?.name ?? attempt.career_path_id}
+              </p>
+              <p className="mt-1 text-xs text-m3-on-surface-variant">
+                {details}
+              </p>
+            </div>
+            <PathAttemptProgress
+              snapshot={attempt.exit_snapshot}
+              progressPercent={attempt.progress_percent}
+              completedCourses={attempt.completed_courses}
+              totalCourses={attempt.total_courses}
+            />
           </div>
         );
       })}

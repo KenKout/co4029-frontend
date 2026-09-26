@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { PathAttemptProgress } from "@/components/learning-programs/PathAttemptProgress";
 import { UserEmailIdentity } from "@/components/ui/user-identity";
 import {
   DataTableToolbar,
@@ -23,7 +24,6 @@ import type {
 import { useFormatDateTimeMedium } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 import { getUserAvatarUrl, getUserDisplayName } from "@/lib/user-identity";
-import { PathAttemptProgress } from "../PathAttemptProgress";
 
 type TerminalStatus = Extract<
   PathChangeRequestStatus,
