@@ -161,6 +161,7 @@ export function QuizAttemptsTable({
     {
       id: "attempt",
       header: "Attempt",
+      align: "right",
       cell: (a) => (
         <span className="text-m3-on-surface-variant">#{a.attempt_number}</span>
       ),
@@ -168,9 +169,10 @@ export function QuizAttemptsTable({
     {
       id: "score",
       header: "Score",
+      align: "right",
       cell: (a) =>
         a.score_percent != null ? (
-          <span className="font-bold text-m3-primary">
+          <span className="font-bold tabular-nums text-m3-primary">
             {Number(a.score_percent).toFixed(0)}%
           </span>
         ) : (
@@ -185,6 +187,7 @@ export function QuizAttemptsTable({
     {
       id: "integrity",
       header: "Flags",
+      align: "right",
       cell: (a) => <IntegrityFlagCell count={a.integrity_flags ?? 0} />,
     },
     {
@@ -325,6 +328,7 @@ export function InterviewSessionsTable({
     {
       id: "attempt",
       header: "Attempt",
+      align: "right",
       cell: (s) => (
         <span className="text-m3-on-surface-variant">#{s.attempt_number}</span>
       ),

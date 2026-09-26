@@ -40,6 +40,7 @@ export function buildSettingsTableColumns(
       id: "value",
       header: t("admin_settings.table.value"),
       width: 140,
+      align: "right",
       cell: (node) => {
         if (node.kind === "group") return null;
         const s = node.setting;
@@ -54,6 +55,7 @@ export function buildSettingsTableColumns(
       id: "default",
       header: t("admin_settings.table.default"),
       width: 100,
+      align: "right",
       cell: (node) => {
         if (node.kind === "group") return null;
         const s = node.setting;

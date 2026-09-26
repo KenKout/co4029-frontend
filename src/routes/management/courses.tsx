@@ -181,7 +181,7 @@ function buildColumns(t: TFn): DataTableColumn<CourseAuthoring>[] {
       header: t("dept_courses.col_students"),
       sortable: true,
       sortValue: (c) => c.student_count,
-      align: "left",
+      align: "right",
       // Enrollment counts are deliberately visible even to staff without
       // enrollment permissions — an aggregate, not the roster itself.
       cell: (c) => <StudentsCell course={c} />,
@@ -191,6 +191,7 @@ function buildColumns(t: TFn): DataTableColumn<CourseAuthoring>[] {
       header: t("dept_courses.col_content"),
       sortable: true,
       sortValue: (c) => c.module_count,
+      align: "right",
       cell: (c) => <ContentCell course={c} t={t} />,
     },
     {

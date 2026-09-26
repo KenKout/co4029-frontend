@@ -119,7 +119,7 @@ export function ProgramsTable({
       {
         id: "switches",
         header: t(`${prefix}.cols.switches`, { defaultValue: "Path switches" }),
-        align: "left",
+        align: "right",
         cell: (row) =>
           row.kind !== "program" ? null : (
             <span className="text-sm tabular-nums text-text-strong">

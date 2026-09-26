@@ -69,7 +69,13 @@ function DataTableHeadCell<T>({
       onClick={col.sortable ? () => onHeaderSort(col.id) : undefined}
     >
       {col.sortable ? (
-        <span className="inline-flex items-center gap-1">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1",
+            col.align === "right" && "w-full justify-end",
+            col.align === "center" && "w-full justify-center",
+          )}
+        >
           {col.header}
           <SortIndicator isSorted={isSorted} dir={dir} />
         </span>
