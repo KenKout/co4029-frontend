@@ -4,6 +4,7 @@ import { RichContent } from "@/components/ui/rich-content";
 import type { ReviewSubmitResult } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { describeReviewInterval } from "./helpers";
 
 /**
  * Hint — parity with the quiz-taking flow. Viewing it flags the answer
@@ -60,6 +61,13 @@ export function ReviewHintBlock({
 /** Feedback after grading. */
 export function ReviewFeedback({ result }: { result: ReviewSubmitResult }) {
   const { t } = useTranslation();
+  const interval = describeReviewInterval(result.due_at);
+  const nextReviewText =
+    interval.unit === "retired"
+      ? t("study_review.retired", "This card will not be scheduled again.")
+      : t(`study_review.next_in_${interval.unit}`, {
+          count: interval.value,
+        });
 
   return (
     <div
@@ -92,10 +100,7 @@ export function ReviewFeedback({ result }: { result: ReviewSubmitResult }) {
         )}
         <p className="text-xs opacity-80">
           {result.passing
-            ? t("study_review.next_in", {
-                days: result.interval_days,
-                defaultValue: "Next review in {{days}} day(s).",
-              })
+            ? nextReviewText
             : t("study_review.will_repeat", "You'll see this one again soon.")}
         </p>
       </div>

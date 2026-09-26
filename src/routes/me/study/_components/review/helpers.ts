@@ -49,3 +49,31 @@ export function deriveDoneStats(
     remaining > 0 && stats.dailyCap > 0 && capRemainingNow === 0;
   return { remaining, moreToday, cappedForToday };
 }
+
+export type ReviewIntervalDisplay =
+  | { unit: "seconds" | "minutes" | "hours" | "days"; value: number }
+  | { unit: "retired" };
+
+/**
+ * Convert the server's due timestamp into a human-readable interval. The
+ * server applies the configurable interval-unit setting when it creates
+ * `due_at`, so this remains correct for both production days and fast demo
+ * seconds without exposing that setting to the client.
+ */
+export function describeReviewInterval(
+  dueAt: string | null,
+  nowMs = Date.now(),
+): ReviewIntervalDisplay {
+  if (!dueAt) return { unit: "retired" };
+
+  const dueMs = Date.parse(dueAt);
+  if (!Number.isFinite(dueMs)) return { unit: "seconds", value: 1 };
+
+  const seconds = Math.max(1, Math.round((dueMs - nowMs) / 1000));
+  if (seconds < 60) return { unit: "seconds", value: seconds };
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return { unit: "minutes", value: minutes };
+  const hours = Math.round(seconds / 3600);
+  if (hours < 24) return { unit: "hours", value: hours };
+  return { unit: "days", value: Math.round(seconds / 86400) };
+}
