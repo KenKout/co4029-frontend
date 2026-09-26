@@ -18805,7 +18805,9 @@ export interface components {
             passing: boolean;
             /** Due At */
             due_at: string | null;
-            /** Interval Days */
+            /** Exact real-time interval using the configured unit */
+            interval_seconds: number | null;
+            /** Logical SM-2 interval */
             interval_days: number;
             /** Remaining Due */
             remaining_due: number;

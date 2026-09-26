@@ -1191,6 +1191,7 @@ export interface ReviewSubmitResult {
   q: number;
   passing: boolean;
   due_at: string;
+  interval_seconds: number | null;
   interval_days: number;
   remaining_due: number;
   correct_option_ids: string[];

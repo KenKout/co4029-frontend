@@ -55,21 +55,16 @@ export type ReviewIntervalDisplay =
   | { unit: "retired" };
 
 /**
- * Convert the server's due timestamp into a human-readable interval. The
- * server applies the configurable interval-unit setting when it creates
- * `due_at`, so this remains correct for both production days and fast demo
- * seconds without exposing that setting to the client.
+ * Convert the server's exact delay into a human-readable interval. The server
+ * applies the configurable interval-unit setting before returning this value,
+ * so the display is not affected by client/server clock skew.
  */
 export function describeReviewInterval(
-  dueAt: string | null,
-  nowMs = Date.now(),
+  intervalSeconds: number | null,
 ): ReviewIntervalDisplay {
-  if (!dueAt) return { unit: "retired" };
+  if (intervalSeconds === null) return { unit: "retired" };
 
-  const dueMs = Date.parse(dueAt);
-  if (!Number.isFinite(dueMs)) return { unit: "seconds", value: 1 };
-
-  const seconds = Math.max(1, Math.round((dueMs - nowMs) / 1000));
+  const seconds = Math.max(1, Math.round(intervalSeconds));
   if (seconds < 60) return { unit: "seconds", value: seconds };
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) return { unit: "minutes", value: minutes };

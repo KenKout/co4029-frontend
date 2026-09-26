@@ -61,7 +61,7 @@ export function ReviewHintBlock({
 /** Feedback after grading. */
 export function ReviewFeedback({ result }: { result: ReviewSubmitResult }) {
   const { t } = useTranslation();
-  const interval = describeReviewInterval(result.due_at);
+  const interval = describeReviewInterval(result.interval_seconds);
   const nextReviewText =
     interval.unit === "retired"
       ? t("study_review.retired", "This card will not be scheduled again.")
