@@ -93,7 +93,6 @@ export default function StudyReviewPage() {
     return (
       <ReviewDoneScreen
         stats={stats}
-        scope={{ lesson, course }}
         answeredCount={answeredCount}
         correctCount={correctCount}
       />

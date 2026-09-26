@@ -6,7 +6,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import {
   deriveDoneStats,
   type ReviewQueueStats,
-  type ReviewScope,
 } from "./helpers";
 
 /** In-flight queue fetch. */
@@ -75,18 +74,15 @@ export function ReviewEmptyQueue({ stats }: { stats: ReviewQueueStats }) {
 
 /** The backlog / cap notice under the session-complete headline. */
 function DoneBacklogNotice({
-  scope,
   remaining,
   moreToday,
   cappedForToday,
 }: {
-  scope: ReviewScope;
   remaining: number;
   moreToday: boolean;
   cappedForToday: boolean;
 }) {
   const { t } = useTranslation();
-  const { lesson, course } = scope;
 
   if (moreToday) {
     return (
@@ -101,7 +97,7 @@ function DoneBacklogNotice({
             so its counts are already fresh. */}
         <Link
           to="/me/study/cards-due"
-          search={{ lesson, course }}
+          search={{ lesson: undefined, course: undefined }}
           className={buttonVariants({
             size: "sm",
             className: "cursor-pointer",
@@ -137,12 +133,10 @@ function DoneBacklogNotice({
 /** The end-of-session screen: score line, backlog notice, back link. */
 export function ReviewDoneScreen({
   stats,
-  scope,
   answeredCount,
   correctCount,
 }: {
   stats: ReviewQueueStats;
-  scope: ReviewScope;
   answeredCount: number;
   correctCount: number;
 }) {
@@ -168,7 +162,6 @@ export function ReviewDoneScreen({
         })}
       </p>
       <DoneBacklogNotice
-        scope={scope}
         remaining={remaining}
         moreToday={moreToday}
         cappedForToday={cappedForToday}

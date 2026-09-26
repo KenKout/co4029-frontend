@@ -6,12 +6,6 @@ import type { useReviewQueue } from "@/lib/api/hooks/spaced-repetition";
  */
 export type ReviewQueueData = ReturnType<typeof useReviewQueue>["data"];
 
-/** The scope the session was entered with (lesson / course deep-link). */
-export interface ReviewScope {
-  lesson?: string;
-  course?: string;
-}
-
 /**
  * Daily-cap accounting. dailyCap 0 = unlimited. cappedOut = the queue is
  * empty specifically because today's cap is used up (not because the student
