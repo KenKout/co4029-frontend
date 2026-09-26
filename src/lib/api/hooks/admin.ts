@@ -17,8 +17,6 @@ import type {
   EnableUserOut,
   GrantCreate,
   GrantRead,
-  MembershipCreate,
-  MembershipRead,
   OverviewOut,
   PermissionRead,
   ProcessingJobOut,
@@ -678,12 +676,17 @@ export function useRevokePermissionGrant(userId: string) {
 }
 
 /** FR-6.7 — role-assignment changes within `[since, until)`. */
-export function useAuditRoleChanges(sinceIso: string, untilIso?: string) {
+export function useAuditRoleChanges(
+  sinceIso: string,
+  untilIso?: string,
+  userId?: string,
+) {
   return useQuery({
-    queryKey: queryKeys.admin.auditRoleChanges(sinceIso, untilIso),
+    queryKey: queryKeys.admin.auditRoleChanges(sinceIso, untilIso, userId),
     queryFn: () => {
       const params = new URLSearchParams({ since: sinceIso, limit: "200" });
       if (untilIso) params.set("until", untilIso);
+      if (userId) params.set("user_id", userId);
       return apiFetch<RoleChangeRow[]>(
         `/admin/audit/role-changes?${params.toString()}`,
       );
@@ -789,9 +792,15 @@ export function useAuditDataChangesList(
   table: string,
   sinceIso: string,
   untilIso?: string,
+  userId?: string,
 ) {
   return useQuery({
-    queryKey: queryKeys.admin.auditDataChangesList(table, sinceIso, untilIso),
+    queryKey: queryKeys.admin.auditDataChangesList(
+      table,
+      sinceIso,
+      untilIso,
+      userId,
+    ),
     queryFn: () => {
       const params = new URLSearchParams({
         table,
@@ -799,6 +808,7 @@ export function useAuditDataChangesList(
         limit: "200",
       });
       if (untilIso) params.set("until", untilIso);
+      if (userId) params.set("user_id", userId);
       return apiFetch<DataChangeRow[]>(
         `/admin/audit/data-changes/list?${params.toString()}`,
       );

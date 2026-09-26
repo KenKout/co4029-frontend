@@ -69,14 +69,15 @@ export function useAdminUsersSearch(
   query: string,
   enabled = true,
   role?: string,
+  limit = 20,
 ) {
   const trimmed = query.trim();
   return useQuery({
-    queryKey: ["admin", "users", "search", trimmed, role ?? "any"] as const,
+    queryKey: ["admin", "users", "search", trimmed, role ?? "any", limit] as const,
     queryFn: async () => {
       const qs = new URLSearchParams();
       qs.set("status", "active");
-      qs.set("page_size", "20");
+      qs.set("page_size", String(limit));
       if (trimmed.length > 0) qs.set("search", trimmed);
       if (role) qs.set("role", role);
       const page = await apiFetch<{

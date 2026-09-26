@@ -2032,6 +2032,12 @@
         "updated_by": "Cập nhật bởi"
       },
       "system": "hệ thống",
+      "user_filter": {
+        "label": "Lọc theo người dùng",
+        "placeholder": "Chọn người dùng hoặc tìm kiếm…",
+        "empty": "Không tìm thấy người dùng.",
+        "clear": "Xóa bộ lọc người dùng"
+      },
       "active": "Đang hiệu lực",
       "revoked": "Đã thu hồi",
       "empty": "Không có bản ghi kiểm toán trong khoảng thời gian này.",

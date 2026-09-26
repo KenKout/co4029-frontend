@@ -14,11 +14,6 @@ type AuthEventRow = NonNullable<
   ReturnType<typeof useAuditAuthEvents>["data"]
 >[number];
 
-/** Same shape as the page's own guard — an account id is only sent when it
- *  is a well-formed uuid. */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** The frozen v1 auth-event registry, mirroring ``AUTH_EVENT_TYPES`` in
  *  identity/services/auth_events.py and the ck_auth_events_event_type CHECK.
  *  Listed rather than derived from the rows so the filter offers every kind
@@ -109,18 +104,16 @@ function DetailChips({ detail }: { detail: Record<string, unknown> }) {
 export function AuthEventsTable({
   sinceIso,
   untilIso,
+  userId,
   onCountChange,
 }: {
   sinceIso: string;
   untilIso?: string;
+  userId?: string;
   onCountChange?: (count: number) => void;
 }) {
   const { t } = useTranslation();
   const [eventType, setEventType] = useState<string | undefined>();
-  const [userQuery, setUserQuery] = useState("");
-  // Only a well-formed uuid is sent. A half-typed one would narrow the feed
-  // to nothing and read as "this account has no auth activity".
-  const userId = UUID_RE.test(userQuery.trim()) ? userQuery.trim() : undefined;
 
   const {
     data: rows,
@@ -224,9 +217,6 @@ export function AuthEventsTable({
   return (
     <div className="space-y-3">
       <DataTableToolbar
-        search={userQuery}
-        onSearchChange={setUserQuery}
-        searchPlaceholder={t("admin.audit.auth_events.user_filter_placeholder")}
         filters={[typeFilterDef]}
         filterValues={{ event_type: eventType }}
         onFilterChange={(filterId, value) => {

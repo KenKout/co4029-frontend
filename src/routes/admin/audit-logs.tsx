@@ -17,10 +17,12 @@ import {
   useAuditRoleChanges,
   useUsersByIds,
 } from "@/lib/api/hooks/admin";
+import type { AdminUserSearchRow } from "@/lib/api/hooks/admin-organizations";
 import { DATA_CHANGE_TABLES, type DataChangeTable } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { ROLE_BADGE_COLOR } from "./_components/users/constants";
 import { AuthEventsTable } from "./_components/audit/AuthEventsTable";
+import { AuditUserSelect } from "./_components/audit/AuditUserSelect";
 import { ErrorPanel, UserIdentityCell } from "./_components/audit/AuditCells";
 
 type TabKey = "auth_events" | "role_changes" | "http" | "data_changes";
@@ -75,6 +77,7 @@ export default function AdminAuditLogsPage() {
   const [tab, setTab] = useState<TabKey>(() =>
     isAuditTab(search.tab) ? search.tab : "auth_events",
   );
+  const [auditUser, setAuditUser] = useState<AdminUserSearchRow | undefined>();
   // Counts are populated only after a tab is visited. This preserves the
   // page's lazy API behaviour instead of fetching all four feeds for badges.
   const [tabCounts, setTabCounts] = useState<Partial<Record<TabKey, number>>>(
@@ -123,7 +126,10 @@ export default function AdminAuditLogsPage() {
             {t("admin.audit.subtitle")}
           </p>
         </div>
-        <DateRangePicker range={range} onChange={setRange} />
+        <div className="flex w-full flex-wrap items-end justify-end gap-3 lg:w-auto">
+          <AuditUserSelect value={auditUser} onChange={setAuditUser} />
+          <DateRangePicker range={range} onChange={setRange} />
+        </div>
       </div>
 
       <Tabs
@@ -142,12 +148,14 @@ export default function AdminAuditLogsPage() {
         <AuthEventsTable
           sinceIso={sinceIso}
           untilIso={untilIso}
+          userId={auditUser?.user_id}
           onCountChange={(count) => rememberTabCount("auth_events", count)}
         />
       ) : tab === "role_changes" ? (
         <RoleChangesTable
           sinceIso={sinceIso}
           untilIso={untilIso}
+          userId={auditUser?.user_id}
           onCountChange={(count) => rememberTabCount("role_changes", count)}
         />
       ) : tab === "http" ? (
@@ -155,6 +163,7 @@ export default function AdminAuditLogsPage() {
           sinceIso={sinceIso}
           untilIso={untilIso}
           initialPath={search.path}
+          userId={auditUser?.user_id}
           initialEvent={
             search.event === "login_failure" || search.event === "denied"
               ? search.event
@@ -171,6 +180,7 @@ export default function AdminAuditLogsPage() {
         <DataChangesPanel
           sinceIso={sinceIso}
           untilIso={untilIso}
+          userId={auditUser?.user_id}
           onCountChange={(count) => rememberTabCount("data_changes", count)}
         />
       )}
@@ -181,10 +191,12 @@ export default function AdminAuditLogsPage() {
 function RoleChangesTable({
   sinceIso,
   untilIso,
+  userId,
   onCountChange,
 }: {
   sinceIso: string;
   untilIso?: string;
+  userId?: string;
   onCountChange: (count: number) => void;
 }) {
   const { t } = useTranslation();
@@ -192,7 +204,7 @@ function RoleChangesTable({
     data: rows,
     isLoading,
     isError,
-  } = useAuditRoleChanges(sinceIso, untilIso);
+  } = useAuditRoleChanges(sinceIso, untilIso, userId);
   useEffect(() => {
     if (rows) onCountChange(rows.length);
   }, [rows, onCountChange]);
@@ -302,6 +314,7 @@ function HttpAuditTable({
   sinceIso,
   untilIso,
   initialPath,
+  userId,
   initialEvent,
   requestId,
   onCountChange,
@@ -310,6 +323,7 @@ function HttpAuditTable({
   untilIso?: string;
   /** Seeded from ?path= so a security alert opens on its own requests. */
   initialPath?: string;
+  userId?: string;
   initialEvent?: "login_failure" | "denied";
   requestId?: string;
   onCountChange: (count: number) => void;
@@ -336,7 +350,7 @@ function HttpAuditTable({
     sinceIso,
     untilIso,
     debouncedPath || undefined,
-    undefined,
+    userId,
     initialEvent,
     requestId,
   );
@@ -554,10 +568,12 @@ function EntityIdLookup({
 function DataChangesPanel({
   sinceIso,
   untilIso,
+  userId,
   onCountChange,
 }: {
   sinceIso: string;
   untilIso?: string;
+  userId?: string;
   onCountChange: (count: number) => void;
 }) {
   const { t } = useTranslation();
@@ -568,7 +584,7 @@ function DataChangesPanel({
     data: rows,
     isLoading,
     isError,
-  } = useAuditDataChangesList(table, sinceIso, untilIso);
+  } = useAuditDataChangesList(table, sinceIso, untilIso, userId);
   useEffect(() => {
     if (rows) onCountChange(rows.length);
   }, [rows, onCountChange]);

@@ -2127,6 +2127,12 @@
         "updated_by": "Updated by"
       },
       "system": "system",
+      "user_filter": {
+        "label": "Filter by user",
+        "placeholder": "Select a user or search…",
+        "empty": "No users found.",
+        "clear": "Clear user filter"
+      },
       "active": "Active",
       "revoked": "Revoked",
       "empty": "No audit entries in this window.",
