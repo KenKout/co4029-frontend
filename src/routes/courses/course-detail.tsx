@@ -1,6 +1,5 @@
-import { useParams, useNavigate } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { ApiError } from "@/lib/api/client";
 import {
   useCourseBySlug,
@@ -8,7 +7,6 @@ import {
   useCourseOutcomes,
 } from "@/lib/api/hooks/courses";
 import { useMyCourseProgress } from "@/lib/api/hooks/progress";
-import { useStartCourse } from "@/lib/api/hooks/career-paths";
 import {
   useMyInterviewProgress,
   useMyQuizProgress,
@@ -25,10 +23,18 @@ import {
 } from "@/routes/courses/_components/course-detail/CourseDetailAtoms";
 import { CourseDiscussionSection } from "@/routes/courses/_components/CourseDiscussionSection";
 import { CourseCard } from "@/routes/courses/_components/course-detail/CourseCard";
+import { EarlyStartDialog } from "@/components/ui/early-start-dialog";
 import { useCourseStartEligibility } from "@/routes/courses/_components/course-detail/use-course-start-eligibility";
+import { useCourseLazyStart } from "@/routes/courses/_components/course-detail/use-course-lazy-start";
 import { InstructorCard } from "@/routes/courses/_components/course-detail/InstructorCard";
 import { slugGradient } from "@/routes/courses/_components/course-detail/helpers";
-import { getApiErrorMessage } from "@/lib/api/error-codes";
+
+function isCourseUnavailable(
+  isError: boolean,
+  error: unknown,
+): boolean {
+  return isError && error instanceof ApiError && error.status === 404;
+}
 
 /**
  * Public course landing page:
@@ -49,7 +55,6 @@ import { getApiErrorMessage } from "@/lib/api/error-codes";
  */
 export default function CourseDetailPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { slug } = useParams({ strict: false }) as { slug: string };
 
   const courseQuery = useCourseBySlug(slug);
@@ -66,19 +71,12 @@ export default function CourseDetailPage() {
     courseId,
     enrollmentLoading ? undefined : enrolled,
   );
-  const startCourse = useStartCourse(lazyEligibility.eligiblePathId ?? "");
-
-  function handleLazyStart() {
-    if (!courseId || !lazyEligibility.eligiblePathId) return;
-    startCourse.mutate(courseId, {
-      onSuccess: () => {
-        void navigate({ to: "/courses/$slug/learn", params: { slug } });
-      },
-      onError: (error) => {
-        toast.error(getApiErrorMessage(error, "Could not start this course"));
-      },
-    });
-  }
+  const lazyStart = useCourseLazyStart({
+    courseId,
+    slug,
+    eligiblePathId: lazyEligibility.eligiblePathId,
+    earlyStart: lazyEligibility.earlyStart,
+  });
 
   const { data: outcomes, isLoading: outcomesLoading } =
     useCourseOutcomes(courseId);
@@ -94,10 +92,10 @@ export default function CourseDetailPage() {
   const quizProgressMap = useMyQuizProgress(courseId ?? "");
   const interviewProgressMap = useMyInterviewProgress(courseId ?? "");
 
-  const courseUnavailable =
-    courseQuery.isError &&
-    courseQuery.error instanceof ApiError &&
-    courseQuery.error.status === 404;
+  const courseUnavailable = isCourseUnavailable(
+    courseQuery.isError,
+    courseQuery.error,
+  );
 
   if (courseQuery.isLoading) {
     return <CourseDetailSkeleton />;
@@ -132,8 +130,16 @@ export default function CourseDetailPage() {
           enrollmentLoading={enrollmentLoading}
           lazyStartLoading={lazyEligibility.isLoading}
           lazyStartAvailable={Boolean(lazyEligibility.eligiblePathId)}
-          lazyStartPending={startCourse.isPending}
-          onLazyStart={handleLazyStart}
+          lazyStartEarly={lazyEligibility.earlyStart}
+          lazyStartPending={lazyStart.startCourse.isPending}
+          onLazyStart={lazyStart.handleStart}
+        />
+        <EarlyStartDialog
+          open={lazyStart.earlyStartOpen}
+          onOpenChange={lazyStart.setEarlyStartOpen}
+          courseTitle={course.title}
+          isPending={lazyStart.startCourse.isPending}
+          onConfirm={lazyStart.startCourseNow}
         />
 
         {/* 60% / 40% split: What you'll learn + curriculum | About. */}

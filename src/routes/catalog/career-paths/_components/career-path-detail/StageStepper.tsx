@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -11,6 +12,7 @@ import {
 import { SectionHeader } from "@/components/ui/section-header";
 import { useStartCourse } from "@/lib/api/hooks/career-paths";
 import { Button } from "@/components/ui/button";
+import { EarlyStartDialog } from "@/components/ui/early-start-dialog";
 import type {
   CareerPathCoursePublic,
   CourseProgressSummaryWithStage,
@@ -225,6 +227,7 @@ function StageCourseRow({
   const { t } = useTranslation();
   const prefix = "career_path_detail.stages";
   const start = useStartCourse(careerPathId);
+  const [earlyStartOpen, setEarlyStartOpen] = useState(false);
 
   // `satisfied` is the enrollment status, NOT completion_percent. Both are now
   // measured over the same gradeable units (lessons + quizzes + interviews),
@@ -234,12 +237,13 @@ function StageCourseRow({
   const enrolled = course.is_enrolled === true;
   const unitTotal = course.unit_total ?? 0;
   const unitDone = course.unit_done ?? 0;
-  // `hard` enforcement on a locked stage is the only case that truly blocks.
   const blocked = !stage.unlocked && stage.enforcement === "hard";
+  const earlyStart = !stage.unlocked && stage.enforcement !== "hard";
 
-  function handleStart() {
+  function startCourseNow() {
     start.mutate(course.course_id, {
       onSuccess: (result) => {
+        setEarlyStartOpen(false);
         if (!result.created) {
           toast.info(t(`${prefix}.already_started`));
         }
@@ -251,16 +255,20 @@ function StageCourseRow({
             t(`${prefix}.cap_warning`, { count: result.active_in_path ?? 0 }),
           );
         }
-        // The stage was locked but its enforcement is soft/advisory, so the
-        // server let the Start through. Say so — otherwise "allowed" and
-        // "allowed while locked" look identical to the student.
-        if (result.stage_locked_warning) {
-          toast.warning(t(`${prefix}.started_while_locked`));
-        }
       },
-      onError: (err) =>
-        toast.error((err as Error).message || t(`${prefix}.start_failed`)),
+      onError: (err) => {
+        setEarlyStartOpen(false);
+        toast.error((err as Error).message || t(`${prefix}.start_failed`));
+      },
     });
+  }
+
+  function handleStart() {
+    if (earlyStart) {
+      setEarlyStartOpen(true);
+      return;
+    }
+    startCourseNow();
   }
 
   const body = (
@@ -310,11 +318,24 @@ function StageCourseRow({
 
   // A course the student has not started has no course page to visit yet, and
   // a hard-locked stage must not be navigable at all.
-  if (blocked || !enrolled) return body;
-
-  return (
+  const row = blocked || !enrolled ? (
+    body
+  ) : (
     <Link to="/courses/$slug" params={{ slug }} className="block">
       {body}
     </Link>
+  );
+
+  return (
+    <>
+      <EarlyStartDialog
+        open={earlyStartOpen}
+        onOpenChange={setEarlyStartOpen}
+        courseTitle={course.title}
+        isPending={start.isPending}
+        onConfirm={startCourseNow}
+      />
+      {row}
+    </>
   );
 }

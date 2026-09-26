@@ -201,6 +201,13 @@
       "locked": "Đã khóa"
     }
   },
+  "early_start": {
+    "title": "Bắt đầu khóa học sớm?",
+    "description": "{{course}} thuộc một giai đoạn sớm hơn trong lộ trình của bạn. Bạn có thể bắt đầu ngay, nhưng giai đoạn trước vẫn chưa hoàn tất.",
+    "checkbox": "Tôi hiểu và muốn bắt đầu khóa học",
+    "confirm": "Bắt đầu khóa học",
+    "cancel": "Để sau"
+  },
   "course_detail": {
     "unavailable_title": "Khóa học không khả dụng",
     "unavailable_body": "Khóa học này hiện chưa được mở hoặc đã bị tạm ẩn.",
@@ -222,6 +229,7 @@
     "ai_mock_title": "Bao gồm phỏng vấn AI",
     "ai_mock_body": "Hoàn thành từng module để mở khóa buổi phỏng vấn AI. Nhận phản hồi thời gian thực, câu hỏi tiếp theo thích ứng và đánh giá chi tiết về cách bạn giải thích kỹ thuật.",
     "start_learning": "Bắt đầu học",
+    "start_early": "Bắt đầu sớm",
     "starting_learning": "Đang bắt đầu học…",
     "checking_enrollment": "Đang kiểm tra quyền học…",
     "continue_learning": "Tiếp tục học",

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { findEligibleCoursePathId } from "../use-course-start-eligibility";
+import {
+  findEligibleCoursePathId,
+  isEarlyStartEligible,
+} from "../use-course-start-eligibility";
 import type { CareerPathProgressRead } from "@/lib/api/types";
 
 function progress(
@@ -56,7 +59,35 @@ describe("findEligibleCoursePathId", () => {
 
   it("allows soft and advisory locked stages because the backend allows them", () => {
     expect(
-      findEligibleCoursePathId("course-1", ["path-soft"], [progress("course-1", { unlocked: false, enforcement: "soft" })]),
+      findEligibleCoursePathId("course-1", ["path-soft"], [
+        progress("course-1", { unlocked: false, enforcement: "soft" }),
+      ]),
     ).toBe("path-soft");
+  });
+
+  it("marks soft and advisory locked stages as early starts", () => {
+    expect(
+      isEarlyStartEligible("course-1", [
+        progress("course-1", { unlocked: false, enforcement: "soft" }),
+      ]),
+    ).toBe(true);
+    expect(
+      isEarlyStartEligible("course-1", [
+        progress("course-1", { unlocked: false, enforcement: "advisory" }),
+      ]),
+    ).toBe(true);
+  });
+
+  it("does not mark hard-locked or already-open stages as early starts", () => {
+    expect(
+      isEarlyStartEligible("course-1", [
+        progress("course-1", { unlocked: false, enforcement: "hard" }),
+      ]),
+    ).toBe(false);
+    expect(
+      isEarlyStartEligible("course-1", [
+        progress("course-1", { unlocked: true, enforcement: "advisory" }),
+      ]),
+    ).toBe(false);
   });
 });

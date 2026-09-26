@@ -111,6 +111,7 @@ function CourseCtaButton({
   enrollmentLoading,
   lazyStartLoading,
   lazyStartAvailable,
+  lazyStartEarly,
   lazyStartPending,
   onLazyStart,
 }: {
@@ -120,6 +121,7 @@ function CourseCtaButton({
   enrollmentLoading?: boolean;
   lazyStartLoading?: boolean;
   lazyStartAvailable?: boolean;
+  lazyStartEarly?: boolean;
   lazyStartPending?: boolean;
   onLazyStart?: () => void;
 }) {
@@ -159,7 +161,9 @@ function CourseCtaButton({
       >
         {lazyStartPending
           ? t("course_detail.starting_learning")
-          : t("course_detail.start_learning")}
+          : lazyStartEarly
+            ? t("course_detail.start_early")
+            : t("course_detail.start_learning")}
         <ArrowRight className="h-5 w-5" />
       </Button>
     );
@@ -364,6 +368,7 @@ export function CourseCard({
   enrollmentLoading,
   lazyStartLoading,
   lazyStartAvailable,
+  lazyStartEarly,
   lazyStartPending,
   onLazyStart,
 }: {
@@ -376,6 +381,7 @@ export function CourseCard({
   enrollmentLoading?: boolean;
   lazyStartLoading?: boolean;
   lazyStartAvailable?: boolean;
+  lazyStartEarly?: boolean;
   lazyStartPending?: boolean;
   onLazyStart?: () => void;
 }) {
@@ -426,6 +432,7 @@ export function CourseCard({
             enrollmentLoading={enrollmentLoading}
             lazyStartLoading={lazyStartLoading}
             lazyStartAvailable={lazyStartAvailable}
+            lazyStartEarly={lazyStartEarly}
             lazyStartPending={lazyStartPending}
             onLazyStart={onLazyStart}
           />

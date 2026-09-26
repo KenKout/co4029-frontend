@@ -24,6 +24,21 @@ export function findEligibleCoursePathId(
   return undefined;
 }
 
+export function isEarlyStartEligible(
+  courseId: string | undefined,
+  progressByPath: Array<CareerPathProgressRead | undefined>,
+): boolean {
+  if (!courseId) return false;
+  return progressByPath.some((progress) =>
+    (progress?.stages ?? []).some(
+      (stage) =>
+        !stage.unlocked &&
+        stage.enforcement !== "hard" &&
+        stage.courses.some((course) => course.course_id === courseId),
+    ),
+  );
+}
+
 /**
  * Resolve whether a course can be lazily started from one of the student's
  * active career paths. The backend remains authoritative when the Start POST
@@ -71,9 +86,18 @@ export function useCourseStartEligibility(
       ),
     [activePathIds, courseId, progressQueries],
   );
+  const earlyStart = useMemo(
+    () =>
+      isEarlyStartEligible(
+        courseId,
+        progressQueries.map((query) => query.data),
+      ),
+    [courseId, progressQueries],
+  );
 
   return {
     eligiblePathId,
+    earlyStart,
     isLoading:
       wantsEligibility &&
       (enrollments.isLoading ||

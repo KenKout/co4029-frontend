@@ -201,6 +201,13 @@
       "locked": "Locked"
     }
   },
+  "early_start": {
+    "title": "Start this course early?",
+    "description": "{{course}} is in an earlier stage of your path. You can start it now, but the preceding stage is not complete yet.",
+    "checkbox": "I understand and want to start the course",
+    "confirm": "Start course",
+    "cancel": "Not now"
+  },
   "course_detail": {
     "unavailable_title": "Course unavailable",
     "unavailable_body": "This course isn't open or has been temporarily hidden.",
@@ -222,6 +229,7 @@
     "ai_mock_title": "AI mock interviews included",
     "ai_mock_body": "Complete each module to unlock an AI-powered mock interview. Get real-time feedback, adaptive follow-up questions, and a detailed assessment of your technical explanations.",
     "start_learning": "Start learning",
+    "start_early": "Start early",
     "starting_learning": "Starting learning…",
     "checking_enrollment": "Checking course access…",
     "continue_learning": "Continue learning",
