@@ -6963,6 +6963,14 @@
         "label": "Giới hạn ôn tập mỗi ngày (thẻ/ngày)",
         "description": "Số thẻ ôn tập lặp lại ngắt quãng tối đa mà một học viên được đưa ra để ôn trong một ngày, để lượng thẻ tồn đọng lớn vẫn là một mục tiêu hằng ngày có thể hoàn thành thay vì một bức tường vô tận. Các thẻ đã ôn trong ngày được tính vào giới hạn. Điều này chỉ giới hạn HÀNG ĐỢI ÔN TẬP — không bao giờ thay đổi điều kiện mở khóa bài học hay điểm ghi nhớ, nên tiến độ không bị ảnh hưởng. Đặt 0 để không giới hạn (đưa ra toàn bộ thẻ tồn đọng)."
       },
+      "spaced_repetition__interval_unit_seconds": {
+        "label": "Đơn vị khoảng cách ôn tập (giây)",
+        "description": "Số giây thực tế tương ứng với một đơn vị khoảng cách SM-2. Giữ 86.400 trong production để một đơn vị bằng một ngày. Để demo nhanh và xác định, đặt giá trị này thành 10 và đặt độ dao động khoảng cách ôn tập thành 0%; hai lần trả lời đúng đầu tiên sẽ xuất hiện lại sau 10 và 60 giây, còn trả lời sai sẽ xuất hiện lại sau 10 giây."
+      },
+      "spaced_repetition__jitter_percent": {
+        "label": "Độ dao động khoảng cách ôn tập (%)",
+        "description": "Tỷ lệ ngẫu nhiên chỉ áp dụng cho khoảng cách sau khi trả lời đúng, giúp phân tán thẻ đến hạn theo thời gian. Trả lời sai không bao giờ bị dao động. Giữ 10% cho production hoặc đặt 0% để thời gian demo có thể dự đoán chính xác."
+      },
       "spaced_repetition__max_interval_days": {
         "label": "Khoảng cách ôn tập tối đa (ngày)",
         "description": "Khoảng thời gian dài nhất trước khi một thẻ được đưa ra ôn lại. Giảm giới hạn này sẽ khiến thẻ quay lại ôn thường xuyên hơn."

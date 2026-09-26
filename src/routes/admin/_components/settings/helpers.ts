@@ -33,6 +33,8 @@ export function unitFor(setting: RuntimeSetting): string | null {
   const k = setting.key;
   if (k.endsWith("_seconds")) return "s";
   if (k.endsWith("_hours")) return "h";
+  if (k.endsWith("_days")) return "d";
+  if (k.endsWith("_percent")) return "%";
   if (k.includes("tokens")) return "tok";
   if (k.endsWith("_dpi")) return "dpi";
   return null;
@@ -42,7 +44,10 @@ export function unitFor(setting: RuntimeSetting): string | null {
  * The four resolution rungs in precedence order, each flagged `present` when
  * that layer actually carries a value. Hoisted out of ResolutionPopover so the
  * popover body is pure markup.
- */ export function resolutionLayers(setting: RuntimeSetting, t: TFn): ResolutionLayer[] {
+ */ export function resolutionLayers(
+  setting: RuntimeSetting,
+  t: TFn,
+): ResolutionLayer[] {
   return [
     {
       source: "organization",

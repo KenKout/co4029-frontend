@@ -6987,6 +6987,14 @@
         "label": "Daily review cap (cards/day)",
         "description": "Maximum spaced-repetition cards a student is served for review in one day, so a large backlog stays a finishable daily goal instead of an unbounded wall. Cards already reviewed today count toward the cap. This bounds the REVIEW QUEUE only — it never changes lesson unlock eligibility or retention scoring, so progression is unaffected. Set to 0 for no cap (serve the whole backlog)."
       },
+      "spaced_repetition__interval_unit_seconds": {
+        "label": "Review interval unit (seconds)",
+        "description": "Number of real seconds represented by one logical SM-2 interval unit. Keep 86,400 in production so one unit equals one day. For a fast deterministic demo, set this to 10 and set review interval jitter to 0%; the first two successful reviews then return after 10 and 60 seconds, while a failed review returns after 10 seconds."
+      },
+      "spaced_repetition__jitter_percent": {
+        "label": "Review interval jitter (%)",
+        "description": "Random percentage applied only to successful-review intervals to spread due cards across time. Failed reviews are never jittered. Keep 10% for production or set 0% for predictable demo timing."
+      },
       "spaced_repetition__max_interval_days": {
         "label": "Maximum review interval (days)",
         "description": "Longest a card may wait before it is shown again. Lowering this cap makes cards return for review more often."
