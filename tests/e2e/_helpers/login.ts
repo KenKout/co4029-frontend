@@ -3,6 +3,7 @@ import { Client } from "pg";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "node:crypto";
 import { createHmac } from "node:crypto";
+import { databaseUrl, describeDatabase, jwtSecret } from "./env";
 
 export type SeedRole = "admin" | "teacher" | "student";
 
@@ -24,10 +25,6 @@ const SEED_DISPLAY_NAMES: Readonly<Record<SeedRole, string>> = {
   student: "E2E Student",
 };
 
-const DEFAULT_DATABASE_URL =
-  "postgresql://abridgeai:abridgeai@localhost:5433/abridgeai";
-const DEFAULT_JWT_SECRET = "dev-only-secret-replace-in-production-32+";
-
 const ACCESS_TTL_SECONDS = 900;
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 
@@ -39,18 +36,6 @@ const STORAGE_KEYS = {
   requiresMfa: "abridgeai.requires_mfa",
   user: "abridgeai.user",
 } as const;
-
-function databaseUrl(): string {
-  return (
-    process.env.E2E_DATABASE_URL ??
-    process.env.DATABASE_URL?.replace(/^postgresql\+psycopg:\/\//, "postgresql://") ??
-    DEFAULT_DATABASE_URL
-  );
-}
-
-function jwtSecret(): string {
-  return process.env.JWT_SECRET_KEY ?? DEFAULT_JWT_SECRET;
-}
 
 function urlBase64(buffer: Buffer): string {
   return buffer
@@ -155,5 +140,44 @@ export async function loginAs(page: Page, role: SeedRole): Promise<void> {
         userJson: JSON.stringify(userPayload),
       },
     },
+  );
+
+  await assertTokenAccepted(page, access.token, role);
+}
+
+/**
+ * Prove the minted token is one the backend under test actually accepts.
+ *
+ * Without this the suite cannot tell a rejected token from a missing feature:
+ * the app simply redirects to the login screen, and each test fails on its own
+ * assertion about a heading or a table that was never going to be rendered.
+ * One request here converts a whole red suite into a single accurate message.
+ */
+async function assertTokenAccepted(
+  page: Page,
+  token: string,
+  role: SeedRole,
+): Promise<void> {
+  const response = await page.request.get("/api/v1/users/me", {
+    headers: { Authorization: `Bearer ${token}` },
+    failOnStatusCode: false,
+  });
+
+  if (response.ok()) return;
+
+  throw new Error(
+    [
+      `E2E login failed for role "${role}": the backend rejected the minted token ` +
+        `(HTTP ${response.status()}).`,
+      "",
+      "The suite signs its own access token and inserts the auth_sessions row itself,",
+      "so it must share the backend's JWT secret and database. It used:",
+      `  database   ${describeDatabase()}`,
+      `  jwt secret ${process.env.JWT_SECRET_KEY ? "$JWT_SECRET_KEY" : "backend .env or built-in default"}`,
+      "",
+      "Set these to match the backend under test and re-run:",
+      "  export E2E_DATABASE_URL=postgresql://<user>:<pass>@<host>:<port>/<database>",
+      "  export JWT_SECRET_KEY=<the backend's JWT_SECRET_KEY>",
+    ].join("\n"),
   );
 }

@@ -2,12 +2,10 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { Client } from "pg";
+import { databaseUrl } from "./env";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SEED_SQL_PATH = resolve(HERE, "..", "seed.sql");
-
-const DEFAULT_DATABASE_URL =
-  "postgresql://abridgeai:abridgeai@localhost:5433/abridgeai";
 
 const SEED_USER_IDS = [
   "00000000-0000-0000-0000-00000000aaaa",
@@ -21,12 +19,7 @@ const SEED_MODULE_ID = "00000000-0000-0000-0000-00000000e001";
 const SEED_LESSON_ID = "00000000-0000-0000-0000-00000000f001";
 
 export async function resetSeed(): Promise<void> {
-  const databaseUrl =
-    process.env.E2E_DATABASE_URL ??
-    process.env.DATABASE_URL?.replace(/^postgresql\+psycopg:\/\//, "postgresql://") ??
-    DEFAULT_DATABASE_URL;
-
-  const client = new Client({ connectionString: databaseUrl });
+  const client = new Client({ connectionString: databaseUrl() });
   await client.connect();
 
   try {
