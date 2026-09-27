@@ -70,7 +70,7 @@ function ServiceChip({
           text for screen readers and for anyone who cannot separate the hues. */}
       <span className="sr-only">{stateLabel}</span>
       {service.latencyMs != null && (
-        <span className="ml-auto tabular-nums opacity-70">
+        <span className="ml-auto tabular-nums">
           {c.f.seconds(service.latencyMs)}
         </span>
       )}

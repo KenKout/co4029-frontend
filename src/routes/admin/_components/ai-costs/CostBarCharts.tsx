@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -22,6 +23,10 @@ export function RoleBarChart({ data }: { data: AiCostsRoleBreakdown[] }) {
   const { t } = useTranslation();
   const fmt = useFormatters();
   const reducedMotion = useReducedMotion();
+  const chartData = useMemo(
+    () => data.map((row) => ({ label: row.role, usd: row.usd })),
+    [data],
+  );
   if (data.length === 0) {
     return (
       <div className="bg-surface-elev border border-border rounded-lg p-8 text-center">
@@ -35,7 +40,7 @@ export function RoleBarChart({ data }: { data: AiCostsRoleBreakdown[] }) {
     <div className="bg-surface-elev border border-border rounded-lg p-4">
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
-          data={data}
+          data={chartData}
           margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
         >
           <CartesianGrid
@@ -44,7 +49,7 @@ export function RoleBarChart({ data }: { data: AiCostsRoleBreakdown[] }) {
             vertical={false}
           />
           <XAxis
-            dataKey="role"
+            dataKey="label"
             tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
             stroke="var(--color-border)"
           />

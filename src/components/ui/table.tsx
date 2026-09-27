@@ -16,11 +16,24 @@ import { cn } from "@/lib/utils";
 function Table({
   className,
   containerClassName,
+  containerLabel,
   ...props
-}: React.ComponentProps<"table"> & { containerClassName?: string }) {
+}: React.ComponentProps<"table"> & {
+  containerClassName?: string;
+  /**
+   * Names the scroll region for assistive technology. Supply it wherever the
+   * table's purpose is not obvious from what precedes it; without it the
+   * container is still keyboard-reachable, just unnamed, which is preferable
+   * to an announced region with nothing useful to announce.
+   */
+  containerLabel?: string;
+}) {
   return (
     <div
       data-slot="table-container"
+      tabIndex={0}
+      role={containerLabel ? "region" : undefined}
+      aria-label={containerLabel}
       className={cn("w-full overflow-x-auto", containerClassName)}
     >
       <table
