@@ -174,13 +174,12 @@ test.describe("wave-5-smoke", () => {
     await loginAs(page, "student");
     await page.goto("/me/study/cards-due", { waitUntil: "domcontentloaded" });
 
-    const titleVisible = await page
-      .getByRole("heading", { name: /Thẻ đến hạn ôn tập/i })
-      .first()
-      .isVisible({ timeout: 10_000 })
-      .catch(() => false);
-
-    expect(titleVisible).toBe(true);
+    // `locator.isVisible()` is an immediate snapshot; its timeout option does
+    // not wait for the client-rendered route. Use Playwright's retrying
+    // assertion so the smoke test synchronizes with the React render.
+    await expect(
+      page.getByRole("heading", { name: /Thẻ đến hạn ôn tập/i }).first(),
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("06 cohort KR histogram renders", async ({ page }) => {
