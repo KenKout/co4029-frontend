@@ -55,7 +55,9 @@ SELECT '00000000-0000-0000-0000-00000000cccc', r.id, 'organization',
 FROM roles r WHERE r.code = 'student'
 ON CONFLICT DO NOTHING;
 
-INSERT INTO courses (id, organization_id, owner_user_id, slug, title, description, status, level)
+-- `courses.level` was removed by migration 0080. Student-facing level labels
+-- are derived from career-path stage placement, not stored on the course.
+INSERT INTO courses (id, organization_id, owner_user_id, slug, title, description, status)
 VALUES (
   '00000000-0000-0000-0000-00000000c001',
   '00000000-0000-0000-0000-00000000a001',
@@ -63,8 +65,7 @@ VALUES (
   'e2e-smoke-course',
   'E2E Smoke Course',
   'Wave-0 smoke fixture course',
-  'published',
-  'beginner'
+  'published'
 )
 ON CONFLICT (id) DO NOTHING;
 

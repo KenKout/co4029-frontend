@@ -6,7 +6,10 @@ export default defineConfig({
   expect: { timeout: 5_000 },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Every spec resets the same E2E database using the same fixed fixture IDs.
+  // Running files concurrently races their DELETE/INSERT transactions and can
+  // make otherwise unrelated tests fail nondeterministically.
+  workers: 1,
   reporter: [
     ["html", { open: "never", outputFolder: "playwright-report" }],
     ["list"],
@@ -17,9 +20,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
-  projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-  ],
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: process.env.PLAYWRIGHT_NO_WEBSERVER
     ? undefined
     : {
