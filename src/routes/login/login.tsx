@@ -35,6 +35,19 @@ export default function LoginPage() {
     };
   }, [isAuthenticated, navigate, search.next]);
 
+  // index.html ships a single canonical pointing at the site root; on /login
+  // that mismatch is flagged as an invalid canonical. Point it at this page
+  // for as long as it is mounted (same pattern as the authenticated layout).
+  useEffect(() => {
+    const canonical = document.querySelector<HTMLLinkElement>(
+      'link[rel="canonical"]',
+    );
+    canonical?.setAttribute("href", "https://abridgeai.tech/login");
+    return () => {
+      canonical?.setAttribute("href", "https://abridgeai.tech/");
+    };
+  }, []);
+
   async function handleGoogleLogin() {
     setIsLoading(true);
     setError(null);

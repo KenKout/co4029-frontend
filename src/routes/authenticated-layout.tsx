@@ -12,16 +12,11 @@ export default function AuthenticatedLayout() {
     useRouteAccess();
 
   useEffect(() => {
-    const robots = document.querySelector<HTMLMetaElement>(
-      'meta[name="robots"]',
-    );
     const canonical = document.querySelector<HTMLLinkElement>(
       'link[rel="canonical"]',
     );
-    robots?.setAttribute("content", "noindex, nofollow, noarchive");
     canonical?.setAttribute("href", `https://abridgeai.tech${pathname}`);
     return () => {
-      robots?.setAttribute("content", "index, follow, max-image-preview:large");
       canonical?.setAttribute("href", "https://abridgeai.tech/");
     };
   }, [pathname]);
