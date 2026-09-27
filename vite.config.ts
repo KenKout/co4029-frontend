@@ -2,6 +2,8 @@ import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import { createReadStream, existsSync, statSync } from "node:fs";
+import { nextTick } from "node:process";
 
 // 112x112 tile. Kept at 112 because Google's Organization logo structured
 // data requires an image of at least 112x112; it is also the og:image and
@@ -65,6 +67,184 @@ const sitemapPlugin = (): Plugin => ({
   },
 });
 
+const MIME_TYPES: Record<string, string> = {
+  ".js": "text/javascript",
+  ".mjs": "text/javascript",
+  ".css": "text/css",
+  ".html": "text/html",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".xml": "application/xml",
+  ".txt": "text/plain",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".avif": "image/avif",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".map": "application/json",
+};
+
+// CSP scoped to what the SPA actually loads: self-hosted fonts/styles,
+// Vite-built scripts, garage media (s3.abridgeai.tech presigned URLs) and
+// the self-hosted LiveKit server (wss + TURN-over-TLS). style-src needs
+// 'unsafe-inline' for React inline style attributes; scripts are fully
+// external (the JSON-LD block in index.html is inert, not executed).
+const CSP_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://s3.abridgeai.tech",
+  "media-src 'self' blob: https://s3.abridgeai.tech",
+  "font-src 'self'",
+  "connect-src 'self' https://s3.abridgeai.tech https://livekit.abridgeai.tech wss://livekit.abridgeai.tech",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
+// Camera/mic stay on 'self' — LiveKit voice interviews run on this origin.
+const SECURITY_HEADERS: Record<string, string> = {
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(self), microphone=(self), geolocation=()",
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Content-Security-Policy": CSP_POLICY,
+};
+
+/**
+ * Stamps the OWASP/Lighthouse trust-and-safety headers on EVERY response the
+ * preview server emits (SPA HTML included — the backend's
+ * SecurityHeadersMiddleware only decorates /api responses, and the openresty
+ * edge passes origin headers through untouched). Registered first so its
+ * setHeader calls ride along whichever handler eventually writes the body
+ * (precompressed middleware or sirv).
+ */
+const securityHeadersPlugin = (): Plugin => ({
+  name: "abridgeai-security-headers",
+  configurePreviewServer(server) {
+    server.middlewares.use(function securityHeaders(_req, res, next) {
+      for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+        res.setHeader(key, value);
+      }
+      next();
+    });
+  },
+});
+
+/**
+ * Serves the .br / .gz variants emitted by scripts/compress-dist.mjs
+ * (run after `vite build`) with the right Content-Encoding, plus a
+ * year-long immutable cache for hashed /assets/* files.
+ *
+ * sirv (vite preview's static server) neither compresses dynamically nor
+ * serves precompressed siblings, and the openresty edge only gzips
+ * text/html — so without this middleware every visitor downloads the
+ * ~3 MB of JS+CSS uncompressed, and re-downloads it on every visit
+ * (Cache-Control: no-cache). Registered BEFORE vite's internal middlewares
+ * (hook body, not the returned post hook) so it wins over sirv.
+ */
+const precompressedServePlugin = (): Plugin => ({
+  name: "abridgeai-precompressed-serve",
+  configurePreviewServer(server) {
+    const distDir = path.resolve(__dirname, "dist");
+    server.middlewares.use(function precompressed(req, res, next) {
+      if (req.method !== "GET" && req.method !== "HEAD") return next();
+
+      let pathname: string;
+      try {
+        pathname = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+      } catch {
+        return next();
+      }
+      // pathname is normalized by URL so no ".." survives; the prefix check
+      // is belt-and-braces against symlinked or case-mangled paths.
+      const filePath = path.resolve(distDir, "." + pathname);
+      if (!filePath.startsWith(distDir + path.sep)) return next();
+
+      let stat;
+      try {
+        stat = statSync(filePath);
+      } catch {
+        return next();
+      }
+      if (!stat.isFile()) return next();
+
+      const accept = req.headers["accept-encoding"] ?? "";
+      const encoding = accept.includes("br")
+        ? "br"
+        : accept.includes("gzip")
+          ? "gzip"
+          : null;
+      const variant = encoding
+        ? `${filePath}${encoding === "br" ? ".br" : ".gz"}`
+        : null;
+      const hasVariant = variant !== null && existsSync(variant);
+
+      // /fonts/* carries no .br/.gz sibling (woff2 is already compressed)
+      // but still needs the immutable cache; its filenames embed -v1, so the
+      // one-year max-age is invalidated by a filename bump. /brand/*,
+      // /favicon.ico and /sitemap.xml are re-emitted byte-identical by every
+      // build (base64 constants / static generators), so they cache just as
+      // hard without a staleness risk. robots.txt stays no-cache via sirv.
+      const immutableFont = pathname.startsWith("/fonts/");
+      const byteStableAsset =
+        pathname.startsWith("/brand/") ||
+        pathname === "/favicon.ico" ||
+        pathname === "/sitemap.xml";
+      if (!hasVariant && !immutableFont && !byteStableAsset) return next();
+
+      // Content-Length/ETag describe the file actually streamed (the VARIANT
+      // when compressed): a mismatch makes the browser wait for bytes that
+      // never arrive and truncate the decoded body.
+      let servedPath = filePath;
+      let servedStat = stat;
+      if (hasVariant) {
+        try {
+          servedStat = statSync(variant!);
+          servedPath = variant!;
+        } catch {
+          return next();
+        }
+      }
+      const immutable =
+        pathname.startsWith("/assets/") || immutableFont || byteStableAsset;
+      const etag = `W/"${servedStat.size}-${Number(servedStat.mtimeMs)}"`;
+      if (req.headers["if-none-match"] === etag) {
+        res.statusCode = 304;
+        res.end();
+        return;
+      }
+      if (hasVariant) {
+        res.setHeader("Content-Encoding", encoding!);
+        res.setHeader("Vary", "Accept-Encoding");
+      }
+      res.setHeader(
+        "Cache-Control",
+        immutable ? "public, max-age=31536000, immutable" : "no-cache",
+      );
+      res.setHeader("Content-Type", MIME_TYPES[path.extname(filePath)] ?? "application/octet-stream");
+      res.setHeader("Content-Length", String(servedStat.size));
+      res.setHeader("ETag", etag);
+      if (req.method === "HEAD") {
+        res.end();
+        return;
+      }
+      const stream = createReadStream(servedPath);
+      stream.on("error", () => {
+        res.destroy();
+      });
+      // Yield one tick so the socket is fully attached before streaming.
+      nextTick(() => stream.pipe(res));
+    });
+  },
+});
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const proxyTarget = env.VITE_DEV_PROXY_TARGET ?? "http://localhost:8000";
@@ -72,7 +252,13 @@ export default defineConfig(({ mode }) => {
   const hmrHost = env.VITE_DEV_HMR_HOST;
 
   return {
-    plugins: [react(), tailwindcss(), sitemapPlugin()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      sitemapPlugin(),
+      securityHeadersPlugin(),
+      precompressedServePlugin(),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
