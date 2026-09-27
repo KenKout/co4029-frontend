@@ -276,6 +276,14 @@ export function LearningPlanSection({
       enrollment.status === "active" || enrollment.status === "completed",
   );
 
+  // First load with no cached data: render nothing rather than a skeleton.
+  // A skeleton that vanishes when the query resolves empty (the common
+  // no-programs student) collapses ~330px and shoves every section below it
+  // down the viewport — a 0.43 CLS on the dashboard audit. Mounting nothing
+  // keeps the layout identical from first paint for the empty case; students
+  // with programs get the section inserted once data arrives.
+  if (isLoading && enrollments.length === 0) return null;
+
   if (!isLoading && !isError && visible.length === 0) return null;
 
   return (
