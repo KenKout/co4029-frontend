@@ -59,12 +59,15 @@ export async function resetSeed(): Promise<void> {
       "DELETE FROM auth_sessions WHERE user_id = ANY($1::uuid[]);",
       [SEED_USER_IDS],
     );
-    await client.query("DELETE FROM users WHERE id = ANY($1::uuid[]);", [
-      SEED_USER_IDS,
-    ]);
-    await client.query("DELETE FROM organizations WHERE id = $1;", [
-      SEED_ORG_ID,
-    ]);
+
+    await client.query(
+      "UPDATE users SET status = 'active' WHERE id = ANY($1::uuid[]) AND status <> 'active';",
+      [SEED_USER_IDS],
+    );
+    await client.query(
+      "UPDATE organizations SET status = 'active' WHERE id = $1 AND status <> 'active';",
+      [SEED_ORG_ID],
+    );
 
     await client.query("COMMIT");
 
