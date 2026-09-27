@@ -142,13 +142,19 @@ export function useQuizManageState({
     const previous = baseline.current;
     const changedQuiz = loadedQuizId.current !== quiz.id;
     // Background refetches must not overwrite a teacher's local edits.
-    setDraft((current) =>
-      changedQuiz ||
-      current === null ||
-      JSON.stringify(current) === JSON.stringify(previous)
+    setDraft((current) => {
+      if (
+        current !== null &&
+        JSON.stringify(current) === JSON.stringify(next)
+      ) {
+        return current;
+      }
+      return changedQuiz ||
+        current === null ||
+        JSON.stringify(current) === JSON.stringify(previous)
         ? next
-        : current,
-    );
+        : current;
+    });
     if (changedQuiz) {
       setFeedbackDirty(false);
       setOverrideDirty(false);

@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import QuizManagePage from "@/routes/teacher/quiz/quiz-manage";
 import type { QuizManageStateController } from "@/routes/teacher/quiz/_components/quiz-manage/use-quiz-manage-state";
@@ -18,6 +19,7 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }),
 }));
 vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children }: { children?: ReactNode }) => <>{children}</>,
   useNavigate: () => vi.fn(),
   useParams: () => ({ courseId: "course-1", quizId: "quiz-1" }),
   useSearch: () => ({}),
