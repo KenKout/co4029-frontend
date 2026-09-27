@@ -44,11 +44,9 @@ async function safeRowCount(
 }
 
 async function countMaterialsForLesson(lessonId: string): Promise<number> {
-  const learning = await safeRowCount(
-    "learning_materials",
-    "lesson_id = $1",
-    [lessonId],
-  );
+  const learning = await safeRowCount("learning_materials", "lesson_id = $1", [
+    lessonId,
+  ]);
   if (learning > 0) return learning;
   return safeRowCount("materials", "lesson_id = $1", [lessonId]);
 }
@@ -83,9 +81,7 @@ test.describe("wave-2-smoke", () => {
     await page.goto(`/courses/${SEED_COURSE_SLUG}`);
 
     await expect(
-      page
-        .getByText(/Created by|Giảng viên không xác định/i)
-        .first(),
+      page.getByText(/Bởi|Giảng viên không xác định/i).first(),
     ).toBeVisible({ timeout: 10_000 });
 
     await expect(page.getByText(/instructor_summary/i)).toHaveCount(0);
@@ -110,12 +106,12 @@ test.describe("wave-2-smoke", () => {
       .poll(
         async () => {
           const curriculum = await page
-            .getByText(/Curriculum/i)
+            .getByText(/Nội dung khóa học/i)
             .first()
             .isVisible()
             .catch(() => false);
           const placeholder = await page
-            .getByText(/No lessons available yet/i)
+            .getByText(/Chưa có bài học/i)
             .first()
             .isVisible()
             .catch(() => false);
@@ -138,9 +134,9 @@ test.describe("wave-2-smoke", () => {
     await loginAs(page, "student");
     await page.goto(`/courses/${SEED_COURSE_SLUG}/learn`);
 
-    await expect(
-      page.locator('[data-testid^="player-"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-testid^="player-"]').first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("notifications inbox renders header + empty state or items", async ({
@@ -159,9 +155,11 @@ test.describe("wave-2-smoke", () => {
     ).toBeVisible({ timeout: 10_000 });
 
     if (notifCount === 0) {
-      await expect(page.getByText("Chưa có thông báo nào")).toBeVisible({
-        timeout: 10_000,
-      });
+      await expect(page.getByText("Chưa có thông báo nào").first()).toBeVisible(
+        {
+          timeout: 10_000,
+        },
+      );
     }
   });
 });

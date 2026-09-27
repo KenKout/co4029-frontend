@@ -73,7 +73,10 @@ test.describe("wave-5-smoke", () => {
 
   test("01 quiz authoring page renders", async ({ page }) => {
     const quizId = await getSeededQuizId(SEED_MODULE_ID);
-    test.skip(!quizId, "No seeded quiz under module — quiz authoring not exercised");
+    test.skip(
+      !quizId,
+      "No seeded quiz under module — quiz authoring not exercised",
+    );
 
     await loginAs(page, "teacher");
     await page.goto(`/teacher/courses/${SEED_COURSE_ID}/quizzes/${quizId}`, {
@@ -92,7 +95,10 @@ test.describe("wave-5-smoke", () => {
 
   test("02 bulk-set-expected-time form renders", async ({ page }) => {
     const quizId = await getSeededQuizId(SEED_MODULE_ID);
-    test.skip(!quizId, "No seeded quiz under module — bulk-set form not exercised");
+    test.skip(
+      !quizId,
+      "No seeded quiz under module — bulk-set form not exercised",
+    );
 
     await loginAs(page, "teacher");
     await page.goto(`/teacher/courses/${SEED_COURSE_ID}/quizzes/${quizId}`, {
@@ -169,7 +175,7 @@ test.describe("wave-5-smoke", () => {
     await page.goto("/study/cards-due", { waitUntil: "domcontentloaded" });
 
     const titleVisible = await page
-      .getByText(/Thẻ cần ôn/i)
+      .getByRole("heading", { name: /Thẻ đến hạn ôn tập/i })
       .first()
       .isVisible({ timeout: 10_000 })
       .catch(() => false);
@@ -190,9 +196,9 @@ test.describe("wave-5-smoke", () => {
       .catch(() => false);
     test.skip(!titleVisible, "SR cohort page not wired or teacher blocked");
 
-    await expect(
-      page.getByText(/Chọn bài học/i).first(),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/Chọn bài học/i).first()).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test("07 at-risk roster renders", async ({ page }) => {

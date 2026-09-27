@@ -7,14 +7,16 @@ test.describe("wave-0-smoke", () => {
     await resetSeed();
   });
 
-  test("admin reaches dashboard after programmatic login", async ({ page }) => {
+  test("admin reaches its role landing after programmatic login", async ({
+    page,
+  }) => {
     await loginAs(page, "admin");
 
-    await page.goto("/dashboard");
+    await page.goto("/admin/stats");
 
-    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page).toHaveURL(/\/admin\/stats/);
     await expect(
-      page.getByRole("heading", { level: 1, name: /chào mừng trở lại/i }),
-    ).toBeVisible();
+      page.getByRole("heading", { level: 1, name: /Tổng quan hệ thống/i }),
+    ).toBeVisible({ timeout: 10_000 });
   });
 });

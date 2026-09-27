@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { loginAs } from "./_helpers/login";
+import { loginAs, setLocale } from "./_helpers/login";
 import { resetSeed } from "./_helpers/seed-reset";
 
-const SEEDED_KPI_LABELS = [
-  "Người dùng",
-  "Khoá học",
-  "Đăng ký",
-  "Tài liệu",
-  "Lượt làm quiz",
+const ADMIN_STATS_SECTIONS = [
+  "Tình trạng",
+  "Cần xử lý",
+  "Độ tin cậy",
+  "Sử dụng & dung lượng",
+  "Bảo mật",
 ] as const;
 
 const SEEDED_USER_EMAILS = [
@@ -23,24 +23,19 @@ test.describe("wave-1-smoke", () => {
     await resetSeed();
   });
 
-  test("healthz status visible in /admin/health", async ({ page }) => {
+  test("legacy health route opens the services operations tab", async ({
+    page,
+  }) => {
     await loginAs(page, "admin");
     await page.goto("/admin/health");
 
+    await expect(page).toHaveURL(/\/admin\/operations\?tab=services/);
     await expect(
-      page.getByRole("heading", { name: /Trạng thái hệ thống/i }),
+      page.getByRole("heading", { name: /Vận hành & độ tin cậy/i }),
     ).toBeVisible({ timeout: 10_000 });
-
-    await expect(page.getByText("Kiểm tra sức khỏe API")).toBeVisible({
+    await expect(page.getByRole("heading", { name: "Phụ thuộc" })).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByText("Kiểm tra sẵn sàng")).toBeVisible({
-      timeout: 10_000,
-    });
-
-    await expect(
-      page.locator("span").filter({ hasText: /^ok$/ }).first(),
-    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("dashboard greets seeded student", async ({ page }) => {
@@ -56,7 +51,9 @@ test.describe("wave-1-smoke", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test("admin stats overview shows 5 KPI cards", async ({ page }) => {
+  test("admin stats overview exposes its five operational sections", async ({
+    page,
+  }) => {
     await loginAs(page, "admin");
     await page.goto("/admin/stats");
 
@@ -64,10 +61,10 @@ test.describe("wave-1-smoke", () => {
       page.getByRole("heading", { name: /Tổng quan hệ thống/i }),
     ).toBeVisible({ timeout: 10_000 });
 
-    for (const label of SEEDED_KPI_LABELS) {
-      await expect(page.getByText(label, { exact: true }).first()).toBeVisible({
-        timeout: 10_000,
-      });
+    for (const label of ADMIN_STATS_SECTIONS) {
+      await expect(
+        page.getByRole("button", { name: label, exact: true }),
+      ).toBeVisible({ timeout: 10_000 });
     }
   });
 
@@ -81,7 +78,10 @@ test.describe("wave-1-smoke", () => {
 
     await expect
       .poll(
-        async () => page.locator('[data-slot="infinite-list-item"]').count(),
+        async () =>
+          page
+            .locator('[data-slot="table-body"] [data-slot="table-row"]')
+            .count(),
         { timeout: 10_000 },
       )
       .toBeGreaterThanOrEqual(SEEDED_USER_EMAILS.length);
@@ -92,10 +92,11 @@ test.describe("wave-1-smoke", () => {
   });
 
   test("login page renders Google OAuth button", async ({ page }) => {
+    await setLocale(page, "vi");
     await page.goto("/login");
 
     await expect(
-      page.getByRole("button", { name: /Continue with Google/i }),
+      page.getByRole("button", { name: /Tiếp tục với Google/i }),
     ).toBeVisible({ timeout: 10_000 });
   });
 });

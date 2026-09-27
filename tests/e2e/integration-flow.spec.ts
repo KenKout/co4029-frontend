@@ -216,7 +216,7 @@ test.describe("integration-flow", () => {
     await page.goto("/study/cards-due");
 
     await expect(
-      page.getByRole("heading", { name: /Thẻ cần ôn/i }).first(),
+      page.getByRole("heading", { name: /Thẻ đến hạn ôn tập/i }).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 

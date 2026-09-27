@@ -35,7 +35,22 @@ const STORAGE_KEYS = {
   expiresAt: "abridgeai.access_token_expires_at",
   requiresMfa: "abridgeai.requires_mfa",
   user: "abridgeai.user",
+  locale: "abridgeai.locale",
 } as const;
+
+export type E2ELocale = "en" | "vi";
+
+/** Keep text locators deterministic across CI hosts with different locales. */
+export async function setLocale(
+  page: Page,
+  locale: E2ELocale = "vi",
+): Promise<void> {
+  await page.goto("/");
+  await page.evaluate(
+    ({ key, value }) => window.localStorage.setItem(key, value),
+    { key: STORAGE_KEYS.locale, value: locale },
+  );
+}
 
 function urlBase64(buffer: Buffer): string {
   return buffer
@@ -53,7 +68,12 @@ function hashSecret(value: string): string {
 }
 
 function generateRefreshToken(): string {
-  return urlBase64(Buffer.from(randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, ""), "hex"));
+  return urlBase64(
+    Buffer.from(
+      randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, ""),
+      "hex",
+    ),
+  );
 }
 
 async function ensureAuthSession(userId: string): Promise<{
@@ -64,7 +84,9 @@ async function ensureAuthSession(userId: string): Promise<{
   const client = new Client({ connectionString: databaseUrl() });
   await client.connect();
   try {
-    await client.query("SELECT set_config('app.actor_id', $1, true);", [userId]);
+    await client.query("SELECT set_config('app.actor_id', $1, true);", [
+      userId,
+    ]);
 
     const sessionId = randomUUID();
     const refreshToken = generateRefreshToken();
@@ -84,7 +106,10 @@ async function ensureAuthSession(userId: string): Promise<{
   }
 }
 
-function mintAccessToken(userId: string, sessionId: string): {
+function mintAccessToken(
+  userId: string,
+  sessionId: string,
+): {
   token: string;
   expiresAtMs: number;
 } {
@@ -98,7 +123,11 @@ function mintAccessToken(userId: string, sessionId: string): {
   return { token, expiresAtMs: expSec * 1000 };
 }
 
-export async function loginAs(page: Page, role: SeedRole): Promise<void> {
+export async function loginAs(
+  page: Page,
+  role: SeedRole,
+  locale: E2ELocale = "vi",
+): Promise<void> {
   const userId = SEED_USER_IDS[role];
   const session = await ensureAuthSession(userId);
   const access = mintAccessToken(userId, session.sessionId);
@@ -113,7 +142,8 @@ export async function loginAs(page: Page, role: SeedRole): Promise<void> {
     profile: {
       user_id: userId,
       given_name: "E2E",
-      family_name: role === "admin" ? "Admin" : role === "teacher" ? "Teacher" : "Student",
+      family_name:
+        role === "admin" ? "Admin" : role === "teacher" ? "Teacher" : "Student",
       display_name: SEED_DISPLAY_NAMES[role],
       avatar_object_id: null,
       bio: null,
@@ -130,6 +160,7 @@ export async function loginAs(page: Page, role: SeedRole): Promise<void> {
       window.localStorage.setItem(keys.expiresAt, String(values.expiresAtMs));
       window.localStorage.setItem(keys.requiresMfa, "false");
       window.localStorage.setItem(keys.user, values.userJson);
+      window.localStorage.setItem(keys.locale, values.locale);
     },
     {
       keys: STORAGE_KEYS,
@@ -138,6 +169,7 @@ export async function loginAs(page: Page, role: SeedRole): Promise<void> {
         refreshToken: session.refreshToken,
         expiresAtMs: access.expiresAtMs,
         userJson: JSON.stringify(userPayload),
+        locale,
       },
     },
   );
