@@ -15,8 +15,12 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: [
+      // "@/i18n" must resolve BEFORE the bare "@" prefix rule and to the
+      // synchronous test stub: the production module inits through an async
+      // backend, and 1600+ tests import i18n and render immediately.
+      { find: /^@\/i18n$/, replacement: path.resolve(__dirname, "./src/i18n/test-sync.ts") },
+      { find: "@", replacement: path.resolve(__dirname, "./src") },
+    ],
   },
 });

@@ -13,28 +13,58 @@ import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { getStoredAuthSession } from "@/lib/auth";
 import { resolveLandingPath } from "@/lib/auth/resolve-landing";
 import { Toaster } from "sonner";
-import GoogleCallbackPage from "@/routes/auth/google-callback";
 import AuthenticatedLayout from "@/routes/authenticated-layout";
-import CareerPathDetailPage from "@/routes/catalog/career-paths/career-path-detail";
-import CareerPathsPage from "@/routes/catalog/career-paths/career-paths";
-import CourseDetailPage from "@/routes/courses/course-detail";
-import CourseLearnPage from "@/routes/courses/course-learn";
-import CourseQuizPage from "@/routes/courses/course-quiz";
-import CoursesListPage from "@/routes/courses/courses-list";
-import DashboardPage from "@/routes/dashboard/dashboard";
-import LandingPage from "@/routes/landing/landing";
-import LoginPage from "@/routes/login/login";
-import LoginMfaPage from "@/routes/login/mfa";
-import MyCareerPathsPage from "@/routes/me/career-paths";
-import ProfilePage from "@/routes/me/profile/profile";
-import ProgressPage from "@/routes/me/progress/progress";
-import StudyCardsDuePage from "@/routes/me/study/cards-due";
-import SrDashboardPage from "@/routes/me/study/index";
-import NotificationsPage from "@/routes/notifications/notifications";
-import SettingsNotificationsPage from "@/routes/settings/notifications";
-import SettingsProfilePage from "@/routes/settings/profile";
-import SettingsSecurityPage from "@/routes/settings/security";
-import SettingsHubPage from "@/routes/settings/settings";
+
+/* Every page below is route-split: the entry chunk carries only the shell
+   (router, auth, layout, i18n runtime) instead of all 20+ pages at once —
+   the difference between a ~1 MB entry and one that fits Slow 4G budgets. */
+const GoogleCallbackPage = lazyRouteComponent(
+  () => import("@/routes/auth/google-callback"),
+);
+const CareerPathDetailPage = lazyRouteComponent(
+  () => import("@/routes/catalog/career-paths/career-path-detail"),
+);
+const CareerPathsPage = lazyRouteComponent(
+  () => import("@/routes/catalog/career-paths/career-paths"),
+);
+const CourseDetailPage = lazyRouteComponent(
+  () => import("@/routes/courses/course-detail"),
+);
+const CourseLearnPage = lazyRouteComponent(
+  () => import("@/routes/courses/course-learn"),
+);
+const CourseQuizPage = lazyRouteComponent(
+  () => import("@/routes/courses/course-quiz"),
+);
+const CoursesListPage = lazyRouteComponent(
+  () => import("@/routes/courses/courses-list"),
+);
+const DashboardPage = lazyRouteComponent(() => import("@/routes/dashboard/dashboard"));
+const LandingPage = lazyRouteComponent(() => import("@/routes/landing/landing"));
+const LoginPage = lazyRouteComponent(() => import("@/routes/login/login"));
+const LoginMfaPage = lazyRouteComponent(() => import("@/routes/login/mfa"));
+const MyCareerPathsPage = lazyRouteComponent(
+  () => import("@/routes/me/career-paths"),
+);
+const ProfilePage = lazyRouteComponent(() => import("@/routes/me/profile/profile"));
+const ProgressPage = lazyRouteComponent(() => import("@/routes/me/progress/progress"));
+const StudyCardsDuePage = lazyRouteComponent(
+  () => import("@/routes/me/study/cards-due"),
+);
+const SrDashboardPage = lazyRouteComponent(() => import("@/routes/me/study/index"));
+const NotificationsPage = lazyRouteComponent(
+  () => import("@/routes/notifications/notifications"),
+);
+const SettingsNotificationsPage = lazyRouteComponent(
+  () => import("@/routes/settings/notifications"),
+);
+const SettingsProfilePage = lazyRouteComponent(
+  () => import("@/routes/settings/profile"),
+);
+const SettingsSecurityPage = lazyRouteComponent(
+  () => import("@/routes/settings/security"),
+);
+const SettingsHubPage = lazyRouteComponent(() => import("@/routes/settings/settings"));
 
 /* ── Root layout ── */
 function Root() {
