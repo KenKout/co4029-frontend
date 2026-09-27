@@ -7,19 +7,13 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Textarea } from "@/components/ui/textarea";
 import { useSaveGapReportNotes } from "@/lib/api/hooks/interviews";
-import type { StudyPlanItem } from "@/lib/api/types";
-import { StudyPlanSection } from "./StudyPlanSection";
 
 export function NotesCard({
   sessionId,
   teacherSummary,
-  studyPlan,
-  courseId,
 }: {
   sessionId: string;
   teacherSummary: string | null | undefined;
-  studyPlan: StudyPlanItem[];
-  courseId: string | null | undefined;
 }) {
   const { t } = useTranslation();
   const saveNotes = useSaveGapReportNotes(sessionId);
@@ -127,8 +121,6 @@ export function NotesCard({
             </p>
           ))}
       </div>
-
-      <StudyPlanSection studyPlan={studyPlan} courseId={courseId} />
     </GlassCard>
   );
 }

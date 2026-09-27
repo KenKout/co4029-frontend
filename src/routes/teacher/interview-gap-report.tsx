@@ -211,7 +211,7 @@ export default function InterviewGapReportPage() {
         ariaLabel={t("teacher_interview_gap_report.sections.title")}
       />
 
-      {/* Overview — session context + notes/study plan. */}
+      {/* Overview — session context + teacher notes. */}
       <div
         id="overview"
         role="tabpanel"
@@ -220,12 +220,7 @@ export default function InterviewGapReportPage() {
         className="space-y-6"
       >
         <ContextCard report={report} session={session} />
-        <NotesCard
-          sessionId={sessionId}
-          teacherSummary={report.teacher_summary}
-          studyPlan={report.study_plan}
-          courseId={report.course_id}
-        />
+        <NotesCard sessionId={sessionId} teacherSummary={report.teacher_summary} />
       </div>
 
       {/* Analysis — criterion charts + per-criterion breakdown. */}

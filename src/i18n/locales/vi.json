@@ -3142,7 +3142,6 @@
       "evaluation_exhausted": "Chấm điểm thất bại hoàn toàn",
       "no_overview": "AI chưa sinh phần tổng quan.",
       "no_detail": "Không có dữ liệu chi tiết theo tiêu chí.",
-      "no_study_plan": "AI chưa đề xuất bước học cụ thể.",
       "no_source_quiz": "Buổi phỏng vấn này không đi kèm với một lượt làm quiz, nên không có quiz nguồn để đối chiếu."
     },
     "errors": {
@@ -3158,7 +3157,6 @@
       "context": "Bối cảnh phiên",
       "overview": "Tổng quan khoảng cách",
       "by_criterion": "Phân tích theo tiêu chí",
-      "study_plan": "Kế hoạch học tập",
       "sources": "Liên kết nguồn"
     },
     "tabs": {

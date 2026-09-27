@@ -109,7 +109,7 @@ export function GapTabBar({
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                 "whitespace-nowrap cursor-pointer text-[13px] font-bold",
                 isActive
-                  ? "text-white"
+                  ? "text-white hover:bg-transparent"
                   : "text-m3-on-surface hover:bg-surface-muted",
               )}
             >

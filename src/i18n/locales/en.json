@@ -3237,7 +3237,6 @@
       "evaluation_exhausted": "Evaluation failed for good",
       "no_overview": "AI hasn't generated an overview yet.",
       "no_detail": "No detailed criterion data.",
-      "no_study_plan": "AI hasn't suggested specific learning steps yet.",
       "no_source_quiz": "This interview wasn't paired with a quiz attempt, so there's no source quiz to compare against."
     },
     "errors": {
@@ -3253,7 +3252,6 @@
       "context": "Session context",
       "overview": "Gap overview",
       "by_criterion": "Analysis by criterion",
-      "study_plan": "Study plan",
       "sources": "Source links"
     },
     "tabs": {
