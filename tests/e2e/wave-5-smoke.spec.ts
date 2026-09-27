@@ -172,7 +172,7 @@ test.describe("wave-5-smoke", () => {
 
   test("05 cards-due infinite-scroll list renders", async ({ page }) => {
     await loginAs(page, "student");
-    await page.goto("/study/cards-due", { waitUntil: "domcontentloaded" });
+    await page.goto("/me/study/cards-due", { waitUntil: "domcontentloaded" });
 
     const titleVisible = await page
       .getByRole("heading", { name: /Thẻ đến hạn ôn tập/i })

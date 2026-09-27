@@ -213,7 +213,7 @@ test.describe("integration-flow", () => {
 
   test("09 student reviews due cards (Wave 5)", async ({ page }) => {
     await loginAs(page, "student");
-    await page.goto("/study/cards-due");
+    await page.goto("/me/study/cards-due");
 
     await expect(
       page.getByRole("heading", { name: /Thẻ đến hạn ôn tập/i }).first(),
@@ -238,7 +238,7 @@ test.describe("integration-flow", () => {
     ).toBeVisible({ timeout: 10_000 });
 
     await expect(
-      page.locator('[aria-label="Khoảng thời gian"]').first(),
+      page.getByRole("button", { name: /Chọn khoảng thời gian/i }).first(),
     ).toBeVisible({ timeout: 5_000 });
   });
 });

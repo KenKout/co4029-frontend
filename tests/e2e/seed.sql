@@ -69,6 +69,33 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- The owner is not implicitly exposed as the course instructor. Course detail
+-- resolves its instructor from an active course-scoped teaching assignment.
+INSERT INTO user_role_assignments (
+  id,
+  user_id,
+  role_id,
+  scope_kind,
+  organization_id,
+  course_id,
+  granted_by,
+  is_instructor,
+  is_assistant
+)
+SELECT
+  '00000000-0000-0000-0000-00000000d004',
+  '00000000-0000-0000-0000-00000000bbbb',
+  r.id,
+  'course',
+  '00000000-0000-0000-0000-00000000a001',
+  '00000000-0000-0000-0000-00000000c001',
+  '00000000-0000-0000-0000-00000000aaaa',
+  TRUE,
+  FALSE
+FROM roles r
+WHERE r.code = 'teacher'
+ON CONFLICT DO NOTHING;
+
 INSERT INTO modules (id, course_id, title, position, status)
 VALUES (
   '00000000-0000-0000-0000-00000000e001',

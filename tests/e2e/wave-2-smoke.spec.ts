@@ -76,13 +76,14 @@ test.describe("wave-2-smoke", () => {
     });
   });
 
-  test("course detail shows instructor card or fallback", async ({ page }) => {
+  test("course detail shows the seeded instructor card", async ({ page }) => {
     await loginAs(page, "student");
     await page.goto(`/courses/${SEED_COURSE_SLUG}`);
 
     await expect(
-      page.getByText(/Bởi|Giảng viên không xác định/i).first(),
+      page.getByRole("heading", { name: /Giới thiệu giảng viên/i }),
     ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("E2E Teacher", { exact: true })).toBeVisible();
 
     await expect(page.getByText(/instructor_summary/i)).toHaveCount(0);
   });

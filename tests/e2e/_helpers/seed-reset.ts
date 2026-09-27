@@ -32,21 +32,20 @@ export async function resetSeed(): Promise<void> {
       "DELETE FROM course_enrollments WHERE course_id = $1 OR student_id = ANY($2::uuid[]);",
       [SEED_COURSE_ID, SEED_USER_IDS],
     );
-    await client.query(
-      "DELETE FROM lesson_resources WHERE lesson_id = $1;",
-      [SEED_LESSON_ID],
-    );
+    await client.query("DELETE FROM lesson_resources WHERE lesson_id = $1;", [
+      SEED_LESSON_ID,
+    ]);
     await client.query("DELETE FROM lessons WHERE module_id = $1;", [
       SEED_MODULE_ID,
     ]);
     await client.query("DELETE FROM modules WHERE course_id = $1;", [
       SEED_COURSE_ID,
     ]);
-    await client.query("DELETE FROM courses WHERE id = $1;", [SEED_COURSE_ID]);
     await client.query(
       "DELETE FROM user_role_assignments WHERE user_id = ANY($1::uuid[]);",
       [SEED_USER_IDS],
     );
+    await client.query("DELETE FROM courses WHERE id = $1;", [SEED_COURSE_ID]);
     await client.query(
       "DELETE FROM organization_memberships WHERE user_id = ANY($1::uuid[]) OR organization_id = $2;",
       [SEED_USER_IDS, SEED_ORG_ID],
