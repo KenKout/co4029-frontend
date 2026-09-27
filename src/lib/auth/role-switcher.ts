@@ -9,6 +9,18 @@ export const ROLE_SWITCHER_ROLES = [
 
 export type RoleSwitcherRole = (typeof ROLE_SWITCHER_ROLES)[number];
 
+/** URL families owned by each role switcher entry. */
+export const ROLE_SWITCHER_PATH_PREFIXES: Record<
+  RoleSwitcherRole,
+  readonly string[]
+> = {
+  student: ["/dashboard", "/courses", "/me"],
+  teacher: ["/teacher"],
+  manager: ["/management"],
+  hod: ["/management"],
+  admin: ["/admin"],
+};
+
 /**
  * Return only the role-backed switcher entries, in a stable UI order.
  *
@@ -21,4 +33,16 @@ export function rolesForSwitcher(
   roles: readonly string[],
 ): RoleSwitcherRole[] {
   return ROLE_SWITCHER_ROLES.filter((role) => roles.includes(role));
+}
+
+/** Resolve the selected switcher entry from the current route family. */
+export function roleForSwitcherPath(
+  pathname: string,
+  visibleRoles: readonly RoleSwitcherRole[],
+): RoleSwitcherRole | undefined {
+  return visibleRoles.find((role) =>
+    ROLE_SWITCHER_PATH_PREFIXES[role].some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    ),
+  );
 }

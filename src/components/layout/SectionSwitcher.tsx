@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useMyRoles } from "@/lib/api/hooks/admin";
 import {
+  roleForSwitcherPath,
   rolesForSwitcher,
   type RoleSwitcherRole,
 } from "@/lib/auth/role-switcher";
@@ -19,7 +20,6 @@ interface SectionLink {
   fallback: string;
   href: string;
   icon: typeof LayoutDashboard;
-  prefix: string;
 }
 
 const SECTIONS: SectionLink[] = [
@@ -29,7 +29,6 @@ const SECTIONS: SectionLink[] = [
     fallback: "Student",
     href: "/dashboard",
     icon: LayoutDashboard,
-    prefix: "/dashboard",
   },
   {
     role: "teacher",
@@ -37,7 +36,6 @@ const SECTIONS: SectionLink[] = [
     fallback: "Teacher",
     href: "/teacher",
     icon: Briefcase,
-    prefix: "/teacher",
   },
   {
     role: "manager",
@@ -45,7 +43,6 @@ const SECTIONS: SectionLink[] = [
     fallback: "Manager",
     href: "/management",
     icon: Building2,
-    prefix: "/management",
   },
   {
     role: "hod",
@@ -53,7 +50,6 @@ const SECTIONS: SectionLink[] = [
     fallback: "Dean",
     href: "/management",
     icon: Building2,
-    prefix: "/management",
   },
   {
     role: "admin",
@@ -61,7 +57,6 @@ const SECTIONS: SectionLink[] = [
     fallback: "Admin",
     href: "/admin/stats",
     icon: ShieldCheck,
-    prefix: "/admin",
   },
 ];
 
@@ -79,14 +74,13 @@ export default function SectionSwitcher() {
   const visible = SECTIONS.filter((s) => visibleRoles.includes(s.role));
   if (visible.length <= 1) return null;
 
-  // Longest prefix wins, so a section nested under another still resolves to
-  // itself. This used to need a MANAGER_EXTRA_PREFIXES escape hatch because the
-  // manager's course pages lived at /dept while the rest of the section lived
-  // at /management; with every manager route under one prefix the special case
-  // is gone.
-  const activeRole = [...visible]
-    .sort((a, b) => b.prefix.length - a.prefix.length)
-    .find((s) => location.pathname.startsWith(s.prefix))?.role;
+  // Student has several route families (/dashboard, /courses, /me), so the
+  // active entry must use the shared role-to-route map rather than checking
+  // only the dashboard prefix.
+  const activeRole = roleForSwitcherPath(
+    location.pathname,
+    visible.map((section) => section.role),
+  );
 
   return (
     <nav
