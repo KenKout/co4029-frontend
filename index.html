@@ -88,11 +88,65 @@
         ]
       }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Self-hosted fonts (see src/fonts.css). Preloading latin+vietnamese
+         400-700 keeps every weight the dashboard paints in flight from the
+         first HTML byte, so the swap (if any) lands before first paint —
+         an async stylesheet caused a 0.456 CLS from the post-paint reflow. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-latin-400-v1.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-latin-500-v1.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-latin-600-v1.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-latin-700-v1.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-vietnamese-400-v1.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-vietnamese-500-v1.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-vietnamese-600-v1.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/be-vietnam-pro-vietnamese-700-v1.woff2"
     />
   </head>
   <body>
