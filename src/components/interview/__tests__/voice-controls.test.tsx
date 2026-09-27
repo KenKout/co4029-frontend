@@ -5,7 +5,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+import i18n from "@/i18n";
 
 // Mock LiveKit components before importing
 vi.mock("@livekit/components-react", () => ({
@@ -75,15 +78,25 @@ describe("VoiceControls", () => {
     expect(container).toBeTruthy();
   });
 
-  it("calls onEndInterview when end button clicked", () => {
+  it("calls onEndInterview only after end is confirmed", async () => {
     const mockOnEnd = vi.fn();
+    const user = userEvent.setup();
     render(<VoiceControls onEndInterview={mockOnEnd} />);
 
-    // Find and click the end interview button
-    const endButton = screen
-      .getAllByTestId("button")
-      .find((btn) => btn.textContent?.includes("End interview"));
-    expect(endButton).toBeTruthy();
+    await user.click(
+      screen.getByRole("button", {
+        name: i18n.t("interview_controls.end_interview"),
+      }),
+    );
+    expect(mockOnEnd).not.toHaveBeenCalled();
+
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: i18n.t("course_interview.actions.end_interview"),
+      }),
+    );
+    expect(mockOnEnd).toHaveBeenCalledOnce();
   });
 
   it("renders mic controls", () => {
@@ -106,11 +119,10 @@ describe("VoiceControls", () => {
     const mockOnEnd = vi.fn();
     render(<VoiceControls onEndInterview={mockOnEnd} isEnding={true} />);
 
-    // Button should show "Ending…" text when isEnding is true
-    const buttons = screen.getAllByTestId("button");
-    const endButton = buttons.find((btn) =>
-      btn.textContent?.includes("Ending"),
-    );
-    expect(endButton).toBeTruthy();
+    const endButton = screen.getByRole("button", {
+      name: i18n.t("interview_controls.end_interview"),
+    });
+    expect(endButton).toBeDisabled();
+    expect(endButton).toHaveTextContent(i18n.t("interview_controls.ending"));
   });
 });

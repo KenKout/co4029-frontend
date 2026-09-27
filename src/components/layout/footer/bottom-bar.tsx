@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 /**
  * Bottom bar chrome only. The policy/help links are passed in as children and
  * live in `Footer.tsx`, where `help-policy.test.tsx` asserts on the source text
@@ -19,4 +21,3 @@ export function FooterBottomBar({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-import { useTranslation } from "react-i18next";

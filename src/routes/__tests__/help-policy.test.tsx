@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { http, HttpResponse } from "msw";
 
+import i18n from "@/i18n";
 import {
   FAQ_CATEGORY_LABELS,
   FAQ_CATEGORY_ORDER,
@@ -9,6 +11,7 @@ import {
   POLICY_ORDER,
   POLICY_TITLES,
 } from "@/lib/help-content";
+import { server } from "@/test/msw-handlers";
 
 /**
  * Public Help (FAQ) and Policy pages.
@@ -153,7 +156,9 @@ describe("policy content", () => {
     expect(POLICY_PAGE).toContain("useContentLanguage");
     expect(POLICY_PAGE).toMatch(/usePolicy\(slug, language\)/);
     expect(READER_POLICIES_SRC).toContain("useContentLanguage");
-    expect(READER_POLICIES_SRC).toMatch(/usePolicies\(roles\.data \?\? \[\], language\)/);
+    expect(READER_POLICIES_SRC).toMatch(
+      /usePolicies\(roles\.data \?\? \[\], language\)/,
+    );
   });
 
   it("renders the body in the format the server declared", () => {
@@ -228,6 +233,8 @@ describe("pages actually render their content", () => {
       "@/test/react-query-wrapper"
     );
 
+    server.use(http.get("*/api/v1/policies", () => HttpResponse.json([])));
+
     const root = createRootRoute({ component: HelpPage });
     const idx = createRoute({ getParentRoute: () => root, path: "/" });
     const pol = createRoute({
@@ -255,6 +262,8 @@ describe("pages actually render their content", () => {
     expect(screen.getAllByText("Privacy Policy").length).toBeGreaterThan(0);
     // The chrome is present: TopNavBar + Footer, so these pages don't render
     // bare. Footer carries the copyright line.
-    expect(screen.getByText(/All\s+rights\s+reserved/)).toBeTruthy();
+    expect(screen.getByRole("contentinfo")).toHaveTextContent(
+      i18n.t("footer.rights_reserved"),
+    );
   });
 });
