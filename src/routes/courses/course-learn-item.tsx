@@ -29,6 +29,7 @@ import {
   InterviewMissingConfigScreen,
 } from "@/routes/courses/_components/course-interview/InterviewStatusScreens";
 import { InterviewWorkspaceScreen } from "@/routes/courses/_components/course-interview/InterviewWorkspaceScreen";
+import { LeaveBlockerDialog } from "@/routes/courses/_components/course-interview/InterviewSessionDialogs";
 import { useCourseInterviewWithRef } from "@/routes/courses/_components/course-interview/use-course-interview-with-ref";
 import { CurriculumSidebar } from "@/routes/courses/_components/course-learn/CurriculumSidebar";
 import { resolveCourseInstructors } from "@/routes/courses/_components/course-learn/InstructorBlock";
@@ -722,11 +723,21 @@ function InterviewProxyInner({
     if (cameraGateBlocks(iv.cameraGate))
       return <InterviewCameraGateScreen camera={iv.cameraGate} />;
     return (
-      <InterviewWorkspaceScreen
-        iv={iv as never}
-        course={course}
-        config={config}
-      />
+      <>
+        <InterviewWorkspaceScreen
+          iv={iv as never}
+          course={course}
+          config={config}
+        />
+        {/* Audit P1 (navigation deadlock), mirrored from course-interview.tsx:
+            the leave-blocker resolver must be reachable from EVERY live-session
+            screen including the fullscreen gate — the workspace unmounts the
+            moment fullscreen is lost, and a dialog it owned would unmount with
+            it. Without this, Esc mid-interview then browser-back left the
+            router blocked with only the re-enter offer: the Leave/Stay dialog
+            had nowhere to render on this route. */}
+        <LeaveBlockerDialog iv={iv as never} />
+      </>
     );
   })();
 

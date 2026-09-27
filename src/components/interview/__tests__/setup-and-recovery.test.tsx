@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import i18n from "@/i18n";
@@ -7,8 +8,9 @@ import { SetupChecklist } from "../setup-checklist";
 import { ErrorBanner, ConnectionLostBanner } from "../error-banner";
 
 // TanStack Router's <Link> needs a router context; stub it for isolated tests.
-vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children }: { children: React.ReactNode }) => (
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  Link: ({ children }: { children: ReactNode }) => (
     <a href="/me/profile">{children}</a>
   ),
 }));

@@ -25,14 +25,15 @@ import type { ConversationTurn } from "@/lib/interview/types";
  * router, since the routing is not what these tests are protecting.
  */
 
-vi.mock("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-router")>()),
   Link: ({
     children,
     ...rest
   }: {
     children?: React.ReactNode;
     [key: string]: unknown;
-  }) => <a {...(rest as Record<string, unknown>)}>{children}</a>,
+  }) => <a {...rest}>{children}</a>,
 }));
 
 function turn(overrides: Partial<ConversationTurn> = {}): ConversationTurn {

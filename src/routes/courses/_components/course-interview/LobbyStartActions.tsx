@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, History } from "lucide-react";
 
@@ -13,20 +13,43 @@ import type { CourseInterviewController } from "./use-course-interview";
  * dialog. Both moved verbatim out of course-interview.tsx.
  */
 
+/**
+ * The lobby's "back to course" affordance uses REAL browser history, not a
+ * hardcoded Link. Reached through the curriculum item route, the lobby renders
+ * at /courses/$slug/learn/$itemSlug — a Link to /learn would skip the student
+ * to the bare learn index and lose their place. history.back() returns to
+ * wherever they actually came from (lesson page, dashboard…); the learn route
+ * is only the deep-link/no-history fallback. A live session elsewhere in the
+ * page still gets its leave-blocker dialog — history.back() is a blocked
+ * navigation the resolver can intercept, a Link bypasses the ask.
+ */
+function useBackToCourse(slug: string) {
+  const router = useRouter();
+  return () => {
+    if (router.history.canGoBack()) {
+      router.history.back();
+      return;
+    }
+    void router.navigate({ to: "/courses/$slug/learn", params: { slug } });
+  };
+}
+
 export function LobbyStartActions({ iv }: { iv: CourseInterviewController }) {
   const { t } = useTranslation();
   const { resumableSession, startSession } = iv;
   const startBlocked = startSession.isPending || iv.previousSessionsLoading;
+  const goBack = useBackToCourse(iv.slug);
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
-      <Link
-        to="/courses/$slug/learn"
-        params={{ slug: iv.slug }}
-        className="inline-flex h-auto items-center rounded-xl border border-m3-outline-variant/40 px-6 py-3 text-sm font-bold text-m3-on-surface-variant outline-none transition-colors hover:bg-m3-surface-container hover:text-m3-on-surface focus-visible:ring-2 focus-visible:ring-m3-primary/40"
+      <Button
+        type="button"
+        variant="outline"
+        onClick={goBack}
+        className="h-auto rounded-xl border-m3-outline-variant/40 px-6 py-3 text-sm font-bold text-m3-on-surface-variant hover:bg-m3-surface-container hover:text-m3-on-surface"
       >
         {t("course_interview.actions.back_to_course")}
-      </Link>
+      </Button>
       <Button
         onClick={() => iv.setStartDialogOpen(true)}
         disabled={startBlocked}

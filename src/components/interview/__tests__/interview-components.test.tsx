@@ -5,11 +5,12 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import i18n from "@/i18n";
 
-vi.mock("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-router")>()),
   Link: ({ children }: { children: ReactNode }) => (
     <a href="/me/profile">{children}</a>
   ),
