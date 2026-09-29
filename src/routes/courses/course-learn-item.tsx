@@ -4,7 +4,7 @@ import {
   useParams,
   useSearch,
 } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ClipboardCheck } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -54,6 +54,7 @@ import {
   useMyQuizProgress,
 } from "@/routes/courses/_components/course-learn/use-curriculum";
 import {
+  cardsNeededToUnlock,
   useActiveLessonContent,
   useLessonStatusMap,
   type LessonLockRequirements,
@@ -451,6 +452,19 @@ function LessonLockedView({
   lock: LessonLockRequirements;
 }) {
   const { t } = useTranslation();
+  // The quizzes that actually hold the blocking cards, resolved against the
+  // curriculum already on screen so each one gets its real title and its item
+  // slug for the link. A quiz that is no longer in the tree is dropped rather
+  // than rendered as a dead button.
+  const blockingQuizzes = lock.blockingQuizIds.flatMap((quizId) => {
+    const index = curriculum.lessonItems.findIndex(
+      (fi) => fi.item.item_type === "quiz" && fi.item.target?.id === quizId,
+    );
+    if (index < 0) return [];
+    const target = curriculum.lessonItems[index].item.target;
+    return [{ index, title: target?.title ?? "" }];
+  });
+  const cardsNeeded = cardsNeededToUnlock(lock);
   return (
     <div className="min-h-screen pb-16 sm:pb-24">
       <div className="mx-auto flex max-w-[1800px] flex-col gap-4 px-3 pt-2 sm:px-6 lg:flex-row lg:gap-8 lg:px-8">
@@ -471,14 +485,41 @@ function LessonLockedView({
                 required: Math.round(lock.requiredRatio * 100),
               })}
             </p>
+            {cardsNeeded > 0 && (
+              <p>
+                {t("course_learn.lesson_locked_cards_needed", {
+                  count: cardsNeeded,
+                })}
+              </p>
+            )}
             {!lock.prerequisitesMet && (
               <p>{t("course_learn.lesson_locked_prerequisites")}</p>
             )}
             {lock.interviewPassRequired && !lock.interviewPassed && (
               <p>{t("course_learn.lesson_locked_interview")}</p>
             )}
-            {lock.nextUnlockEstimate && <p>{lock.nextUnlockEstimate}</p>}
           </div>
+          {blockingQuizzes.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-m3-on-surface-variant">
+                {t("course_learn.lesson_locked_quiz_hint")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {blockingQuizzes.map((quiz) => (
+                  <Button
+                    key={quiz.index}
+                    onClick={() => curriculum.onSelect(quiz.index)}
+                    variant="outline"
+                  >
+                    <ClipboardCheck aria-hidden="true" className="h-4 w-4" />
+                    {t("course_learn.lesson_locked_quiz_cta", {
+                      quiz: quiz.title,
+                    })}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </GlassCard>
         <CurriculumSidebar
           {...curriculum}

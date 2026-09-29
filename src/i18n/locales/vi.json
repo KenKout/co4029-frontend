@@ -670,7 +670,7 @@
     "lesson_unavailable_title": "Bài học không khả dụng",
     "lesson_unavailable_body": "Nội dung bài học này hiện chưa được mở.",
     "lesson_locked_title": "Bài học đang khóa",
-    "lesson_locked_body": "Hoàn thành các bài học tiên quyết và ôn tập các thẻ đến hạn để mở khóa bài học này.",
+    "lesson_locked_body": "Bài học sẽ mở khi kết quả kiểm tra cho thấy bạn đã ghi nhớ nội dung.",
     "lesson_locked_progress": "{{passing}}/{{total}} thẻ đạt ngưỡng ghi nhớ {{required}}%.",
     "lesson_locked_prerequisites": "Hãy hoàn thành các bài học tiên quyết trước.",
     "lesson_locked_interview": "Hãy vượt qua bài phỏng vấn bắt buộc trước.",
@@ -732,7 +732,10 @@
     "breadcrumb_learn": "Học",
     "item_not_found_title": "Không tìm thấy nội dung",
     "item_not_found_body": "Không tồn tại nội dung “{{item}}” trong khóa học này. Nội dung có thể đã bị gỡ hoặc slug đã thay đổi.",
-    "back_to_learn": "Quay lại Học"
+    "back_to_learn": "Quay lại Học",
+    "lesson_locked_quiz_hint": "Hãy làm bài kiểm tra bên dưới — mỗi câu trả lời tốt sẽ nâng điểm ghi nhớ của bạn cho bài học này.",
+    "lesson_locked_quiz_cta": "Làm {{quiz}}",
+    "lesson_locked_cards_needed_other": "Cần thêm {{count}} thẻ đạt ngưỡng."
   },
   "placeholder": {
     "body": "Trang này sắp có. Quay lại sau khi quá trình chuyển API hoàn tất.",

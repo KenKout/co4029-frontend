@@ -19,6 +19,37 @@ export interface LessonLockRequirements {
   interviewPassRequired: boolean;
   interviewPassed: boolean;
   nextUnlockEstimate: string | null;
+  /**
+   * Quizzes holding the cards that are keeping the lesson shut, worst first.
+   *
+   * The gate is cleared by answering quiz questions, and quiz routes are not
+   * lesson-gated, so the student is never actually stuck — but until this
+   * arrived the locked screen said "review 4 more cards" with nothing to click,
+   * which reads as a dead end. Ids only: the curriculum already on screen
+   * carries each quiz's title and slug.
+   */
+  blockingQuizIds: string[];
+}
+
+/**
+ * How many more cards must reach the EF threshold before the lesson opens.
+ *
+ * Computed here rather than read from `nextUnlockEstimate`, which the backend
+ * builds as a hardcoded English sentence and would show untranslated to a
+ * Vietnamese reader.
+ */
+export function cardsNeededToUnlock(lock: LessonLockRequirements): number {
+  if (lock.totalCards <= 0) return 0;
+  const required = Math.ceil(lock.requiredRatio * lock.totalCards);
+  return Math.max(required - lock.passingCards, 0);
+}
+
+/** Ids the server sent, keeping only usable strings. */
+function parseBlockingQuizIds(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (id): id is string => typeof id === "string" && id.length > 0,
+  );
 }
 
 export function parseLessonLockRequirements(
@@ -43,6 +74,7 @@ export function parseLessonLockRequirements(
       typeof lock.next_unlock_estimate === "string"
         ? lock.next_unlock_estimate
         : null,
+    blockingQuizIds: parseBlockingQuizIds(lock.blocking_quiz_ids),
   };
 }
 

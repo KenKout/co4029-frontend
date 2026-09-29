@@ -98,6 +98,7 @@ const CSP_POLICY = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://s3.abridgeai.tech",
   "media-src 'self' blob: https://s3.abridgeai.tech",
+  "frame-src 'self' https://s3.abridgeai.tech",
   "font-src 'self'",
   "connect-src 'self' https://s3.abridgeai.tech https://livekit.abridgeai.tech wss://livekit.abridgeai.tech",
   "object-src 'none'",

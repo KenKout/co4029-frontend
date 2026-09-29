@@ -726,7 +726,7 @@
     "lesson_unavailable_title": "Lesson unavailable",
     "lesson_unavailable_body": "This lesson's content isn't open yet.",
     "lesson_locked_title": "Lesson locked",
-    "lesson_locked_body": "Complete the prerequisite lessons and review your due cards to unlock this lesson.",
+    "lesson_locked_body": "This lesson opens once your quiz results show you have retained the material.",
     "lesson_locked_progress": "{{passing}} of {{total}} cards meet the {{required}}% retention threshold.",
     "lesson_locked_prerequisites": "Complete the prerequisite lessons first.",
     "lesson_locked_interview": "Pass the required interview first.",
@@ -788,7 +788,11 @@
     "breadcrumb_learn": "Learn",
     "item_not_found_title": "Item not found",
     "item_not_found_body": "The item “{{item}}” does not exist in this course. It may have been removed or its slug changed.",
-    "back_to_learn": "Back to Learn"
+    "back_to_learn": "Back to Learn",
+    "lesson_locked_quiz_hint": "Take the quiz below — each question you answer well raises your retention score for this lesson.",
+    "lesson_locked_quiz_cta": "Take {{quiz}}",
+    "lesson_locked_cards_needed_one": "{{count}} more card needs to reach the threshold.",
+    "lesson_locked_cards_needed_other": "{{count}} more cards need to reach the threshold."
   },
   "placeholder": {
     "body": "This page is coming soon. Check back after the API migration is complete.",
