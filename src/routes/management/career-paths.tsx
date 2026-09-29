@@ -26,6 +26,30 @@ import type { CareerPathAuthoring } from "@/lib/api/types";
 
 const STATUS_FILTER_ID = "status";
 
+/**
+ * The version number to show on the "revision in progress" badge, or null when
+ * the badge does not belong on this row.
+ *
+ * Two rules, both of which the inline version of this got wrong, and both of
+ * which the learning-program card documents:
+ *
+ * - A path that is itself a draft gets no badge. Every draft path has a draft
+ *   version — its own base version — so the badge would fire on all of them
+ *   while meaning "there is a revision behind the published one".
+ * - The number is `draft_version_no` as-is. The backend already returns the
+ *   draft's own `version_no` (`MAX(version_no) WHERE status='draft'`), unlike
+ *   the learning-program card's `current_version.version_no`, which for a
+ *   published program is the PUBLISHED number and so does need a +1. Porting
+ *   that increment onto this field rendered a v1 draft as "Draft v2".
+ *
+ * Exported for the unit test: the rule has been mis-implemented twice, so it
+ * is worth pinning somewhere cheaper than a rendered table.
+ */
+export function draftRevisionVersion(path: CareerPathAuthoring): number | null {
+  if (!path.has_draft_version || path.status === "draft") return null;
+  return path.draft_version_no ?? 0;
+}
+
 /** Table columns for the management career-path list. */
 function buildPathColumns(
   t: TFunction,
@@ -56,21 +80,25 @@ function buildPathColumns(
     {
       id: "status",
       header: t("management_career_paths.col_status"),
-      cell: (p) => (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <CareerPathStatusBadge status={p.status} />
-          {/* Draft-revision signal, mirroring the learning-program card:
-              a state, not an alert — no pulse. */}
-          {p.has_draft_version && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-violet-300">
-              <FileClock aria-hidden="true" className="h-3 w-3" />
-              {t("management_career_paths.draft_version_badge", {
-                n: (p.draft_version_no ?? 0) + 1,
-              })}
-            </span>
-          )}
-        </div>
-      ),
+      cell: (p) => {
+        // Draft-revision signal, mirroring the learning-program card: a
+        // state, not an alert — no pulse. See `draftRevisionVersion` for when
+        // it shows and why the number is not incremented.
+        const draftVersion = draftRevisionVersion(p);
+        return (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <CareerPathStatusBadge status={p.status} />
+            {draftVersion !== null && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-violet-300">
+                <FileClock aria-hidden="true" className="h-3 w-3" />
+                {t("management_career_paths.draft_version_badge", {
+                  n: draftVersion,
+                })}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       id: "student_count",
