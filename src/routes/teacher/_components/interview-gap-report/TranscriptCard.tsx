@@ -226,6 +226,16 @@ function RecordingCard({
             aria-label={t("teacher_interview_gap_report.recording.audio_label")}
           >
             <MediaProvider />
+            {/* Brand the vidstack audio player to the app's primary (blue):
+                --media-brand drives the progress/slider fill; the border radii
+                round the player shell and its track to match the card. */}
+            <style>{`
+              .vds-audio-layout {
+                --media-brand: var(--color-m3-primary);
+                --audio-border-radius: 0.75rem;
+                --media-slider-track-border-radius: 9999px;
+              }
+            `}</style>
             <DefaultAudioLayout icons={defaultLayoutIcons} download={false} />
           </MediaPlayer>
           <p className="text-xs text-m3-on-surface-variant">
