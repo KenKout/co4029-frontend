@@ -102,8 +102,11 @@ describe("agent speech duration estimate", () => {
 
   it("is meaningfully longer than the unpaced typewriter would take", () => {
     // The bug: base delays finish early. The estimate must exceed them or the
-    // runner has nothing to stretch.
-    expect(estimateAgentSpeechMs(REPORTED_QUESTION)).toBeGreaterThan(4_920);
+    // runner has nothing to stretch. Threshold is rate-aware so a faster
+    // playout (higher INTERVIEWER_PLAYBACK_RATE) doesn't sink below it.
+    expect(estimateAgentSpeechMs(REPORTED_QUESTION)).toBeGreaterThan(
+      4_920 / INTERVIEWER_PLAYBACK_RATE,
+    );
   });
 
   it("scales with length", () => {

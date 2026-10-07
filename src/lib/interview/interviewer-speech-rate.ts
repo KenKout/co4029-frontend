@@ -17,7 +17,7 @@
 
 // Temporary tuning (teacher request): speed the interviewer up across both
 // languages. Set this back to 1.0 to restore the providers' natural rate.
-export const INTERVIEWER_PLAYBACK_RATE = 1.1;
+export const INTERVIEWER_PLAYBACK_RATE = 1.5;
 
 /**
  * Effective playback rate for a narration/agent voice in `lang`.
