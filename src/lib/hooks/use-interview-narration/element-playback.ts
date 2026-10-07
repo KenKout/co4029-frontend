@@ -40,9 +40,11 @@ export async function playViaAudioElement(
   };
   await waitForAudioReady(audio);
   if (!ctx.isCurrent() || serverAudioFailed) return;
+  // Same audible-duration contract as the Web Audio path: the media duration
+  // is natural-rate; playout at the interviewer rate finishes sooner.
   ctx.deferred.resolveDuration(
     Number.isFinite(audio.duration) && audio.duration > 0
-      ? audio.duration * 1_000
+      ? (audio.duration * 1_000) / INTERVIEWER_PLAYBACK_RATE
       : null,
   );
   await ctx.warmup.ensureAudioWarmup();

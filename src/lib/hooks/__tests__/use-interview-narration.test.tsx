@@ -186,7 +186,7 @@ describe("useInterviewNarration", () => {
     expect(MockAudio.instances[0].loop).toBe(true);
     await waitFor(() => expect(mocks.audioPause).toHaveBeenCalled());
     expect(MockAudio.latest?.currentTime).toBe(0);
-    expect(await narrationReady.durationMs).toBe(2_400);
+    expect(await narrationReady.durationMs).toBe(2_400 / 1.5);
     expect(mocks.browserSpeak).not.toHaveBeenCalled();
   });
 
@@ -259,7 +259,8 @@ describe("useInterviewNarration", () => {
       48 / 32_768,
     );
     expect(context?.protectedChannel?.[500]).toBeCloseTo(0.1);
-    expect(await presentation.durationMs).toBe(4);
+    // durationMs is AUDIBLE duration: natural 4s buffer played at 1.5.
+    expect(await presentation.durationMs).toBeCloseTo(4 / 1.5, 6);
     expect(MockAudio.instances).toHaveLength(1);
 
     act(() => {

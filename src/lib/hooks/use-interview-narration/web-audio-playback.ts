@@ -97,7 +97,12 @@ export async function playViaWebAudio(
     source.connect(context.destination);
     const graph: ActiveAudioGraph = { context, source };
     ctx.audioGraphRef.current = graph;
-    ctx.deferred.resolveDuration(decodedAudio.duration * 1_000);
+    // The buffer's duration is the NATURAL-rate duration; playout runs at the
+    // interviewer rate, so the audible time — what the typewriter paces to —
+    // is duration / rate. Report the audible figure or text lags the voice.
+    ctx.deferred.resolveDuration(
+      (decodedAudio.duration * 1_000) / INTERVIEWER_PLAYBACK_RATE,
+    );
     attachEndedHandler(ctx, graph);
 
     await ctx.warmup.ensureAudioWarmup();
