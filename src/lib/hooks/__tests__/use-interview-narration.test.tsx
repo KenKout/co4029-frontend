@@ -93,6 +93,10 @@ class MockAudioContext {
     start: mocks.sourceStart,
     stop: mocks.sourceStop,
     onended: null as (() => void) | null,
+    // Real AudioBufferSourceNodes always expose playbackRate as an AudioParam;
+    // the playback path sets it to the interviewer pacing rate.
+    playbackRate: { value: 1 } as AudioParam,
+    preservesPitch: false,
   };
 
   constructor() {

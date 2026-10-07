@@ -9,6 +9,7 @@
  */
 
 import { waitForAudioReady } from "@/lib/hooks/use-interview-narration/audio-support";
+import { INTERVIEWER_PLAYBACK_RATE } from "@/lib/interview/interviewer-speech-rate";
 import type { NarrationPlaybackContext } from "@/lib/hooks/use-interview-narration/playback-context";
 
 export async function playViaAudioElement(
@@ -19,6 +20,11 @@ export async function playViaAudioElement(
   ctx.objectUrlRef.current = url;
   const audio = new Audio(url);
   audio.preload = "auto";
+  // Interviewer pacing (lib/interview/interviewer-speech-rate): slow the
+  // server voice to match the tuned rate. `preservesPitch` keeps the tone
+  // natural — without it a sub-1.0 rate drops the pitch.
+  audio.playbackRate = INTERVIEWER_PLAYBACK_RATE;
+  audio.preservesPitch = true;
   ctx.audioRef.current = audio;
   let serverAudioFailed = false;
   audio.onended = () => {

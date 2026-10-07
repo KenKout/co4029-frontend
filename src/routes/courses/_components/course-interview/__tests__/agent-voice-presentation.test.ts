@@ -6,6 +6,7 @@ import {
   estimateAgentSpeechMs,
   resolveAgentVoicePhase,
 } from "../agent-voice-presentation";
+import { INTERVIEWER_PLAYBACK_RATE } from "@/lib/interview/interviewer-speech-rate";
 
 /**
  * Pacing of turns the LiveKit AGENT speaks.
@@ -89,9 +90,14 @@ describe("agent speech duration estimate", () => {
     "information processing in an organizational context?";
 
   it("lands within a few hundred ms of the measured Deepgram audio", () => {
-    // Measured on this deployment with aura-2-orpheus-en: 5.976s.
+    // Measured on this deployment with aura-2-orpheus-en: 5.976s at the
+    // natural provider rate. The audible playout runs at the interviewer
+    // playback rate (1.1), so the estimate — which paces the typewriter to
+    // what is actually audible — is the measured duration divided by it.
+    const naturalMeasuredMs = 5_976;
+    const audibleTarget = naturalMeasuredMs / INTERVIEWER_PLAYBACK_RATE;
     const estimate = estimateAgentSpeechMs(REPORTED_QUESTION);
-    expect(Math.abs(estimate - 5_976)).toBeLessThan(400);
+    expect(Math.abs(estimate - audibleTarget)).toBeLessThan(400);
   });
 
   it("is meaningfully longer than the unpaced typewriter would take", () => {

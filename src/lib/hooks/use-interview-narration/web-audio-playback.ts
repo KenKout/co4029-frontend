@@ -18,6 +18,7 @@ import {
   AUDIO_SOURCE_SCHEDULE_AHEAD_MS,
   EMBEDDED_AUDIO_LEAD_IN_MS,
 } from "@/lib/hooks/use-interview-narration/constants";
+import { INTERVIEWER_PLAYBACK_RATE } from "@/lib/interview/interviewer-speech-rate";
 import type { NarrationPlaybackContext } from "@/lib/hooks/use-interview-narration/playback-context";
 
 /** Prepend the keep-alive lead-in frames to every channel of the decoded audio. */
@@ -83,6 +84,16 @@ export async function playViaWebAudio(
     const protectedAudio = buildProtectedBuffer(context, decodedAudio);
     const source = context.createBufferSource();
     source.buffer = protectedAudio;
+    // Interviewer pacing (lib/interview/interviewer-speech-rate). Web Audio
+    // resamples without pitch correction, so set preservesPitch on the source
+    // (supported in Chromium/Firefox) — same contract as the HTMLAudio path.
+    source.playbackRate.value = INTERVIEWER_PLAYBACK_RATE;
+    const withPreservesPitch = source as AudioBufferSourceNode & {
+      preservesPitch?: boolean;
+    };
+    if ("preservesPitch" in withPreservesPitch) {
+      withPreservesPitch.preservesPitch = true;
+    }
     source.connect(context.destination);
     const graph: ActiveAudioGraph = { context, source };
     ctx.audioGraphRef.current = graph;

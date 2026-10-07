@@ -34,12 +34,16 @@ import {
   ConnectionState,
   DisconnectReason,
   RoomEvent,
+  Track,
+  TrackEvent,
+  type RemoteAudioTrack,
   type Room,
 } from "livekit-client";
 import { toast } from "sonner";
 
 import { useDispatchInterviewAgent, useInterviewRealtimeToken } from "@/lib/api/hooks/interviews";
 import type { RealtimeTokenResponse } from "@/lib/api/types";
+import { INTERVIEWER_PLAYBACK_RATE } from "@/lib/interview/interviewer-speech-rate";
 
 interface InterviewRoomState {
   room: Room | undefined;
@@ -291,6 +295,15 @@ export function InterviewRoomProvider({
     };
   }, [room, audio]);
 
+  // Interviewer pacing for the room (voice-mode) audio — see
+  // applyInterviewerSpeechRate below. Runs whenever a room exists; a room
+  // with no agent audio yet simply has no tracks to tag, and the
+  // ElementAttached listener covers tracks that arrive later.
+  useEffect(() => {
+    if (!room) return;
+    return applyInterviewerSpeechRate(room);
+  }, [room]);
+
   const state: InterviewRoomState = {
     room,
     // `active`, NOT `wantToken`: during the prefetch beat the room is
@@ -316,4 +329,43 @@ export function InterviewRoomProvider({
       </InterviewRoomStateContext.Provider>
     </RoomContext.Provider>
   );
+}
+
+/**
+ * Slow the interviewer's room voice to the tuned rate (see
+ * lib/interview/interviewer-speech-rate).
+ *
+ * `RoomAudioRenderer` attaches the agent's remote audio track to detached
+ * `<audio>` elements it creates, and livekit-client emits
+ * `TrackEvent.ElementAttached` on the track for each. Listening on the room
+ * for that event (any remote audio track) is the only seam that covers both
+ * initial attach and re-attach on reconnect — the elements are never in the
+ * DOM, so a DOM query cannot see them.
+ *
+ * `preservesPitch = true` keeps the tone natural at the sub-1.0 rate.
+ */
+function applyInterviewerSpeechRate(room: Room): () => void {
+  const onElementAttached = (element: HTMLMediaElement): void => {
+    element.playbackRate = INTERVIEWER_PLAYBACK_RATE;
+    element.preservesPitch = true;
+  };
+  const tracks: RemoteAudioTrack[] = [];
+  for (const participant of room.remoteParticipants.values()) {
+    for (const publication of participant.trackPublications.values()) {
+      if (publication.kind === Track.Kind.Audio && publication.track) {
+        tracks.push(publication.track as RemoteAudioTrack);
+      }
+    }
+  }
+  for (const track of tracks) {
+    track.on(TrackEvent.ElementAttached, onElementAttached);
+    for (const element of track.attachedElements) {
+      onElementAttached(element);
+    }
+  }
+  return () => {
+    for (const track of tracks) {
+      track.off(TrackEvent.ElementAttached, onElementAttached);
+    }
+  };
 }

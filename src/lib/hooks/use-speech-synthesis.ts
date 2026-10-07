@@ -17,6 +17,7 @@ import {
   resolvePersonaTraits,
   type PersonaTraits,
 } from "@/lib/interview/persona-traits";
+import { INTERVIEWER_PLAYBACK_RATE as INTERVIEWER_SPEECH_RATE } from "@/lib/interview/interviewer-speech-rate";
 
 /** Interview AI persona — drives the spoken tone (rate + pitch). */
 export type SpeechPersona = "strict" | "neutral" | "supportive";
@@ -93,6 +94,8 @@ export function useSpeechSynthesis(): UseSpeechSynthesis {
       const { lang = "en-US", persona = "neutral", traits, onStart } = options;
       // Prefer explicit resolved traits (teacher override); else derive from the
       // persona label's preset. Prosody is DERIVED, never a per-name table.
+      // The interviewer pacing constant multiplies in: browser voice must
+      // match the (slower) server-voice rate, so 0.85 × prosody.rate.
       const prosody = prosodyFromTraits(
         traits ?? resolvePersonaTraits(persona),
       );
@@ -103,7 +106,7 @@ export function useSpeechSynthesis(): UseSpeechSynthesis {
           utterance.onend = () => resolve();
           utterance.onerror = () => resolve();
           utterance.lang = lang;
-          utterance.rate = prosody.rate;
+          utterance.rate = Math.min(2, prosody.rate * INTERVIEWER_SPEECH_RATE);
           utterance.pitch = prosody.pitch;
 
           // Best-effort voice selection: among voices matching the language,

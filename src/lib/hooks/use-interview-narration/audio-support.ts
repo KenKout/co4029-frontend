@@ -11,6 +11,7 @@ import {
   wordsPerMinuteFromTraits,
   type PersonaTraits,
 } from "@/lib/interview/persona-traits";
+import { playbackRateForLang } from "@/lib/interview/interviewer-speech-rate";
 import {
   AUDIO_KEEPALIVE_INT16,
   AUDIO_READY_TIMEOUT_MS,
@@ -106,7 +107,11 @@ export function estimateSpeechDurationMs(
   const punctuationPauses = (text.match(/[.!?;:]/gu) ?? []).length * 180;
   const languageRate = lang.toLowerCase().startsWith("vi") ? 0.92 : 1;
   const wordsPerMinute = wordsPerMinuteFromTraits(traits) * languageRate;
-  return Math.max(800, (words * 60_000) / wordsPerMinute + punctuationPauses);
+  // The audible playout runs at the interviewer playback rate (see
+  // lib/interview/interviewer-speech-rate): a 1.1 rate finishes 1/1.1 sooner,
+  // so the audible duration is the natural estimate divided by the rate.
+  const naturalMs = (words * 60_000) / wordsPerMinute + punctuationPauses;
+  return Math.max(800, naturalMs / playbackRateForLang(lang));
 }
 
 export function waitForAudioReady(audio: HTMLAudioElement): Promise<void> {

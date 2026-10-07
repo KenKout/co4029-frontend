@@ -30,6 +30,7 @@ import type {
   FinishReason,
   InterviewPhase,
 } from "@/lib/interview/turn-factory";
+import { INTERVIEWER_PLAYBACK_RATE } from "@/lib/interview/interviewer-speech-rate";
 
 /**
  * What the agent's voice is doing, as far as this client can tell.
@@ -120,10 +121,11 @@ export function estimateAgentSpeechMs(text: string): number {
   const words = text.trim().split(/\s+/u).filter(Boolean).length;
   if (words === 0) return AGENT_MIN_DURATION_MS;
   const pauses = (text.match(/[.!?;:]/gu) ?? []).length * AGENT_PUNCTUATION_PAUSE_MS;
-  return Math.max(
-    AGENT_MIN_DURATION_MS,
-    (words * 60_000) / AGENT_WORDS_PER_MINUTE + pauses,
-  );
+  // The room voice plays at the interviewer playback rate (see
+  // lib/interview/interviewer-speech-rate): the audible duration is the
+  // natural estimate divided by the rate (1.1 → ~9% shorter playout).
+  const naturalMs = (words * 60_000) / AGENT_WORDS_PER_MINUTE + pauses;
+  return Math.max(AGENT_MIN_DURATION_MS, naturalMs / INTERVIEWER_PLAYBACK_RATE);
 }
 
 export interface AgentVoiceCoordinator {
